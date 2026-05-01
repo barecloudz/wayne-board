@@ -20,7 +20,7 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
-        <Image src="/wayne-logo.png" alt="Wayne" width={36} height={36} className="object-contain rounded-lg" priority />
+        <Image src="/wayne-logo.png" alt="Wayne" width={52} height={32} className="object-contain" priority />
         <div className="flex flex-col leading-none">
           <span className="text-[13px] font-bold text-slate-900 tracking-tight">Wayne Board</span>
           <span className="text-[11px] text-slate-400 mt-0.5">Operations Suite</span>
