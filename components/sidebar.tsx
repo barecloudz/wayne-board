@@ -17,28 +17,21 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-56 shrink-0 bg-white border-r border-slate-200 min-h-screen sticky top-0 h-screen">
+    <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-100">
-        <Image
-          src="/wayne-logo.png"
-          alt="Wayne"
-          width={30}
-          height={30}
-          className="object-contain"
-          priority
-        />
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-slate-900 tracking-tight">
-            Wayne Board
-          </span>
-          <span className="text-[11px] text-slate-400">Operations Suite</span>
+      <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
+        <div className="w-8 h-8 rounded-lg bg-slate-950 flex items-center justify-center">
+          <Image src="/wayne-logo.png" alt="Wayne" width={20} height={20} className="object-contain" priority />
+        </div>
+        <div className="flex flex-col leading-none">
+          <span className="text-[13px] font-bold text-slate-900 tracking-tight">Wayne Board</span>
+          <span className="text-[11px] text-slate-400 mt-0.5">Operations Suite</span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col gap-0.5 p-3 flex-1">
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2 mt-1">
+      <nav className="flex flex-col gap-0.5 p-3 flex-1 pt-4">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
           Reports
         </p>
         {navItems.map(({ icon: Icon, label, href }) => {
@@ -47,27 +40,29 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
                 active
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-slate-950 text-white"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <Icon
-                className={`w-4 h-4 flex-shrink-0 ${active ? "text-blue-600" : "text-slate-400"}`}
-              />
+              <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom badge */}
-      <div className="px-4 py-4 border-t border-slate-100">
-        <span className="inline-flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 text-yellow-700 text-[11px] font-semibold px-3 py-1.5 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
-          Demo Preview
-        </span>
+      {/* Bottom */}
+      <div className="p-4 border-t border-slate-100 flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+          <span className="text-[11px] font-bold text-slate-900">BN</span>
+        </div>
+        <div className="flex flex-col leading-none min-w-0">
+          <span className="text-[12px] font-semibold text-slate-800 truncate">Blake Nardoni</span>
+          <span className="text-[11px] text-slate-400 mt-0.5">Operations Mgr</span>
+        </div>
+        <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" title="Demo" />
       </div>
     </aside>
   );
