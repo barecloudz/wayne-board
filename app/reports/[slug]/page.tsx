@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, FileDown, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
+import AppShell from "@/components/app-shell";
 import { notFound } from "next/navigation";
 import { use } from "react";
 
@@ -372,55 +371,59 @@ export default function ReportPage({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header />
+    <AppShell>
+      <main className="flex-1 px-6 py-8 max-w-5xl w-full mx-auto flex flex-col gap-6">
+        {/* Back link */}
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors w-fit"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Reports
+        </Link>
 
-      <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6">
-          {/* Back link */}
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 transition-colors w-fit"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Reports
-          </Link>
-
-          {/* Report header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{report.title}</h1>
-              <p className="text-sm text-slate-500 mt-0.5">{report.period}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePrint}
-                className="flex items-center gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50"
-              >
-                <Printer className="w-4 h-4" />
-                Print
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleExport}
-                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <FileDown className="w-4 h-4" />
-                Export PDF
-              </Button>
-            </div>
+        {/* Report header */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1.5">
+              742 Logistics · FedEx Ground
+            </p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{report.title}</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{report.period}</p>
           </div>
-
-          {/* Report content card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8">
-            {report.component}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              Print
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleExport}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              Export PDF
+            </Button>
           </div>
+        </div>
+
+        {/* Report content */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8
+          shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.06)]">
+          {report.component}
         </div>
       </main>
 
-      <Footer />
-    </div>
+      <footer className="border-t border-slate-200 py-5 px-6">
+        <p className="text-center text-xs text-slate-400">
+          Wayne Board · Operations reporting prototype · Built by Blake Nardoni
+        </p>
+      </footer>
+    </AppShell>
   );
 }
