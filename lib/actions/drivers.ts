@@ -5,20 +5,14 @@ import { drivers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-function generateDriverId(existing: { driverId: string }[]) {
-  const nums = existing
-    .map((d) => parseInt(d.driverId.split("-")[1]))
-    .filter((n) => !isNaN(n));
-  const next = Math.max(0, ...nums) + 1;
-  return `DR-${String(next).padStart(3, "0")}`;
+export function suggestDriverId(name: string) {
+  const first = name.trim().split(/\s+/)[0] ?? name.trim();
+  return `${first}742`;
 }
 
-function generateTempPassword(length = 10) {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  return Array.from(
-    { length },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
+export async function isDriverIdTaken(driverId: string) {
+  const rows = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.driverId, driverId));
+  return rows.length > 0;
 }
 
 export async function getDrivers() {
@@ -32,10 +26,14 @@ export async function getDrivers() {
   }).from(drivers).orderBy(drivers.id);
 }
 
-export async function createDriver(name: string, role: "driver" | "management") {
-  const existing = await db.select({ driverId: drivers.driverId }).from(drivers);
-  const driverId = generateDriverId(existing);
-  const tempPassword = generateTempPassword();
+export async function createDriver(
+  name: string,
+  role: "driver" | "management",
+  customDriverId?: string,
+  customTempPassword?: string,
+) {
+  const driverId     = customDriverId     ?? suggestDriverId(name);
+  const tempPassword = customTempPassword ?? "Fedex1234#";
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
   await db.insert(drivers).values({ driverId, name, passwordHash, role });

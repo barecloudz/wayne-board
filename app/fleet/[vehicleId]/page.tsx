@@ -8,6 +8,7 @@ import { INSPECTION_COMPONENTS } from "@/lib/inspection-components";
 import { InspectionStatus } from "@/lib/inspection-types";
 import VehicleEditModal from "./vehicle-edit-modal";
 import InspectionActions from "./inspection-actions";
+import VehicleDeleteButton from "./vehicle-delete-button";
 
 const STATUS_STYLES: Record<InspectionStatus, { cell: string; dot: string; label: string }> = {
   OK:              { cell: "text-emerald-700", dot: "bg-emerald-400", label: "OK" },
@@ -71,6 +72,7 @@ export default async function VehicleDetailPage({
             )}
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
+            <VehicleDeleteButton vehicleId={vehicle.id} />
             <VehicleEditModal vehicle={vehicle} />
             {latestInspection ? (
               <>

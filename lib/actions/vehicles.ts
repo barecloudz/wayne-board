@@ -1,8 +1,44 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { vehicles } from "@/lib/schema";
+import { vehicles, inspections, inspectionResults } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+
+export async function createVehicle(data: {
+  unitNumber: string;
+  make: string;
+  model: string;
+  year: number;
+  mileage: number;
+  vin?: string;
+  type?: string;
+}) {
+  const [vehicle] = await db.insert(vehicles).values({
+    unitNumber: data.unitNumber,
+    make:       data.make,
+    model:      data.model,
+    year:       data.year,
+    mileage:    data.mileage,
+    vin:        data.vin ?? "",
+    type:       data.type ?? "van",
+    active:     true,
+  }).returning({ id: vehicles.id });
+  return vehicle;
+}
+
+export async function deleteVehicle(vehicleId: number) {
+  // Delete inspection results → inspections → vehicle
+  const vehicleInspections = await db
+    .select({ id: inspections.id })
+    .from(inspections)
+    .where(eq(inspections.vehicleId, vehicleId));
+
+  for (const insp of vehicleInspections) {
+    await db.delete(inspectionResults).where(eq(inspectionResults.inspectionId, insp.id));
+  }
+  await db.delete(inspections).where(eq(inspections.vehicleId, vehicleId));
+  await db.delete(vehicles).where(eq(vehicles.id, vehicleId));
+}
 
 export async function getVehicles() {
   return db.select().from(vehicles).orderBy(vehicles.unitNumber);
