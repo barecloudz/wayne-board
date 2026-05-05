@@ -69,7 +69,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
   // Header fields
   const [inspectorName, setInspectorName] = useState("");
   const [inspectorId, setInspectorId]     = useState("");
-  const [stationName, setStationName]     = useState("Hampstead Terminal");
+  const [stationName, setStationName]     = useState("Fletcher Terminal");
   const [stationNumber, setStationNumber] = useState("742");
   const [inspectionDate, setInspectionDate] = useState(today());
   const [outOfService, setOutOfService]    = useState(false);
@@ -217,10 +217,10 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
             />
           </Field>
           <Field label="Station Name">
-            <input type="text" value={stationName} readOnly className={`${INPUT} bg-slate-50 text-slate-500`} />
+            <input type="text" value={stationName} onChange={(e) => setStationName(e.target.value)} className={INPUT} />
           </Field>
           <Field label="Station #">
-            <input type="text" value={stationNumber} readOnly className={`${INPUT} bg-slate-50 text-slate-500`} />
+            <input type="text" value={stationNumber} onChange={(e) => setStationNumber(e.target.value)} className={INPUT} />
           </Field>
           <Field label="Vehicle Unit #">
             <input type="text" value={vehicle.unitNumber} readOnly className={`${INPUT} bg-slate-50 text-slate-500`} />
