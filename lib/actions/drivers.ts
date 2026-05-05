@@ -5,11 +5,6 @@ import { drivers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-export function suggestDriverId(name: string) {
-  const first = name.trim().split(/\s+/)[0] ?? name.trim();
-  return `${first}742`;
-}
-
 export async function isDriverIdTaken(driverId: string) {
   const rows = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.driverId, driverId));
   return rows.length > 0;

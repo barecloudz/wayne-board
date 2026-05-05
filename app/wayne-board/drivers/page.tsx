@@ -7,8 +7,9 @@ import {
   XCircle, Eye, EyeOff, Copy, Check, Loader2,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, resetDriverPassword, suggestDriverId,
+  getDrivers, createDriver, setDriverActive, resetDriverPassword,
 } from "@/lib/actions/drivers";
+import { suggestDriverId } from "@/lib/driver-utils";
 
 type Driver = {
   id: number;
