@@ -31,7 +31,7 @@ type Props = {
 export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfirmed }: Props) {
   const [state, setState] = useState<ScanState>({ type: "idle" });
   const [torchOn, setTorchOn] = useState(false);
-  const [torchSupported, setTorchSupported] = useState(false);
+  const [torchUnavailable, setTorchUnavailable] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const detectingRef = useRef(false);
@@ -43,22 +43,20 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     controlsRef.current = null;
     detectingRef.current = false;
     setTorchOn(false);
-    setTorchSupported(false);
+    setTorchUnavailable(false);
     setState({ type: "idle" });
   }
 
   async function toggleTorch() {
-    if (!videoRef.current?.srcObject) return;
-    const stream = videoRef.current.srcObject as MediaStream;
-    const track = stream.getVideoTracks()[0];
+    const stream = videoRef.current?.srcObject as MediaStream | null;
+    const track = stream?.getVideoTracks()[0];
     if (!track) return;
     const next = !torchOn;
     try {
       await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
       setTorchOn(next);
     } catch {
-      // torch not supported on this device — hide the button
-      setTorchSupported(false);
+      setTorchUnavailable(true);
     }
   }
 
@@ -67,7 +65,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     controlsRef.current = null;
     detectingRef.current = false;
     setTorchOn(false);
-    setTorchSupported(false);
+    setTorchUnavailable(false);
 
     setState({ type: "opening" });
 
@@ -102,15 +100,6 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       );
 
       controlsRef.current = controls;
-
-      // Check torch support after stream is live
-      const stream = videoRef.current.srcObject as MediaStream | null;
-      if (stream) {
-        const track = stream.getVideoTracks()[0];
-        const capabilities = track?.getCapabilities() as Record<string, unknown> | undefined;
-        if (capabilities && "torch" in capabilities) setTorchSupported(true);
-      }
-
       setState({ type: "scanning" });
     } catch {
       setState({
@@ -244,15 +233,16 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                       </div>
                     )}
 
-                    {/* Torch button */}
-                    {state.type === "scanning" && torchSupported && (
+                    {/* Torch button — always shown while scanning */}
+                    {state.type === "scanning" && !torchUnavailable && (
                       <button
                         type="button"
                         onClick={toggleTorch}
+                        title={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
                         className={`absolute bottom-3 right-3 p-2.5 rounded-full transition-all active:scale-90
                           ${torchOn
-                            ? "bg-yellow-400 text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]"
-                            : "bg-black/50 text-white"
+                            ? "bg-yellow-400 text-slate-900 shadow-[0_0_16px_rgba(250,204,21,0.7)]"
+                            : "bg-black/60 text-white hover:bg-black/80"
                           }`}
                       >
                         <Flashlight className="w-5 h-5" />
