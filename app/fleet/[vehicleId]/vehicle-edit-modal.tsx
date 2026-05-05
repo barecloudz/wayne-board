@@ -86,8 +86,9 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
         });
         setOpen(false);
         router.refresh();
-      } catch {
-        setError("Failed to save changes. Please try again.");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setError(`Save failed: ${msg}`);
       }
     });
   }
