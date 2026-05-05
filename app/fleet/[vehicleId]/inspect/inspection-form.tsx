@@ -69,8 +69,8 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
   // Header fields
   const [inspectorName, setInspectorName] = useState("");
   const [inspectorId, setInspectorId]     = useState("");
-  const [stationName]                      = useState("Hampstead Terminal");
-  const [stationNumber]                    = useState("742");
+  const [stationName, setStationName]     = useState("Hampstead Terminal");
+  const [stationNumber, setStationNumber] = useState("742");
   const [inspectionDate, setInspectionDate] = useState(today());
   const [outOfService, setOutOfService]    = useState(false);
   const [outOfServiceDocs, setOutOfServiceDocs] = useState("");
@@ -190,11 +190,11 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
         shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">
         <h2 className="text-[13px] font-bold text-slate-900 mb-4">Inspection Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Employee Name / ID *">
+          <Field label="Inspector Name / Employee ID *">
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Full name"
+                placeholder="Name of person doing the inspection"
                 value={inspectorName}
                 onChange={(e) => setInspectorName(e.target.value)}
                 className={INPUT}

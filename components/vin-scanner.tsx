@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, X, CheckCircle2, AlertTriangle, Loader2, RotateCcw, ScanLine } from "lucide-react";
+import { Camera, X, CheckCircle2, AlertTriangle, Loader2, RotateCcw, ScanLine, Flashlight } from "lucide-react";
 import { updateVehicleVin } from "@/lib/actions/vehicles";
 
 type NHTSAResult = {
@@ -30,6 +30,8 @@ type Props = {
 
 export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfirmed }: Props) {
   const [state, setState] = useState<ScanState>({ type: "idle" });
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const detectingRef = useRef(false);
@@ -40,13 +42,32 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     controlsRef.current?.stop();
     controlsRef.current = null;
     detectingRef.current = false;
+    setTorchOn(false);
+    setTorchSupported(false);
     setState({ type: "idle" });
+  }
+
+  async function toggleTorch() {
+    if (!videoRef.current?.srcObject) return;
+    const stream = videoRef.current.srcObject as MediaStream;
+    const track = stream.getVideoTracks()[0];
+    if (!track) return;
+    const next = !torchOn;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] });
+      setTorchOn(next);
+    } catch {
+      // torch not supported on this device — hide the button
+      setTorchSupported(false);
+    }
   }
 
   async function startScan() {
     controlsRef.current?.stop();
     controlsRef.current = null;
     detectingRef.current = false;
+    setTorchOn(false);
+    setTorchSupported(false);
 
     setState({ type: "opening" });
 
@@ -81,6 +102,15 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       );
 
       controlsRef.current = controls;
+
+      // Check torch support after stream is live
+      const stream = videoRef.current.srcObject as MediaStream | null;
+      if (stream) {
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track?.getCapabilities() as Record<string, unknown> | undefined;
+        if (capabilities && "torch" in capabilities) setTorchSupported(true);
+      }
+
       setState({ type: "scanning" });
     } catch {
       setState({
@@ -212,6 +242,21 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                           <div className="absolute left-2 right-2 top-1/2 h-px bg-indigo-400/70" />
                         </div>
                       </div>
+                    )}
+
+                    {/* Torch button */}
+                    {state.type === "scanning" && torchSupported && (
+                      <button
+                        type="button"
+                        onClick={toggleTorch}
+                        className={`absolute bottom-3 right-3 p-2.5 rounded-full transition-all active:scale-90
+                          ${torchOn
+                            ? "bg-yellow-400 text-slate-900 shadow-[0_0_12px_rgba(250,204,21,0.6)]"
+                            : "bg-black/50 text-white"
+                          }`}
+                      >
+                        <Flashlight className="w-5 h-5" />
+                      </button>
                     )}
                   </div>
 

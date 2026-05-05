@@ -6,6 +6,7 @@ import { vehicles, inspections, inspectionResults } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
 import { INSPECTION_COMPONENTS } from "@/lib/inspection-components";
 import { InspectionStatus } from "@/lib/inspection-types";
+import VehicleEditModal from "./vehicle-edit-modal";
 
 const STATUS_STYLES: Record<InspectionStatus, { cell: string; dot: string; label: string }> = {
   OK:              { cell: "text-emerald-700", dot: "bg-emerald-400", label: "OK" },
@@ -68,17 +69,20 @@ export default async function VehicleDetailPage({
               <p className="text-[12px] text-slate-400 mt-0.5 font-mono">VIN: {vehicle.vin}</p>
             )}
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
+            <VehicleEditModal vehicle={vehicle} />
             <button disabled
               className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
                 text-slate-400 bg-white cursor-not-allowed">
-              Generate PDF Report
+              Generate PDF
             </button>
-            <button disabled
+            <Link
+              href={`/fleet/${vehicle.id}/inspect`}
               className="px-4 py-2 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
-                opacity-50 cursor-not-allowed">
+                hover:bg-slate-700 active:scale-[0.98] transition-all duration-150 shadow-sm"
+            >
               Start New Inspection
-            </button>
+            </Link>
           </div>
         </div>
 
