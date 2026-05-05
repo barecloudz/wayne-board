@@ -18,6 +18,7 @@ type NHTSAResult = {
 type ScanState =
   | { type: "idle" }
   | { type: "opening" }
+  | { type: "photo" }
   | { type: "scanning" }
   | { type: "manual" }
   | { type: "decoding"; vin: string }
@@ -45,6 +46,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
   const [manualVin, setManualVin] = useState("");
   const [manualError, setManualError] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanningRef = useRef(false);
@@ -117,6 +119,63 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       await track.applyConstraints({ advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet] });
     } catch { /* focus constraint not supported */ }
     setTimeout(() => setRefocusing(false), 1200);
+  }
+
+  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset input so the same file can be re-selected if needed
+    e.target.value = "";
+    if (!file) return;
+
+    stopCamera();
+    setState({ type: "photo" });
+
+    // objectURL is temporary — decoded in memory then immediately revoked
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+      // Strategy A: native BarcodeDetector on ImageBitmap (no upload, in-memory only)
+      if ("BarcodeDetector" in window) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const BD = (window as any).BarcodeDetector;
+        const supported: string[] = await BD.getSupportedFormats();
+        const formats = (["code_39", "code_128", "pdf417", "data_matrix", "qr_code"] as const)
+          .filter((f) => supported.includes(f));
+        const detector = new BD({ formats: formats.length > 0 ? formats : ["code_39", "code_128"] });
+        const bitmap = await createImageBitmap(file);
+        const barcodes = await detector.detect(bitmap);
+        bitmap.close();
+        if (barcodes.length > 0) {
+          URL.revokeObjectURL(objectUrl);
+          await handleDetected(barcodes[0].rawValue);
+          return;
+        }
+      }
+
+      // Strategy B: ZXing decodeFromImageUrl (still local — objectURL never sent anywhere)
+      const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] = await Promise.all([
+        import("@zxing/browser"),
+        import("@zxing/library"),
+      ]);
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.PDF_417,
+        BarcodeFormat.DATA_MATRIX,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      const reader = new BrowserMultiFormatReader(hints);
+      const result = await reader.decodeFromImageUrl(objectUrl);
+      URL.revokeObjectURL(objectUrl);
+      await handleDetected(result.getText());
+    } catch {
+      URL.revokeObjectURL(objectUrl);
+      setState({
+        type: "error",
+        message: "No barcode found in that photo. Move closer, make sure the barcode is in frame, then try again.",
+      });
+    }
   }
 
   async function startScan() {
@@ -461,15 +520,27 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                     Hold barcode in frame · back up if blurry · press <ScanLine className="inline w-3 h-3" /> to refocus
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={() => { stopCamera(); setState({ type: "manual" }); }}
-                    className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg
-                      border border-slate-200 text-[12px] font-semibold text-slate-500
-                      hover:bg-slate-50 active:scale-[0.98] transition-all"
-                  >
-                    <Keyboard className="w-3.5 h-3.5" /> Type VIN manually
-                  </button>
+                  <div className="flex gap-2">
+                    {/* Take Photo — native camera app handles zoom/focus, image never stored */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg
+                        border border-slate-200 text-[12px] font-semibold text-slate-500
+                        hover:bg-slate-50 active:scale-[0.98] transition-all"
+                    >
+                      <Camera className="w-3.5 h-3.5" /> Take Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { stopCamera(); setState({ type: "manual" }); }}
+                      className="flex items-center justify-center gap-1.5 flex-1 py-2 rounded-lg
+                        border border-slate-200 text-[12px] font-semibold text-slate-500
+                        hover:bg-slate-50 active:scale-[0.98] transition-all"
+                    >
+                      <Keyboard className="w-3.5 h-3.5" /> Type Manually
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -514,6 +585,17 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                         hover:bg-slate-700 active:scale-[0.98] disabled:opacity-40 transition-all shadow-sm">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Look Up VIN
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Photo processing ── */}
+              {state.type === "photo" && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                  <div className="text-center">
+                    <p className="text-[13px] font-bold text-slate-800">Analyzing photo...</p>
+                    <p className="text-[11px] text-slate-400 mt-1">Photo is processed locally and not stored</p>
                   </div>
                 </div>
               )}
@@ -613,6 +695,17 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
           </div>
         </div>
       )}
+      {/* Hidden file input — capture="environment" opens native camera on mobile.
+          accept="image/*" without capture works as gallery fallback on Android 14/15.
+          Image is processed locally via objectURL and never uploaded. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handlePhotoFile}
+      />
     </>
   );
 }
