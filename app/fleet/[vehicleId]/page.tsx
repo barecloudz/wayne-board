@@ -71,11 +71,24 @@ export default async function VehicleDetailPage({
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
             <VehicleEditModal vehicle={vehicle} />
-            <button disabled
-              className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
-                text-slate-400 bg-white cursor-not-allowed">
-              Generate PDF
-            </button>
+            {latestInspection ? (
+              <a
+                href={`/api/inspection-pdf/${latestInspection.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-300
+                  active:scale-[0.98] transition-all duration-150"
+              >
+                Generate PDF
+              </a>
+            ) : (
+              <button disabled
+                className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-400 bg-white cursor-not-allowed">
+                Generate PDF
+              </button>
+            )}
             <Link
               href={`/fleet/${vehicle.id}/inspect`}
               className="px-4 py-2 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
