@@ -5,7 +5,7 @@ import {
   Camera, X, CheckCircle2, AlertTriangle,
   Loader2, RotateCcw, Flashlight, Keyboard,
 } from "lucide-react";
-import { updateVehicleVin } from "@/lib/actions/vehicles";
+import { updateVehicleVinWithNhtsa } from "@/lib/actions/vehicles";
 
 type NHTSAResult = {
   Make: string;
@@ -41,19 +41,21 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
   const [state, setState] = useState<ScanState>({ type: "idle" });
   const [torchOn, setTorchOn] = useState(false);
   const [torchUnavailable, setTorchUnavailable] = useState(false);
+  const [tapRipple, setTapRipple] = useState<{ x: number; y: number } | null>(null);
   const [manualVin, setManualVin] = useState("");
   const [manualError, setManualError] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const detectingRef = useRef(false);
+  const scanLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scanningRef = useRef(false);
 
   const isOpen = state.type !== "idle";
 
   function stopCamera() {
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
+    scanningRef.current = false;
+    if (scanLoopRef.current) {
+      clearTimeout(scanLoopRef.current);
+      scanLoopRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -64,9 +66,9 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
 
   function closeModal() {
     stopCamera();
-    detectingRef.current = false;
     setTorchOn(false);
     setTorchUnavailable(false);
+    setTapRipple(null);
     setManualVin("");
     setManualError("");
     setState({ type: "idle" });
@@ -84,14 +86,45 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     }
   }
 
+  async function handleVideoTap(e: React.MouseEvent<HTMLVideoElement>) {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+
+    const rect = (e.currentTarget as HTMLVideoElement).getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+    const relY = e.clientY - rect.top;
+    const normX = relX / rect.width;
+    const normY = relY / rect.height;
+
+    // Show ripple feedback
+    setTapRipple({ x: relX, y: relY });
+    setTimeout(() => setTapRipple(null), 700);
+
+    try {
+      // Single-shot focus at tap point
+      await track.applyConstraints({
+        advanced: [{ pointOfInterest: { x: normX, y: normY }, focusMode: "single-shot" } as MediaTrackConstraintSet],
+      });
+      // Resume continuous after hold
+      setTimeout(async () => {
+        try {
+          await track.applyConstraints({
+            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
+          });
+        } catch { /* ignore */ }
+      }, 1500);
+    } catch { /* pointOfInterest not supported on this device */ }
+  }
+
   async function startScan() {
     stopCamera();
-    detectingRef.current = false;
     setTorchOn(false);
     setTorchUnavailable(false);
+    setTapRipple(null);
     setState({ type: "opening" });
 
-    await new Promise((r) => setTimeout(r, 150));
+    // Give DOM a tick to mount the video element
+    await new Promise((r) => setTimeout(r, 100));
 
     if (!videoRef.current) {
       setState({ type: "error", message: "Camera could not initialize." });
@@ -99,12 +132,47 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     }
 
     try {
-      const [{ BrowserMultiFormatReader }, { DecodeHintType }, { BarcodeFormat }] =
-        await Promise.all([
-          import("@zxing/browser"),
-          import("@zxing/library"),
-          import("@zxing/library"),
-        ]);
+      // Request highest possible resolution — ImageCapture will deliver full sensor res
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+      });
+
+      videoRef.current.srcObject = stream;
+      streamRef.current = stream;
+      await videoRef.current.play();
+
+      const track = stream.getVideoTracks()[0];
+
+      // Continuous autofocus
+      try {
+        await track.applyConstraints({
+          advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
+        });
+      } catch { /* not supported */ }
+
+      // Zoom — 2× makes small door-jamb barcodes fill more of the frame
+      try {
+        const caps = track.getCapabilities() as MediaTrackCapabilities & { zoom?: { min: number; max: number; step: number } };
+        if (caps?.zoom) {
+          const targetZoom = Math.min(2, caps.zoom.max);
+          if (targetZoom > 1) {
+            await track.applyConstraints({ advanced: [{ zoom: targetZoom } as MediaTrackConstraintSet] });
+          }
+        }
+      } catch { /* zoom not supported */ }
+
+      // Load ZXing low-level API
+      const [
+        { HTMLCanvasElementLuminanceSource },
+        { BinaryBitmap, HybridBinarizer, MultiFormatReader, DecodeHintType, BarcodeFormat },
+      ] = await Promise.all([
+        import("@zxing/browser"),
+        import("@zxing/library"),
+      ]);
 
       const hints = new Map();
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [
@@ -115,43 +183,67 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       ]);
       hints.set(DecodeHintType.TRY_HARDER, true);
 
-      const reader = new BrowserMultiFormatReader(hints);
+      const mfReader = new MultiFormatReader();
+      mfReader.setHints(hints);
 
-      const controls = await reader.decodeFromConstraints(
-        {
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            // continuous autofocus — critical for barcode scanning
-            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
-          },
-        },
-        videoRef.current,
-        (result) => {
-          if (result && !detectingRef.current) {
-            detectingRef.current = true;
-            controls.stop();
-            handleDetected(result.getText());
-          }
-        }
-      );
+      // ImageCapture: grabs a full-resolution still from the sensor
+      // Much better than reading compressed video frames for small barcodes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let imageCapture: any = null;
+      if ("ImageCapture" in window) {
+        try {
+          // ImageCapture is not in all TypeScript lib defs — cast through any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          imageCapture = new (window as any).ImageCapture(track);
+        } catch { /* not available */ }
+      }
 
-      // Store stream ref for torch
-      const stream = videoRef.current.srcObject as MediaStream | null;
-      if (stream) streamRef.current = stream;
+      const offscreen = document.createElement("canvas");
+      const ctx = offscreen.getContext("2d", { willReadFrequently: true });
 
-      // Apply continuous autofocus on the live track
-      try {
-        const track = stream?.getVideoTracks()[0];
-        if (track) {
-          await track.applyConstraints({
-            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
-          });
-        }
-      } catch { /* autofocus not supported — ignore */ }
-
+      scanningRef.current = true;
       setState({ type: "scanning" });
+
+      async function decodeFrame() {
+        if (!scanningRef.current) return;
+
+        try {
+          if (imageCapture && ctx) {
+            // Primary path: ImageCapture.grabFrame() → full sensor resolution
+            const bitmap = await imageCapture.grabFrame();
+            offscreen.width = bitmap.width;
+            offscreen.height = bitmap.height;
+            ctx.drawImage(bitmap, 0, 0);
+            bitmap.close();
+          } else if (videoRef.current && ctx) {
+            // Fallback: read directly from video element
+            offscreen.width = videoRef.current.videoWidth || 640;
+            offscreen.height = videoRef.current.videoHeight || 480;
+            ctx.drawImage(videoRef.current, 0, 0);
+          } else {
+            scanLoopRef.current = setTimeout(decodeFrame, 150);
+            return;
+          }
+
+          try {
+            const luminance = new HTMLCanvasElementLuminanceSource(offscreen);
+            const binaryBitmap = new BinaryBitmap(new HybridBinarizer(luminance));
+            const result = mfReader.decode(binaryBitmap);
+
+            if (result && scanningRef.current) {
+              scanningRef.current = false;
+              handleDetected(result.getText());
+              return;
+            }
+          } catch { /* no barcode in this frame — expected, keep looping */ }
+        } catch { /* grabFrame can occasionally fail — keep looping */ }
+
+        if (scanningRef.current) {
+          scanLoopRef.current = setTimeout(decodeFrame, 150);
+        }
+      }
+
+      decodeFrame();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setState({
@@ -166,8 +258,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
   async function handleDetected(raw: string) {
     const vin = raw.trim().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "");
     if (vin.length !== 17) {
-      // Not a VIN — keep scanning
-      detectingRef.current = false;
+      // Not a VIN — restart scan
       startScan();
       return;
     }
@@ -175,6 +266,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
   }
 
   async function decodeAndConfirm(vin: string) {
+    stopCamera();
     setState({ type: "decoding", vin });
     try {
       const res = await fetch(
@@ -202,14 +294,18 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       return;
     }
     setManualError("");
-    stopCamera();
     decodeAndConfirm(vin);
   }
 
   async function confirmVin(vin: string, nhtsa: NHTSAResult) {
     setState({ type: "saving", vin, nhtsa });
     try {
-      await updateVehicleVin(vehicleId, vin);
+      const yearNum = parseInt(nhtsa.ModelYear);
+      await updateVehicleVinWithNhtsa(vehicleId, vin, {
+        make:  nhtsa.Make !== "—" ? nhtsa.Make : undefined,
+        model: nhtsa.Model !== "—" ? nhtsa.Model : undefined,
+        year:  !isNaN(yearNum) ? yearNum : undefined,
+      });
       onVinConfirmed(vin);
       closeModal();
     } catch {
@@ -268,7 +364,14 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
               {(state.type === "opening" || state.type === "scanning") && (
                 <div className="flex flex-col gap-3">
                   <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3]">
-                    <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+                    {/* Video — tap anywhere to focus */}
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover cursor-crosshair"
+                      muted
+                      playsInline
+                      onClick={handleVideoTap}
+                    />
 
                     {state.type === "opening" && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70">
@@ -279,16 +382,28 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
 
                     {state.type === "scanning" && (
                       <>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="relative w-[75%] h-16">
+                        {/* Aim reticle */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="relative w-[80%] h-14">
                             <div className="absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
                             <div className="absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
                             <div className="absolute bottom-0 left-0 w-5 h-5 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
                             <div className="absolute bottom-0 right-0 w-5 h-5 border-b-2 border-r-2 border-indigo-400 rounded-br" />
-                            <div className="absolute left-2 right-2 top-1/2 h-px bg-indigo-400/70" />
+                            <div className="absolute left-2 right-2 top-1/2 h-px bg-indigo-400/60" />
                           </div>
                         </div>
 
+                        {/* Tap-to-focus ripple */}
+                        {tapRipple && (
+                          <div
+                            className="absolute pointer-events-none"
+                            style={{ left: tapRipple.x - 20, top: tapRipple.y - 20 }}
+                          >
+                            <div className="w-10 h-10 rounded-full border-2 border-yellow-300 animate-ping opacity-80" />
+                          </div>
+                        )}
+
+                        {/* Torch button */}
                         {!torchUnavailable && (
                           <button
                             type="button"
@@ -308,10 +423,9 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                   </div>
 
                   <p className="text-[11px] text-slate-400 text-center">
-                    Hold steady — align the barcode within the frame
+                    Align barcode in frame · <span className="text-indigo-500 font-medium">tap to focus</span>
                   </p>
 
-                  {/* Manual entry fallback always visible */}
                   <button
                     type="button"
                     onClick={() => { stopCamera(); setState({ type: "manual" }); }}
@@ -401,9 +515,9 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                       <p className="font-mono text-[14px] font-bold text-slate-900 tracking-widest break-all">{vin}</p>
                       <div className="mt-3 grid grid-cols-3 gap-2">
                         {[
-                          { label: "Make", value: nhtsa.Make },
-                          { label: "Year", value: nhtsa.ModelYear },
-                          { label: "Body", value: nhtsa.BodyClass?.split(" ")[0] ?? "—" },
+                          { label: "Make",  value: nhtsa.Make },
+                          { label: "Year",  value: nhtsa.ModelYear },
+                          { label: "Body",  value: nhtsa.BodyClass?.split(" ")[0] ?? "—" },
                         ].map(({ label, value }) => (
                           <div key={label} className="bg-white rounded-lg px-2 py-2 border border-slate-200 text-center">
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
