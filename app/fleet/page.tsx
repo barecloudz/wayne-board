@@ -1,9 +1,17 @@
 import Link from "next/link";
+import Image from "next/image";
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
 import { vehicles, inspections } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 import FleetHeader from "./fleet-header";
+
+function getVehicleImage(model: string): string | null {
+  const m = model.toLowerCase();
+  if (m.includes("transit")) return "/transit.png";
+  if (m.includes("p1000") || m.includes("promaster 1000")) return "/p1000.png";
+  return null;
+}
 
 type InspectionStatus = "Complete" | "Defects Pending Repair" | "Out of Service" | "Draft";
 
@@ -113,40 +121,59 @@ export default async function FleetPage() {
             const latest = latestByVehicle.get(truck.id);
             const statusKey = (latest?.status ?? "None") as InspectionStatus | "None";
             const badge = STATUS_BADGE[statusKey] ?? STATUS_BADGE.None;
+            const vehicleImg = getVehicleImage(truck.model);
 
             return (
               <Link
                 key={truck.id}
                 href={`/fleet/${truck.id}`}
-                className="group block bg-white rounded-2xl border border-slate-200/80 p-5
+                className="group relative block bg-white rounded-2xl border border-slate-200/80 p-5
                   shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]
                   hover:shadow-[0_8px_28px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.05)]
-                  hover:-translate-y-0.5 transition-all duration-300"
+                  hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
               >
-                <div className="flex items-start justify-between mb-1">
-                  <span className="text-[22px] font-extrabold text-slate-900 tracking-tight leading-none">
-                    {truck.unitNumber}
-                  </span>
-                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${badge.className}`}>
-                    {badge.label}
-                  </span>
-                </div>
-                <p className="text-[13px] text-slate-500 mb-1">
-                  {truck.year} {truck.make} {truck.model}
-                </p>
-                {truck.vin && truck.vin.length === 17 ? (
-                  <p className="text-[11px] text-slate-400 font-mono mb-3">
-                    VIN: {truck.vin.slice(0, 8)}...{truck.vin.slice(-5)}
+                {/* Text content — right-padded when image present */}
+                <div className={vehicleImg ? "pr-[140px] sm:pr-[152px]" : ""}>
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-[22px] font-extrabold text-slate-900 tracking-tight leading-none">
+                      {truck.unitNumber}
+                    </span>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${badge.className}`}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-slate-500 mb-1">
+                    {truck.year} {truck.make} {truck.model}
                   </p>
-                ) : (
-                  <p className="text-[11px] text-slate-300 font-mono mb-3">VIN not scanned</p>
-                )}
-                <div className="text-[12px] text-slate-400 mb-3">
-                  {truck.mileage.toLocaleString()} mi
-                  {latest?.date && (
-                    <span className="ml-2 text-slate-300">· Inspected {latest.date}</span>
+                  {truck.vin && truck.vin.length === 17 ? (
+                    <p className="text-[11px] text-slate-400 font-mono mb-3">
+                      VIN: {truck.vin.slice(0, 8)}...{truck.vin.slice(-5)}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-slate-300 font-mono mb-3">VIN not scanned</p>
                   )}
+                  <div className="text-[12px] text-slate-400 mb-3">
+                    {truck.mileage.toLocaleString()} mi
+                    {latest?.date && (
+                      <span className="ml-2 text-slate-300">· Inspected {latest.date}</span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Vehicle image — absolutely positioned, non-interactive */}
+                {vehicleImg && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[148px] sm:w-[160px] pointer-events-none select-none">
+                    <Image
+                      src={vehicleImg}
+                      alt={truck.model}
+                      width={320}
+                      height={180}
+                      className="w-full h-auto object-contain drop-shadow-sm"
+                      priority={false}
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-end pt-3 border-t border-slate-100">
                   <span className="text-[12px] font-medium text-indigo-600 group-hover:text-indigo-800 transition-colors">
                     View Details →
