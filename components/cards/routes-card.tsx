@@ -3,12 +3,6 @@
 import Link from "next/link";
 import { Map, ArrowRight } from "lucide-react";
 
-const routes = [
-  { label: "Primary routes", count: 10, total: 12, color: "bg-indigo-500" },
-  { label: "Backup assigned", count: 2, total: 12, color: "bg-amber-400" },
-  { label: "On-time dispatch", count: 12, total: 12, color: "bg-emerald-500" },
-];
-
 export default function RoutesCard() {
   return (
     <Link
@@ -26,41 +20,28 @@ export default function RoutesCard() {
           </div>
           <div>
             <p className="text-[13px] font-bold text-slate-900 leading-none">Route Coverage</p>
-            <p className="text-[11px] text-slate-400 mt-1">Daily assignments · Nov 25</p>
+            <p className="text-[11px] text-slate-400 mt-1">Daily route assignments</p>
           </div>
         </div>
-        <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-          100%
+        <span className="bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+          No Data
         </span>
       </div>
 
       {/* Big number */}
       <div>
-        <p className="text-[42px] font-extrabold text-slate-900 leading-none tracking-tight">12 / 12</p>
-        <p className="text-[12px] text-slate-400 mt-1 font-medium">Routes covered · 2 backup drivers available</p>
+        <p className="text-[42px] font-extrabold text-slate-400 leading-none tracking-tight">— / —</p>
+        <p className="text-[12px] text-slate-400 mt-1 font-medium">No route records yet</p>
       </div>
 
-      {/* Progress bars */}
-      <div className="flex flex-col gap-3">
-        {routes.map((r) => (
-          <div key={r.label}>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-medium text-slate-500">{r.label}</span>
-              <span className="text-[11px] font-bold text-slate-700">{r.count}/{r.total}</span>
-            </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full ${r.color} rounded-full transition-all duration-500`}
-                style={{ width: `${(r.count / r.total) * 100}%` }}
-              />
-            </div>
-          </div>
-        ))}
+      {/* Empty state */}
+      <div className="bg-slate-50 rounded-xl px-4 py-3 text-center flex-1 flex items-center justify-center">
+        <p className="text-[12px] text-slate-400">Route tracking coming soon</p>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-        <p className="text-[11px] text-slate-400">Last report: Nov 25, 2025</p>
+        <p className="text-[11px] text-slate-400">Q2 2026</p>
         <span className="flex items-center gap-1 text-[12px] font-semibold text-indigo-600 group-hover:gap-1.5 transition-all duration-150">
           View report <ArrowRight className="w-3.5 h-3.5" />
         </span>

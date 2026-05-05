@@ -3,18 +3,43 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid } from "lucide-react";
+import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog } from "lucide-react";
 
-const navItems = [
-  { icon: LayoutGrid, label: "Overview", href: "/" },
-  { icon: Truck, label: "Fleet", href: "/reports/fleet" },
-  { icon: DollarSign, label: "Payroll", href: "/reports/payroll" },
-  { icon: Users, label: "Drivers", href: "/reports/drivers" },
-  { icon: Map, label: "Routes", href: "/reports/routes" },
+const reportItems = [
+  { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
+  { icon: Truck, label: "Fleet", href: "/reports/fleet", exact: true },
+  { icon: DollarSign, label: "Payroll", href: "/reports/payroll", exact: true },
+  { icon: Users, label: "Drivers", href: "/reports/drivers", exact: true },
+  { icon: Map, label: "Routes", href: "/reports/routes", exact: true },
+];
+
+const complianceItems = [
+  { icon: ClipboardCheck, label: "Inspections", href: "/fleet", exact: false },
+];
+
+const adminItems = [
+  { icon: UserCog, label: "Driver Accounts", href: "/wayne-board/drivers", exact: true },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+
+  function NavLink({ icon: Icon, label, href, exact }: { icon: React.ElementType; label: string; href: string; exact: boolean }) {
+    const active = exact ? pathname === href : pathname.startsWith(href);
+    return (
+      <Link
+        href={href}
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+          active
+            ? "bg-slate-950 text-white"
+            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+        }`}
+      >
+        <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
+        {label}
+      </Link>
+    );
+  }
 
   return (
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
@@ -32,23 +57,27 @@ export default function Sidebar() {
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
           Reports
         </p>
-        {navItems.map(({ icon: Icon, label, href }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-                active
-                  ? "bg-slate-950 text-white"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
-              {label}
-            </Link>
-          );
-        })}
+        {reportItems.map((item) => (
+          <NavLink key={item.href} {...item} />
+        ))}
+
+        <div className="my-3 border-t border-slate-100" />
+
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
+          Compliance
+        </p>
+        {complianceItems.map((item) => (
+          <NavLink key={item.href} {...item} />
+        ))}
+
+        <div className="my-3 border-t border-slate-100" />
+
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
+          Admin
+        </p>
+        {adminItems.map((item) => (
+          <NavLink key={item.href} {...item} />
+        ))}
       </nav>
 
       {/* Bottom */}

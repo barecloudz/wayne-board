@@ -1,0 +1,65 @@
+"use server";
+
+import { db } from "@/lib/db";
+import { inspections, inspectionResults } from "@/lib/schema";
+
+export type ItemResult = {
+  componentId: number;
+  status: string;
+  notes?: string;
+  dateRepaired?: string;
+};
+
+export async function saveInspection(data: {
+  vehicleId: number;
+  inspectorName: string;
+  inspectorId: string;
+  stationName: string;
+  stationNumber: string;
+  inspectionDate: string;
+  outOfService: boolean;
+  outOfServiceDocs?: string;
+  results: ItemResult[];
+  notificationDate?: string;
+  notifiedAOBCName?: string;
+  agreedRepairDate?: string;
+}) {
+  const hasDefects = data.results.some((r) => r.status === "Repair Needed");
+  const status = data.outOfService
+    ? "Out of Service"
+    : hasDefects
+    ? "Defects Pending Repair"
+    : "Complete";
+
+  const [inspection] = await db
+    .insert(inspections)
+    .values({
+      vehicleId:        data.vehicleId,
+      inspectorName:    data.inspectorName,
+      inspectorId:      data.inspectorId,
+      stationName:      data.stationName,
+      stationNumber:    data.stationNumber,
+      inspectionDate:   data.inspectionDate,
+      outOfService:     data.outOfService,
+      outOfServiceDocs: data.outOfServiceDocs,
+      notificationDate: data.notificationDate,
+      notifiedAOBCName: data.notifiedAOBCName,
+      agreedRepairDate: data.agreedRepairDate,
+      status,
+    })
+    .returning({ id: inspections.id });
+
+  if (data.results.length > 0) {
+    await db.insert(inspectionResults).values(
+      data.results.map((r) => ({
+        inspectionId: inspection.id,
+        componentId:  r.componentId,
+        status:       r.status,
+        notes:        r.notes,
+        dateRepaired: r.dateRepaired,
+      }))
+    );
+  }
+
+  return { inspectionId: inspection.id, status };
+}
