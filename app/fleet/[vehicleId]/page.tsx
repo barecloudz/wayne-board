@@ -7,6 +7,7 @@ import { eq, desc } from "drizzle-orm";
 import { INSPECTION_COMPONENTS } from "@/lib/inspection-components";
 import { InspectionStatus } from "@/lib/inspection-types";
 import VehicleEditModal from "./vehicle-edit-modal";
+import InspectionActions from "./inspection-actions";
 
 const STATUS_STYLES: Record<InspectionStatus, { cell: string; dot: string; label: string }> = {
   OK:              { cell: "text-emerald-700", dot: "bg-emerald-400", label: "OK" },
@@ -72,16 +73,22 @@ export default async function VehicleDetailPage({
           <div className="flex gap-2 shrink-0 flex-wrap">
             <VehicleEditModal vehicle={vehicle} />
             {latestInspection ? (
-              <a
-                href={`/api/inspection-pdf/${latestInspection.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
-                  text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-300
-                  active:scale-[0.98] transition-all duration-150"
-              >
-                Generate PDF
-              </a>
+              <>
+                <InspectionActions
+                  inspectionId={latestInspection.id}
+                  vehicleId={vehicle.id}
+                />
+                <a
+                  href={`/api/inspection-pdf/${latestInspection.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200
+                    text-slate-600 bg-white hover:bg-slate-50 hover:border-slate-300
+                    active:scale-[0.98] transition-all duration-150"
+                >
+                  Generate PDF
+                </a>
+              </>
             ) : (
               <button disabled
                 className="px-4 py-2 rounded-lg text-[13px] font-semibold border border-slate-200

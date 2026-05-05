@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { inspections, inspectionResults } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 export type ItemResult = {
   componentId: number;
@@ -62,4 +63,23 @@ export async function saveInspection(data: {
   }
 
   return { inspectionId: inspection.id, status };
+}
+
+export async function deleteInspection(inspectionId: number) {
+  await db.delete(inspectionResults).where(eq(inspectionResults.inspectionId, inspectionId));
+  await db.delete(inspections).where(eq(inspections.id, inspectionId));
+}
+
+export async function updateInspectionStatus(
+  inspectionId: number,
+  patch: {
+    outOfService?: boolean;
+    outOfServiceDocs?: string | null;
+    notificationDate?: string | null;
+    notifiedAOBCName?: string | null;
+    agreedRepairDate?: string | null;
+    status?: string;
+  }
+) {
+  await db.update(inspections).set(patch).where(eq(inspections.id, inspectionId));
 }

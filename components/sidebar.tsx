@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog } from "lucide-react";
+import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star } from "lucide-react";
 
 const reportItems = [
   { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
@@ -19,6 +19,7 @@ const complianceItems = [
 
 const adminItems = [
   { icon: UserCog, label: "Driver Accounts", href: "/wayne-board/drivers", exact: true },
+  { icon: Star,    label: "Ryde Scores",     href: "/wayne-board/ryde",    exact: true },
 ];
 
 export default function Sidebar() {

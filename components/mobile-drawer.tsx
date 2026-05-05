@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
-  ClipboardCheck, UserCog, ChevronRight,
+  ClipboardCheck, UserCog, ChevronRight, Star,
 } from "lucide-react";
 
 const reportItems = [
@@ -23,6 +23,7 @@ const complianceItems = [
 
 const adminItems = [
   { icon: UserCog, label: "Driver Accounts", href: "/wayne-board/drivers", exact: true },
+  { icon: Star,    label: "Ryde Scores",     href: "/wayne-board/ryde",    exact: true },
 ];
 
 export default function MobileDrawer() {

@@ -66,3 +66,15 @@ export const rydeScores = pgTable("ryde_scores", {
   positiveReviews: integer("positive_reviews").notNull().default(0),
   createdAt:       timestamp("created_at").defaultNow(),
 });
+
+// ── Ryde Reviews ──────────────────────────────────────────────────────────────
+export const rydeReviews = pgTable("ryde_reviews", {
+  id:          serial("id").primaryKey(),
+  driverId:    text("driver_id").notNull().references(() => drivers.driverId),
+  type:        text("type").notNull(),        // "positive" | "negative"
+  category:    text("category"),              // e.g. "customer_feedback", "on_time", "safety"
+  content:     text("content").notNull(),
+  week:        text("week"),                  // "2026-W18" (optional, ties to a score week)
+  improvement: text("improvement"),           // improvement tip for negatives
+  createdAt:   timestamp("created_at").defaultNow(),
+});
