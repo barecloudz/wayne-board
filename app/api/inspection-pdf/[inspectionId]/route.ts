@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { db } from "@/lib/db";
 import { inspections, inspectionResults, vehicles } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { M121Document } from "@/lib/m121-pdf";
-import React from "react";
+import { stampM121 } from "@/lib/m121-stamp";
 
 export async function GET(
   _req: NextRequest,
@@ -35,14 +33,37 @@ export async function GET(
     .from(inspectionResults)
     .where(eq(inspectionResults.inspectionId, id));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buffer = await renderToBuffer(
-    React.createElement(M121Document, { inspection, vehicle, results }) as any
+  const pdfBytes = await stampM121(
+    {
+      inspectorName:    inspection.inspectorName,
+      inspectorId:      inspection.inspectorId ?? "",
+      stationName:      inspection.stationName,
+      stationNumber:    inspection.stationNumber,
+      inspectionDate:   inspection.inspectionDate,
+      outOfService:     inspection.outOfService ?? false,
+      outOfServiceDocs: inspection.outOfServiceDocs ?? null,
+      notificationDate: inspection.notificationDate ?? null,
+      notifiedAOBCName: inspection.notifiedAOBCName ?? null,
+      agreedRepairDate: inspection.agreedRepairDate ?? null,
+      status:           inspection.status,
+    },
+    {
+      unitNumber: vehicle.unitNumber,
+      make:       vehicle.make,
+      model:      vehicle.model,
+      year:       vehicle.year,
+    },
+    results.map((r) => ({
+      componentId:  r.componentId,
+      status:       r.status,
+      dateRepaired: r.dateRepaired ?? null,
+      notes:        r.notes ?? null,
+    }))
   );
 
   const filename = `M121_${vehicle.unitNumber.replace(/\s+/g, "_")}_${inspection.inspectionDate}.pdf`;
 
-  return new NextResponse(buffer as unknown as BodyInit, {
+  return new NextResponse(pdfBytes as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}"`,
