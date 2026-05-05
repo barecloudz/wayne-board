@@ -99,80 +99,64 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-      });
+      const [{ BrowserMultiFormatReader }, { DecodeHintType }, { BarcodeFormat }] =
+        await Promise.all([
+          import("@zxing/browser"),
+          import("@zxing/library"),
+          import("@zxing/library"),
+        ]);
 
-      streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.PDF_417,
+        BarcodeFormat.DATA_MATRIX,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+
+      const reader = new BrowserMultiFormatReader(hints);
+
+      const controls = await reader.decodeFromConstraints(
+        {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            // continuous autofocus — critical for barcode scanning
+            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
+          },
+        },
+        videoRef.current,
+        (result) => {
+          if (result && !detectingRef.current) {
+            detectingRef.current = true;
+            controls.stop();
+            handleDetected(result.getText());
+          }
+        }
+      );
+
+      // Store stream ref for torch
+      const stream = videoRef.current.srcObject as MediaStream | null;
+      if (stream) streamRef.current = stream;
+
+      // Apply continuous autofocus on the live track
+      try {
+        const track = stream?.getVideoTracks()[0];
+        if (track) {
+          await track.applyConstraints({
+            advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet],
+          });
+        }
+      } catch { /* autofocus not supported — ignore */ }
 
       setState({ type: "scanning" });
-
-      // ── Try native BarcodeDetector first (Chrome, Edge, Android) ──
-      if ("BarcodeDetector" in window) {
-        const detector = new (window as { BarcodeDetector: new (opts: object) => { detect: (el: HTMLVideoElement) => Promise<{ rawValue: string }[]> } }).BarcodeDetector({
-          formats: ["code_39", "code_128", "pdf417", "data_matrix"],
-        });
-
-        const scanFrame = async () => {
-          if (detectingRef.current || !videoRef.current) return;
-          try {
-            const codes = await detector.detect(videoRef.current);
-            if (codes.length > 0) {
-              detectingRef.current = true;
-              stopCamera();
-              handleDetected(codes[0].rawValue);
-              return;
-            }
-          } catch { /* keep scanning */ }
-          animFrameRef.current = requestAnimationFrame(scanFrame);
-        };
-
-        animFrameRef.current = requestAnimationFrame(scanFrame);
-
-      } else {
-        // ── Fall back to ZXing with TRY_HARDER hints ──
-        const [{ BrowserMultiFormatReader }, { DecodeHintType }, { BarcodeFormat }] =
-          await Promise.all([
-            import("@zxing/browser"),
-            import("@zxing/library"),
-            import("@zxing/library"),
-          ]);
-
-        const hints = new Map();
-        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-          BarcodeFormat.CODE_39,
-          BarcodeFormat.CODE_128,
-          BarcodeFormat.PDF_417,
-          BarcodeFormat.DATA_MATRIX,
-        ]);
-        hints.set(DecodeHintType.TRY_HARDER, true);
-
-        const reader = new BrowserMultiFormatReader(hints);
-
-        const controls = await reader.decodeFromStream(
-          stream,
-          videoRef.current,
-          (result) => {
-            if (result && !detectingRef.current) {
-              detectingRef.current = true;
-              controls.stop();
-              stopCamera();
-              handleDetected(result.getText());
-            }
-          }
-        );
-      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setState({
         type: "error",
-        message: msg.includes("Permission")
+        message: msg.toLowerCase().includes("permission")
           ? "Camera permission denied. Please allow access and try again."
           : `Camera error: ${msg}`,
       });

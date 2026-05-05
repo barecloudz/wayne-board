@@ -1,10 +1,46 @@
 import Link from "next/link";
 import AppShell from "@/components/app-shell";
-import { getVehicles } from "@/lib/actions/vehicles";
+import { db } from "@/lib/db";
+import { vehicles, inspections } from "@/lib/schema";
+import { desc, eq } from "drizzle-orm";
 import FleetHeader from "./fleet-header";
 
+type InspectionStatus = "Complete" | "Defects Pending Repair" | "Out of Service" | "Draft";
+
+const STATUS_BADGE: Record<InspectionStatus | "None", { label: string; className: string }> = {
+  Complete:               { label: "Inspected ✓",        className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  "Defects Pending Repair": { label: "Defects Pending",   className: "bg-amber-50 text-amber-700 border-amber-200" },
+  "Out of Service":       { label: "Out of Service",      className: "bg-red-50 text-red-700 border-red-200" },
+  Draft:                  { label: "Draft",               className: "bg-slate-100 text-slate-500 border-slate-200" },
+  None:                   { label: "Inspection Due",      className: "bg-slate-100 text-slate-500 border-slate-200" },
+};
+
 export default async function FleetPage() {
-  const trucks = await getVehicles();
+  const trucks = await db.select().from(vehicles).orderBy(vehicles.unitNumber);
+
+  // Get latest inspection per vehicle
+  const allInspections = await db
+    .select({
+      vehicleId: inspections.vehicleId,
+      status:    inspections.status,
+      inspectionDate: inspections.inspectionDate,
+    })
+    .from(inspections)
+    .orderBy(desc(inspections.createdAt));
+
+  const latestByVehicle = new Map<number, { status: string; date: string }>();
+  for (const insp of allInspections) {
+    if (!latestByVehicle.has(insp.vehicleId)) {
+      latestByVehicle.set(insp.vehicleId, { status: insp.status, date: insp.inspectionDate });
+    }
+  }
+
+  // Stats
+  const inspectedCount  = trucks.filter(t => latestByVehicle.get(t.id)?.status === "Complete").length;
+  const defectsCount    = trucks.filter(t => latestByVehicle.get(t.id)?.status === "Defects Pending Repair").length;
+  const oosCount        = trucks.filter(t => latestByVehicle.get(t.id)?.status === "Out of Service").length;
+  const doneCount       = inspectedCount + defectsCount + oosCount;
+  const progressPct     = trucks.length > 0 ? Math.round((doneCount / trucks.length) * 100) : 0;
 
   return (
     <AppShell>
@@ -28,10 +64,10 @@ export default async function FleetPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "Total Trucks",       value: trucks.length,                                          dot: "bg-slate-400",   accent: "text-slate-900" },
-            { label: "Inspected Q2",       value: 0,                                                      dot: "bg-indigo-400",  accent: "text-indigo-600" },
-            { label: "Defects Pending",    value: 0,                                                      dot: "bg-amber-400",   accent: "text-amber-600" },
-            { label: "Out of Service",     value: 0,                                                      dot: "bg-red-400",     accent: "text-red-600" },
+            { label: "Total Trucks",    value: trucks.length,  dot: "bg-slate-400",   accent: "text-slate-900" },
+            { label: "Inspected Q2",    value: inspectedCount, dot: "bg-emerald-400", accent: "text-emerald-600" },
+            { label: "Defects Pending", value: defectsCount,   dot: "bg-amber-400",   accent: "text-amber-600" },
+            { label: "Out of Service",  value: oosCount,       dot: "bg-red-400",     accent: "text-red-600" },
           ].map((kpi) => (
             <div key={kpi.label}
               className="bg-white rounded-xl border border-slate-200/80 px-5 py-4
@@ -57,51 +93,68 @@ export default async function FleetPage() {
               <span className="text-[11px] text-slate-400">Next cycle begins July 1, 2026</span>
             </div>
             <p className="text-[13px] font-semibold text-slate-700 mb-2">
-              0 of {trucks.length} trucks inspected this quarter
+              {doneCount} of {trucks.length} trucks inspected this quarter
             </p>
             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: "0%" }} />
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-400 transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
           </div>
-          <p className="text-[12px] text-slate-400 shrink-0">Inspections begin once workflow is live.</p>
+          <span className={`text-[12px] font-semibold shrink-0 ${progressPct === 100 ? "text-emerald-600" : "text-slate-400"}`}>
+            {progressPct === 100 ? "All trucks done ✓" : `${progressPct}% complete`}
+          </span>
         </div>
 
         {/* Truck grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trucks.map((truck) => (
-            <Link
-              key={truck.id}
-              href={`/fleet/${truck.id}`}
-              className="group block bg-white rounded-2xl border border-slate-200/80 p-5
-                shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]
-                hover:shadow-[0_8px_28px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.05)]
-                hover:-translate-y-0.5 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-1">
-                <span className="text-[22px] font-extrabold text-slate-900 tracking-tight leading-none">
-                  {truck.unitNumber}
-                </span>
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full
-                  bg-slate-100 text-slate-500 border border-slate-200/80">
-                  Inspection Due
-                </span>
-              </div>
-              <p className="text-[13px] text-slate-500 mb-1">
-                {truck.year} {truck.make} {truck.model}
-              </p>
-              <p className="text-[11px] text-slate-400 font-mono mb-3">
-                VIN: {truck.vin.slice(0, 8)}...{truck.vin.slice(-5)}
-              </p>
-              <div className="text-[12px] text-slate-400 mb-3">
-                {truck.mileage.toLocaleString()} mi
-              </div>
-              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
-                <span className="text-[12px] font-medium text-indigo-600 group-hover:text-indigo-800 transition-colors">
-                  View Details →
-                </span>
-              </div>
-            </Link>
-          ))}
+          {trucks.map((truck) => {
+            const latest = latestByVehicle.get(truck.id);
+            const statusKey = (latest?.status ?? "None") as InspectionStatus | "None";
+            const badge = STATUS_BADGE[statusKey] ?? STATUS_BADGE.None;
+
+            return (
+              <Link
+                key={truck.id}
+                href={`/fleet/${truck.id}`}
+                className="group block bg-white rounded-2xl border border-slate-200/80 p-5
+                  shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]
+                  hover:shadow-[0_8px_28px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.05)]
+                  hover:-translate-y-0.5 transition-all duration-300"
+              >
+                <div className="flex items-start justify-between mb-1">
+                  <span className="text-[22px] font-extrabold text-slate-900 tracking-tight leading-none">
+                    {truck.unitNumber}
+                  </span>
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${badge.className}`}>
+                    {badge.label}
+                  </span>
+                </div>
+                <p className="text-[13px] text-slate-500 mb-1">
+                  {truck.year} {truck.make} {truck.model}
+                </p>
+                {truck.vin && truck.vin.length === 17 ? (
+                  <p className="text-[11px] text-slate-400 font-mono mb-3">
+                    VIN: {truck.vin.slice(0, 8)}...{truck.vin.slice(-5)}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-300 font-mono mb-3">VIN not scanned</p>
+                )}
+                <div className="text-[12px] text-slate-400 mb-3">
+                  {truck.mileage.toLocaleString()} mi
+                  {latest?.date && (
+                    <span className="ml-2 text-slate-300">· Inspected {latest.date}</span>
+                  )}
+                </div>
+                <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+                  <span className="text-[12px] font-medium text-indigo-600 group-hover:text-indigo-800 transition-colors">
+                    View Details →
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
 
         <p className="mt-8 text-center text-[11px] text-slate-400">
