@@ -70,6 +70,17 @@ export async function deleteInspection(inspectionId: number) {
   await db.delete(inspections).where(eq(inspections.id, inspectionId));
 }
 
+export async function updateRepairDetails(
+  resultId: number,
+  repairInstructions: string | null,
+  repairCost: number | null
+) {
+  await db
+    .update(inspectionResults)
+    .set({ repairInstructions, repairCost })
+    .where(eq(inspectionResults.id, resultId));
+}
+
 export async function updateInspectionStatus(
   inspectionId: number,
   patch: {

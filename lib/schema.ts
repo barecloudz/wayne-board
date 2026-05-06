@@ -48,12 +48,14 @@ export const inspections = pgTable("inspections", {
 
 // ── Inspection Item Results ───────────────────────────────────────────────────
 export const inspectionResults = pgTable("inspection_results", {
-  id:           serial("id").primaryKey(),
-  inspectionId: integer("inspection_id").notNull().references(() => inspections.id),
-  componentId:  integer("component_id").notNull(),
-  status:       text("status").notNull(),              // "OK" | "Repair Needed" | "N/A" | "A/D"
-  dateRepaired: text("date_repaired"),
-  notes:        text("notes"),
+  id:                 serial("id").primaryKey(),
+  inspectionId:       integer("inspection_id").notNull().references(() => inspections.id),
+  componentId:        integer("component_id").notNull(),
+  status:             text("status").notNull(),         // "OK" | "Repair Needed" | "N/A" | "A/D"
+  dateRepaired:       text("date_repaired"),
+  notes:              text("notes"),
+  repairInstructions: text("repair_instructions"),      // how to fix
+  repairCost:         real("repair_cost"),              // estimated cost (optional)
 });
 
 // ── Ryde Scores ───────────────────────────────────────────────────────────────

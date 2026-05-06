@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
-  ClipboardCheck, UserCog, ChevronRight, Star,
+  ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
 } from "lucide-react";
 
 const reportItems = [
@@ -18,7 +18,8 @@ const reportItems = [
 ];
 
 const complianceItems = [
-  { icon: ClipboardCheck, label: "Inspections", href: "/fleet", exact: false },
+  { icon: ClipboardCheck, label: "Inspections", href: "/fleet",    exact: false },
+  { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
 ];
 
 const adminItems = [
