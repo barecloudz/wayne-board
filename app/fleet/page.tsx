@@ -5,13 +5,7 @@ import { db } from "@/lib/db";
 import { vehicles, inspections } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";
 import FleetHeader from "./fleet-header";
-
-function getVehicleImage(model: string): string | null {
-  const m = model.toLowerCase();
-  if (m.includes("transit")) return "/transit.png";
-  if (m.includes("p1000") || m.includes("promaster 1000")) return "/p1000.png";
-  return null;
-}
+import { getVehicleImage } from "@/lib/vehicle-image";
 
 type InspectionStatus = "Complete" | "Defects Pending Repair" | "Out of Service" | "Draft";
 
@@ -24,17 +18,14 @@ const STATUS_BADGE: Record<InspectionStatus | "None", { label: string; className
 };
 
 export default async function FleetPage() {
-  const trucks = await db.select().from(vehicles).orderBy(vehicles.unitNumber);
-
-  // Get latest inspection per vehicle
-  const allInspections = await db
-    .select({
-      vehicleId: inspections.vehicleId,
-      status:    inspections.status,
+  const [trucks, allInspections] = await Promise.all([
+    db.select().from(vehicles).orderBy(vehicles.unitNumber),
+    db.select({
+      vehicleId:      inspections.vehicleId,
+      status:         inspections.status,
       inspectionDate: inspections.inspectionDate,
-    })
-    .from(inspections)
-    .orderBy(desc(inspections.createdAt));
+    }).from(inspections).orderBy(desc(inspections.createdAt)),
+  ]);
 
   const latestByVehicle = new Map<number, { status: string; date: string }>();
   for (const insp of allInspections) {

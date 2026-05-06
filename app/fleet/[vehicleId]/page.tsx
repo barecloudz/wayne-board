@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
@@ -9,6 +10,7 @@ import { InspectionStatus } from "@/lib/inspection-types";
 import VehicleEditModal from "./vehicle-edit-modal";
 import InspectionActions from "./inspection-actions";
 import VehicleDeleteButton from "./vehicle-delete-button";
+import { getVehicleImage } from "@/lib/vehicle-image";
 
 const STATUS_STYLES: Record<InspectionStatus, { cell: string; dot: string; label: string }> = {
   OK:              { cell: "text-emerald-700", dot: "bg-emerald-400", label: "OK" },
@@ -28,15 +30,13 @@ export default async function VehicleDetailPage({
   const id = parseInt(vehicleId);
   if (isNaN(id)) notFound();
 
-  const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id)).limit(1);
-  if (!vehicle) notFound();
+  const [[vehicle], [latestInspection]] = await Promise.all([
+    db.select().from(vehicles).where(eq(vehicles.id, id)).limit(1),
+    db.select().from(inspections).where(eq(inspections.vehicleId, id))
+      .orderBy(desc(inspections.inspectionDate)).limit(1),
+  ]);
 
-  const [latestInspection] = await db
-    .select()
-    .from(inspections)
-    .where(eq(inspections.vehicleId, id))
-    .orderBy(desc(inspections.inspectionDate))
-    .limit(1);
+  if (!vehicle) notFound();
 
   const results = latestInspection
     ? await db
@@ -44,6 +44,8 @@ export default async function VehicleDetailPage({
         .from(inspectionResults)
         .where(eq(inspectionResults.inspectionId, latestInspection.id))
     : [];
+
+  const vehicleImg = getVehicleImage(vehicle.model);
 
   return (
     <AppShell>
@@ -57,18 +59,32 @@ export default async function VehicleDetailPage({
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
-          <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
-              742 Logistics · FedEx Ground Contractor
-            </p>
-            <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
-              {vehicle.unitNumber}
-            </h1>
-            <p className="text-[14px] text-slate-500 mt-1">
-              {vehicle.year} {vehicle.make} {vehicle.model} &middot; {vehicle.mileage.toLocaleString()} mi
-            </p>
-            {vehicle.vin && (
-              <p className="text-[12px] text-slate-400 mt-0.5 font-mono">VIN: {vehicle.vin}</p>
+          <div className="flex items-end gap-6">
+            <div>
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                742 Logistics · FedEx Ground Contractor
+              </p>
+              <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
+                {vehicle.unitNumber}
+              </h1>
+              <p className="text-[14px] text-slate-500 mt-1">
+                {vehicle.year} {vehicle.make} {vehicle.model} &middot; {vehicle.mileage.toLocaleString()} mi
+              </p>
+              {vehicle.vin && (
+                <p className="text-[12px] text-slate-400 mt-0.5 font-mono">VIN: {vehicle.vin}</p>
+              )}
+            </div>
+            {vehicleImg && (
+              <div className="hidden sm:block shrink-0 select-none pointer-events-none">
+                <Image
+                  src={vehicleImg}
+                  alt={vehicle.model}
+                  width={220}
+                  height={120}
+                  className="w-[180px] lg:w-[220px] h-auto object-contain drop-shadow-sm"
+                  priority
+                />
+              </div>
             )}
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
