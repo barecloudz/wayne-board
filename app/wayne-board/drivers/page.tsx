@@ -37,6 +37,9 @@ export default function DriversPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [resetTarget, setResetTarget] = useState<{ id: number; driverId: string } | null>(null);
+  const [resetPassword, setResetPassword] = useState("Fedex1234#");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   async function refresh() {
@@ -100,12 +103,21 @@ export default function DriversPage() {
     });
   }
 
-  function handleResetPassword(id: number) {
+  function openResetModal(id: number) {
+    const driver = drivers.find((d) => d.id === id);
+    setResetTarget({ id, driverId: driver?.driverId ?? "" });
+    setResetPassword("Fedex1234#");
+    setShowResetPassword(false);
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  function handleResetPassword() {
+    if (!resetTarget || !resetPassword.trim()) return;
     startTransition(async () => {
-      const result = await resetDriverPassword(id);
-      setCreated({ driverId: drivers.find((d) => d.id === id)?.driverId ?? "", password: result.tempPassword });
-      setMenuOpen(null);
-      setMenuPos(null);
+      const result = await resetDriverPassword(resetTarget.id, resetPassword.trim());
+      setCreated({ driverId: resetTarget.driverId, password: result.tempPassword });
+      setResetTarget(null);
       setShowPassword(false);
     });
   }
@@ -329,7 +341,7 @@ export default function DriversPage() {
                     : <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Activate</>}
                 </button>
                 <button
-                  onClick={() => handleResetPassword(driver.id)}
+                  onClick={() => openResetModal(driver.id)}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
@@ -338,6 +350,59 @@ export default function DriversPage() {
               </>
             );
           })()}
+        </div>
+      )}
+
+      {/* Reset password modal */}
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Reset Password</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Set a new temporary password for <span className="font-semibold text-slate-600">{resetTarget.driverId}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">New Password</label>
+              <div className="relative mt-1.5">
+                <input
+                  type={showResetPassword ? "text" : "password"}
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  className={INPUT_CLS + " pr-10"}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResetPassword((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">Driver will be prompted to change this on first login.</p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setResetTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={!resetPassword.trim() || isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Reset Password
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

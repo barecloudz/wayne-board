@@ -78,5 +78,20 @@ export const rydeReviews = pgTable("ryde_reviews", {
   content:     text("content").notNull(),
   week:        text("week"),                  // "2026-W18" (optional, ties to a score week)
   improvement: text("improvement"),           // improvement tip for negatives
+  atFault:     boolean("at_fault").notNull().default(false), // driver at fault — breaks milestone streak
   createdAt:   timestamp("created_at").defaultNow(),
+});
+
+// ── Milestone Rewards ─────────────────────────────────────────────────────────
+export const milestoneRewards = pgTable("milestone_rewards", {
+  id:           serial("id").primaryKey(),
+  name:         text("name").notNull(),
+  description:  text("description"),
+  daysRequired: integer("days_required").notNull(),
+  type:         text("type").notNull().default("physical"), // "physical" | "bonus"
+  bonusAmount:  real("bonus_amount"),
+  icon:         text("icon").notNull().default("🏅"),
+  active:       boolean("active").notNull().default(true),
+  sortOrder:    integer("sort_order").notNull().default(0),
+  createdAt:    timestamp("created_at").defaultNow(),
 });

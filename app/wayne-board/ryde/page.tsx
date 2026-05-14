@@ -12,7 +12,7 @@ import {
 
 type Driver   = { id: number; driverId: string; name: string };
 type Score    = { id: number; driverId: string; score: number; week: string; deliveries: number; positiveReviews: number; createdAt: Date | null };
-type Review   = { id: number; driverId: string; type: string; category: string | null; content: string; week: string | null; improvement: string | null; createdAt: Date | null };
+type Review   = { id: number; driverId: string; type: string; category: string | null; content: string; week: string | null; improvement: string | null; atFault: boolean; createdAt: Date | null };
 
 const CATEGORIES = ["Customer Feedback", "On-Time Delivery", "Scan Compliance", "Safety", "Professionalism", "Other"];
 
@@ -46,6 +46,7 @@ export default function RydePage() {
   const [rContent, setRContent]   = useState("");
   const [rWeek, setRWeek]         = useState(currentWeek());
   const [rImprovement, setRImprovement] = useState("");
+  const [rAtFault, setRAtFault]   = useState(false);
 
   async function refresh() {
     const [d, s, r] = await Promise.all([getRydeDrivers(), getRydeScores(), getRydeReviews()]);
@@ -83,10 +84,11 @@ export default function RydePage() {
         content:     rContent.trim(),
         week:        rWeek || null,
         improvement: rType === "negative" && rImprovement.trim() ? rImprovement.trim() : null,
+        atFault:     rType === "negative" ? rAtFault : false,
       });
       setShowReview(false);
       setRDriver(""); setRType("positive"); setRCategory(CATEGORIES[0]);
-      setRContent(""); setRWeek(currentWeek()); setRImprovement("");
+      setRContent(""); setRWeek(currentWeek()); setRImprovement(""); setRAtFault(false);
       await refresh();
     });
   }
@@ -346,15 +348,29 @@ export default function RydePage() {
             />
           </FormField>
           {rType === "negative" && (
-            <FormField label="Improvement Tip (optional)">
-              <textarea
-                value={rImprovement}
-                onChange={(e) => setRImprovement(e.target.value)}
-                rows={2}
-                className={INPUT_CLS + " resize-none"}
-                placeholder="How can the driver improve in this area?"
-              />
-            </FormField>
+            <>
+              <FormField label="Improvement Tip (optional)">
+                <textarea
+                  value={rImprovement}
+                  onChange={(e) => setRImprovement(e.target.value)}
+                  rows={2}
+                  className={INPUT_CLS + " resize-none"}
+                  placeholder="How can the driver improve in this area?"
+                />
+              </FormField>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rAtFault}
+                  onChange={(e) => setRAtFault(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-slate-300 accent-red-500"
+                />
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-800">Driver at fault</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Checking this will reset the driver&apos;s milestone streak.</p>
+                </div>
+              </label>
+            </>
           )}
           <ModalFooter
             onCancel={() => setShowReview(false)}
@@ -406,6 +422,11 @@ function ReviewCard({ review, driverName, onDelete, isPending }: {
           {review.category && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200/80">
               {review.category}
+            </span>
+          )}
+          {review.atFault && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200/80">
+              At Fault
             </span>
           )}
           {review.week && (

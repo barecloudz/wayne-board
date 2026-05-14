@@ -13,10 +13,6 @@ function suggestDriverId(name: string): string {
     .slice(0, 20) || "driver";
 }
 
-function generateTempPassword(): string {
-  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#";
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-}
 
 export async function isDriverIdTaken(driverId: string) {
   const rows = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.driverId, driverId));
@@ -53,9 +49,8 @@ export async function setDriverActive(id: number, active: boolean) {
   await db.update(drivers).set({ active }).where(eq(drivers.id, id));
 }
 
-export async function resetDriverPassword(id: number) {
-  const tempPassword = generateTempPassword();
-  const passwordHash = await bcrypt.hash(tempPassword, 10);
+export async function resetDriverPassword(id: number, newPassword: string) {
+  const passwordHash = await bcrypt.hash(newPassword, 10);
   await db.update(drivers).set({ passwordHash }).where(eq(drivers.id, id));
-  return { tempPassword };
+  return { tempPassword: newPassword };
 }

@@ -43,8 +43,9 @@ export async function addRydeReview(data: {
   content: string;
   week: string | null;
   improvement: string | null;
+  atFault?: boolean;
 }) {
-  await db.insert(rydeReviews).values(data);
+  await db.insert(rydeReviews).values({ ...data, atFault: data.atFault ?? false });
 }
 
 export async function deleteRydeScore(id: number) {
