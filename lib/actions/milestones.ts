@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { milestoneRewards, rydeReviews, drivers } from "@/lib/schema";
-import { eq, asc } from "drizzle-orm";
+import { milestoneRewards, rydeReviews, drivers, driverMilestoneClaims } from "@/lib/schema";
+import { eq, asc, and } from "drizzle-orm";
 
 export async function getMilestoneRewards() {
   return db
@@ -44,6 +44,24 @@ export async function deleteMilestoneReward(id: number) {
 }
 
 // Returns each active driver with their current clean streak (days since last at-fault review)
+export async function getDriverClaims(driverId: string) {
+  return db
+    .select({ milestoneId: driverMilestoneClaims.milestoneId, earnedAt: driverMilestoneClaims.earnedAt })
+    .from(driverMilestoneClaims)
+    .where(eq(driverMilestoneClaims.driverId, driverId));
+}
+
+export async function claimMilestone(driverId: string, milestoneId: number) {
+  // Idempotent — only insert if not already claimed
+  const existing = await db
+    .select({ id: driverMilestoneClaims.id })
+    .from(driverMilestoneClaims)
+    .where(and(eq(driverMilestoneClaims.driverId, driverId), eq(driverMilestoneClaims.milestoneId, milestoneId)))
+    .limit(1);
+  if (existing.length > 0) return;
+  await db.insert(driverMilestoneClaims).values({ driverId, milestoneId });
+}
+
 export async function getDriverStreaks() {
   const allDrivers = await db
     .select({ id: drivers.id, driverId: drivers.driverId, name: drivers.name, createdAt: drivers.createdAt })

@@ -3,99 +3,122 @@
 import { useState, useEffect, useTransition } from "react";
 import AppShell from "@/components/app-shell";
 import {
-  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2,
+  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil,
 } from "lucide-react";
 import {
-  getRydeDrivers, getRydeScores, getRydeReviews,
-  addRydeScore, addRydeReview, deleteRydeScore, deleteRydeReview,
+  getRydeDrivers, getRydeReviews,
+  addRydeReview, deleteRydeReview, updateRydeReview,
+  getCompanyRating, setCompanyRating,
+  getRydeGoalMessage, setRydeGoalMessage,
 } from "@/lib/actions/ryde";
 
-type Driver   = { id: number; driverId: string; name: string };
-type Score    = { id: number; driverId: string; score: number; week: string; deliveries: number; positiveReviews: number; createdAt: Date | null };
-type Review   = { id: number; driverId: string; type: string; category: string | null; content: string; week: string | null; improvement: string | null; atFault: boolean; createdAt: Date | null };
+type Driver = { id: number; driverId: string; name: string };
+type Review = {
+  id: number; driverId: string; type: string; stars: number | null;
+  category: string | null; content: string; week: string | null;
+  improvement: string | null; atFault: boolean;
+  customerInitials: string | null; createdAt: Date | null;
+};
 
 const CATEGORIES = ["Customer Feedback", "On-Time Delivery", "Scan Compliance", "Safety", "Professionalism", "Other"];
+const RATING_GOAL = 4.0;
 
-function currentWeek() {
-  const now = new Date();
-  const jan1 = new Date(now.getFullYear(), 0, 1);
-  const week = Math.ceil(((now.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${now.getFullYear()}-W${String(week).padStart(2, "0")}`;
+function toISODate(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
+function dateToWeek(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+function currentWeekDate() {
+  return toISODate(new Date());
 }
 
 export default function RydePage() {
   const [drivers, setDrivers]   = useState<Driver[]>([]);
-  const [scores, setScores]     = useState<Score[]>([]);
   const [reviews, setReviews]   = useState<Review[]>([]);
-  const [tab, setTab]           = useState<"scores" | "reviews">("scores");
-  const [showScore, setShowScore]   = useState(false);
+  const [companyRating, setCompanyRatingState] = useState<number | null>(null);
+  const [editingRating, setEditingRating] = useState(false);
+  const [ratingInput, setRatingInput] = useState("");
+  const [goalMessage, setGoalMessageState] = useState("");
+  const [editingMessage, setEditingMessage] = useState(false);
+  const [messageInput, setMessageInput] = useState("");
   const [showReview, setShowReview] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  // Score form state
-  const [sDriver, setSDriver]     = useState("");
-  const [sScore, setSScore]       = useState("");
-  const [sWeek, setSWeek]         = useState(currentWeek());
-  const [sDeliveries, setSDeliveries] = useState("");
-  const [sPosReviews, setSPosReviews] = useState("");
 
   // Review form state
   const [rDriver, setRDriver]     = useState("");
   const [rType, setRType]         = useState<"positive" | "negative">("positive");
+  const [rStars, setRStars]       = useState(0);
   const [rCategory, setRCategory] = useState(CATEGORIES[0]);
   const [rContent, setRContent]   = useState("");
-  const [rWeek, setRWeek]         = useState(currentWeek());
+  const [rWeek, setRWeek]         = useState(currentWeekDate());
   const [rImprovement, setRImprovement] = useState("");
-  const [rAtFault, setRAtFault]   = useState(false);
+  const [rAtFault, setRAtFault]           = useState(false);
+  const [rCustomerInitials, setRCustomerInitials] = useState("");
+
+  // Edit review state
+  const [editReview, setEditReview] = useState<Review | null>(null);
+  const [eType, setEType]           = useState<"positive" | "negative">("positive");
+  const [eStars, setEStars]         = useState(0);
+  const [eCategory, setECategory]   = useState(CATEGORIES[0]);
+  const [eContent, setEContent]     = useState("");
+  const [eWeek, setEWeek]           = useState(currentWeekDate());
+  const [eImprovement, setEImprovement] = useState("");
+  const [eAtFault, setEAtFault]                 = useState(false);
+  const [eCustomerInitials, setECustomerInitials] = useState("");
 
   async function refresh() {
-    const [d, s, r] = await Promise.all([getRydeDrivers(), getRydeScores(), getRydeReviews()]);
+    const [d, r, cr, msg] = await Promise.all([getRydeDrivers(), getRydeReviews(), getCompanyRating(), getRydeGoalMessage()]);
     setDrivers(d as Driver[]);
-    setScores(s as Score[]);
     setReviews(r as Review[]);
+    setCompanyRatingState(cr);
+    setGoalMessageState(msg);
+  }
+
+  function handleSaveMessage() {
+    if (!messageInput.trim()) return;
+    startTransition(async () => {
+      await setRydeGoalMessage(messageInput.trim());
+      setGoalMessageState(messageInput.trim());
+      setEditingMessage(false);
+    });
+  }
+
+  function handleSaveRating() {
+    const n = parseFloat(ratingInput);
+    if (isNaN(n) || n < 1 || n > 5) return;
+    const rounded = Math.round(n * 10) / 10;
+    startTransition(async () => {
+      await setCompanyRating(rounded);
+      setCompanyRatingState(rounded);
+      setEditingRating(false);
+    });
   }
 
   useEffect(() => { refresh(); }, []);
 
-  function handleAddScore() {
-    if (!sDriver || !sScore || !sWeek) return;
-    startTransition(async () => {
-      await addRydeScore({
-        driverId:       sDriver,
-        score:          parseFloat(sScore),
-        week:           sWeek,
-        deliveries:     parseInt(sDeliveries) || 0,
-        positiveReviews: parseInt(sPosReviews) || 0,
-      });
-      setShowScore(false);
-      setSDriver(""); setSScore(""); setSWeek(currentWeek());
-      setSDeliveries(""); setSPosReviews("");
-      await refresh();
-    });
-  }
-
   function handleAddReview() {
-    if (!rDriver || !rContent.trim()) return;
+    if (!rDriver || !rContent.trim() || rStars === 0) return;
     startTransition(async () => {
       await addRydeReview({
-        driverId:    rDriver,
-        type:        rType,
-        category:    rCategory || null,
-        content:     rContent.trim(),
-        week:        rWeek || null,
-        improvement: rType === "negative" && rImprovement.trim() ? rImprovement.trim() : null,
-        atFault:     rType === "negative" ? rAtFault : false,
+        driverId:         rDriver,
+        type:             rType,
+        stars:            rStars,
+        category:         rCategory || null,
+        content:          rContent.trim(),
+        week:             rWeek ? dateToWeek(rWeek) : null,
+        improvement:      rType === "negative" && rImprovement.trim() ? rImprovement.trim() : null,
+        atFault:          rType === "negative" ? rAtFault : false,
+        customerInitials: rCustomerInitials.trim() || null,
       });
       setShowReview(false);
-      setRDriver(""); setRType("positive"); setRCategory(CATEGORIES[0]);
-      setRContent(""); setRWeek(currentWeek()); setRImprovement(""); setRAtFault(false);
-      await refresh();
-    });
-  }
-
-  function handleDeleteScore(id: number) {
-    startTransition(async () => {
-      await deleteRydeScore(id);
+      setRDriver(""); setRType("positive"); setRStars(0); setRCategory(CATEGORIES[0]);
+      setRContent(""); setRWeek(currentWeekDate()); setRImprovement(""); setRAtFault(false); setRCustomerInitials("");
       await refresh();
     });
   }
@@ -107,14 +130,45 @@ export default function RydePage() {
     });
   }
 
+  function openEditReview(review: Review) {
+    setEditReview(review);
+    setEType(review.type as "positive" | "negative");
+    setEStars(review.stars ?? 0);
+    setECategory(review.category ?? CATEGORIES[0]);
+    setEContent(review.content);
+    setEWeek(currentWeekDate());
+    setEImprovement(review.improvement ?? "");
+    setEAtFault(review.atFault);
+    setECustomerInitials(review.customerInitials ?? "");
+  }
+
+  function handleEditReview() {
+    if (!editReview || !eContent.trim() || eStars === 0) return;
+    startTransition(async () => {
+      await updateRydeReview(editReview.id, {
+        type:             eType,
+        stars:            eStars,
+        category:         eCategory || null,
+        content:          eContent.trim(),
+        week:             eWeek ? dateToWeek(eWeek) : null,
+        improvement:      eType === "negative" && eImprovement.trim() ? eImprovement.trim() : null,
+        atFault:          eType === "negative" ? eAtFault : false,
+        customerInitials: eCustomerInitials.trim() || null,
+      });
+      setEditReview(null);
+      await refresh();
+    });
+  }
+
   function driverName(driverId: string) {
     return drivers.find((d) => d.driverId === driverId)?.name ?? driverId;
   }
 
-  const scoreCount  = scores.length;
   const reviewCount = reviews.length;
   const posCount    = reviews.filter((r) => r.type === "positive").length;
   const negCount    = reviews.filter((r) => r.type === "negative").length;
+  const goalPct     = companyRating != null ? Math.min(100, (companyRating / RATING_GOAL) * 100) : 0;
+  const atGoal      = companyRating != null && companyRating >= RATING_GOAL;
 
   return (
     <AppShell>
@@ -134,29 +188,151 @@ export default function RydePage() {
             <button
               onClick={() => { setShowReview(true); }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
-                border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                bg-slate-900 text-white hover:bg-slate-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Review
             </button>
-            <button
-              onClick={() => { setShowScore(true); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
-                bg-slate-900 text-white hover:bg-slate-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Score
-            </button>
+          </div>
+        </div>
+
+        {/* Team goal message — editable */}
+        <div className="mb-3 flex items-start justify-between gap-4 px-1">
+          {editingMessage ? (
+            <div className="flex-1 flex flex-col gap-2">
+              <textarea
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                rows={2}
+                autoFocus
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveMessage}
+                  disabled={isPending || !messageInput.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                >
+                  {isPending ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={() => setEditingMessage(false)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[13px] text-slate-500 flex-1">{goalMessage}</p>
+              <button
+                onClick={() => { setMessageInput(goalMessage); setEditingMessage(true); }}
+                className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 underline underline-offset-2 shrink-0 transition-colors"
+              >
+                Edit message
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Company Rating Goal Banner */}
+        <div className={`mb-6 rounded-2xl px-6 py-5 border ${
+          atGoal
+            ? "bg-emerald-50 border-emerald-200"
+            : "bg-white border-slate-200/80"
+        } shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]`}>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                Company Ryde Rating
+              </p>
+              {editingRating ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="number"
+                    min="1" max="5" step="0.1"
+                    value={ratingInput}
+                    onChange={(e) => setRatingInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveRating(); if (e.key === "Escape") setEditingRating(false); }}
+                    autoFocus
+                    className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-[16px] font-bold text-slate-900 outline-none focus:border-slate-500"
+                    placeholder="3.5"
+                  />
+                  <button
+                    onClick={handleSaveRating}
+                    disabled={isPending}
+                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40"
+                  >
+                    {isPending ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    onClick={() => setEditingRating(false)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map((i) => (
+                      <Star key={i} className={`w-5 h-5 ${
+                        companyRating != null && i <= Math.round(companyRating)
+                          ? "text-amber-400 fill-amber-400"
+                          : "text-slate-200 fill-slate-200"
+                      }`} />
+                    ))}
+                  </div>
+                  <span className="text-[28px] font-extrabold text-slate-900 leading-none">
+                    {companyRating != null ? companyRating.toFixed(1) : "—"}
+                  </span>
+                  <button
+                    onClick={() => { setRatingInput(companyRating != null ? String(companyRating) : ""); setEditingRating(true); }}
+                    className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  {atGoal && (
+                    <span className="text-[12px] font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                      🎉 Goal reached! Free breakfast!
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-[11px] font-semibold text-slate-400">Goal: {RATING_GOAL.toFixed(1)} ★</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {atGoal ? "Team earns free breakfast" : `${companyRating != null ? (RATING_GOAL - companyRating).toFixed(1) : RATING_GOAL.toFixed(1)} stars to go`}
+              </p>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${goalPct}%`,
+                background: atGoal
+                  ? "linear-gradient(90deg, #10b981, #34d399)"
+                  : "linear-gradient(90deg, #f59e0b, #fb923c)",
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[10px] text-slate-400">0</span>
+            <span className="text-[10px] font-semibold text-slate-500">🥞 Free Breakfast @ {RATING_GOAL.toFixed(1)}</span>
+            <span className="text-[10px] text-slate-400">5.0</span>
           </div>
         </div>
 
         {/* KPI strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Score Entries",    value: scoreCount.toString()  },
-            { label: "Total Reviews",    value: reviewCount.toString() },
-            { label: "Positive",         value: posCount.toString()    },
-            { label: "Negative",         value: negCount.toString()    },
+            { label: "Total Reviews", value: reviewCount.toString() },
+            { label: "Positive",      value: posCount.toString()    },
+            { label: "Negative",      value: negCount.toString()    },
           ].map((kpi) => (
             <div key={kpi.label}
               className="bg-white rounded-xl border border-slate-200/80 px-5 py-4
@@ -167,136 +343,26 @@ export default function RydePage() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-slate-100 rounded-xl p-1 w-fit">
-          {(["scores", "reviews"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg text-[13px] font-semibold transition-all ${
-                tab === t
-                  ? "bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
+        {/* Reviews list */}
+        <div className="flex flex-col gap-3">
+          {reviews.length === 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center
+              shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <p className="text-slate-400 text-[13px]">No reviews yet. Use &quot;Add Review&quot; to record customer or performance feedback.</p>
+            </div>
+          )}
+          {reviews.map((r) => (
+            <ReviewCard
+              key={r.id}
+              review={r}
+              driverName={driverName(r.driverId)}
+              onDelete={() => handleDeleteReview(r.id)}
+              onEdit={() => openEditReview(r)}
+              isPending={isPending}
+            />
           ))}
         </div>
-
-        {tab === "scores" && (
-          <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden
-            shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
-                  <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Driver</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Week</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Score</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Deliveries</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Pos. Reviews</th>
-                  <th className="px-3 py-3 w-10" />
-                </tr>
-              </thead>
-              <tbody>
-                {scores.map((s) => (
-                  <tr key={s.id}
-                    className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-3 font-semibold text-slate-800">{driverName(s.driverId)}</td>
-                    <td className="px-3 py-3 font-mono text-[12px] text-slate-500">{s.week}</td>
-                    <td className="px-3 py-3">
-                      <ScoreBadge score={s.score} />
-                    </td>
-                    <td className="px-3 py-3 text-slate-500 hidden md:table-cell">{s.deliveries}</td>
-                    <td className="px-3 py-3 text-slate-500 hidden md:table-cell">{s.positiveReviews}</td>
-                    <td className="px-3 py-3">
-                      <button
-                        onClick={() => handleDeleteScore(s.id)}
-                        disabled={isPending}
-                        className="p-1.5 rounded hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {scores.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-slate-400 text-[13px]">
-                      No scores yet. Use &quot;Add Score&quot; to enter a driver&apos;s Ryde score.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {tab === "reviews" && (
-          <div className="flex flex-col gap-3">
-            {reviews.length === 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center
-                shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                <p className="text-slate-400 text-[13px]">No reviews yet. Use &quot;Add Review&quot; to record customer or performance feedback.</p>
-              </div>
-            )}
-            {reviews.map((r) => (
-              <ReviewCard
-                key={r.id}
-                review={r}
-                driverName={driverName(r.driverId)}
-                onDelete={() => handleDeleteReview(r.id)}
-                isPending={isPending}
-              />
-            ))}
-          </div>
-        )}
       </main>
-
-      {/* Add Score modal */}
-      {showScore && (
-        <Modal title="Add Ryde Score" onClose={() => setShowScore(false)}>
-          <FormField label="Driver">
-            <DriverSelect drivers={drivers} value={sDriver} onChange={setSDriver} />
-          </FormField>
-          <FormField label="Week (e.g. 2026-W18)">
-            <input
-              type="text"
-              value={sWeek}
-              onChange={(e) => setSWeek(e.target.value)}
-              className={INPUT_CLS}
-              placeholder="2026-W18"
-            />
-          </FormField>
-          <FormField label="Ryde Score (0–100)">
-            <input
-              type="number"
-              min={0}
-              max={100}
-              step={0.1}
-              value={sScore}
-              onChange={(e) => setSScore(e.target.value)}
-              className={INPUT_CLS}
-              placeholder="e.g. 94.5"
-            />
-          </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Deliveries">
-              <input type="number" min={0} value={sDeliveries} onChange={(e) => setSDeliveries(e.target.value)} className={INPUT_CLS} placeholder="0" />
-            </FormField>
-            <FormField label="Positive Reviews">
-              <input type="number" min={0} value={sPosReviews} onChange={(e) => setSPosReviews(e.target.value)} className={INPUT_CLS} placeholder="0" />
-            </FormField>
-          </div>
-          <ModalFooter
-            onCancel={() => setShowScore(false)}
-            onConfirm={handleAddScore}
-            disabled={!sDriver || !sScore || !sWeek || isPending}
-            isPending={isPending}
-            label="Add Score"
-          />
-        </Modal>
-      )}
 
       {/* Add Review modal */}
       {showReview && (
@@ -323,6 +389,9 @@ export default function RydePage() {
               ))}
             </div>
           </FormField>
+          <FormField label="Ryde Score (1–5 stars)">
+            <StarPicker value={rStars} onChange={setRStars} />
+          </FormField>
           <FormField label="Category">
             <div className="relative">
               <select
@@ -335,8 +404,18 @@ export default function RydePage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
             </div>
           </FormField>
-          <FormField label="Week (optional)">
-            <input type="text" value={rWeek} onChange={(e) => setRWeek(e.target.value)} className={INPUT_CLS} placeholder="2026-W18" />
+          <FormField label="Date of Review">
+            <input type="date" value={rWeek} onChange={(e) => setRWeek(e.target.value)} className={INPUT_CLS} />
+          </FormField>
+          <FormField label="Customer Initials (optional)">
+            <input
+              type="text"
+              value={rCustomerInitials}
+              onChange={(e) => setRCustomerInitials(e.target.value)}
+              className={INPUT_CLS}
+              placeholder="e.g. J.D."
+              maxLength={10}
+            />
           </FormField>
           <FormField label="Review / Feedback">
             <textarea
@@ -375,10 +454,75 @@ export default function RydePage() {
           <ModalFooter
             onCancel={() => setShowReview(false)}
             onConfirm={handleAddReview}
-            disabled={!rDriver || !rContent.trim() || isPending}
+            disabled={!rDriver || !rContent.trim() || rStars === 0 || isPending}
             isPending={isPending}
             label="Add Review"
           />
+        </Modal>
+      )}
+
+      {/* Edit Review modal */}
+      {editReview && (
+        <Modal title="Edit Review" onClose={() => setEditReview(null)}>
+          <FormField label="Type">
+            <div className="flex gap-2">
+              {(["positive", "negative"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setEType(t)}
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-all ${
+                    eType === t
+                      ? t === "positive" ? "bg-emerald-600 text-white border-emerald-600" : "bg-red-500 text-white border-red-500"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                  }`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+          </FormField>
+          <FormField label="Ryde Score (1–5 stars)">
+            <StarPicker value={eStars} onChange={setEStars} />
+          </FormField>
+          <FormField label="Category">
+            <div className="relative">
+              <select value={eCategory} onChange={(e) => setECategory(e.target.value)} className={INPUT_CLS + " appearance-none pr-8"}>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            </div>
+          </FormField>
+          <FormField label="Date of Review">
+            <input type="date" value={eWeek} onChange={(e) => setEWeek(e.target.value)} className={INPUT_CLS} />
+          </FormField>
+          <FormField label="Customer Initials (optional)">
+            <input
+              type="text"
+              value={eCustomerInitials}
+              onChange={(e) => setECustomerInitials(e.target.value)}
+              className={INPUT_CLS}
+              placeholder="e.g. J.D."
+              maxLength={10}
+            />
+          </FormField>
+          <FormField label="Review / Feedback">
+            <textarea value={eContent} onChange={(e) => setEContent(e.target.value)} rows={3} className={INPUT_CLS + " resize-none"} />
+          </FormField>
+          {eType === "negative" && (
+            <>
+              <FormField label="Improvement Tip">
+                <textarea value={eImprovement} onChange={(e) => setEImprovement(e.target.value)} rows={2} className={INPUT_CLS + " resize-none"} />
+              </FormField>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" checked={eAtFault} onChange={(e) => setEAtFault(e.target.checked)} className="mt-0.5 w-4 h-4 rounded border-slate-300 accent-red-500" />
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-800">Driver at fault</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Resets driver&apos;s milestone streak.</p>
+                </div>
+              </label>
+            </>
+          )}
+          <ModalFooter onCancel={() => setEditReview(null)} onConfirm={handleEditReview} disabled={!eContent.trim() || eStars === 0 || isPending} isPending={isPending} label="Save Changes" />
         </Modal>
       )}
     </AppShell>
@@ -389,21 +533,37 @@ export default function RydePage() {
 
 const INPUT_CLS = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
 
-function ScoreBadge({ score }: { score: number }) {
-  const color =
-    score >= 95 ? "text-emerald-600 bg-emerald-50 border-emerald-200" :
-    score >= 85 ? "text-amber-600 bg-amber-50 border-amber-200" :
-                  "text-red-600 bg-red-50 border-red-200";
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
   return (
-    <span className={`inline-flex items-center gap-1 text-[12px] font-bold px-2.5 py-0.5 rounded-full border ${color}`}>
-      <Star className="w-3 h-3" />
-      {score.toFixed(1)}
-    </span>
+    <div className="flex items-center gap-1.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          className="transition-transform hover:scale-110 active:scale-95"
+        >
+          <Star
+            className={`w-8 h-8 transition-colors ${
+              star <= (hovered || value)
+                ? "text-amber-400 fill-amber-400"
+                : "text-slate-200 fill-slate-200"
+            }`}
+          />
+        </button>
+      ))}
+      {value > 0 && (
+        <span className="ml-2 text-[14px] font-bold text-slate-600">{value} star{value !== 1 ? "s" : ""}</span>
+      )}
+    </div>
   );
 }
 
-function ReviewCard({ review, driverName, onDelete, isPending }: {
-  review: Review; driverName: string; onDelete: () => void; isPending: boolean;
+function ReviewCard({ review, driverName, onDelete, onEdit, isPending }: {
+  review: Review; driverName: string; onDelete: () => void; onEdit: () => void; isPending: boolean;
 }) {
   const isPos = review.type === "positive";
   return (
@@ -419,9 +579,22 @@ function ReviewCard({ review, driverName, onDelete, isPending }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="text-[13px] font-bold text-slate-900">{driverName}</span>
+          {/* Star rating */}
+          {review.stars != null && (
+            <div className="flex gap-0.5">
+              {[1,2,3,4,5].map((i) => (
+                <Star key={i} className={`w-3 h-3 ${i <= review.stars! ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
+              ))}
+            </div>
+          )}
           {review.category && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200/80">
               {review.category}
+            </span>
+          )}
+          {review.customerInitials && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/80">
+              {review.customerInitials}
             </span>
           )}
           {review.atFault && (
@@ -444,13 +617,22 @@ function ReviewCard({ review, driverName, onDelete, isPending }: {
           {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ""}
         </p>
       </div>
-      <button
-        onClick={onDelete}
-        disabled={isPending}
-        className="p-1.5 rounded hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors shrink-0 self-start"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      <div className="flex flex-col gap-1 shrink-0 self-start">
+        <button
+          onClick={onEdit}
+          disabled={isPending}
+          className="p-1.5 rounded hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-colors"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={onDelete}
+          disabled={isPending}
+          className="p-1.5 rounded hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -21,12 +21,14 @@ export async function isDriverIdTaken(driverId: string) {
 
 export async function getDrivers() {
   return db.select({
-    id:        drivers.id,
-    driverId:  drivers.driverId,
-    name:      drivers.name,
-    role:      drivers.role,
-    active:    drivers.active,
-    createdAt: drivers.createdAt,
+    id:                drivers.id,
+    driverId:          drivers.driverId,
+    name:              drivers.name,
+    role:              drivers.role,
+    isAdmin:           drivers.isAdmin,
+    assignedVehicleId: drivers.assignedVehicleId,
+    active:            drivers.active,
+    createdAt:         drivers.createdAt,
   }).from(drivers).orderBy(drivers.id);
 }
 
@@ -49,8 +51,31 @@ export async function setDriverActive(id: number, active: boolean) {
   await db.update(drivers).set({ active }).where(eq(drivers.id, id));
 }
 
+export async function setDriverAdmin(id: number, isAdmin: boolean) {
+  await db.update(drivers).set({ isAdmin }).where(eq(drivers.id, id));
+}
+
+export async function assignDriverVehicle(id: number, vehicleId: number | null) {
+  await db.update(drivers).set({ assignedVehicleId: vehicleId }).where(eq(drivers.id, id));
+}
+
 export async function resetDriverPassword(id: number, newPassword: string) {
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await db.update(drivers).set({ passwordHash }).where(eq(drivers.id, id));
   return { tempPassword: newPassword };
 }
+
+export async function deleteDriver(id: number) {
+  await db.delete(drivers).where(eq(drivers.id, id));
+}
+
+export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {
+  const [driver] = await db.select().from(drivers).where(eq(drivers.driverId, driverId)).limit(1);
+  if (!driver) return { error: "Driver not found." };
+  const match = await bcrypt.compare(currentPassword, driver.passwordHash);
+  if (!match) return { error: "Current password is incorrect." };
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.update(drivers).set({ passwordHash }).where(eq(drivers.driverId, driverId));
+  return { ok: true };
+}
+

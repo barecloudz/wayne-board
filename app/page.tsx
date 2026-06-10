@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, Star, BarChart2, ChevronRight } from "lucide-react";
+import { Lock, Star, BarChart2 } from "lucide-react";
+import LoginForm from "./login-form";
 
 export default function Home() {
   return (
@@ -85,137 +86,52 @@ export default function Home() {
 
       {/* ── DESKTOP layout (≥ md) ─────────────────────────────────────── */}
       <div className="hidden md:flex flex-col flex-1">
-        {/* Top nav bar */}
-        <nav className="flex items-center justify-between px-10 py-4">
+        {/* Top nav */}
+        <nav className="flex items-center justify-between px-10 py-5">
           <div className="flex items-center gap-3">
-            <div className="bg-white rounded-xl p-0.5 shadow-[0_2px_10px_rgba(0,0,0,0.2)]">
-              <Image
-                src="/74slogo.svg"
-                alt="742 Logistics"
-                width={46}
-                height={46}
-                className="object-contain"
-                priority
-              />
+            <div className="bg-white rounded-xl p-1 shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
+              <Image src="/74slogo.svg" alt="742 Logistics" width={40} height={40} className="object-contain" priority />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[15px] font-extrabold text-white tracking-tight">742 Logistics</span>
-              <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>
-                FedEx Ground Contractor
-              </span>
+              <span className="text-[16px] font-extrabold text-white tracking-tight">742 Logistics</span>
+              <span className="text-[11px] font-medium text-white/50">FedEx Ground Contractor</span>
             </div>
           </div>
           <Link
             href="/wayne-board"
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold
-              text-white/80 border border-white/20 hover:bg-white/10 transition-all"
+              text-white/70 border border-white/20 hover:bg-white/10 transition-all"
           >
             <Lock className="w-3.5 h-3.5" />
             Management Portal
           </Link>
         </nav>
 
-        {/* Hero split */}
-        <div className="flex flex-1 items-center justify-center px-10 py-12 gap-16 max-w-6xl mx-auto w-full">
-          {/* Left — branding */}
-          <div className="flex-1 flex flex-col gap-6">
-            <div>
-              <div className="bg-white rounded-3xl p-1 inline-flex mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.25)]">
-                <Image
-                  src="/74slogo.svg"
-                  alt="742 Logistics"
-                  width={150}
-                  height={150}
-                  className="object-contain"
-                />
-              </div>
-              <h1 className="text-[48px] font-extrabold text-white tracking-tight leading-none mb-3">
-                Driver Portal
-              </h1>
-              <p className="text-[17px] text-white/70 leading-relaxed max-w-sm">
-                Sign in to view your Ryde Score, track your performance,
-                and stay up to date with 742 Logistics.
-              </p>
+        {/* Centered content */}
+        <div className="flex flex-1 items-center justify-center px-6 py-10">
+          <div className="w-full max-w-[560px] flex flex-col items-center">
+            {/* Logo + title above card */}
+            <div className="bg-white rounded-3xl p-3 mb-8 shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+              <Image src="/74slogo.svg" alt="742 Logistics" width={140} height={140} className="object-contain" />
             </div>
-
-            {/* Feature pills */}
-            <div className="flex flex-col gap-2.5">
-              {[
-                { icon: Star, label: "Ryde Score", desc: "Your customer satisfaction rating" },
-                { icon: BarChart2, label: "Performance", desc: "Delivery stats & trends — coming soon" },
-              ].map(({ icon: Icon, label, desc }) => (
-                <div key={label} className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 border border-white/10">
-                  <Icon className="w-4 h-4 text-white/70 shrink-0" />
-                  <div>
-                    <span className="text-[13px] font-bold text-white">{label}</span>
-                    <span className="text-[12px] text-white/50 ml-2">{desc}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[12px] text-white/40 mt-2">
-              &copy; {new Date().getFullYear()} 742 Logistics LLC &middot; FedEx Ground Contractor
+            <h1 className="text-[52px] font-extrabold text-white tracking-tight leading-none mb-3 text-center">
+              Driver Portal
+            </h1>
+            <p className="text-[18px] text-white/60 text-center mb-10">
+              Sign in to view your Ryde Score and performance.
             </p>
-          </div>
 
-          {/* Right — login card */}
-          <div className="w-full max-w-sm shrink-0">
-            <div className="bg-white rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.35)]">
-              {/* Card header */}
-              <div className="px-6 pt-6 pb-5 flex flex-col items-center text-center"
-                style={{ background: "linear-gradient(135deg, #4D148C 0%, #7B2FC0 100%)" }}>
-                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center mb-3">
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-[16px] font-extrabold text-white">My Ryde Score</h2>
-                <p className="text-[12px] text-white/65 mt-1">Sign in with your driver credentials</p>
-              </div>
-              <div className="h-[3px]" style={{ background: "#FF6200" }} />
-
-              {/* Form */}
-              <div className="px-6 py-6 flex flex-col gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Driver ID
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. BN-001"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-[13px]
-                      text-slate-800 placeholder-slate-300 outline-none
-                      focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-[13px]
-                      text-slate-800 placeholder-slate-300 outline-none
-                      focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
-                  />
-                </div>
-                <button
-                  className="w-full py-2.5 rounded-lg text-[13px] font-bold text-white mt-1
-                    transition-all hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2"
-                  style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}
-                >
-                  Sign In
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <p className="text-[11px] text-center text-slate-400 mt-1">
-                  Driver login coming soon &mdash; check back shortly
-                </p>
-              </div>
+            {/* Login card */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.4)] w-full">
+              <div className="h-[5px]" style={{ background: "linear-gradient(90deg, #4D148C, #FF6200)" }} />
+              <LoginForm variant="card" />
             </div>
 
-            {/* Below card note */}
-            <p className="text-center text-[12px] text-white/40 mt-4">
+            <p className="text-center text-[14px] text-white/35 mt-6">
               Contact your station manager if you need access help.
+            </p>
+            <p className="text-center text-[13px] text-white/25 mt-2">
+              &copy; {new Date().getFullYear()} 742 Logistics LLC
             </p>
           </div>
         </div>
@@ -238,30 +154,7 @@ function RydeCard() {
           <p className="text-[12px] text-white/75">Sign in to view your score</p>
         </div>
       </div>
-      <div className="bg-white px-5 py-4 flex flex-col gap-2">
-        <input
-          type="text"
-          placeholder="Driver ID"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px]
-            text-slate-800 placeholder-slate-400 outline-none
-            focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px]
-            text-slate-800 placeholder-slate-400 outline-none
-            focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
-        />
-        <button
-          className="w-full py-2.5 rounded-lg text-[13px] font-bold text-white mt-0.5
-            transition-all active:scale-[0.98]"
-          style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}
-        >
-          Sign In
-        </button>
-        <p className="text-[11px] text-center text-slate-400">Coming soon &mdash; check back shortly</p>
-      </div>
+      <LoginForm variant="mobile" />
     </div>
   );
 }

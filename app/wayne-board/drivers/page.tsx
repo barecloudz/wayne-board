@@ -4,11 +4,12 @@ import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, resetDriverPassword,
+  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver,
 } from "@/lib/actions/drivers";
+import { getVehicles } from "@/lib/actions/vehicles";
 import { suggestDriverId } from "@/lib/driver-utils";
 
 type Driver = {
@@ -16,15 +17,29 @@ type Driver = {
   driverId: string;
   name: string;
   role: string;
+  isAdmin: boolean;
+  assignedVehicleId: number | null;
   active: boolean;
   createdAt: Date | null;
+};
+
+type Vehicle = {
+  id: number;
+  unitNumber: string;
+  make: string;
+  model: string;
+  year: number;
+  active: boolean;
 };
 
 const INPUT_CLS = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [vehicleTarget, setVehicleTarget] = useState<{ id: number; name: string; current: number | null } | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
@@ -37,14 +52,16 @@ export default function DriversPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<number | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
-  const [resetTarget, setResetTarget] = useState<{ id: number; driverId: string } | null>(null);
+  const [resetTarget, setResetTarget]   = useState<{ id: number; driverId: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
   const [resetPassword, setResetPassword] = useState("Fedex1234#");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   async function refresh() {
-    const data = await getDrivers();
-    setDrivers(data as Driver[]);
+    const [driverData, vehicleData] = await Promise.all([getDrivers(), getVehicles()]);
+    setDrivers(driverData as Driver[]);
+    setVehicles(vehicleData as Vehicle[]);
     setLoading(false);
   }
 
@@ -103,6 +120,32 @@ export default function DriversPage() {
     });
   }
 
+  function handleToggleAdmin(id: number, isAdmin: boolean) {
+    startTransition(async () => {
+      await setDriverAdmin(id, !isAdmin);
+      setMenuOpen(null);
+      setMenuPos(null);
+      await refresh();
+    });
+  }
+
+  function openVehicleModal(driver: Driver) {
+    setVehicleTarget({ id: driver.id, name: driver.name, current: driver.assignedVehicleId });
+    setSelectedVehicleId(driver.assignedVehicleId?.toString() ?? "");
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  function handleAssignVehicle() {
+    if (!vehicleTarget) return;
+    startTransition(async () => {
+      const vid = selectedVehicleId ? parseInt(selectedVehicleId) : null;
+      await assignDriverVehicle(vehicleTarget.id, vid);
+      setVehicleTarget(null);
+      await refresh();
+    });
+  }
+
   function openResetModal(id: number) {
     const driver = drivers.find((d) => d.id === id);
     setResetTarget({ id, driverId: driver?.driverId ?? "" });
@@ -119,6 +162,15 @@ export default function DriversPage() {
       setCreated({ driverId: resetTarget.driverId, password: result.tempPassword });
       setResetTarget(null);
       setShowPassword(false);
+    });
+  }
+
+  function handleDeleteDriver() {
+    if (!deleteTarget) return;
+    startTransition(async () => {
+      await deleteDriver(deleteTarget.id);
+      setDeleteTarget(null);
+      await refresh();
     });
   }
 
@@ -260,6 +312,7 @@ export default function DriversPage() {
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Name</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Role</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Created</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Vehicle</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status</th>
                     <th className="px-3 py-3 w-10" />
                   </tr>
@@ -273,16 +326,32 @@ export default function DriversPage() {
                       </td>
                       <td className="px-3 py-3 font-semibold text-slate-800">{driver.name}</td>
                       <td className="px-3 py-3 hidden sm:table-cell">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                          driver.role === "management"
-                            ? "bg-indigo-50 text-indigo-700 border border-indigo-200/80"
-                            : "bg-slate-100 text-slate-600 border border-slate-200/80"
-                        }`}>
-                          {driver.role}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                            {driver.role}
+                          </span>
+                          {driver.isAdmin && (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80">
+                              admin
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-slate-400 hidden md:table-cell">
                         {driver.createdAt ? new Date(driver.createdAt).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="px-3 py-3 hidden lg:table-cell">
+                        {(() => {
+                          const v = vehicles.find((v) => v.id === driver.assignedVehicleId);
+                          return v ? (
+                            <span className="text-[12px] font-semibold text-slate-700 flex items-center gap-1.5">
+                              <Truck className="w-3.5 h-3.5 text-slate-400" />
+                              {v.unitNumber}
+                            </span>
+                          ) : (
+                            <span className="text-[12px] text-slate-300">—</span>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-1.5">
@@ -341,11 +410,34 @@ export default function DriversPage() {
                     : <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Activate</>}
                 </button>
                 <button
+                  onClick={() => handleToggleAdmin(driver.id, driver.isAdmin)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  {driver.isAdmin
+                    ? <><ShieldOff className="w-3.5 h-3.5 text-slate-400" />Remove Admin</>
+                    : <><ShieldCheck className="w-3.5 h-3.5 text-amber-500" />Make Admin</>}
+                </button>
+                <button
+                  onClick={() => openVehicleModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <Truck className="w-3.5 h-3.5 text-slate-400" />Assign Vehicle
+                </button>
+                <button
                   onClick={() => openResetModal(driver.id)}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
                   <Eye className="w-3.5 h-3.5 text-slate-400" />Reset Password
+                </button>
+                <button
+                  onClick={() => { setDeleteTarget({ id: driver.id, driverId: driver.driverId, name: driver.name }); setMenuOpen(null); setMenuPos(null); }}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-red-500
+                    hover:bg-red-50 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />Delete Account
                 </button>
               </>
             );
@@ -400,6 +492,91 @@ export default function DriversPage() {
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Reset Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Delete Account</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Permanently delete <span className="font-semibold text-slate-600">{deleteTarget.name}</span> ({deleteTarget.driverId})?
+                This cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 py-5 flex gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteDriver}
+                disabled={isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-red-500 text-white
+                  hover:bg-red-600 transition-colors disabled:opacity-40
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign vehicle modal */}
+      {vehicleTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Assign Vehicle</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Choose a vehicle for <span className="font-semibold text-slate-600">{vehicleTarget.name}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Vehicle</label>
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                className={INPUT_CLS + " mt-1.5"}
+              >
+                <option value="">— None (Coming Soon) —</option>
+                {vehicles.filter((v) => v.active).map((v) => (
+                  <option key={v.id} value={v.id.toString()}>
+                    {v.unitNumber} — {v.year} {v.make} {v.model}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                Driver sees vehicle info on their dashboard. &quot;None&quot; shows Coming Soon.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setVehicleTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignVehicle}
+                disabled={isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save
               </button>
             </div>
           </div>

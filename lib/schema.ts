@@ -10,7 +10,9 @@ export const drivers = pgTable("drivers", {
   name:         text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   role:         text("role").notNull().default("driver"), // "driver" | "management"
-  active:       boolean("active").notNull().default(true),
+  isAdmin:          boolean("is_admin").notNull().default(false),
+  assignedVehicleId: integer("assigned_vehicle_id").references(() => vehicles.id),
+  active:           boolean("active").notNull().default(true),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 
@@ -74,12 +76,14 @@ export const rydeReviews = pgTable("ryde_reviews", {
   id:          serial("id").primaryKey(),
   driverId:    text("driver_id").notNull().references(() => drivers.driverId),
   type:        text("type").notNull(),        // "positive" | "negative"
+  stars:       integer("stars"),              // 1–5 star rating (drives Ryde score)
   category:    text("category"),              // e.g. "customer_feedback", "on_time", "safety"
   content:     text("content").notNull(),
   week:        text("week"),                  // "2026-W18" (optional, ties to a score week)
   improvement: text("improvement"),           // improvement tip for negatives
-  atFault:     boolean("at_fault").notNull().default(false), // driver at fault — breaks milestone streak
-  createdAt:   timestamp("created_at").defaultNow(),
+  atFault:          boolean("at_fault").notNull().default(false), // driver at fault — breaks milestone streak
+  customerInitials: text("customer_initials"),                    // e.g. "J.D." — no address stored
+  createdAt:        timestamp("created_at").defaultNow(),
 });
 
 // ── Milestone Rewards ─────────────────────────────────────────────────────────
@@ -94,4 +98,19 @@ export const milestoneRewards = pgTable("milestone_rewards", {
   active:       boolean("active").notNull().default(true),
   sortOrder:    integer("sort_order").notNull().default(0),
   createdAt:    timestamp("created_at").defaultNow(),
+});
+
+// ── App Settings (key-value) ──────────────────────────────────────────────────
+export const settings = pgTable("settings", {
+  key:   text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
+// ── Driver Milestone Claims ───────────────────────────────────────────────────
+// Permanently records when a driver earns a milestone — survives streak resets
+export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
+  id:          serial("id").primaryKey(),
+  driverId:    text("driver_id").notNull().references(() => drivers.driverId),
+  milestoneId: integer("milestone_id").notNull().references(() => milestoneRewards.id),
+  earnedAt:    timestamp("earned_at").defaultNow(),
 });
