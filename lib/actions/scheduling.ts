@@ -15,12 +15,20 @@ export async function getAllSchedules() {
       driverId: drivers.driverId,
       name:     drivers.name,
       active:   drivers.active,
+      workArea: drivers.workArea,
       schedule: driverSchedules,
     })
     .from(drivers)
     .leftJoin(driverSchedules, eq(drivers.driverId, driverSchedules.driverId))
     .orderBy(drivers.name);
   return rows;
+}
+
+export async function updateDriverInfo(driverId: string, name: string, workArea: string | null) {
+  await db.update(drivers)
+    .set({ name: name.trim(), workArea: workArea?.trim() || null })
+    .where(eq(drivers.driverId, driverId));
+  revalidatePath("/wayne-board/scheduling");
 }
 
 export async function upsertSchedule(

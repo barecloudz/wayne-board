@@ -5,7 +5,7 @@ import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
   Loader2, Check, AlertTriangle, Pencil, X,
 } from "lucide-react";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -28,6 +28,7 @@ type ScheduleRow = {
   driverId: string;
   name: string;
   active: boolean;
+  workArea: string | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -98,6 +99,27 @@ export default function SchedulingClient({
       setSavedId(driverId);
       setDrafts((prev) => { const n = { ...prev }; delete n[driverId]; return n; });
       setTimeout(() => setSavedId(null), 2000);
+    });
+  }
+
+  // ── Driver info editing ───────────────────────────────────────────────────
+  const [editingDriver, setEditingDriver] = useState<string | null>(null);
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string }>>({});
+
+  function openDriverEdit(row: ScheduleRow) {
+    setDriverDrafts((prev) => ({
+      ...prev,
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "" },
+    }));
+    setEditingDriver(row.driverId);
+  }
+
+  function saveDriverInfo(driverId: string) {
+    const draft = driverDrafts[driverId];
+    if (!draft?.name.trim()) return;
+    startTransition(async () => {
+      await updateDriverInfo(driverId, draft.name, draft.workArea || null);
+      setEditingDriver(null);
     });
   }
 
@@ -234,15 +256,62 @@ export default function SchedulingClient({
                   return (
                     <tr key={row.driverId} className={`border-b border-slate-100/80 last:border-0 transition-colors ${isDirty ? "bg-amber-50/40" : "hover:bg-slate-50/40"}`}>
                       <td className="px-6 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-800">{row.name}</span>
-                          {!row.active && (
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
-                              inactive
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] font-mono text-slate-400">{row.driverId}</span>
+                        {editingDriver === row.driverId ? (
+                          <div className="flex flex-col gap-1.5 min-w-[200px]">
+                            <input
+                              autoFocus
+                              value={driverDrafts[row.driverId]?.name ?? row.name}
+                              onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], name: e.target.value } }))}
+                              placeholder="Full name"
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
+                            />
+                            <input
+                              value={driverDrafts[row.driverId]?.workArea ?? ""}
+                              onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], workArea: e.target.value } }))}
+                              placeholder="Work area (e.g. Zone A, Dock 3)"
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
+                            />
+                            <div className="flex gap-1.5">
+                              <button
+                                onClick={() => saveDriverInfo(row.driverId)}
+                                disabled={isPending}
+                                className="flex-1 py-1 rounded-lg text-[12px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-1"
+                              >
+                                {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingDriver(null)}
+                                className="px-2 py-1 rounded-lg text-[12px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2 group">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-800">{row.name}</span>
+                                {!row.active && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
+                                    inactive
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] font-mono text-slate-400">{row.driverId}</span>
+                              {row.workArea && (
+                                <span className="block text-[11px] text-slate-500 mt-0.5">{row.workArea}</span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => openDriverEdit(row)}
+                              className="p-1 rounded hover:bg-slate-100 transition-colors opacity-0 group-hover:opacity-100 mt-0.5 shrink-0"
+                            >
+                              <Pencil className="w-3 h-3 text-slate-400" />
+                            </button>
+                          </div>
+                        )}
                       </td>
                       {DAYS.map((d) => (
                         <td key={d.key} className="px-2 py-3 text-center">

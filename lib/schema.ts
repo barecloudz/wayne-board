@@ -12,6 +12,7 @@ export const drivers = pgTable("drivers", {
   role:         text("role").notNull().default("driver"), // "driver" | "management"
   isAdmin:          boolean("is_admin").notNull().default(false),
   assignedVehicleId: integer("assigned_vehicle_id").references(() => vehicles.id),
+  workArea:         text("work_area"),
   active:           boolean("active").notNull().default(true),
   createdAt:    timestamp("created_at").defaultNow(),
 });
