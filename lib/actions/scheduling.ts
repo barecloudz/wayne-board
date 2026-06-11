@@ -2,7 +2,8 @@
 
 import { db } from "@/lib/db";
 import { drivers, driverSchedules, timeOffEntries } from "@/lib/schema";
-import { eq, and, gte, lte, or } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -34,6 +35,7 @@ export async function upsertSchedule(
       target: driverSchedules.driverId,
       set: { ...days, notes: notes ?? null, updatedAt: new Date() },
     });
+  revalidatePath("/wayne-board/scheduling");
 }
 
 export async function getDriverSchedule(driverId: string) {
@@ -80,6 +82,7 @@ export async function addTimeOff(
   note?: string,
 ) {
   await db.insert(timeOffEntries).values({ driverId, startDate, endDate, reason, note: note ?? null });
+  revalidatePath("/wayne-board/scheduling");
 }
 
 export async function updateTimeOff(
@@ -92,10 +95,12 @@ export async function updateTimeOff(
   await db.update(timeOffEntries)
     .set({ startDate, endDate, reason, note: note ?? null })
     .where(eq(timeOffEntries.id, id));
+  revalidatePath("/wayne-board/scheduling");
 }
 
 export async function deleteTimeOff(id: number) {
   await db.delete(timeOffEntries).where(eq(timeOffEntries.id, id));
+  revalidatePath("/wayne-board/scheduling");
 }
 
 // ── Coverage helpers ──────────────────────────────────────────────────────────

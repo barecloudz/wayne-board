@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
   Loader2, Check, AlertTriangle, Pencil, X,
@@ -64,7 +63,6 @@ export default function SchedulingClient({
   coverageTimeOff: CoverageRow[];
   today: string;
 }) {
-  const router = useRouter();
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
   const [isPending, startTransition] = useTransition();
 
@@ -100,7 +98,6 @@ export default function SchedulingClient({
       setSavedId(driverId);
       setDrafts((prev) => { const n = { ...prev }; delete n[driverId]; return n; });
       setTimeout(() => setSavedId(null), 2000);
-      router.refresh();
     });
   }
 
@@ -138,14 +135,12 @@ export default function SchedulingClient({
         await addTimeOff(toDriverId, toStart, toEnd, toReason, toNote || undefined);
       }
       setShowAdd(false);
-      router.refresh();
     });
   }
 
   function handleDeleteTimeOff(id: number) {
     startTransition(async () => {
       await deleteTimeOff(id);
-      router.refresh();
     });
   }
 
