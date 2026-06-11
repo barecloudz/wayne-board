@@ -106,6 +106,34 @@ export const settings = pgTable("settings", {
   value: text("value").notNull(),
 });
 
+// ── Driver Schedules ─────────────────────────────────────────────────────────
+// One row per driver — their regular recurring weekly schedule
+export const driverSchedules = pgTable("driver_schedules", {
+  id:       serial("id").primaryKey(),
+  driverId: text("driver_id").notNull().unique().references(() => drivers.driverId, { onDelete: "cascade" }),
+  mon:      boolean("mon").notNull().default(false),
+  tue:      boolean("tue").notNull().default(false),
+  wed:      boolean("wed").notNull().default(false),
+  thu:      boolean("thu").notNull().default(false),
+  fri:      boolean("fri").notNull().default(false),
+  sat:      boolean("sat").notNull().default(false),
+  sun:      boolean("sun").notNull().default(false),
+  notes:    text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ── Time Off Entries ──────────────────────────────────────────────────────────
+// Admin-entered time off; drivers cannot submit their own
+export const timeOffEntries = pgTable("time_off_entries", {
+  id:        serial("id").primaryKey(),
+  driverId:  text("driver_id").notNull().references(() => drivers.driverId, { onDelete: "cascade" }),
+  startDate: date("start_date").notNull(),
+  endDate:   date("end_date").notNull(),
+  reason:    text("reason").notNull().default(""),
+  note:      text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ── Driver Milestone Claims ───────────────────────────────────────────────────
 // Permanently records when a driver earns a milestone — survives streak resets
 export const driverMilestoneClaims = pgTable("driver_milestone_claims", {

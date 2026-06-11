@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock, Truck } from "lucide-react";
+import { Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock, Truck, CalendarDays, CalendarOff } from "lucide-react";
 import { changeDriverPassword } from "@/lib/actions/drivers";
 
 type Review  = {
@@ -12,11 +12,16 @@ type Review  = {
 type Milestone    = { id: number; name: string; description: string | null; daysRequired: number; type: string; bonusAmount: number | null; icon: string };
 type LeaderEntry  = { driverId: string; initials: string; avgScore: number; weeks: number };
 type AssignedVehicle = { id: number; unitNumber: string; make: string; model: string; year: number; mileage: number; type: string } | null;
+type DriverSchedule = { mon: boolean; tue: boolean; wed: boolean; thu: boolean; fri: boolean; sat: boolean; sun: boolean; notes: string | null } | null;
+type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: string; note: string | null };
+
+const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] as const;
+const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -28,8 +33,10 @@ export default function DriverTabs({
   companyRating: number | null;
   goalMessage: string;
   assignedVehicle: AssignedVehicle;
+  driverSchedule: DriverSchedule;
+  upcomingTimeOff: TimeOffEntry[];
 }) {
-  const [tab, setTab] = useState<"score" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">("score");
+  const [tab, setTab] = useState<"score" | "schedule" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">("score");
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
 
   // Account / password change state
@@ -160,9 +167,10 @@ export default function DriverTabs({
       {/* Tabs — scrollable pill row */}
       <div className="flex gap-1 mb-5 bg-white/10 rounded-xl p-1 overflow-x-auto scrollbar-none">
         {([
-          { key: "score",      label: "My Score" },
-          { key: "reviews",    label: `Reviews (${reviews.length})` },
-          { key: "milestones", label: "Milestones" },
+          { key: "score",       label: "My Score" },
+          { key: "schedule",    label: "Schedule" },
+          { key: "reviews",     label: `Reviews (${reviews.length})` },
+          { key: "milestones",  label: "Milestones" },
           { key: "bonuses",     label: "Bonuses" },
           { key: "leaderboard", label: "Leaderboard" },
           { key: "account",     label: "Account" },
@@ -352,6 +360,79 @@ export default function DriverTabs({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Schedule tab */}
+      {tab === "schedule" && (
+        <div className="flex flex-col gap-4">
+          {/* Weekly schedule card */}
+          <div className="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <CalendarDays className="w-4 h-4 text-slate-400" />
+              <h2 className="text-[15px] font-extrabold text-slate-900">My Weekly Schedule</h2>
+            </div>
+            {driverSchedule ? (
+              <div className="px-5 py-5">
+                <div className="flex gap-1.5 flex-wrap">
+                  {DAY_KEYS.map((key, i) => {
+                    const isWork = driverSchedule[key as keyof DriverSchedule & string] as boolean;
+                    return (
+                      <div key={key}
+                        className={`flex flex-col items-center gap-1 px-3 py-3 rounded-xl border min-w-[44px] ${
+                          isWork
+                            ? "bg-slate-900 border-slate-900"
+                            : "bg-slate-50 border-slate-200"
+                        }`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isWork ? "text-slate-300" : "text-slate-400"}`}>
+                          {DAY_LABELS[i]}
+                        </span>
+                        <span className={`text-[16px] ${isWork ? "text-white" : "text-slate-300"}`}>
+                          {isWork ? "✓" : "–"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {driverSchedule.notes && (
+                  <p className="text-[12px] text-slate-500 mt-4 italic">{driverSchedule.notes}</p>
+                )}
+              </div>
+            ) : (
+              <div className="px-5 py-8 text-center">
+                <p className="text-[13px] text-slate-400">Your schedule hasn&apos;t been set yet. Contact your manager.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming time off */}
+          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+              <CalendarOff className="w-4 h-4 text-slate-400" />
+              <h2 className="text-[15px] font-extrabold text-slate-900">Upcoming Time Off</h2>
+            </div>
+            {upcomingTimeOff.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <p className="text-[13px] text-slate-400">No upcoming time off on record.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {upcomingTimeOff.map((entry) => (
+                  <div key={entry.id} className="px-5 py-4 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-slate-800">{entry.reason}</span>
+                      </div>
+                      <p className="text-[12px] font-mono text-slate-400 mt-0.5">
+                        {fmtDate(entry.startDate)}{entry.startDate !== entry.endDate ? ` → ${fmtDate(entry.endDate)}` : ""}
+                      </p>
+                      {entry.note && <p className="text-[12px] text-slate-500 italic mt-0.5">{entry.note}</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -765,4 +846,11 @@ export default function DriverTabs({
       )}
     </>
   );
+}
+
+function fmtDate(d: string) {
+  try {
+    const [y, m, day] = d.split("-").map(Number);
+    return new Date(y, m - 1, day).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch { return d; }
 }

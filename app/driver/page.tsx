@@ -5,6 +5,7 @@ import { drivers, rydeReviews, vehicles } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
+import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
 import Image from "next/image";
 import LogoutButton from "./logout-button";
 import DriverTabs from "./driver-tabs";
@@ -13,7 +14,9 @@ export default async function DriverDashboard() {
   const session = await getSession();
   if (!session) redirect("/");
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow]] = await Promise.all([
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -22,7 +25,11 @@ export default async function DriverDashboard() {
     getCompanyRating(),
     getRydeGoalMessage(),
     db.select({ assignedVehicleId: drivers.assignedVehicleId }).from(drivers).where(eq(drivers.driverId, session.driverId)).limit(1),
+    getDriverSchedule(session.driverId),
+    getDriverTimeOff(session.driverId),
   ]);
+
+  const upcomingTimeOff = allTimeOff.filter((t) => t.endDate >= today);
 
   const assignedVehicle = driverRow?.assignedVehicleId
     ? await db.select().from(vehicles).where(eq(vehicles.id, driverRow.assignedVehicleId)).limit(1).then((r) => r[0] ?? null)
@@ -84,6 +91,8 @@ export default async function DriverDashboard() {
           companyRating={companyRating}
           goalMessage={goalMessage}
           assignedVehicle={assignedVehicle}
+          driverSchedule={driverSchedule}
+          upcomingTimeOff={upcomingTimeOff as any}
         />
       </div>
     </div>
