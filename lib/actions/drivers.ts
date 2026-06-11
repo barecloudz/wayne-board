@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { drivers } from "@/lib/schema";
+import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -66,6 +66,12 @@ export async function resetDriverPassword(id: number, newPassword: string) {
 }
 
 export async function deleteDriver(id: number) {
+  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.id, id)).limit(1);
+  if (!driver) return;
+  // Delete FK-constrained rows that don't have ON DELETE CASCADE
+  await db.delete(rydeScores).where(eq(rydeScores.driverId, driver.driverId));
+  await db.delete(rydeReviews).where(eq(rydeReviews.driverId, driver.driverId));
+  await db.delete(driverMilestoneClaims).where(eq(driverMilestoneClaims.driverId, driver.driverId));
   await db.delete(drivers).where(eq(drivers.id, id));
 }
 
