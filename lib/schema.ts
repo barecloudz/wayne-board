@@ -106,6 +106,21 @@ export const settings = pgTable("settings", {
   value: text("value").notNull(),
 });
 
+// ── Vehicle Conditions ────────────────────────────────────────────────────────
+// Condition issues reported per vehicle — drives the Fleet Status Report PDF
+export const vehicleConditions = pgTable("vehicle_conditions", {
+  id:             serial("id").primaryKey(),
+  vehicleId:      integer("vehicle_id").notNull().references(() => vehicles.id, { onDelete: "cascade" }),
+  description:    text("description").notNull(),
+  severity:       text("severity").notNull().default("medium"), // "critical"|"high"|"medium"|"low"
+  status:         text("status").notNull().default("open"),     // "open"|"in_progress"|"resolved"
+  repairEstimate: real("repair_estimate"),
+  routeStatus:    text("route_status").notNull().default("confirm"), // "in_use"|"not_in_use"|"confirm"
+  note:           text("note"),
+  reportedAt:     timestamp("reported_at").defaultNow(),
+  resolvedAt:     timestamp("resolved_at"),
+});
+
 // ── Driver Schedules ─────────────────────────────────────────────────────────
 // One row per driver — their regular recurring weekly schedule
 export const driverSchedules = pgTable("driver_schedules", {

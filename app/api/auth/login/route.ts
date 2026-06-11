@@ -29,5 +29,5 @@ export async function POST(req: NextRequest) {
 
   await createSession({ driverId: driver.driverId, name: driver.name, role: driver.role, isAdmin: driver.isAdmin });
 
-  return NextResponse.json({ ok: true, role: driver.role });
+  return NextResponse.json({ ok: true, role: driver.role, isAdmin: driver.isAdmin });
 }

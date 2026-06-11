@@ -11,6 +11,8 @@ import VehicleEditModal from "./vehicle-edit-modal";
 import InspectionActions from "./inspection-actions";
 import VehicleDeleteButton from "./vehicle-delete-button";
 import { getVehicleImage } from "@/lib/vehicle-image";
+import ConditionPanel from "./condition-panel";
+import { getVehicleConditions } from "@/lib/actions/vehicle-conditions";
 
 const STATUS_STYLES: Record<InspectionStatus, { cell: string; dot: string; label: string }> = {
   OK:              { cell: "text-emerald-700", dot: "bg-emerald-400", label: "OK" },
@@ -30,10 +32,11 @@ export default async function VehicleDetailPage({
   const id = parseInt(vehicleId);
   if (isNaN(id)) notFound();
 
-  const [[vehicle], [latestInspection]] = await Promise.all([
+  const [[vehicle], [latestInspection], conditions] = await Promise.all([
     db.select().from(vehicles).where(eq(vehicles.id, id)).limit(1),
     db.select().from(inspections).where(eq(inspections.vehicleId, id))
       .orderBy(desc(inspections.inspectionDate)).limit(1),
+    getVehicleConditions(id),
   ]);
 
   if (!vehicle) notFound();
@@ -123,6 +126,9 @@ export default async function VehicleDetailPage({
             </Link>
           </div>
         </div>
+
+        {/* Condition issues panel */}
+        <ConditionPanel vehicleId={vehicle.id} initial={conditions as any} />
 
         {latestInspection ? (
           <>
