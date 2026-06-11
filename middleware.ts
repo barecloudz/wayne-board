@@ -26,5 +26,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/wayne-board/:path*"],
+  matcher: ["/wayne-board/((?!login).*)"],
 };
