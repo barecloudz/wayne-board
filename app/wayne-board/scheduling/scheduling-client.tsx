@@ -5,7 +5,7 @@ import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
   Loader2, Check, AlertTriangle, Pencil, X,
 } from "lucide-react";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -101,6 +101,15 @@ export default function SchedulingClient({
       setTimeout(() => setSavedId(null), 2000);
     });
   }
+
+  // ── Show/hide inactive ────────────────────────────────────────────────────
+  const [showInactive, setShowInactive] = useState(false);
+
+  function handleSetActive(driverId: string, active: boolean) {
+    startTransition(async () => { await setDriverActive(driverId, active); });
+  }
+
+  const visibleSchedules = showInactive ? schedules : schedules.filter((s) => s.active);
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
@@ -231,10 +240,20 @@ export default function SchedulingClient({
       {/* ── SCHEDULES TAB ────────────────────────────────────────────────── */}
       {tab === "schedules" && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <p className="text-[13px] text-slate-500">
               Toggle which days each driver is scheduled. Changes save per-driver.
             </p>
+            <button
+              onClick={() => setShowInactive((p) => !p)}
+              className={`text-[12px] font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
+                showInactive
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "border-slate-200 text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              {showInactive ? "Hide inactive" : `Show inactive (${schedules.filter(s => !s.active).length})`}
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
@@ -246,11 +265,11 @@ export default function SchedulingClient({
                       {d.short}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right">Save</th>
+                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right w-28">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {schedules.map((row) => {
+                {visibleSchedules.map((row) => {
                   const days = getDays(row);
                   const isDirty = !!drafts[row.driverId];
                   return (
@@ -328,25 +347,35 @@ export default function SchedulingClient({
                         </td>
                       ))}
                       <td className="px-4 py-3 text-right">
-                        {isDirty ? (
+                        <div className="flex items-center justify-end gap-2">
+                          {isDirty ? (
+                            <button
+                              onClick={() => saveSchedule(row.driverId)}
+                              disabled={savingId === row.driverId}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-slate-900 text-white
+                                hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                            >
+                              {savingId === row.driverId ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                              Save
+                            </button>
+                          ) : savedId === row.driverId ? (
+                            <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600">
+                              <Check className="w-3.5 h-3.5" /> Saved
+                            </span>
+                          ) : null}
                           <button
-                            onClick={() => saveSchedule(row.driverId)}
-                            disabled={savingId === row.driverId}
-                            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-slate-900 text-white
-                              hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-1.5 ml-auto"
+                            onClick={() => handleSetActive(row.driverId, !row.active)}
+                            disabled={isPending}
+                            title={row.active ? "Hide from schedule" : "Restore to schedule"}
+                            className={`p-1.5 rounded transition-colors disabled:opacity-40 ${
+                              row.active
+                                ? "hover:bg-red-50 text-slate-300 hover:text-red-400"
+                                : "bg-amber-50 text-amber-500 hover:bg-amber-100"
+                            }`}
                           >
-                            {savingId === row.driverId
-                              ? <Loader2 className="w-3 h-3 animate-spin" />
-                              : null}
-                            Save
+                            {row.active ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
                           </button>
-                        ) : savedId === row.driverId ? (
-                          <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600 justify-end">
-                            <Check className="w-3.5 h-3.5" /> Saved
-                          </span>
-                        ) : (
-                          <span className="text-[12px] text-slate-300">—</span>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -31,6 +31,11 @@ export async function updateDriverInfo(driverId: string, name: string, workArea:
   revalidatePath("/wayne-board/scheduling");
 }
 
+export async function setDriverActive(driverId: string, active: boolean) {
+  await db.update(drivers).set({ active }).where(eq(drivers.driverId, driverId));
+  revalidatePath("/wayne-board/scheduling");
+}
+
 export async function upsertSchedule(
   driverId: string,
   days: Record<DayKey, boolean>,
