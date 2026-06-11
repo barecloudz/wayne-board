@@ -3,18 +3,25 @@ import FleetCard from "@/components/cards/fleet-card";
 import PayrollCard from "@/components/cards/payroll-card";
 import DriversCard from "@/components/cards/drivers-card";
 import RoutesCard from "@/components/cards/routes-card";
+import PortalSettings from "./portal-settings";
 import { db } from "@/lib/db";
 import { vehicles, drivers, inspections } from "@/lib/schema";
 import { count, eq } from "drizzle-orm";
+import { getSetting } from "@/lib/actions/settings";
 
 export default async function Home() {
-  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }]] =
+  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting] =
     await Promise.all([
       db.select({ vehicleCount: count() }).from(vehicles).where(eq(vehicles.active, true)),
       db.select({ driverCount: count() }).from(drivers).where(eq(drivers.active, true)),
       db.select({ completedCount: count() }).from(inspections).where(eq(inspections.status, "Complete")),
       db.select({ oosCount: count() }).from(inspections).where(eq(inspections.status, "Out of Service")),
+      getSetting("show_ryde", "true"),
+      getSetting("show_milestones", "true"),
     ]);
+
+  const showRyde       = showRydeSetting === "true";
+  const showMilestones = showMilestonesSetting === "true";
 
   return (
     <AppShell>
@@ -55,12 +62,15 @@ export default async function Home() {
         </div>
 
         {/* Report cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <FleetCard vehicleCount={vehicleCount} inspectedCount={completedCount} />
           <PayrollCard />
           <DriversCard driverCount={driverCount} />
           <RoutesCard />
         </div>
+
+        {/* Driver portal feature toggles */}
+        <PortalSettings showRyde={showRyde} showMilestones={showMilestones} />
       </main>
     </AppShell>
   );

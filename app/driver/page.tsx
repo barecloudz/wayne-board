@@ -6,6 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
+import { getSetting } from "@/lib/actions/settings";
 import Image from "next/image";
 import LogoutButton from "./logout-button";
 import DriverTabs from "./driver-tabs";
@@ -16,7 +17,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -27,7 +28,12 @@ export default async function DriverDashboard() {
     db.select({ assignedVehicleId: drivers.assignedVehicleId }).from(drivers).where(eq(drivers.driverId, session.driverId)).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
+    getSetting("show_ryde", "true"),
+    getSetting("show_milestones", "true"),
   ]);
+
+  const showRyde       = showRydeSetting === "true";
+  const showMilestones = showMilestonesSetting === "true";
 
   const upcomingTimeOff = allTimeOff.filter((t) => t.endDate >= today);
 
@@ -93,6 +99,8 @@ export default async function DriverDashboard() {
           assignedVehicle={assignedVehicle}
           driverSchedule={driverSchedule}
           upcomingTimeOff={upcomingTimeOff as any}
+          showRyde={showRyde}
+          showMilestones={showMilestones}
         />
       </div>
     </div>

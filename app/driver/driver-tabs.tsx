@@ -21,7 +21,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -35,8 +35,11 @@ export default function DriverTabs({
   assignedVehicle: AssignedVehicle;
   driverSchedule: DriverSchedule;
   upcomingTimeOff: TimeOffEntry[];
+  showRyde: boolean;
+  showMilestones: boolean;
 }) {
-  const [tab, setTab] = useState<"score" | "schedule" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">("score");
+  const defaultTab = showRyde ? "score" : "schedule";
+  const [tab, setTab] = useState<"score" | "schedule" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
 
   // Account / password change state
@@ -84,8 +87,8 @@ export default function DriverTabs({
 
   return (
     <>
-      {/* Milestone progress bar — always visible, liquid glass */}
-      {milestones.length > 0 && (() => {
+      {/* Milestone progress bar */}
+      {showMilestones && milestones.length > 0 && (() => {
         const maxDays = milestones[milestones.length - 1].daysRequired;
         const pct = Math.min(100, (streakDays / maxDays) * 100);
         return (
@@ -167,14 +170,14 @@ export default function DriverTabs({
       {/* Tabs — scrollable pill row */}
       <div className="flex gap-1 mb-5 bg-white/10 rounded-xl p-1 overflow-x-auto scrollbar-none">
         {([
-          { key: "score",       label: "My Score" },
-          { key: "schedule",    label: "Schedule" },
-          { key: "reviews",     label: `Reviews (${reviews.length})` },
-          { key: "milestones",  label: "Milestones" },
-          { key: "bonuses",     label: "Bonuses" },
-          { key: "leaderboard", label: "Leaderboard" },
-          { key: "account",     label: "Account" },
-        ] as const).map(({ key, label }) => (
+          { key: "score",       label: "My Score",                  show: showRyde },
+          { key: "schedule",    label: "Schedule",                   show: true },
+          { key: "reviews",     label: `Reviews (${reviews.length})`, show: showRyde },
+          { key: "milestones",  label: "Milestones",                 show: showMilestones },
+          { key: "bonuses",     label: "Bonuses",                    show: showMilestones },
+          { key: "leaderboard", label: "Leaderboard",                show: showRyde },
+          { key: "account",     label: "Account",                    show: true },
+        ] as const).filter(({ show }) => show).map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
