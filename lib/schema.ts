@@ -158,3 +158,21 @@ export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
   milestoneId: integer("milestone_id").notNull().references(() => milestoneRewards.id),
   earnedAt:    timestamp("earned_at").defaultNow(),
 });
+
+// ── Gate Codes ────────────────────────────────────────────────────────────────
+export const gateCodes = pgTable("gate_codes", {
+  id:           serial("id").primaryKey(),
+  location:     text("location").notNull(),           // e.g. "Station 7 North Gate"
+  code:         text("code").notNull(),
+  addedBy:      text("added_by").notNull(),           // driverId
+  addedByName:  text("added_by_name").notNull(),
+  active:       boolean("active").notNull().default(true),
+  createdAt:    timestamp("created_at").defaultNow(),
+});
+
+export const gateCodeReports = pgTable("gate_code_reports", {
+  id:          serial("id").primaryKey(),
+  gateCodeId:  integer("gate_code_id").notNull().references(() => gateCodes.id, { onDelete: "cascade" }),
+  driverId:    text("driver_id").notNull(),
+  createdAt:   timestamp("created_at").defaultNow(),
+});

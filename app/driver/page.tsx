@@ -7,9 +7,11 @@ import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone 
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
 import { getSetting } from "@/lib/actions/settings";
+import { getGateCodes } from "@/lib/actions/gate-codes";
 import Image from "next/image";
 import LogoutButton from "./logout-button";
 import DriverTabs from "./driver-tabs";
+import UpdateBanner from "@/components/update-banner";
 
 export default async function DriverDashboard() {
   const session = await getSession();
@@ -17,7 +19,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -30,6 +32,7 @@ export default async function DriverDashboard() {
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
+    getGateCodes(session.driverId),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -101,8 +104,12 @@ export default async function DriverDashboard() {
           upcomingTimeOff={upcomingTimeOff as any}
           showRyde={showRyde}
           showMilestones={showMilestones}
+          gateCodes={gateCodes}
+          isAdmin={session.isAdmin}
+          driverName={session.name}
         />
       </div>
+      <UpdateBanner />
     </div>
   );
 }

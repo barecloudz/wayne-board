@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock, Truck, CalendarDays, CalendarOff } from "lucide-react";
 import { changeDriverPassword } from "@/lib/actions/drivers";
+import GateCodesTab from "./gate-codes-tab";
+import type { GateCodeRow } from "@/lib/actions/gate-codes";
 
 type Review  = {
   id: number; type: string; stars: number | null;
@@ -21,7 +23,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, isAdmin,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -37,9 +39,12 @@ export default function DriverTabs({
   upcomingTimeOff: TimeOffEntry[];
   showRyde: boolean;
   showMilestones: boolean;
+  gateCodes: GateCodeRow[];
+  isAdmin?: boolean;
+  driverName: string;
 }) {
   const defaultTab = showRyde ? "score" : "schedule";
-  const [tab, setTab] = useState<"score" | "schedule" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
+  const [tab, setTab] = useState<"score" | "schedule" | "gatecodes" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
 
   // Account / password change state
@@ -172,6 +177,7 @@ export default function DriverTabs({
         {([
           { key: "score",       label: "My Score",                  show: showRyde },
           { key: "schedule",    label: "Schedule",                   show: true },
+          { key: "gatecodes",   label: "Gate Codes",                 show: true },
           { key: "reviews",     label: `Reviews (${reviews.length})`, show: showRyde },
           { key: "milestones",  label: "Milestones",                 show: showMilestones },
           { key: "bonuses",     label: "Bonuses",                    show: showMilestones },
@@ -440,6 +446,16 @@ export default function DriverTabs({
             )}
           </div>
         </div>
+      )}
+
+      {/* Gate Codes tab */}
+      {tab === "gatecodes" && (
+        <GateCodesTab
+          initial={gateCodes}
+          driverId={driverId}
+          driverName={driverName}
+          isAdmin={isAdmin ?? false}
+        />
       )}
 
       {/* Reviews tab */}
