@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { gateCodes, gateCodeReports } from "@/lib/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import type { GateCodeRow } from "@/lib/gate-code-constants";
 export type { GateArea, GateCodeRow } from "@/lib/gate-code-constants";
 
 export async function getGateCodes(driverId: string): Promise<GateCodeRow[]> {
