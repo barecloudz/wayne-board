@@ -30,13 +30,12 @@ export default function UpdateBanner() {
   if (!show) return null;
 
   function handleUpdate() {
-    // Clear caches then hard reload
     if ("caches" in window) {
-      caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).finally(() => {
-        window.location.reload();
+      void caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).then(() => {
+        location.reload();
       });
     } else {
-      window.location.reload();
+      location.reload();
     }
   }
 
