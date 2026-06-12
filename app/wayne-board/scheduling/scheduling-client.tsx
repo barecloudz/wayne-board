@@ -382,7 +382,9 @@ export default function SchedulingClient({
                             <div>
                               <div className="flex items-center gap-2">
                                 {row.noticeDate && (
-                                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" title={`2-week notice given ${formatDate(row.noticeDate)}`} />
+                                  <span title={`2-week notice given ${formatDate(row.noticeDate)}`}>
+                                    <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                  </span>
                                 )}
                                 <span className="font-semibold text-slate-800">{row.name}</span>
                                 {!row.active && (
