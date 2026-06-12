@@ -159,6 +159,19 @@ export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
   earnedAt:    timestamp("earned_at").defaultNow(),
 });
 
+// ── Maintenance Requests ──────────────────────────────────────────────────────
+export const maintenanceRequests = pgTable("maintenance_requests", {
+  id:          serial("id").primaryKey(),
+  driverId:    text("driver_id").notNull(),
+  driverName:  text("driver_name").notNull(),
+  truckNumber: text("truck_number").notNull(),
+  description: text("description").notNull(),
+  status:      text("status").notNull().default("pending"), // "pending"|"in_progress"|"resolved"
+  adminNote:   text("admin_note"),
+  createdAt:   timestamp("created_at").defaultNow(),
+  updatedAt:   timestamp("updated_at").defaultNow(),
+});
+
 // ── Gate Codes ────────────────────────────────────────────────────────────────
 export const gateCodes = pgTable("gate_codes", {
   id:           serial("id").primaryKey(),

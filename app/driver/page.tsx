@@ -8,6 +8,7 @@ import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/acti
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
 import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes } from "@/lib/actions/gate-codes";
+import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
 import Image from "next/image";
 import LogoutButton from "./logout-button";
 import DriverTabs from "./driver-tabs";
@@ -19,7 +20,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, myRequests, activeVehicles] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -33,6 +34,8 @@ export default async function DriverDashboard() {
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getGateCodes(session.driverId),
+    getMyMaintenanceRequests(session.driverId),
+    db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -105,6 +108,8 @@ export default async function DriverDashboard() {
           showRyde={showRyde}
           showMilestones={showMilestones}
           gateCodes={gateCodes}
+          maintenanceRequests={myRequests as any}
+          activeVehicles={activeVehicles}
           isAdmin={session.isAdmin}
           driverName={session.name}
         />
