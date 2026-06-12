@@ -14,6 +14,7 @@ export const drivers = pgTable("drivers", {
   assignedVehicleId: integer("assigned_vehicle_id").references(() => vehicles.id),
   workArea:         text("work_area"),
   active:           boolean("active").notNull().default(true),
+  noticeDate:       date("notice_date"),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 
@@ -157,6 +158,15 @@ export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
   driverId:    text("driver_id").notNull().references(() => drivers.driverId),
   milestoneId: integer("milestone_id").notNull().references(() => milestoneRewards.id),
   earnedAt:    timestamp("earned_at").defaultNow(),
+});
+
+// ── Schedule Overrides (one-time extra working days) ─────────────────────────
+export const scheduleOverrides = pgTable("schedule_overrides", {
+  id:        serial("id").primaryKey(),
+  driverId:  text("driver_id").notNull().references(() => drivers.driverId, { onDelete: "cascade" }),
+  date:      date("date").notNull(),
+  note:      text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // ── Maintenance Requests ──────────────────────────────────────────────────────

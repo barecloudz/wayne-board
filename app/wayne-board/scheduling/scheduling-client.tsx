@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, Fragment, useRef } from "react";
 import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
-  Loader2, Check, AlertTriangle, Pencil, X,
+  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus,
 } from "lucide-react";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -29,6 +29,7 @@ type ScheduleRow = {
   name: string;
   active: boolean;
   workArea: string | null;
+  noticeDate: string | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -54,14 +55,22 @@ type CoverageRow = {
   reason: string;
 };
 
+type OverrideRow = {
+  id: number;
+  driverId: string;
+  date: string;
+  note: string | null;
+};
+
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, coverageTimeOff, today,
+  schedules, timeOff, coverageTimeOff, upcomingOverrides, today,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
   coverageTimeOff: CoverageRow[];
+  upcomingOverrides: OverrideRow[];
   today: string;
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
@@ -113,12 +122,12 @@ export default function SchedulingClient({
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
-  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string }>>({});
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string }>>({});
 
   function openDriverEdit(row: ScheduleRow) {
     setDriverDrafts((prev) => ({
       ...prev,
-      [row.driverId]: { name: row.name, workArea: row.workArea ?? "" },
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "" },
     }));
     setEditingDriver(row.driverId);
   }
@@ -128,13 +137,47 @@ export default function SchedulingClient({
     if (!draft?.name.trim()) return;
     startTransition(async () => {
       await updateDriverInfo(driverId, draft.name, draft.workArea || null);
+      const noticeDateVal = draft.noticeDate || null;
+      // Find current notice date from schedules to detect change
+      const currentRow = schedules.find((s) => s.driverId === driverId);
+      if (noticeDateVal !== (currentRow?.noticeDate ?? null)) {
+        await setDriverNoticeDate(driverId, noticeDateVal);
+      }
       setEditingDriver(null);
+    });
+  }
+
+  // ── One-time overrides ────────────────────────────────────────────────────
+  const [overrides, setOverrides] = useState<OverrideRow[]>(upcomingOverrides);
+  const [overridePicker, setOverridePicker] = useState<string | null>(null); // driverId
+  const [overrideDate, setOverrideDate] = useState("");
+  const [overrideNote, setOverrideNote] = useState("");
+
+  function handleAddOverride(driverId: string) {
+    if (!overrideDate) return;
+    startTransition(async () => {
+      await addScheduleOverride(driverId, overrideDate, overrideNote || undefined);
+      setOverrides((prev) => [
+        ...prev.filter((o) => !(o.driverId === driverId && o.date === overrideDate)),
+        { id: Date.now(), driverId, date: overrideDate, note: overrideNote || null },
+      ]);
+      setOverridePicker(null);
+      setOverrideDate("");
+      setOverrideNote("");
+    });
+  }
+
+  function handleRemoveOverride(id: number) {
+    startTransition(async () => {
+      await removeScheduleOverride(id);
+      setOverrides((prev) => prev.filter((o) => o.id !== id));
     });
   }
 
   // ── Time off ──────────────────────────────────────────────────────────────
   const [showAdd, setShowAdd]   = useState(false);
   const [editEntry, setEditEntry] = useState<TimeOffRow | null>(null);
+  const timeOffFormRef = useRef<HTMLDivElement>(null);
   const [toDriverId, setToDriverId] = useState("");
   const [toStart, setToStart]   = useState("");
   const [toEnd, setToEnd]       = useState("");
@@ -145,6 +188,7 @@ export default function SchedulingClient({
     setToDriverId(""); setToStart(""); setToEnd(""); setToReason(""); setToNote("");
     setEditEntry(null);
     setShowAdd(true);
+    setTimeout(() => timeOffFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
   function openEdit(entry: TimeOffRow) {
@@ -155,6 +199,7 @@ export default function SchedulingClient({
     setToNote(entry.note ?? "");
     setEditEntry(entry);
     setShowAdd(true);
+    setTimeout(() => timeOffFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
   function handleSaveTimeOff() {
@@ -191,15 +236,19 @@ export default function SchedulingClient({
 
   // Map schedules for quick lookup
   const scheduleMap = Object.fromEntries(schedules.map((s) => [s.driverId, s]));
+
+  // Drivers on notice are only counted as working up to noticeDate + 14 days
+  function isOnNotice(driverId: string, date: Date): boolean {
+    const sched = scheduleMap[driverId];
+    if (!sched?.noticeDate) return false;
+    const lastDay = addDays(parseISO(sched.noticeDate), 14);
+    return date > lastDay;
+  }
+
   const activeDrivers = schedules.filter((s) => s.active);
 
-  function isWorking(driverId: string, date: Date): boolean {
-    const dayKey = JS_DAY_TO_KEY[date.getDay()];
-    const sched = scheduleMap[driverId];
-    if (!sched?.schedule) return false;
-    if (!sched.schedule[dayKey]) return false;
-    return !offSet.has(`${driverId}|${format(date, "yyyy-MM-dd")}`);
-  }
+  // Build override lookup: "driverId|YYYY-MM-DD"
+  const overrideSet = new Set<string>(overrides.map((o) => `${o.driverId}|${o.date}`));
 
   const upcomingTimeOff = timeOff.filter((t) => t.endDate >= today).slice(0, 20);
 
@@ -272,8 +321,11 @@ export default function SchedulingClient({
                 {visibleSchedules.map((row) => {
                   const days = getDays(row);
                   const isDirty = !!drafts[row.driverId];
+                  const driverOverrides = overrides.filter((o) => o.driverId === row.driverId);
+                  const pickerOpen = overridePicker === row.driverId;
                   return (
-                    <tr key={row.driverId} className={`border-b border-slate-100/80 last:border-0 transition-colors ${isDirty ? "bg-amber-50/40" : "hover:bg-slate-50/40"}`}>
+                    <Fragment key={row.driverId}>
+                    <tr className={`border-b ${pickerOpen ? "border-slate-100" : "border-slate-100/80 last:border-0"} transition-colors ${isDirty ? "bg-amber-50/40" : "hover:bg-slate-50/40"}`}>
                       <td className="px-6 py-3">
                         {editingDriver === row.driverId ? (
                           <div className="flex flex-col gap-1.5 min-w-[200px]">
@@ -290,6 +342,24 @@ export default function SchedulingClient({
                               placeholder="Work area (e.g. Zone A, Dock 3)"
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
                             />
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[10px] font-semibold text-red-500 uppercase tracking-wider">2-Week Notice Date</label>
+                              <input
+                                type="date"
+                                value={driverDrafts[row.driverId]?.noticeDate ?? ""}
+                                onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], noticeDate: e.target.value } }))}
+                                className="px-2.5 py-1.5 rounded-lg border border-red-200 text-[13px] text-slate-800 outline-none focus:border-red-400 focus:ring-1 focus:ring-red-100 bg-red-50/40"
+                              />
+                              {driverDrafts[row.driverId]?.noticeDate && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], noticeDate: "" } }))}
+                                  className="text-[10px] text-slate-400 hover:text-red-500 text-left transition-colors"
+                                >
+                                  Clear notice
+                                </button>
+                              )}
+                            </div>
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => saveDriverInfo(row.driverId)}
@@ -311,16 +381,40 @@ export default function SchedulingClient({
                           <div className="flex items-start gap-2 group">
                             <div>
                               <div className="flex items-center gap-2">
+                                {row.noticeDate && (
+                                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" title={`2-week notice given ${formatDate(row.noticeDate)}`} />
+                                )}
                                 <span className="font-semibold text-slate-800">{row.name}</span>
                                 {!row.active && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
                                     inactive
                                   </span>
                                 )}
+                                {row.noticeDate && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
+                                    notice: {formatDate(row.noticeDate)}
+                                  </span>
+                                )}
                               </div>
                               <span className="text-[11px] font-mono text-slate-400">{row.driverId}</span>
                               {row.workArea && (
                                 <span className="block text-[11px] text-slate-500 mt-0.5">{row.workArea}</span>
+                              )}
+                              {driverOverrides.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {driverOverrides.map((o) => (
+                                    <span key={o.id} className="flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                      {formatDate(o.date)}
+                                      <button
+                                        onClick={() => handleRemoveOverride(o.id)}
+                                        disabled={isPending}
+                                        className="hover:text-red-500 transition-colors disabled:opacity-40"
+                                      >
+                                        <X className="w-2.5 h-2.5" />
+                                      </button>
+                                    </span>
+                                  ))}
+                                </div>
                               )}
                             </div>
                             <button
@@ -364,6 +458,22 @@ export default function SchedulingClient({
                             </span>
                           ) : null}
                           <button
+                            onClick={() => {
+                              setOverridePicker(pickerOpen ? null : row.driverId);
+                              setOverrideDate("");
+                              setOverrideNote("");
+                            }}
+                            disabled={isPending}
+                            title="Add one-time working day"
+                            className={`p-1.5 rounded transition-colors disabled:opacity-40 ${
+                              pickerOpen
+                                ? "bg-blue-100 text-blue-600"
+                                : "hover:bg-blue-50 text-slate-300 hover:text-blue-500"
+                            }`}
+                          >
+                            <CalendarPlus className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleSetActive(row.driverId, !row.active)}
                             disabled={isPending}
                             title={row.active ? "Hide from schedule" : "Restore to schedule"}
@@ -378,6 +488,44 @@ export default function SchedulingClient({
                         </div>
                       </td>
                     </tr>
+                    {pickerOpen && (
+                      <tr className="border-b border-slate-100/80">
+                        <td colSpan={9} className="px-6 pb-3 pt-0">
+                          <div className="flex items-center gap-2 bg-blue-50/60 border border-blue-100 rounded-xl p-3">
+                            <CalendarPlus className="w-4 h-4 text-blue-400 shrink-0" />
+                            <input
+                              type="date"
+                              value={overrideDate}
+                              min={today}
+                              onChange={(e) => setOverrideDate(e.target.value)}
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Note (optional)"
+                              value={overrideNote}
+                              onChange={(e) => setOverrideNote(e.target.value)}
+                              className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-white"
+                            />
+                            <button
+                              onClick={() => handleAddOverride(row.driverId)}
+                              disabled={!overrideDate || isPending}
+                              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-40 flex items-center gap-1.5 shrink-0"
+                            >
+                              {isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+                              Add Day
+                            </button>
+                            <button
+                              onClick={() => setOverridePicker(null)}
+                              className="p-1.5 rounded-lg hover:bg-blue-100 transition-colors text-slate-400 shrink-0"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })}
               </tbody>
@@ -402,7 +550,7 @@ export default function SchedulingClient({
 
           {/* Add/edit form */}
           {showAdd && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6">
+            <div ref={timeOffFormRef} className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-[15px] font-extrabold text-slate-900">
                   {editEntry ? "Edit Time Off" : "Add Time Off"}
@@ -567,12 +715,18 @@ export default function SchedulingClient({
               {days14.map((day) => {
                 const dateStr = format(day, "yyyy-MM-dd");
                 const dayKey = JS_DAY_TO_KEY[day.getDay()];
-                const working = activeDrivers.filter(
-                  (d) => d.schedule && d.schedule[dayKey] && !offSet.has(`${d.driverId}|${dateStr}`)
-                );
-                const offToday = activeDrivers.filter(
-                  (d) => d.schedule && d.schedule[dayKey] && offSet.has(`${d.driverId}|${dateStr}`)
-                );
+                const working = activeDrivers.filter((d) => {
+                  const key = `${d.driverId}|${dateStr}`;
+                  if (offSet.has(key)) return false;
+                  if (isOnNotice(d.driverId, day)) return false;
+                  return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
+                });
+                const offToday = activeDrivers.filter((d) => {
+                  const key = `${d.driverId}|${dateStr}`;
+                  if (isOnNotice(d.driverId, day)) return false;
+                  if (!offSet.has(key)) return false;
+                  return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
+                });
                 const isToday = dateStr === today;
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 

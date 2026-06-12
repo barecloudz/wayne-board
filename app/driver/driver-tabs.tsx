@@ -5,7 +5,7 @@ import { Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock, Truck, Calendar
 import { changeDriverPassword } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import MaintenanceTab from "./maintenance-tab";
-import type { GateCodeRow } from "@/lib/actions/gate-codes";
+import type { GateCodeRow } from "@/lib/gate-code-constants";
 
 type Review  = {
   id: number; type: string; stars: number | null;

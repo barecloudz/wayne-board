@@ -4,26 +4,7 @@ import { db } from "@/lib/db";
 import { gateCodes, gateCodeReports } from "@/lib/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-
-export const GATE_AREAS = [
-  "East Hendersonville",
-  "West Hendersonville",
-  "North Hendersonville",
-  "Zirconia",
-] as const;
-
-export type GateArea = (typeof GATE_AREAS)[number];
-
-export type GateCodeRow = {
-  id: number;
-  location: string;
-  code: string;
-  addedByName: string;
-  active: boolean;
-  createdAt: Date | null;
-  reportCount: number;
-  myReport: boolean;
-};
+export type { GateArea, GateCodeRow } from "@/lib/gate-code-constants";
 
 export async function getGateCodes(driverId: string): Promise<GateCodeRow[]> {
   const rows = await db

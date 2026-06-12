@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { ThumbsDown, Plus, ChevronDown, ChevronUp, Trash2, Loader2, X } from "lucide-react";
-import { addGateCode, reportNotWorking, deleteGateCode, GATE_AREAS } from "@/lib/actions/gate-codes";
-import type { GateCodeRow, GateArea } from "@/lib/actions/gate-codes";
+import { addGateCode, reportNotWorking, deleteGateCode } from "@/lib/actions/gate-codes";
+import { GATE_AREAS } from "@/lib/gate-code-constants";
+import type { GateCodeRow, GateArea } from "@/lib/gate-code-constants";
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[13px] text-white placeholder-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 transition";
 
