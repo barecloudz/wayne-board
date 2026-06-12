@@ -23,7 +23,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, isAdmin,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, isAdmin, driverName,
 }: {
   reviews: Review[];
   milestones: Milestone[];
