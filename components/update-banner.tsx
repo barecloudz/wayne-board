@@ -3,18 +3,24 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
+const STORAGE_KEY = "app_version";
+
 export default function UpdateBanner() {
   const [show, setShow] = useState(false);
-  const initialVersion = useRef<string | null>(null);
+  const checked = useRef(false);
 
   useEffect(() => {
     async function check() {
       try {
         const res = await fetch("/api/version", { cache: "no-store" });
         const { version } = await res.json();
-        if (initialVersion.current === null) {
-          initialVersion.current = version;
-        } else if (version !== initialVersion.current) {
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === null) {
+          // First ever visit — store current version, no banner
+          localStorage.setItem(STORAGE_KEY, version);
+        } else if (stored !== version) {
+          // Version changed since last visit — show banner
           setShow(true);
         }
       } catch {
@@ -22,8 +28,12 @@ export default function UpdateBanner() {
       }
     }
 
-    check();
-    const id = setInterval(check, 60_000); // check every 60s
+    if (!checked.current) {
+      checked.current = true;
+      check();
+    }
+
+    const id = setInterval(check, 60_000);
     return () => clearInterval(id);
   }, []);
 
@@ -31,10 +41,14 @@ export default function UpdateBanner() {
 
   function handleUpdate() {
     if ("caches" in window) {
-      void caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).then(() => {
-        location.reload();
-      });
+      void caches.keys()
+        .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        .then(() => {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+        });
     } else {
+      localStorage.removeItem(STORAGE_KEY);
       location.reload();
     }
   }

@@ -14,7 +14,6 @@ import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
 import Image from "next/image";
 import LogoutButton from "./logout-button";
 import DriverTabs from "./driver-tabs";
-import UpdateBanner from "@/components/update-banner";
 
 export default async function DriverDashboard() {
   const session = await getSession();
@@ -116,7 +115,6 @@ export default async function DriverDashboard() {
           driverName={session.name}
         />
       </div>
-      <UpdateBanner />
     </div>
   );
 }
