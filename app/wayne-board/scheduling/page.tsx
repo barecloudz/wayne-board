@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import AppShell from "@/components/app-shell";
 import { getAllSchedules, getAllTimeOff, getTimeOffInRange, getAllUpcomingOverrides } from "@/lib/actions/scheduling";
 import SchedulingClient from "./scheduling-client";
