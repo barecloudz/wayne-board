@@ -498,7 +498,6 @@ export default function SchedulingClient({
                             <input
                               type="date"
                               value={overrideDate}
-                              min={today}
                               onChange={(e) => setOverrideDate(e.target.value)}
                               className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 bg-white"
                             />
