@@ -17,6 +17,7 @@ export async function getAllSchedules() {
       active:     drivers.active,
       workArea:   drivers.workArea,
       noticeDate: drivers.noticeDate,
+      lastDay:    drivers.lastDay,
       schedule:   driverSchedules,
     })
     .from(drivers)
@@ -27,6 +28,11 @@ export async function getAllSchedules() {
 
 export async function setDriverNoticeDate(driverId: string, noticeDate: string | null) {
   await db.update(drivers).set({ noticeDate }).where(eq(drivers.driverId, driverId));
+  revalidatePath("/wayne-board/scheduling");
+}
+
+export async function setDriverLastDay(driverId: string, lastDay: string | null) {
+  await db.update(drivers).set({ lastDay }).where(eq(drivers.driverId, driverId));
   revalidatePath("/wayne-board/scheduling");
 }
 

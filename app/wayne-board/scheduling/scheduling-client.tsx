@@ -5,7 +5,7 @@ import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -30,6 +30,7 @@ type ScheduleRow = {
   active: boolean;
   workArea: string | null;
   noticeDate: string | null;
+  lastDay: string | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -122,12 +123,12 @@ export default function SchedulingClient({
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
-  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string }>>({});
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string; lastDay: string }>>({});
 
   function openDriverEdit(row: ScheduleRow) {
     setDriverDrafts((prev) => ({
       ...prev,
-      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "" },
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "" },
     }));
     setEditingDriver(row.driverId);
   }
@@ -136,12 +137,15 @@ export default function SchedulingClient({
     const draft = driverDrafts[driverId];
     if (!draft?.name.trim()) return;
     startTransition(async () => {
+      const currentRow = schedules.find((s) => s.driverId === driverId);
       await updateDriverInfo(driverId, draft.name, draft.workArea || null);
       const noticeDateVal = draft.noticeDate || null;
-      // Find current notice date from schedules to detect change
-      const currentRow = schedules.find((s) => s.driverId === driverId);
       if (noticeDateVal !== (currentRow?.noticeDate ?? null)) {
         await setDriverNoticeDate(driverId, noticeDateVal);
+      }
+      const lastDayVal = draft.lastDay || null;
+      if (lastDayVal !== (currentRow?.lastDay ?? null)) {
+        await setDriverLastDay(driverId, lastDayVal);
       }
       setEditingDriver(null);
     });
@@ -243,12 +247,12 @@ export default function SchedulingClient({
   // Map schedules for quick lookup
   const scheduleMap = Object.fromEntries(schedules.map((s) => [s.driverId, s]));
 
-  // Drivers on notice are only counted as working up to noticeDate + 14 days
-  function isOnNotice(driverId: string, date: Date): boolean {
+  // Returns true if driver should be excluded from coverage on this date (past their last day)
+  function isPastLastDay(driverId: string, date: Date): boolean {
     const sched = scheduleMap[driverId];
-    if (!sched?.noticeDate) return false;
-    const lastDay = addDays(parseISO(sched.noticeDate), 14);
-    return date > lastDay;
+    if (sched?.lastDay) return date > parseISO(sched.lastDay);
+    if (sched?.noticeDate) return date > addDays(parseISO(sched.noticeDate), 14);
+    return false;
   }
 
   const activeDrivers = schedules.filter((s) => s.active);
@@ -366,6 +370,24 @@ export default function SchedulingClient({
                                 </button>
                               )}
                             </div>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[10px] font-semibold text-orange-500 uppercase tracking-wider">Last Day</label>
+                              <input
+                                type="date"
+                                value={driverDrafts[row.driverId]?.lastDay ?? ""}
+                                onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: e.target.value } }))}
+                                className="px-2.5 py-1.5 rounded-lg border border-orange-200 text-[13px] text-slate-800 outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 bg-orange-50/40"
+                              />
+                              {driverDrafts[row.driverId]?.lastDay && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: "" } }))}
+                                  className="text-[10px] text-slate-400 hover:text-red-500 text-left transition-colors"
+                                >
+                                  Clear last day
+                                </button>
+                              )}
+                            </div>
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => saveDriverInfo(row.driverId)}
@@ -401,6 +423,11 @@ export default function SchedulingClient({
                                 {row.noticeDate && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
                                     notice: {formatDate(row.noticeDate)}
+                                  </span>
+                                )}
+                                {row.lastDay && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
+                                    last day: {formatDate(row.lastDay)}
                                   </span>
                                 )}
                               </div>
@@ -754,12 +781,12 @@ export default function SchedulingClient({
                 const working = activeDrivers.filter((d) => {
                   const key = `${d.driverId}|${dateStr}`;
                   if (offSet.has(key)) return false;
-                  if (isOnNotice(d.driverId, day)) return false;
+                  if (isPastLastDay(d.driverId, day)) return false;
                   return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
                 });
                 const offToday = activeDrivers.filter((d) => {
                   const key = `${d.driverId}|${dateStr}`;
-                  if (isOnNotice(d.driverId, day)) return false;
+                  if (isPastLastDay(d.driverId, day)) return false;
                   if (!offSet.has(key)) return false;
                   return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
                 });

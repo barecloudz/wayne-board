@@ -15,6 +15,7 @@ export const drivers = pgTable("drivers", {
   workArea:         text("work_area"),
   active:           boolean("active").notNull().default(true),
   noticeDate:       date("notice_date"),
+  lastDay:          date("last_day"),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 
