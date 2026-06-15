@@ -148,6 +148,11 @@ export async function getAllUpcomingOverrides(fromDate: string) {
     .orderBy(scheduleOverrides.driverId, scheduleOverrides.date);
 }
 
+export async function getAllOverrides() {
+  return db.select().from(scheduleOverrides)
+    .orderBy(scheduleOverrides.driverId, scheduleOverrides.date);
+}
+
 // Returns time-off entries that overlap with the given date range
 export async function getTimeOffInRange(startDate: string, endDate: string) {
   return db

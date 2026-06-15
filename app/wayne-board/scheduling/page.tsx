@@ -1,21 +1,19 @@
 export const dynamic = "force-dynamic";
 
 import AppShell from "@/components/app-shell";
-import { getAllSchedules, getAllTimeOff, getTimeOffInRange, getAllUpcomingOverrides } from "@/lib/actions/scheduling";
+import { getAllSchedules, getAllTimeOff, getAllUpcomingOverrides, getAllOverrides } from "@/lib/actions/scheduling";
 import SchedulingClient from "./scheduling-client";
-import { addDays, format } from "date-fns";
+import { format } from "date-fns";
 
 export default async function SchedulingPage() {
   const today = new Date();
-  const rangeEnd = addDays(today, 13);
   const rangeStart = format(today, "yyyy-MM-dd");
-  const rangeEndStr = format(rangeEnd, "yyyy-MM-dd");
 
-  const [schedules, timeOff, coverageTimeOff, upcomingOverrides] = await Promise.all([
+  const [schedules, timeOff, upcomingOverrides, allOverrides] = await Promise.all([
     getAllSchedules(),
     getAllTimeOff(),
-    getTimeOffInRange(rangeStart, rangeEndStr),
     getAllUpcomingOverrides(rangeStart),
+    getAllOverrides(),
   ]);
 
   return (
@@ -23,8 +21,8 @@ export default async function SchedulingPage() {
       <SchedulingClient
         schedules={schedules as any}
         timeOff={timeOff as any}
-        coverageTimeOff={coverageTimeOff as any}
         upcomingOverrides={upcomingOverrides as any}
+        allOverrides={allOverrides as any}
         today={rangeStart}
       />
     </AppShell>

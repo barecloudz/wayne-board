@@ -3,7 +3,7 @@
 import { useState, useTransition, Fragment, useRef } from "react";
 import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
-  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus,
+  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
@@ -65,12 +65,12 @@ type OverrideRow = {
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, coverageTimeOff, upcomingOverrides, today,
+  schedules, timeOff, upcomingOverrides, allOverrides, today,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
-  coverageTimeOff: CoverageRow[];
   upcomingOverrides: OverrideRow[];
+  allOverrides: OverrideRow[];
   today: string;
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
@@ -221,11 +221,17 @@ export default function SchedulingClient({
   }
 
   // ── Coverage ──────────────────────────────────────────────────────────────
-  const days14 = Array.from({ length: 14 }, (_, i) => addDays(parseISO(today), i));
+  const COVERAGE_FLOOR = parseISO("2026-06-08"); // earliest allowed week start
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = this week, -1 = last week, etc.
 
-  // Build a set of "driverId|YYYY-MM-DD" for quick off-day lookup
+  const coverageStart = addDays(parseISO(today), weekOffset * 7);
+  const days14 = Array.from({ length: 14 }, (_, i) => addDays(coverageStart, i));
+  const canGoBack = addDays(coverageStart, -7) >= COVERAGE_FLOOR;
+  const canGoForward = weekOffset < 0; // can only go forward if in the past
+
+  // Build a set of "driverId|YYYY-MM-DD" for quick off-day lookup using ALL time off
   const offSet = new Set<string>();
-  coverageTimeOff.forEach((to) => {
+  timeOff.forEach((to) => {
     const s = parseISO(to.startDate), e = parseISO(to.endDate);
     days14.forEach((d) => {
       if (isWithinInterval(d, { start: s, end: e })) {
@@ -247,8 +253,8 @@ export default function SchedulingClient({
 
   const activeDrivers = schedules.filter((s) => s.active);
 
-  // Build override lookup: "driverId|YYYY-MM-DD"
-  const overrideSet = new Set<string>(overrides.map((o) => `${o.driverId}|${o.date}`));
+  // Build override lookup: "driverId|YYYY-MM-DD" — use allOverrides for past week viewing
+  const overrideSet = new Set<string>(allOverrides.map((o) => `${o.driverId}|${o.date}`));
 
   const upcomingTimeOff = timeOff.filter((t) => t.endDate >= today).slice(0, 20);
 
@@ -708,9 +714,38 @@ export default function SchedulingClient({
       {/* ── COVERAGE TAB ─────────────────────────────────────────────────── */}
       {tab === "coverage" && (
         <div className="flex flex-col gap-4">
-          <p className="text-[13px] text-slate-500">
-            Based on each driver&apos;s weekly schedule minus any time-off entries. Drivers with no schedule set are excluded.
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] text-slate-500">
+              Based on each driver&apos;s weekly schedule minus any time-off entries.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setWeekOffset((w) => w - 1)}
+                disabled={!canGoBack}
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <span className="text-[12px] font-semibold text-slate-600 min-w-[120px] text-center">
+                {weekOffset === 0 ? "This 2 weeks" : weekOffset === -1 ? "Last 2 weeks" : `${Math.abs(weekOffset) * 2} weeks ago`}
+              </span>
+              <button
+                onClick={() => setWeekOffset((w) => w + 1)}
+                disabled={!canGoForward}
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-600" />
+              </button>
+              {weekOffset !== 0 && (
+                <button
+                  onClick={() => setWeekOffset(0)}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                >
+                  Today
+                </button>
+              )}
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <div className="flex gap-2 min-w-max pb-2">
               {days14.map((day) => {
