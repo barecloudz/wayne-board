@@ -120,6 +120,10 @@ export default function SchedulingClient({
     startTransition(async () => { await setDriverActive(driverId, active); });
   }
 
+  function handleSetTrainee(driverId: string, isTrainee: boolean) {
+    startTransition(async () => { await setDriverTrainee(driverId, isTrainee); });
+  }
+
   const visibleSchedules = showInactive ? schedules : schedules.filter((s) => s.active);
 
   // ── Driver info editing ───────────────────────────────────────────────────
@@ -329,7 +333,7 @@ export default function SchedulingClient({
                       {d.short}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right w-28">Actions</th>
+                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right w-52">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -482,9 +486,10 @@ export default function SchedulingClient({
                             </div>
                             <button
                               onClick={() => openDriverEdit(row)}
-                              className="p-1 rounded hover:bg-slate-100 transition-colors opacity-0 group-hover:opacity-100 mt-0.5 shrink-0"
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors mt-0.5 shrink-0"
                             >
-                              <Pencil className="w-3 h-3 text-slate-400" />
+                              <Pencil className="w-3 h-3" />
+                              Edit
                             </button>
                           </div>
                         )}
@@ -535,6 +540,18 @@ export default function SchedulingClient({
                             }`}
                           >
                             <CalendarPlus className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleSetTrainee(row.driverId, !row.isTrainee)}
+                            disabled={isPending}
+                            title={row.isTrainee ? "Remove trainee status" : "Mark as trainee (won't count as a route)"}
+                            className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-40 border ${
+                              row.isTrainee
+                                ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                                : "text-slate-300 border-slate-200 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200"
+                            }`}
+                          >
+                            Trainee
                           </button>
                           <button
                             onClick={() => handleSetActive(row.driverId, !row.active)}
