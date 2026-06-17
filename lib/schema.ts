@@ -14,8 +14,10 @@ export const drivers = pgTable("drivers", {
   assignedVehicleId: integer("assigned_vehicle_id").references(() => vehicles.id),
   workArea:         text("work_area"),
   active:           boolean("active").notNull().default(true),
+  isTrainee:        boolean("is_trainee").notNull().default(false),
   noticeDate:       date("notice_date"),
   lastDay:          date("last_day"),
+  firstLoginAt:     timestamp("first_login_at"),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 
@@ -186,7 +188,8 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
 // ── Gate Codes ────────────────────────────────────────────────────────────────
 export const gateCodes = pgTable("gate_codes", {
   id:           serial("id").primaryKey(),
-  location:     text("location").notNull(),           // e.g. "Station 7 North Gate"
+  location:     text("location").notNull(),           // e.g. "East Hendersonville"
+  roadName:     text("road_name"),                    // e.g. "Lyndsey Dr" — helps drivers find the gate
   code:         text("code").notNull(),
   addedBy:      text("added_by").notNull(),           // driverId
   addedByName:  text("added_by_name").notNull(),

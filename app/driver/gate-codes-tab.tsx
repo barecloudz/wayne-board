@@ -1,35 +1,41 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ThumbsDown, Plus, ChevronDown, ChevronUp, Trash2, Loader2, X } from "lucide-react";
-import { addGateCode, reportNotWorking, deleteGateCode } from "@/lib/actions/gate-codes";
-import { GATE_AREAS } from "@/lib/gate-code-constants";
-import type { GateCodeRow, GateArea } from "@/lib/gate-code-constants";
+import { ThumbsDown, Plus, ChevronDown, ChevronUp, Trash2, Loader2, X, MapPin, AlertTriangle } from "lucide-react";
+import { addGateCode, addGateArea, reportNotWorking, deleteGateCode } from "@/lib/actions/gate-codes";
+import type { GateCodeRow } from "@/lib/gate-code-constants";
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[13px] text-white placeholder-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 transition";
 
 export default function GateCodesTab({
   initial,
+  areas,
   driverId,
   driverName,
   isAdmin,
 }: {
   initial: GateCodeRow[];
+  areas: string[];
   driverId: string;
   driverName: string;
   isAdmin: boolean;
 }) {
   const [codes, setCodes] = useState<GateCodeRow[]>(initial);
-  const [openAreas, setOpenAreas] = useState<Set<string>>(new Set(GATE_AREAS));
+  const [allAreas, setAllAreas] = useState<string[]>(areas);
+  const [openAreas, setOpenAreas] = useState<Set<string>>(new Set(areas));
   const [showAdd, setShowAdd] = useState(false);
-  const [addArea, setAddArea] = useState<GateArea>(GATE_AREAS[0]);
+  const [addArea, setAddArea] = useState<string>(areas[0] ?? "");
+  const [addRoadName, setAddRoadName] = useState("");
   const [addCode, setAddCode] = useState("");
+  const [showNewArea, setShowNewArea] = useState(false);
+  const [newAreaName, setNewAreaName] = useState("");
   const [isPending, startTransition] = useTransition();
 
   // Thumbs-down modal state
   const [reportTarget, setReportTarget] = useState<GateCodeRow | null>(null);
   const [hasNew, setHasNew] = useState<boolean | null>(null);
   const [newCode, setNewCode] = useState("");
+  const [newRoadName, setNewRoadName] = useState("");
 
   function toggleArea(area: string) {
     setOpenAreas((prev) => {
@@ -40,19 +46,32 @@ export default function GateCodesTab({
   }
 
   function handleAdd() {
-    if (!addCode.trim()) return;
+    if (!addCode.trim() || !addRoadName.trim()) return;
     startTransition(async () => {
-      await addGateCode(addArea, addCode.trim(), driverId, driverName);
+      await addGateCode(addArea, addRoadName.trim(), addCode.trim(), driverId, driverName);
       setCodes((prev) => [
         {
-          id: Date.now(), location: addArea, code: addCode.trim(),
+          id: Date.now(), location: addArea, roadName: addRoadName.trim(), code: addCode.trim(),
           addedByName: driverName, active: true, createdAt: new Date(),
           reportCount: 0, myReport: false,
         },
         ...prev,
       ]);
       setAddCode("");
+      setAddRoadName("");
       setShowAdd(false);
+    });
+  }
+
+  function handleAddArea() {
+    const trimmed = newAreaName.trim();
+    if (!trimmed || allAreas.includes(trimmed)) return;
+    startTransition(async () => {
+      await addGateArea(trimmed);
+      setAllAreas((prev) => [...prev, trimmed]);
+      setOpenAreas((prev) => new Set([...prev, trimmed]));
+      setNewAreaName("");
+      setShowNewArea(false);
     });
   }
 
@@ -60,6 +79,7 @@ export default function GateCodesTab({
     setReportTarget(row);
     setHasNew(null);
     setNewCode("");
+    setNewRoadName("");
   }
 
   function handleReport() {
@@ -71,8 +91,8 @@ export default function GateCodesTab({
         hasNew ? newCode : undefined,
         hasNew ? reportTarget.location : undefined,
         hasNew ? driverName : undefined,
+        hasNew ? newRoadName : undefined,
       );
-      // Optimistically update count + myReport
       setCodes((prev) =>
         prev.map((c) =>
           c.id === reportTarget.id
@@ -80,12 +100,11 @@ export default function GateCodesTab({
             : c
         )
       );
-      // If new code provided, add it optimistically
       if (hasNew && newCode.trim()) {
         setCodes((prev) => [
           {
-            id: Date.now(), location: reportTarget.location, code: newCode.trim(),
-            addedByName: driverName, active: true, createdAt: new Date(),
+            id: Date.now(), location: reportTarget.location, roadName: newRoadName.trim() || reportTarget.roadName,
+            code: newCode.trim(), addedByName: driverName, active: true, createdAt: new Date(),
             reportCount: 0, myReport: false,
           },
           ...prev,
@@ -104,10 +123,20 @@ export default function GateCodesTab({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Add button */}
-      <div className="flex justify-end">
+      {/* Add button row */}
+      <div className="flex gap-2 justify-end flex-wrap">
+        {isAdmin && (
+          <button
+            onClick={() => { setShowNewArea((p) => !p); setNewAreaName(""); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold
+              bg-white/10 text-white/70 hover:bg-white/20 transition-colors border border-white/15"
+          >
+            <MapPin className="w-4 h-4" />
+            Add Location
+          </button>
+        )}
         <button
-          onClick={() => { setShowAdd((p) => !p); setAddCode(""); }}
+          onClick={() => { setShowAdd((p) => !p); setAddCode(""); setAddRoadName(""); }}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold
             bg-white/15 text-white hover:bg-white/25 transition-colors border border-white/20"
         >
@@ -116,7 +145,53 @@ export default function GateCodesTab({
         </button>
       </div>
 
-      {/* Add form */}
+      {/* Add new location form (admin only) */}
+      {showNewArea && isAdmin && (
+        <div className="rounded-2xl p-5 flex flex-col gap-3"
+          style={{ background: "rgba(255,200,0,0.08)", border: "1px solid rgba(255,200,0,0.25)" }}>
+          <div className="flex items-center justify-between">
+            <p className="text-[14px] font-bold text-white">Add a New Location</p>
+            <button onClick={() => setShowNewArea(false)} className="text-white/40 hover:text-white/70 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 bg-amber-500/15 border border-amber-400/30">
+            <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+            <p className="text-[12px] text-amber-200">Once a location is added, it <strong>cannot be removed</strong>. Make sure the name is correct before saving.</p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Location Name</label>
+            <input
+              autoFocus
+              type="text"
+              placeholder="e.g. South Hendersonville"
+              value={newAreaName}
+              onChange={(e) => setNewAreaName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddArea()}
+              className={INPUT}
+            />
+          </div>
+          <div className="flex gap-2 mt-1">
+            <button
+              onClick={() => setShowNewArea(false)}
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-white/20 text-white/60 hover:bg-white/10 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddArea}
+              disabled={!newAreaName.trim() || allAreas.includes(newAreaName.trim()) || isPending}
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-white text-slate-900
+                hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Add Location
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add gate code form */}
       {showAdd && (
         <div className="rounded-2xl p-5 flex flex-col gap-3"
           style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)" }}>
@@ -130,21 +205,36 @@ export default function GateCodesTab({
             <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Area</label>
             <select
               value={addArea}
-              onChange={(e) => setAddArea(e.target.value as GateArea)}
+              onChange={(e) => setAddArea(e.target.value)}
               className={INPUT}
+              style={{ colorScheme: "dark" }}
             >
-              {GATE_AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+              {allAreas.map((a) => <option key={a} value={a} style={{ background: "#4D148C", color: "white" }}>{a}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Gate Code</label>
+            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+              Road / Street Name <span className="text-red-300">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Lyndsey Dr, US-64, Kanuga Rd"
+              value={addRoadName}
+              onChange={(e) => setAddRoadName(e.target.value)}
+              className={INPUT}
+            />
+            <p className="text-[11px] text-white/40">Helps other drivers find the gate</p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+              Gate Code <span className="text-red-300">*</span>
+            </label>
             <input
               type="text"
               placeholder="e.g. 1234#"
               value={addCode}
               onChange={(e) => setAddCode(e.target.value)}
               className={INPUT}
-              autoFocus
             />
           </div>
           <div className="flex gap-2 mt-1">
@@ -156,7 +246,7 @@ export default function GateCodesTab({
             </button>
             <button
               onClick={handleAdd}
-              disabled={!addCode.trim() || isPending}
+              disabled={!addCode.trim() || !addRoadName.trim() || isPending}
               className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-white text-slate-900
                 hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
             >
@@ -168,7 +258,7 @@ export default function GateCodesTab({
       )}
 
       {/* Area sections */}
-      {GATE_AREAS.map((area) => {
+      {allAreas.map((area) => {
         const areaCodes = codes.filter((c) => c.location === area);
         const isOpen = openAreas.has(area);
         const badCount = areaCodes.reduce((s, c) => s + c.reportCount, 0);
@@ -210,7 +300,13 @@ export default function GateCodesTab({
                           <p className="text-[22px] font-extrabold text-white tracking-widest font-mono leading-none">
                             {c.code}
                           </p>
-                          <p className="text-[11px] text-white/40 mt-1">
+                          {c.roadName && (
+                            <p className="text-[12px] font-semibold text-white/70 mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 shrink-0" />
+                              {c.roadName}
+                            </p>
+                          )}
+                          <p className="text-[11px] text-white/40 mt-0.5">
                             Added by {c.addedByName}
                             {c.createdAt ? ` · ${new Date(c.createdAt).toLocaleDateString()}` : ""}
                           </p>
@@ -296,16 +392,28 @@ export default function GateCodesTab({
                 </>
               ) : hasNew ? (
                 <>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">New Gate Code</label>
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Enter new code..."
-                      value={newCode}
-                      onChange={(e) => setNewCode(e.target.value)}
-                      className={INPUT}
-                    />
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Road / Street Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Lyndsey Dr"
+                        value={newRoadName}
+                        onChange={(e) => setNewRoadName(e.target.value)}
+                        className={INPUT}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">New Gate Code</label>
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Enter new code..."
+                        value={newCode}
+                        onChange={(e) => setNewCode(e.target.value)}
+                        className={INPUT}
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -327,7 +435,7 @@ export default function GateCodesTab({
                 </>
               ) : (
                 <>
-                  <p className="text-[13px] text-white/70">Got it — we'll mark this code as reported.</p>
+                  <p className="text-[13px] text-white/70">Got it — we&apos;ll mark this code as reported.</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setReportTarget(null)}

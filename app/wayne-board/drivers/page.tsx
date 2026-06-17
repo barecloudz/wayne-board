@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck, Clock,
 } from "lucide-react";
 import {
   getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver,
@@ -20,6 +20,7 @@ type Driver = {
   isAdmin: boolean;
   assignedVehicleId: number | null;
   active: boolean;
+  firstLoginAt: Date | null;
   createdAt: Date | null;
 };
 
@@ -354,13 +355,25 @@ export default function DriversPage() {
                         })()}
                       </td>
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {driver.active
-                            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                            : <XCircle className="w-3.5 h-3.5 text-red-400" />}
-                          <span className={`text-[12px] font-semibold ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
-                            {driver.active ? "Active" : "Inactive"}
-                          </span>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            {driver.active
+                              ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                              : <XCircle className="w-3.5 h-3.5 text-red-400" />}
+                            <span className={`text-[12px] font-semibold ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
+                              {driver.active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {driver.firstLoginAt
+                              ? <Check className="w-3 h-3 text-blue-500" />
+                              : <Clock className="w-3 h-3 text-slate-300" />}
+                            <span className={`text-[11px] ${driver.firstLoginAt ? "text-blue-600 font-semibold" : "text-slate-300"}`}>
+                              {driver.firstLoginAt
+                                ? `Logged in ${new Date(driver.firstLoginAt).toLocaleDateString()}`
+                                : "Never logged in"}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-3 py-3">

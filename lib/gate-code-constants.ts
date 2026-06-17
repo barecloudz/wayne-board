@@ -1,15 +1,18 @@
-export const GATE_AREAS = [
+export const DEFAULT_GATE_AREAS = [
   "East Hendersonville",
   "West Hendersonville",
   "North Hendersonville",
   "Zirconia",
-] as const;
+];
 
-export type GateArea = (typeof GATE_AREAS)[number];
+// Keep GATE_AREAS export for backwards-compat
+export const GATE_AREAS = DEFAULT_GATE_AREAS;
+export type GateArea = string;
 
 export type GateCodeRow = {
   id: number;
   location: string;
+  roadName: string | null;
   code: string;
   addedByName: string;
   active: boolean;

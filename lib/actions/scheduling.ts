@@ -16,6 +16,7 @@ export async function getAllSchedules() {
       name:       drivers.name,
       active:     drivers.active,
       workArea:   drivers.workArea,
+      isTrainee:  drivers.isTrainee,
       noticeDate: drivers.noticeDate,
       lastDay:    drivers.lastDay,
       schedule:   driverSchedules,
@@ -45,6 +46,11 @@ export async function updateDriverInfo(driverId: string, name: string, workArea:
 
 export async function setDriverActive(driverId: string, active: boolean) {
   await db.update(drivers).set({ active }).where(eq(drivers.driverId, driverId));
+  revalidatePath("/wayne-board/scheduling");
+}
+
+export async function setDriverTrainee(driverId: string, isTrainee: boolean) {
+  await db.update(drivers).set({ isTrainee }).where(eq(drivers.driverId, driverId));
   revalidatePath("/wayne-board/scheduling");
 }
 

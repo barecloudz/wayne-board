@@ -28,6 +28,7 @@ export async function getDrivers() {
     isAdmin:           drivers.isAdmin,
     assignedVehicleId: drivers.assignedVehicleId,
     active:            drivers.active,
+    firstLoginAt:      drivers.firstLoginAt,
     createdAt:         drivers.createdAt,
   }).from(drivers).orderBy(drivers.id);
 }

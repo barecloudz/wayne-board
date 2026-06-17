@@ -1,0 +1,1 @@
+ALTER TABLE gate_codes ADD COLUMN IF NOT EXISTS road_name TEXT;

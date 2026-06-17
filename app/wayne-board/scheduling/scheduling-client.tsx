@@ -5,7 +5,7 @@ import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -29,6 +29,7 @@ type ScheduleRow = {
   name: string;
   active: boolean;
   workArea: string | null;
+  isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
   schedule: {
@@ -123,12 +124,12 @@ export default function SchedulingClient({
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
-  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string; lastDay: string }>>({});
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string; lastDay: string; isTrainee: boolean }>>({});
 
   function openDriverEdit(row: ScheduleRow) {
     setDriverDrafts((prev) => ({
       ...prev,
-      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "" },
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "", isTrainee: row.isTrainee ?? false },
     }));
     setEditingDriver(row.driverId);
   }
@@ -146,6 +147,10 @@ export default function SchedulingClient({
       const lastDayVal = draft.lastDay || null;
       if (lastDayVal !== (currentRow?.lastDay ?? null)) {
         await setDriverLastDay(driverId, lastDayVal);
+      }
+      const isTraineeVal = draft.isTrainee ?? false;
+      if (isTraineeVal !== (currentRow?.isTrainee ?? false)) {
+        await setDriverTrainee(driverId, isTraineeVal);
       }
       setEditingDriver(null);
     });
@@ -378,16 +383,34 @@ export default function SchedulingClient({
                                 onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: e.target.value } }))}
                                 className="px-2.5 py-1.5 rounded-lg border border-orange-200 text-[13px] text-slate-800 outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-100 bg-orange-50/40"
                               />
-                              {driverDrafts[row.driverId]?.lastDay && (
+                              <div className="flex gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: "" } }))}
-                                  className="text-[10px] text-slate-400 hover:text-red-500 text-left transition-colors"
+                                  onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: today } }))}
+                                  className="text-[10px] text-orange-500 hover:text-orange-700 font-semibold text-left transition-colors"
                                 >
-                                  Clear last day
+                                  Set today
                                 </button>
-                              )}
+                                {driverDrafts[row.driverId]?.lastDay && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], lastDay: "" } }))}
+                                    className="text-[10px] text-slate-400 hover:text-red-500 text-left transition-colors"
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                              </div>
                             </div>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={driverDrafts[row.driverId]?.isTrainee ?? false}
+                                onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], isTrainee: e.target.checked } }))}
+                                className="w-4 h-4 rounded accent-blue-600"
+                              />
+                              <span className="text-[12px] font-semibold text-blue-700">In training — doesn&apos;t count as a route</span>
+                            </label>
                             <div className="flex gap-1.5">
                               <button
                                 onClick={() => saveDriverInfo(row.driverId)}
@@ -415,6 +438,11 @@ export default function SchedulingClient({
                                   </span>
                                 )}
                                 <span className="font-semibold text-slate-800">{row.name}</span>
+                                {row.isTrainee && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                    trainee
+                                  </span>
+                                )}
                                 {!row.active && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
                                     inactive
@@ -792,6 +820,7 @@ export default function SchedulingClient({
                 });
                 const isToday = dateStr === today;
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                const routeCount = working.filter((d) => !d.isTrainee).length;
 
                 return (
                   <div
@@ -813,20 +842,30 @@ export default function SchedulingClient({
                         {format(day, "MMM d")}
                       </p>
                       <p className={`text-[11px] font-semibold mt-0.5 ${
-                        working.length === 0 ? "text-red-400" : isToday ? "text-slate-300" : "text-emerald-600"
+                        routeCount === 0 ? "text-red-400" : isToday ? "text-slate-300" : "text-emerald-600"
                       }`}>
-                        {working.length} driver{working.length !== 1 ? "s" : ""}
+                        {routeCount} route{routeCount !== 1 ? "s" : ""}
                       </p>
                     </div>
 
                     {/* Drivers working */}
                     <div className="flex flex-col p-2 gap-1 flex-1">
-                      {working.map((d) => (
-                        <span key={d.driverId}
-                          className="text-[11px] font-semibold text-slate-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-md truncate">
-                          {d.name}
-                        </span>
-                      ))}
+                      {working.map((d) => {
+                        const isLastDay = d.lastDay === dateStr;
+                        const isTrainee = d.isTrainee;
+                        return (
+                          <span key={d.driverId}
+                            className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate ${
+                              isTrainee
+                                ? "text-blue-700 bg-blue-50 border border-blue-100"
+                                : isLastDay
+                                ? "text-red-700 bg-red-50 border border-red-100"
+                                : "text-slate-700 bg-emerald-50 border border-emerald-100"
+                            }`}>
+                            {d.name}
+                          </span>
+                        );
+                      })}
                       {offToday.map((d) => (
                         <span key={d.driverId}
                           className="text-[11px] font-semibold text-slate-400 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md truncate line-through">
@@ -844,10 +883,18 @@ export default function SchedulingClient({
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 text-[12px] text-slate-500">
+          <div className="flex flex-wrap items-center gap-4 text-[12px] text-slate-500">
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-emerald-100 border border-emerald-200 inline-block" />
               Working
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-blue-100 border border-blue-200 inline-block" />
+              Trainee (not counted as a route)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-red-100 border border-red-200 inline-block" />
+              Last day
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-amber-100 border border-amber-200 inline-block" />

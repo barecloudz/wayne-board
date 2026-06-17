@@ -1,17 +1,47 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { gateCodes, gateCodeReports } from "@/lib/schema";
+import { gateCodes, gateCodeReports, settings } from "@/lib/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { DEFAULT_GATE_AREAS } from "@/lib/gate-code-constants";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 export type { GateArea, GateCodeRow } from "@/lib/gate-code-constants";
+
+const GATE_AREAS_KEY = "gate_areas_extra";
+
+export async function getGateAreas(): Promise<string[]> {
+  const [row] = await db.select().from(settings).where(eq(settings.key, GATE_AREAS_KEY)).limit(1);
+  const extra: string[] = row ? JSON.parse(row.value) : [];
+  // Merge defaults with custom, preserving order
+  const all = [...DEFAULT_GATE_AREAS];
+  for (const a of extra) {
+    if (!all.includes(a)) all.push(a);
+  }
+  return all;
+}
+
+export async function addGateArea(area: string) {
+  const trimmed = area.trim();
+  if (!trimmed) return;
+  const [row] = await db.select().from(settings).where(eq(settings.key, GATE_AREAS_KEY)).limit(1);
+  const extra: string[] = row ? JSON.parse(row.value) : [];
+  if (!DEFAULT_GATE_AREAS.includes(trimmed) && !extra.includes(trimmed)) {
+    extra.push(trimmed);
+    await db
+      .insert(settings)
+      .values({ key: GATE_AREAS_KEY, value: JSON.stringify(extra) })
+      .onConflictDoUpdate({ target: settings.key, set: { value: JSON.stringify(extra) } });
+  }
+  revalidatePath("/driver");
+}
 
 export async function getGateCodes(driverId: string): Promise<GateCodeRow[]> {
   const rows = await db
     .select({
       id:          gateCodes.id,
       location:    gateCodes.location,
+      roadName:    gateCodes.roadName,
       code:        gateCodes.code,
       addedByName: gateCodes.addedByName,
       active:      gateCodes.active,
@@ -35,12 +65,14 @@ export async function getGateCodes(driverId: string): Promise<GateCodeRow[]> {
 
 export async function addGateCode(
   location: string,
+  roadName: string,
   code: string,
   driverId: string,
   driverName: string,
 ) {
   await db.insert(gateCodes).values({
     location: location.trim(),
+    roadName: roadName.trim() || null,
     code: code.trim(),
     addedBy: driverId,
     addedByName: driverName,
@@ -54,6 +86,7 @@ export async function reportNotWorking(
   newCode?: string,
   newLocation?: string,
   driverName?: string,
+  newRoadName?: string,
 ) {
   // Record the report (ignore if already reported by this driver)
   await db
@@ -65,6 +98,7 @@ export async function reportNotWorking(
   if (newCode?.trim() && newLocation && driverName) {
     await db.insert(gateCodes).values({
       location:    newLocation.trim(),
+      roadName:    newRoadName?.trim() || null,
       code:        newCode.trim(),
       addedBy:     driverId,
       addedByName: driverName,

@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid Driver ID or password." }, { status: 401 });
   }
 
+  // Record first login timestamp if this is their first time
+  if (!driver.firstLoginAt) {
+    await db.update(drivers).set({ firstLoginAt: new Date() }).where(eq(drivers.driverId, driver.driverId));
+  }
+
   await createSession({ driverId: driver.driverId, name: driver.name, role: driver.role, isAdmin: driver.isAdmin });
 
   return NextResponse.json({ ok: true, role: driver.role, isAdmin: driver.isAdmin });

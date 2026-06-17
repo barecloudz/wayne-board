@@ -24,7 +24,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, maintenanceRequests, activeVehicles, isAdmin, driverName,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -41,6 +41,7 @@ export default function DriverTabs({
   showRyde: boolean;
   showMilestones: boolean;
   gateCodes: GateCodeRow[];
+  gateAreas: string[];
   maintenanceRequests: any[];
   activeVehicles: { id: number; unitNumber: string }[];
   isAdmin?: boolean;
@@ -456,6 +457,7 @@ export default function DriverTabs({
       {tab === "gatecodes" && (
         <GateCodesTab
           initial={gateCodes}
+          areas={gateAreas}
           driverId={driverId}
           driverName={driverName}
           isAdmin={isAdmin ?? false}
