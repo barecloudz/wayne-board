@@ -85,6 +85,17 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Driver Portal link */}
+      <div className="px-3 pb-2">
+        <Link
+          href="/driver"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 w-full"
+        >
+          <Truck className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          My Driver Portal
+        </Link>
+      </div>
+
       {/* Bottom */}
       <div className="p-4 border-t border-slate-100 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
