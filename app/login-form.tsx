@@ -25,7 +25,7 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Login failed."); return; }
-      router.push(data.isAdmin ? "/wayne-board" : "/driver");
+      router.push("/driver");
     } catch {
       setError("Something went wrong. Try again.");
     } finally {

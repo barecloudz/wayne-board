@@ -82,6 +82,14 @@ export default async function DriverDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[12px] text-white/60 hidden sm:block">{session.name}</span>
+          {session.isAdmin && (
+            <a
+              href="/wayne-board"
+              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 text-white/70 hover:bg-white/10 transition-colors hidden sm:block"
+            >
+              Wayne Board
+            </a>
+          )}
           <LogoutButton />
         </div>
       </nav>
