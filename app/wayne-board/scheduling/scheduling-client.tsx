@@ -6,6 +6,7 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
+import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -25,6 +26,7 @@ const JS_DAY_TO_KEY: Record<number, DayKey> = {
 };
 
 type ScheduleRow = {
+  id: number;
   driverId: string;
   name: string;
   active: boolean;
@@ -32,6 +34,7 @@ type ScheduleRow = {
   isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
+  assignedVehicleId: number | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -64,16 +67,26 @@ type OverrideRow = {
   note: string | null;
 };
 
+type VehicleRow = {
+  id: number;
+  unitNumber: string;
+  make: string;
+  model: string;
+  year: number;
+  active: boolean;
+};
+
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, upcomingOverrides, allOverrides, today,
+  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
   upcomingOverrides: OverrideRow[];
   allOverrides: OverrideRow[];
   today: string;
+  vehicles: VehicleRow[];
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
   const [isPending, startTransition] = useTransition();
@@ -184,6 +197,36 @@ export default function SchedulingClient({
     startTransition(async () => {
       await removeScheduleOverride(id);
       setOverrides((prev) => prev.filter((o) => o.id !== id));
+    });
+  }
+
+  // ── Coverage driver modal ─────────────────────────────────────────────────
+  type CoverageModal = { driver: ScheduleRow; dateStr: string };
+  const [coverageModal, setCoverageModal] = useState<CoverageModal | null>(null);
+  const [modalVehicleId, setModalVehicleId] = useState("");
+
+  function openCoverageModal(driver: ScheduleRow, dateStr: string) {
+    setCoverageModal({ driver, dateStr });
+    setModalVehicleId(driver.assignedVehicleId?.toString() ?? "");
+  }
+
+  function handleCutDay() {
+    if (!coverageModal) return;
+    const { driver, dateStr } = coverageModal;
+    startTransition(async () => {
+      await addTimeOff(driver.driverId, dateStr, dateStr, "Other", "Cut from day");
+      // Update offSet optimistically by re-fetching isn't possible client-side,
+      // so just close and let revalidation refresh
+      setCoverageModal(null);
+    });
+  }
+
+  function handleAssignVehicleFromModal() {
+    if (!coverageModal) return;
+    const vid = modalVehicleId ? parseInt(modalVehicleId) : null;
+    startTransition(async () => {
+      await assignDriverVehicle(coverageModal.driver.id, vid);
+      setCoverageModal(null);
     });
   }
 
@@ -871,8 +914,10 @@ export default function SchedulingClient({
                         const isLastDay = d.lastDay === dateStr;
                         const isTrainee = d.isTrainee;
                         return (
-                          <span key={d.driverId}
-                            className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate ${
+                          <button
+                            key={d.driverId}
+                            onClick={() => openCoverageModal(d, dateStr)}
+                            className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left w-full transition-opacity hover:opacity-70 ${
                               isTrainee
                                 ? "text-blue-700 bg-blue-50 border border-blue-100"
                                 : isLastDay
@@ -880,7 +925,7 @@ export default function SchedulingClient({
                                 : "text-slate-700 bg-emerald-50 border border-emerald-100"
                             }`}>
                             {d.name}
-                          </span>
+                          </button>
                         );
                       })}
                       {offToday.map((d) => (
@@ -941,6 +986,85 @@ export default function SchedulingClient({
           )}
         </div>
       )}
+
+      {/* ── COVERAGE DRIVER MODAL ────────────────────────────────────────── */}
+      {coverageModal && (() => {
+        const { driver, dateStr } = coverageModal;
+        const assignedVehicle = vehicles.find(v => v.id === driver.assignedVehicleId);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setCoverageModal(null)}>
+            <div
+              className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] w-full max-w-sm overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[18px] font-extrabold text-slate-900">{driver.name}</p>
+                    <p className="text-[12px] font-mono text-slate-400 mt-0.5">{driver.driverId}</p>
+                    {driver.workArea && <p className="text-[12px] text-slate-500 mt-0.5">{driver.workArea}</p>}
+                  </div>
+                  <button onClick={() => setCoverageModal(null)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[12px] font-semibold text-slate-500 mt-3 bg-slate-50 rounded-lg px-3 py-1.5 inline-block">
+                  {formatDate(dateStr)}
+                </p>
+              </div>
+
+              <div className="px-6 py-5 flex flex-col gap-5">
+                {/* Cut from day */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cut from this day</p>
+                  <button
+                    onClick={handleCutDay}
+                    disabled={isPending}
+                    className="w-full py-3 rounded-xl text-[13px] font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                    Cut {driver.name.split(" ")[0]} on {format(parseISO(dateStr), "EEE MMM d")}
+                  </button>
+                </div>
+
+                {/* Assign vehicle */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Vehicle Assignment
+                  </p>
+                  {assignedVehicle && (
+                    <p className="text-[12px] text-slate-500">
+                      Currently: <span className="font-semibold text-slate-700">{assignedVehicle.unitNumber}</span>
+                    </p>
+                  )}
+                  <select
+                    value={modalVehicleId || (driver.assignedVehicleId?.toString() ?? "")}
+                    onChange={(e) => setModalVehicleId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                  >
+                    <option value="">— No vehicle —</option>
+                    {vehicles.filter(v => v.active).map(v => (
+                      <option key={v.id} value={v.id.toString()}>
+                        {v.unitNumber} — {v.year} {v.make} {v.model}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssignVehicleFromModal}
+                    disabled={isPending}
+                    className="w-full py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                  >
+                    {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {assignedVehicle ? "Update Vehicle" : "Assign Vehicle"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </main>
   );
 }

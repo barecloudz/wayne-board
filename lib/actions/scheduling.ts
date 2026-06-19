@@ -12,14 +12,16 @@ export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export async function getAllSchedules() {
   const rows = await db
     .select({
-      driverId:   drivers.driverId,
-      name:       drivers.name,
-      active:     drivers.active,
-      workArea:   drivers.workArea,
-      isTrainee:  drivers.isTrainee,
-      noticeDate: drivers.noticeDate,
-      lastDay:    drivers.lastDay,
-      schedule:   driverSchedules,
+      id:                drivers.id,
+      driverId:          drivers.driverId,
+      name:              drivers.name,
+      active:            drivers.active,
+      workArea:          drivers.workArea,
+      isTrainee:         drivers.isTrainee,
+      noticeDate:        drivers.noticeDate,
+      lastDay:           drivers.lastDay,
+      assignedVehicleId: drivers.assignedVehicleId,
+      schedule:          driverSchedules,
     })
     .from(drivers)
     .leftJoin(driverSchedules, eq(drivers.driverId, driverSchedules.driverId))
