@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-// Baked in at build time by Netlify — stable for the lifetime of a deployment
-const VERSION = process.env.NEXT_PUBLIC_DEPLOY_ID ?? "dev";
-
 export function GET() {
-  return NextResponse.json({ version: VERSION });
+  // DEPLOY_ID is injected by Netlify at runtime into every serverless function.
+  // NEXT_PUBLIC_DEPLOY_ID is a fallback for local dev or other hosts.
+  const version = process.env.DEPLOY_ID ?? process.env.NEXT_PUBLIC_DEPLOY_ID ?? "dev";
+  return NextResponse.json({ version });
 }
