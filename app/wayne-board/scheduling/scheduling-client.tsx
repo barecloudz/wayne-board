@@ -974,20 +974,30 @@ export default function SchedulingClient({
                         const isTrainee = d.isTrainee;
                         const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
                         return (
-                          <div key={d.driverId} className="flex items-center gap-1 w-full">
-                            <button
-                              onClick={() => openCoverageModal(d, dateStr)}
-                              className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 ${
-                                isTrainee
-                                  ? "text-blue-700 bg-blue-50 border border-blue-100"
-                                  : isLastDay
-                                  ? "text-red-700 bg-red-50 border border-red-100"
-                                  : "text-slate-700 bg-emerald-50 border border-emerald-100"
-                              }`}>
+                          <button
+                            key={d.driverId}
+                            onClick={() => openCoverageModal(d, dateStr)}
+                            className={`text-left w-full rounded-md border transition-opacity hover:opacity-70 ${
+                              isTrainee
+                                ? "bg-blue-50 border-blue-100"
+                                : isLastDay
+                                ? "bg-red-50 border-red-100"
+                                : "bg-emerald-50 border-emerald-100"
+                            }`}>
+                            <span className={`block text-[11px] font-semibold px-2 pt-1 truncate ${
+                              isTrainee ? "text-blue-700" : isLastDay ? "text-red-700" : "text-slate-700"
+                            }`}>
                               {d.name}
-                            </button>
-                            {wa && <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />}
-                          </div>
+                            </span>
+                            {wa ? (
+                              <span className="flex items-center gap-1 px-2 pb-1">
+                                <WorkAreaShape shape={wa.shape} color={wa.color} size={8} />
+                                <span className="text-[10px] font-semibold text-slate-500 truncate">{wa.name}</span>
+                              </span>
+                            ) : (
+                              <span className="block pb-1" />
+                            )}
+                          </button>
                         );
                       })}
                       {offToday.map((d) => (
