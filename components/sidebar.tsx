@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon } from "lucide-react";
+import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings } from "lucide-react";
 
 const reportItems = [
   { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
@@ -24,6 +24,7 @@ const adminItems = [
   { icon: WrenchIcon,   label: "Maintenance",      href: "/wayne-board/maintenance", exact: true },
   { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",        exact: true },
   { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",  exact: true },
+  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",    exact: true },
 ];
 
 export default function Sidebar() {
