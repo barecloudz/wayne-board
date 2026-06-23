@@ -3,6 +3,16 @@ import {
   timestamp, boolean, date,
 } from "drizzle-orm/pg-core";
 
+// ── Work Areas ───────────────────────────────────────────────────────────────
+export const workAreas = pgTable("work_areas", {
+  id:        serial("id").primaryKey(),
+  name:      text("name").notNull(),
+  shape:     text("shape").notNull().default("circle"), // "circle"|"square"|"diamond"|"triangle"
+  color:     text("color").notNull().default("#6366f1"),
+  active:    boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ── Drivers / Users ──────────────────────────────────────────────────────────
 export const drivers = pgTable("drivers", {
   id:           serial("id").primaryKey(),
@@ -13,6 +23,7 @@ export const drivers = pgTable("drivers", {
   isAdmin:          boolean("is_admin").notNull().default(false),
   assignedVehicleId: integer("assigned_vehicle_id").references(() => vehicles.id),
   workArea:         text("work_area"),
+  defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),
   active:           boolean("active").notNull().default(true),
   isTrainee:        boolean("is_trainee").notNull().default(false),
   noticeDate:       date("notice_date"),
@@ -202,4 +213,12 @@ export const gateCodeReports = pgTable("gate_code_reports", {
   gateCodeId:  integer("gate_code_id").notNull().references(() => gateCodes.id, { onDelete: "cascade" }),
   driverId:    text("driver_id").notNull(),
   createdAt:   timestamp("created_at").defaultNow(),
+});
+
+export const dailyWorkAreaAssignments = pgTable("daily_work_area_assignments", {
+  id:         serial("id").primaryKey(),
+  driverId:   text("driver_id").notNull().references(() => drivers.driverId, { onDelete: "cascade" }),
+  date:       date("date").notNull(),
+  workAreaId: integer("work_area_id").notNull().references(() => workAreas.id, { onDelete: "cascade" }),
+  createdAt:  timestamp("created_at").defaultNow(),
 });

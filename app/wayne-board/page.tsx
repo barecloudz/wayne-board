@@ -4,13 +4,15 @@ import PayrollCard from "@/components/cards/payroll-card";
 import DriversCard from "@/components/cards/drivers-card";
 import RoutesCard from "@/components/cards/routes-card";
 import PortalSettings from "./portal-settings";
+import WorkAreaManager from "./work-area-manager";
 import { db } from "@/lib/db";
 import { vehicles, drivers, inspections } from "@/lib/schema";
 import { count, eq } from "drizzle-orm";
 import { getSetting } from "@/lib/actions/settings";
+import { getWorkAreas } from "@/lib/actions/work-areas";
 
 export default async function Home() {
-  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting] =
+  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, workAreasList] =
     await Promise.all([
       db.select({ vehicleCount: count() }).from(vehicles).where(eq(vehicles.active, true)),
       db.select({ driverCount: count() }).from(drivers).where(eq(drivers.active, true)),
@@ -18,6 +20,7 @@ export default async function Home() {
       db.select({ oosCount: count() }).from(inspections).where(eq(inspections.status, "Out of Service")),
       getSetting("show_ryde", "true"),
       getSetting("show_milestones", "true"),
+      getWorkAreas(),
     ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -71,6 +74,9 @@ export default async function Home() {
 
         {/* Driver portal feature toggles */}
         <PortalSettings showRyde={showRyde} showMilestones={showMilestones} />
+
+        {/* Work Area Manager */}
+        <WorkAreaManager initial={workAreasList as any} />
       </main>
     </AppShell>
   );

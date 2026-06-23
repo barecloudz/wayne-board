@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import AppShell from "@/components/app-shell";
 import { getAllMaintenanceRequests } from "@/lib/actions/maintenance";
 import MaintenanceAdmin from "./maintenance-admin";

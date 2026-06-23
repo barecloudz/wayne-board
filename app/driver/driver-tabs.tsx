@@ -43,7 +43,7 @@ export default function DriverTabs({
   gateCodes: GateCodeRow[];
   gateAreas: string[];
   maintenanceRequests: any[];
-  activeVehicles: { id: number; unitNumber: string }[];
+  activeVehicles: { id: number; unitNumber: string; model: string }[];
   isAdmin?: boolean;
   driverName: string;
 }) {

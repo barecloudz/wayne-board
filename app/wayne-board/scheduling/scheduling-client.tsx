@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
+import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -31,6 +32,7 @@ type ScheduleRow = {
   name: string;
   active: boolean;
   workArea: string | null;
+  defaultWorkAreaId: number | null;
   isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
@@ -76,10 +78,25 @@ type VehicleRow = {
   active: boolean;
 };
 
+type WorkAreaRow = {
+  id: number;
+  name: string;
+  shape: string;
+  color: string;
+  active: boolean;
+};
+
+type DailyAssignmentRow = {
+  id: number;
+  driverId: string;
+  date: string;
+  workAreaId: number;
+};
+
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles,
+  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
@@ -87,6 +104,8 @@ export default function SchedulingClient({
   allOverrides: OverrideRow[];
   today: string;
   vehicles: VehicleRow[];
+  workAreas: WorkAreaRow[];
+  dailyAssignments: DailyAssignmentRow[];
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
   const [isPending, startTransition] = useTransition();
@@ -141,12 +160,12 @@ export default function SchedulingClient({
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
-  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; noticeDate: string; lastDay: string; isTrainee: boolean }>>({});
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; defaultWorkAreaId: number | null; noticeDate: string; lastDay: string; isTrainee: boolean }>>({});
 
   function openDriverEdit(row: ScheduleRow) {
     setDriverDrafts((prev) => ({
       ...prev,
-      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "", isTrainee: row.isTrainee ?? false },
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", defaultWorkAreaId: row.defaultWorkAreaId ?? null, noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "", isTrainee: row.isTrainee ?? false },
     }));
     setEditingDriver(row.driverId);
   }
@@ -168,6 +187,10 @@ export default function SchedulingClient({
       const isTraineeVal = draft.isTrainee ?? false;
       if (isTraineeVal !== (currentRow?.isTrainee ?? false)) {
         await setDriverTrainee(driverId, isTraineeVal);
+      }
+      const defaultWaId = draft.defaultWorkAreaId ?? null;
+      if (defaultWaId !== (currentRow?.defaultWorkAreaId ?? null)) {
+        await setDriverDefaultWorkArea(driverId, defaultWaId);
       }
       setEditingDriver(null);
     });
@@ -204,10 +227,15 @@ export default function SchedulingClient({
   type CoverageModal = { driver: ScheduleRow; dateStr: string };
   const [coverageModal, setCoverageModal] = useState<CoverageModal | null>(null);
   const [modalVehicleId, setModalVehicleId] = useState("");
+  const [modalWorkAreaId, setModalWorkAreaId] = useState<string>("");
 
   function openCoverageModal(driver: ScheduleRow, dateStr: string) {
     setCoverageModal({ driver, dateStr });
     setModalVehicleId(driver.assignedVehicleId?.toString() ?? "");
+    const dailyId = dailyAssignments.find(
+      (a) => a.driverId === driver.driverId && a.date === dateStr
+    )?.workAreaId;
+    setModalWorkAreaId(dailyId?.toString() ?? "");
   }
 
   function handleCutDay() {
@@ -226,6 +254,15 @@ export default function SchedulingClient({
     const vid = modalVehicleId ? parseInt(modalVehicleId) : null;
     startTransition(async () => {
       await assignDriverVehicle(coverageModal.driver.id, vid);
+      setCoverageModal(null);
+    });
+  }
+
+  function handleAssignWorkAreaFromModal() {
+    if (!coverageModal) return;
+    const waId = modalWorkAreaId ? parseInt(modalWorkAreaId) : null;
+    startTransition(async () => {
+      await setDailyWorkArea(coverageModal.driver.driverId, coverageModal.dateStr, waId);
       setCoverageModal(null);
     });
   }
@@ -305,6 +342,18 @@ export default function SchedulingClient({
     if (sched?.lastDay) return date > parseISO(sched.lastDay);
     if (sched?.noticeDate) return date > addDays(parseISO(sched.noticeDate), 14);
     return false;
+  }
+
+  // Work area lookups for coverage
+  const workAreaById = new Map<number, WorkAreaRow>(workAreas.map((wa) => [wa.id, wa]));
+  const dailyWorkAreaMap = new Map<string, number>(
+    dailyAssignments.map((a) => [`${a.driverId}|${a.date}`, a.workAreaId])
+  );
+
+  function getEffectiveWorkArea(driverId: string, defaultWorkAreaId: number | null, dateStr: string): WorkAreaRow | null {
+    const dailyId = dailyWorkAreaMap.get(`${driverId}|${dateStr}`);
+    const effectiveId = dailyId ?? defaultWorkAreaId ?? null;
+    return effectiveId != null ? (workAreaById.get(effectiveId) ?? null) : null;
   }
 
   const activeDrivers = schedules.filter((s) => s.active);
@@ -404,6 +453,16 @@ export default function SchedulingClient({
                               placeholder="Work area (e.g. Zone A, Dock 3)"
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
                             />
+                            <select
+                              value={driverDrafts[row.driverId]?.defaultWorkAreaId?.toString() ?? ""}
+                              onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], defaultWorkAreaId: e.target.value ? parseInt(e.target.value) : null } }))}
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
+                            >
+                              <option value="">— No default work area —</option>
+                              {workAreas.filter((wa) => wa.active).map((wa) => (
+                                <option key={wa.id} value={wa.id.toString()}>{wa.name}</option>
+                              ))}
+                            </select>
                             <div className="flex flex-col gap-0.5">
                               <label className="text-[10px] font-semibold text-red-500 uppercase tracking-wider">2-Week Notice Date</label>
                               <input
@@ -913,19 +972,22 @@ export default function SchedulingClient({
                       {working.map((d) => {
                         const isLastDay = d.lastDay === dateStr;
                         const isTrainee = d.isTrainee;
+                        const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
                         return (
-                          <button
-                            key={d.driverId}
-                            onClick={() => openCoverageModal(d, dateStr)}
-                            className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left w-full transition-opacity hover:opacity-70 ${
-                              isTrainee
-                                ? "text-blue-700 bg-blue-50 border border-blue-100"
-                                : isLastDay
-                                ? "text-red-700 bg-red-50 border border-red-100"
-                                : "text-slate-700 bg-emerald-50 border border-emerald-100"
-                            }`}>
-                            {d.name}
-                          </button>
+                          <div key={d.driverId} className="flex items-center gap-1 w-full">
+                            <button
+                              onClick={() => openCoverageModal(d, dateStr)}
+                              className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 ${
+                                isTrainee
+                                  ? "text-blue-700 bg-blue-50 border border-blue-100"
+                                  : isLastDay
+                                  ? "text-red-700 bg-red-50 border border-red-100"
+                                  : "text-slate-700 bg-emerald-50 border border-emerald-100"
+                              }`}>
+                              {d.name}
+                            </button>
+                            {wa && <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />}
+                          </div>
                         );
                       })}
                       {offToday.map((d) => (
@@ -1060,6 +1122,49 @@ export default function SchedulingClient({
                     {assignedVehicle ? "Update Vehicle" : "Assign Vehicle"}
                   </button>
                 </div>
+
+                {/* Work area for this day */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Work Area — {formatDate(dateStr)}
+                  </p>
+                  {driver.defaultWorkAreaId && (() => {
+                    const defaultWa = workAreaById.get(driver.defaultWorkAreaId);
+                    return defaultWa ? (
+                      <p className="text-[12px] text-slate-500">
+                        Default: <span className="font-semibold text-slate-700">{defaultWa.name}</span>
+                      </p>
+                    ) : null;
+                  })()}
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={modalWorkAreaId}
+                      onChange={(e) => setModalWorkAreaId(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                    >
+                      <option value="">— Use repeatable default —</option>
+                      {workAreas.filter((wa) => wa.active).map((wa) => (
+                        <option key={wa.id} value={wa.id.toString()}>{wa.name}</option>
+                      ))}
+                    </select>
+                    {modalWorkAreaId && (() => {
+                      const wa = workAreaById.get(parseInt(modalWorkAreaId));
+                      return wa ? (
+                        <div className="flex items-center justify-center w-8 h-8 shrink-0">
+                          <WorkAreaShape shape={wa.shape} color={wa.color} size={18} />
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                  <button
+                    onClick={handleAssignWorkAreaFromModal}
+                    disabled={isPending}
+                    className="w-full py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                  >
+                    {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Set Work Area for this Day
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1075,4 +1180,30 @@ function formatDate(d: string) {
   } catch {
     return d;
   }
+}
+
+function WorkAreaShape({ shape, color, size = 10 }: { shape: string; color: string; size?: number }) {
+  if (shape === "triangle") {
+    const half = Math.round(size * 0.55);
+    return (
+      <span style={{
+        display: "inline-block", width: 0, height: 0,
+        borderLeft: `${half}px solid transparent`,
+        borderRight: `${half}px solid transparent`,
+        borderBottom: `${size}px solid ${color}`,
+        flexShrink: 0,
+      }} />
+    );
+  }
+  return (
+    <span style={{
+      display: "inline-block",
+      width: size,
+      height: size,
+      backgroundColor: color,
+      borderRadius: shape === "circle" ? "50%" : "2px",
+      transform: shape === "diamond" ? "rotate(45deg)" : "none",
+      flexShrink: 0,
+    }} />
+  );
 }

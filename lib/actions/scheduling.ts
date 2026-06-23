@@ -17,6 +17,7 @@ export async function getAllSchedules() {
       name:              drivers.name,
       active:            drivers.active,
       workArea:          drivers.workArea,
+      defaultWorkAreaId: drivers.defaultWorkAreaId,
       isTrainee:         drivers.isTrainee,
       noticeDate:        drivers.noticeDate,
       lastDay:           drivers.lastDay,

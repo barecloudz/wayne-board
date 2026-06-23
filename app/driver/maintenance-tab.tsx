@@ -13,7 +13,7 @@ type Request = {
   createdAt: Date | null;
 };
 
-type Vehicle = { id: number; unitNumber: string };
+type Vehicle = { id: number; unitNumber: string; model: string };
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
   pending:     { label: "Pending",     icon: Clock,         cls: "bg-amber-500/15 text-amber-300 border-amber-500/25" },
@@ -21,7 +21,7 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; cl
   resolved:    { label: "Resolved",    icon: CheckCircle2,  cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/25" },
 };
 
-const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[13px] text-white placeholder-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 transition";
+const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[13px] text-white placeholder-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 transition [&>option]:bg-slate-800 [&>option]:text-white";
 
 export default function MaintenanceTab({
   initial,
@@ -81,9 +81,13 @@ export default function MaintenanceTab({
           <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Truck Number *</label>
           <select value={truck} onChange={(e) => setTruck(e.target.value)} className={INPUT}>
             <option value="">— Select your truck —</option>
-            {vehicles.map((v) => (
-              <option key={v.id} value={v.unitNumber}>{v.unitNumber}</option>
-            ))}
+            {vehicles.map((v) => {
+              const m = v.model ?? "";
+              const label = /transit/i.test(m) ? "Transit" : (m.match(/P-?\d+/i)?.[0]?.replace("-", "") ?? m);
+              return (
+                <option key={v.id} value={v.unitNumber}>{v.unitNumber} — {label}</option>
+              );
+            })}
           </select>
         </div>
 
