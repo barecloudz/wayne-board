@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings } from "lucide-react";
+import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings, Gauge } from "lucide-react";
 
 const reportItems = [
   { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
@@ -19,12 +19,13 @@ const complianceItems = [
 ];
 
 const adminItems = [
-  { icon: UserCog,      label: "Driver Accounts", href: "/wayne-board/drivers",     exact: true },
-  { icon: CalendarDays, label: "Scheduling",       href: "/wayne-board/scheduling",  exact: true },
-  { icon: WrenchIcon,   label: "Maintenance",      href: "/wayne-board/maintenance", exact: true },
-  { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",        exact: true },
-  { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",  exact: true },
-  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",    exact: true },
+  { icon: UserCog,      label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
+  { icon: CalendarDays, label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
+  { icon: Gauge,        label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
+  { icon: WrenchIcon,   label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
+  { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
+  { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
+  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",     exact: true },
 ];
 
 export default function Sidebar() {

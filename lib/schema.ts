@@ -41,8 +41,12 @@ export const vehicles = pgTable("vehicles", {
   year:       integer("year").notNull(),
   mileage:    integer("mileage").notNull(),
   vin:        text("vin").notNull().default(""),
-  type:       text("type").notNull().default("van"),  // "van" | "tractor"
-  active:     boolean("active").notNull().default(true),
+  type:                  text("type").notNull().default("van"),       // "van" | "tractor"
+  ownership:             text("ownership").notNull().default("owned"), // "owned" | "rental"
+  mmrDue:                date("mmr_due"),
+  federalInspectionDue:  date("federal_inspection_due"),
+  registrationExpiry:    date("registration_expiry"),
+  active:                boolean("active").notNull().default(true),
   createdAt:  timestamp("created_at").defaultNow(),
 });
 

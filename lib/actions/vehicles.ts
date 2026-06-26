@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { vehicles, inspections, inspectionResults } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 export async function createVehicle(data: {
   unitNumber: string;
@@ -74,4 +75,22 @@ export async function updateVehicle(
   }
 ) {
   await db.update(vehicles).set(data).where(eq(vehicles.id, vehicleId));
+}
+
+export async function setVehicleActive(vehicleId: number, active: boolean) {
+  await db.update(vehicles).set({ active }).where(eq(vehicles.id, vehicleId));
+  revalidatePath("/wayne-board/fleet-status");
+}
+
+export async function updateVehicleCompliance(
+  vehicleId: number,
+  data: {
+    ownership: string;
+    mmrDue: string | null;
+    federalInspectionDue: string | null;
+    registrationExpiry: string | null;
+  }
+) {
+  await db.update(vehicles).set(data).where(eq(vehicles.id, vehicleId));
+  revalidatePath("/wayne-board/fleet-status");
 }

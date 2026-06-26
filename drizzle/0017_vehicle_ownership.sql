@@ -1,0 +1,1 @@
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS ownership TEXT NOT NULL DEFAULT 'owned';
