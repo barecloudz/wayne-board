@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Printer, Pencil, Check, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Pencil, Check, Loader2, ChevronDown, ChevronUp, FileDown } from "lucide-react";
 import { setVehicleActive, updateVehicleCompliance } from "@/lib/actions/vehicles";
 
 type Vehicle = {
@@ -204,95 +204,6 @@ function VehicleRow({
   );
 }
 
-// ── Dedicated print-only layout ───────────────────────────────────────────────
-// Always renders ALL vehicles, formatted for letter paper. Hidden on screen.
-function PrintLayout({
-  vehicles,
-  driverByVehicleId,
-  today,
-}: {
-  vehicles: Vehicle[];
-  driverByVehicleId: Map<number, Driver>;
-  today: string;
-}) {
-  const active   = vehicles.filter((v) => v.active);
-  const inactive = vehicles.filter((v) => !v.active);
-  const owned    = active.filter((v) => v.ownership !== "rental");
-  const rentals  = active.filter((v) => v.ownership === "rental");
-
-  const printDate = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-
-  function PrintSection({ title, rows, dimmed }: { title: string; rows: Vehicle[]; dimmed?: boolean }) {
-    if (rows.length === 0) return null;
-    return (
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ borderBottom: "2px solid #1e293b", marginBottom: 8, paddingBottom: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#475569" }}>
-            {title} — {rows.length} vehicle{rows.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, opacity: dimmed ? 0.6 : 1 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #e2e8f0", background: "#f8fafc" }}>
-              {["Unit #", "Year / Make / Model", "Type", "Assigned Driver", "MMR Due", "Fed Inspection", "Registration", "Status"].map((h) => (
-                <th key={h} style={{ padding: "5px 8px", textAlign: "left", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", whiteSpace: "nowrap" }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((v, i) => {
-              const driver = driverByVehicleId.get(v.id);
-              const { issues, warning } = statusOf(v, today);
-              const allAlerts = [...issues, ...warning];
-              const hasIssue = issues.length > 0;
-              const hasWarn  = warning.length > 0 && issues.length === 0;
-              return (
-                <tr key={v.id} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                  <td style={{ padding: "6px 8px", fontWeight: 800, fontSize: 12, color: "#0f172a", whiteSpace: "nowrap" }}>{v.unitNumber}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: "#334155" }}>{v.year} {v.make} {v.model}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: "#64748b", textTransform: "capitalize" }}>{v.type}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: driver ? "#334155" : "#cbd5e1" }}>{driver ? driver.name : "Unassigned"}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: v.mmrDue && v.mmrDue < today ? "#dc2626" : "#475569" }}>{fmt(v.mmrDue)}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: v.federalInspectionDue && v.federalInspectionDue < today ? "#dc2626" : "#475569" }}>{fmt(v.federalInspectionDue)}</td>
-                  <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: v.registrationExpiry && v.registrationExpiry < today ? "#dc2626" : "#475569" }}>{fmt(v.registrationExpiry)}</td>
-                  <td style={{ padding: "6px 8px" }}>
-                    {allAlerts.length === 0
-                      ? <span style={{ color: "#22c55e", fontWeight: 600, fontSize: 10 }}>OK</span>
-                      : <span style={{ color: hasIssue ? "#dc2626" : "#d97706", fontWeight: 700, fontSize: 10 }}>{allAlerts.join(" · ")}</span>
-                    }
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  return (
-    <div id="fleet-print-only" style={{ display: "none", fontFamily: "system-ui, sans-serif", padding: "24px 32px", color: "#0f172a" }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20, borderBottom: "3px solid #0f172a", paddingBottom: 12 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em" }}>742 Logistics — Fleet Status Report</div>
-        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Generated {printDate} · {vehicles.length} total vehicles ({active.length} active, {inactive.length} inactive)</div>
-      </div>
-
-      <PrintSection title="Owned" rows={owned} />
-      <PrintSection title="Rentals" rows={rentals} />
-      <PrintSection title="Inactive" rows={inactive} dimmed />
-
-      {/* Legend */}
-      <div style={{ marginTop: 16, borderTop: "1px solid #e2e8f0", paddingTop: 10, display: "flex", gap: 24, fontSize: 10, color: "#64748b" }}>
-        <span>Red date = overdue / expired</span>
-        <span>Normal date = OK</span>
-        <span>— = date not entered</span>
-      </div>
-    </div>
-  );
-}
 
 export default function FleetStatusClient({
   vehicles: initialVehicles,
@@ -331,16 +242,6 @@ export default function FleetStatusClient({
     return issues.length > 0 || warning.length > 0;
   });
 
-  function handlePrint() {
-    // Swap: show print layout, hide main content, print, then restore
-    const printEl = document.getElementById("fleet-print-only");
-    const mainEl  = document.getElementById("fleet-main");
-    if (printEl) printEl.style.display = "block";
-    if (mainEl)  mainEl.style.display  = "none";
-    window.print();
-    if (printEl) printEl.style.display = "none";
-    if (mainEl)  mainEl.style.display  = "block";
-  }
 
   const tableHead = (
     <thead>
@@ -356,10 +257,7 @@ export default function FleetStatusClient({
 
   return (
     <>
-      {/* Print-only layout — always in DOM, hidden until print */}
-      <PrintLayout vehicles={vehicles} driverByVehicleId={driverByVehicleId} today={today} />
-
-      <main id="fleet-main" className="flex-1 px-6 py-8 max-w-[1300px] w-full mx-auto">
+      <main className="flex-1 px-6 py-8 max-w-[1300px] w-full mx-auto">
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
@@ -367,13 +265,14 @@ export default function FleetStatusClient({
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Fleet Status</h1>
             <p className="text-[13px] text-slate-400 mt-1.5">Active vehicles, assignments, and compliance dates.</p>
           </div>
-          <button
-            onClick={handlePrint}
+          <a
+            href="/api/fleet-pdf"
+            target="_blank"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shrink-0"
           >
-            <Printer className="w-4 h-4" />
-            Print / Save PDF
-          </button>
+            <FileDown className="w-4 h-4" />
+            Download PDF
+          </a>
         </div>
 
         {/* KPI strip */}
