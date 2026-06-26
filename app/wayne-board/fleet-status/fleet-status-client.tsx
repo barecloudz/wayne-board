@@ -322,6 +322,10 @@ export default function FleetStatusClient({
   const owned    = active.filter((v) => v.ownership !== "rental");
   const rentals  = active.filter((v) => v.ownership === "rental");
 
+  // KPI totals count across ALL vehicles, not just active
+  const totalOwned   = vehicles.filter((v) => v.ownership !== "rental").length;
+  const totalRentals = vehicles.filter((v) => v.ownership === "rental").length;
+
   const allIssues = vehicles.filter((v) => {
     const { issues, warning } = statusOf(v, today);
     return issues.length > 0 || warning.length > 0;
@@ -375,10 +379,10 @@ export default function FleetStatusClient({
         {/* KPI strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "Active",   value: active.length,   color: "text-emerald-600" },
-            { label: "Inactive", value: inactive.length, color: "text-slate-400" },
-            { label: "Owned",    value: owned.length,    color: "text-slate-900" },
-            { label: "Rentals",  value: rentals.length,  color: "text-purple-600" },
+            { label: "Active",        value: active.length,   color: "text-emerald-600" },
+            { label: "Inactive",      value: inactive.length, color: "text-slate-400" },
+            { label: "Owned (total)", value: totalOwned,      color: "text-slate-900" },
+            { label: "Rentals (total)", value: totalRentals,  color: "text-purple-600" },
           ].map((k) => (
             <div key={k.label} className="bg-white rounded-xl border border-slate-200/80 px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{k.label}</p>
