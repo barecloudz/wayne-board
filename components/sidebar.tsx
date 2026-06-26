@@ -5,18 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings, Gauge } from "lucide-react";
 
-const reportItems = [
-  { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
-  { icon: Truck, label: "Fleet", href: "/reports/fleet", exact: true },
-  { icon: DollarSign, label: "Payroll", href: "/reports/payroll", exact: true },
-  { icon: Users, label: "Drivers", href: "/reports/drivers", exact: true },
-  { icon: Map, label: "Routes", href: "/reports/routes", exact: true },
-];
-
-const complianceItems = [
-  { icon: ClipboardCheck, label: "Inspections", href: "/fleet",    exact: false },
-  { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
-];
+const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true };
 
 const adminItems = [
   { icon: UserCog,      label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
@@ -26,6 +15,18 @@ const adminItems = [
   { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
   { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
   { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",     exact: true },
+];
+
+const complianceItems = [
+  { icon: ClipboardCheck, label: "Inspections", href: "/fleet",    exact: false },
+  { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
+];
+
+const reportItems = [
+  { icon: Truck,      label: "Fleet",   href: "/reports/fleet",    exact: true },
+  { icon: DollarSign, label: "Payroll", href: "/reports/payroll",  exact: true },
+  { icon: Users,      label: "Drivers", href: "/reports/drivers",  exact: true },
+  { icon: Map,        label: "Routes",  href: "/reports/routes",   exact: true },
 ];
 
 export default function Sidebar() {
@@ -61,10 +62,14 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex flex-col gap-0.5 p-3 flex-1 pt-4">
+        <NavLink {...overviewItem} />
+
+        <div className="my-3 border-t border-slate-100" />
+
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
-          Reports
+          Admin
         </p>
-        {reportItems.map((item) => (
+        {adminItems.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
 
@@ -80,9 +85,9 @@ export default function Sidebar() {
         <div className="my-3 border-t border-slate-100" />
 
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
-          Admin
+          Reports
         </p>
-        {adminItems.map((item) => (
+        {reportItems.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
       </nav>

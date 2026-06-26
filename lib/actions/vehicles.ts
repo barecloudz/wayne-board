@@ -13,6 +13,7 @@ export async function createVehicle(data: {
   mileage: number;
   vin?: string;
   type?: string;
+  ownership?: string;
 }) {
   const [vehicle] = await db.insert(vehicles).values({
     unitNumber: data.unitNumber,
@@ -22,6 +23,7 @@ export async function createVehicle(data: {
     mileage:    data.mileage,
     vin:        data.vin ?? "",
     type:       data.type ?? "van",
+    ownership:  data.ownership ?? "owned",
     active:     true,
   }).returning({ id: vehicles.id });
   return vehicle;
@@ -80,6 +82,8 @@ export async function updateVehicle(
 export async function setVehicleActive(vehicleId: number, active: boolean) {
   await db.update(vehicles).set({ active }).where(eq(vehicles.id, vehicleId));
   revalidatePath("/wayne-board/fleet-status");
+  revalidatePath("/vehicles");
+  revalidatePath("/fleet");
 }
 
 export async function updateVehicleCompliance(
