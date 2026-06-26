@@ -14,19 +14,27 @@ export async function createVehicle(data: {
   vin?: string;
   type?: string;
   ownership?: string;
-}) {
-  const [vehicle] = await db.insert(vehicles).values({
-    unitNumber: data.unitNumber,
-    make:       data.make,
-    model:      data.model,
-    year:       data.year,
-    mileage:    data.mileage,
-    vin:        data.vin ?? "",
-    type:       data.type ?? "van",
-    ownership:  data.ownership ?? "owned",
-    active:     true,
-  }).returning({ id: vehicles.id });
-  return vehicle;
+}): Promise<{ id: number } | { error: string }> {
+  try {
+    const [vehicle] = await db.insert(vehicles).values({
+      unitNumber: data.unitNumber,
+      make:       data.make,
+      model:      data.model,
+      year:       data.year,
+      mileage:    data.mileage,
+      vin:        data.vin ?? "",
+      type:       data.type ?? "van",
+      ownership:  data.ownership ?? "owned",
+      active:     true,
+    }).returning({ id: vehicles.id });
+    return vehicle;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("unique") || msg.includes("duplicate")) {
+      return { error: `A vehicle named "${data.unitNumber}" already exists. Use a different unit number.` };
+    }
+    return { error: "Failed to add vehicle. Please try again." };
+  }
 }
 
 export async function deleteVehicle(vehicleId: number) {

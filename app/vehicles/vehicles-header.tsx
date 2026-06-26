@@ -40,7 +40,7 @@ export default function VehiclesHeader() {
     }
     setError("");
     startTransition(async () => {
-      await createVehicle({
+      const result = await createVehicle({
         unitNumber: unitNumber.trim(),
         make: make.trim(),
         model: model.trim(),
@@ -50,6 +50,10 @@ export default function VehiclesHeader() {
         type: "van",
         ownership,
       });
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
       setShowModal(false);
       router.refresh();
     });
