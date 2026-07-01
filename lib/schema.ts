@@ -29,6 +29,9 @@ export const drivers = pgTable("drivers", {
   noticeDate:       date("notice_date"),
   lastDay:          date("last_day"),
   firstLoginAt:     timestamp("first_login_at"),
+  terminationType:  text("termination_type"),   // "notice" | "fired" | "mistake"
+  terminationNote:  text("termination_note"),
+  terminatedAt:     timestamp("terminated_at"),
   createdAt:    timestamp("created_at").defaultNow(),
 });
 

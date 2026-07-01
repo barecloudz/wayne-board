@@ -30,6 +30,9 @@ export async function getDrivers() {
     active:            drivers.active,
     firstLoginAt:      drivers.firstLoginAt,
     createdAt:         drivers.createdAt,
+    terminationType:   drivers.terminationType,
+    terminationNote:   drivers.terminationNote,
+    terminatedAt:      drivers.terminatedAt,
   }).from(drivers).orderBy(drivers.id);
 }
 
@@ -74,6 +77,20 @@ export async function deleteDriver(id: number) {
   await db.delete(rydeReviews).where(eq(rydeReviews.driverId, driver.driverId));
   await db.delete(driverMilestoneClaims).where(eq(driverMilestoneClaims.driverId, driver.driverId));
   await db.delete(drivers).where(eq(drivers.id, id));
+}
+
+// Soft-delete with termination reason — record is kept for records
+export async function terminateDriver(
+  id: number,
+  type: "notice" | "fired",
+  note: string,
+) {
+  await db.update(drivers).set({
+    active:          false,
+    terminationType: type,
+    terminationNote: note,
+    terminatedAt:    new Date(),
+  }).where(eq(drivers.id, id));
 }
 
 export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {

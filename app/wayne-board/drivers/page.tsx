@@ -7,7 +7,7 @@ import {
   XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck, Clock,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver,
+  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver,
 } from "@/lib/actions/drivers";
 import { getVehicles } from "@/lib/actions/vehicles";
 import { suggestDriverId } from "@/lib/driver-utils";
@@ -22,6 +22,9 @@ type Driver = {
   active: boolean;
   firstLoginAt: Date | null;
   createdAt: Date | null;
+  terminationType: string | null;
+  terminationNote: string | null;
+  terminatedAt: Date | null;
 };
 
 type Vehicle = {
@@ -55,6 +58,8 @@ export default function DriversPage() {
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const [resetTarget, setResetTarget]   = useState<{ id: number; driverId: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
+  const [terminationType, setTerminationType] = useState<"notice" | "fired" | "mistake" | null>(null);
+  const [terminationNote, setTerminationNote] = useState("");
   const [resetPassword, setResetPassword] = useState("Fedex1234#");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -166,11 +171,25 @@ export default function DriversPage() {
     });
   }
 
+  function openDeleteModal(driver: { id: number; driverId: string; name: string }) {
+    setDeleteTarget(driver);
+    setTerminationType(null);
+    setTerminationNote("");
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
   function handleDeleteDriver() {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !terminationType) return;
     startTransition(async () => {
-      await deleteDriver(deleteTarget.id);
+      if (terminationType === "mistake") {
+        await deleteDriver(deleteTarget.id);
+      } else {
+        await terminateDriver(deleteTarget.id, terminationType, terminationNote);
+      }
       setDeleteTarget(null);
+      setTerminationType(null);
+      setTerminationNote("");
       await refresh();
     });
   }
@@ -361,9 +380,17 @@ export default function DriversPage() {
                               ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                               : <XCircle className="w-3.5 h-3.5 text-red-400" />}
                             <span className={`text-[12px] font-semibold ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
-                              {driver.active ? "Active" : "Inactive"}
+                              {driver.active ? "Active" : driver.terminationType ? (
+                                driver.terminationType === "notice" ? "Gave Notice" :
+                                driver.terminationType === "fired" ? "Terminated" : "Removed"
+                              ) : "Inactive"}
                             </span>
                           </div>
+                          {driver.terminationNote && (
+                            <p className="text-[11px] text-slate-400 italic truncate max-w-[180px]" title={driver.terminationNote}>
+                              {driver.terminationNote}
+                            </p>
+                          )}
                           <div className="flex items-center gap-1.5">
                             {driver.firstLoginAt
                               ? <Check className="w-3 h-3 text-blue-500" />
@@ -446,11 +473,11 @@ export default function DriversPage() {
                   <Eye className="w-3.5 h-3.5 text-slate-400" />Reset Password
                 </button>
                 <button
-                  onClick={() => { setDeleteTarget({ id: driver.id, driverId: driver.driverId, name: driver.name }); setMenuOpen(null); setMenuPos(null); }}
+                  onClick={() => openDeleteModal({ id: driver.id, driverId: driver.driverId, name: driver.name })}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-red-500
                     hover:bg-red-50 transition-colors flex items-center gap-2"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />Delete Account
+                  <Trash2 className="w-3.5 h-3.5" />Remove Account
                 </button>
               </>
             );
@@ -511,20 +538,83 @@ export default function DriversPage() {
         </div>
       )}
 
-      {/* Delete confirm modal */}
+      {/* Termination modal */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-md">
             <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-              <h2 className="text-[16px] font-extrabold text-slate-900">Delete Account</h2>
+              <h2 className="text-[16px] font-extrabold text-slate-900">Remove Driver Account</h2>
               <p className="text-[12px] text-slate-400 mt-0.5">
-                Permanently delete <span className="font-semibold text-slate-600">{deleteTarget.name}</span> ({deleteTarget.driverId})?
-                This cannot be undone.
+                <span className="font-semibold text-slate-600">{deleteTarget.name}</span> ({deleteTarget.driverId}) — what&apos;s the reason?
               </p>
             </div>
-            <div className="px-6 py-5 flex gap-2">
+
+            <div className="px-6 py-5 flex flex-col gap-3">
+              {/* Type selection */}
+              {(["notice", "fired", "mistake"] as const).map((type) => {
+                const labels = {
+                  notice:  { title: "Two Weeks Notice", sub: "Driver gave notice — record kept for history" },
+                  fired:   { title: "Terminated",       sub: "Let go or fired — record kept with reason" },
+                  mistake: { title: "Account Mistake",  sub: "Created in error — permanently deleted" },
+                };
+                const selected = terminationType === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => { setTerminationType(type); setTerminationNote(""); }}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                      selected
+                        ? type === "mistake"
+                          ? "border-red-400 bg-red-50"
+                          : "border-slate-800 bg-slate-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <p className={`text-[13px] font-bold ${selected ? (type === "mistake" ? "text-red-700" : "text-slate-900") : "text-slate-700"}`}>
+                      {labels[type].title}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{labels[type].sub}</p>
+                  </button>
+                );
+              })}
+
+              {/* Detail fields */}
+              {terminationType === "notice" && (
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Last Day / Note (optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Last day July 15"
+                    value={terminationNote}
+                    onChange={(e) => setTerminationNote(e.target.value)}
+                    className={INPUT_CLS}
+                    autoFocus
+                  />
+                </div>
+              )}
+              {terminationType === "fired" && (
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reason <span className="text-red-400">*</span></label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. No call no show on June 30, policy violation..."
+                    value={terminationNote}
+                    onChange={(e) => setTerminationNote(e.target.value)}
+                    className={INPUT_CLS + " resize-none"}
+                    autoFocus
+                  />
+                </div>
+              )}
+              {terminationType === "mistake" && (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-[12px] text-red-700">
+                  This will permanently delete the account and all associated data. This cannot be undone.
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 pb-6 flex gap-2">
               <button
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => { setDeleteTarget(null); setTerminationType(null); setTerminationNote(""); }}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
                   text-slate-500 hover:bg-slate-50 transition-colors"
               >
@@ -532,13 +622,16 @@ export default function DriversPage() {
               </button>
               <button
                 onClick={handleDeleteDriver}
-                disabled={isPending}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-red-500 text-white
-                  hover:bg-red-600 transition-colors disabled:opacity-40
-                  flex items-center justify-center gap-2"
+                disabled={!terminationType || (terminationType === "fired" && !terminationNote.trim()) || isPending}
+                className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-40
+                  flex items-center justify-center gap-2 ${
+                    terminationType === "mistake"
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : "bg-slate-900 text-white hover:bg-slate-700"
+                  }`}
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Delete
+                {terminationType === "mistake" ? "Delete Permanently" : terminationType ? "Confirm & Remove" : "Confirm"}
               </button>
             </div>
           </div>

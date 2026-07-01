@@ -7,9 +7,11 @@ import { Loader2 } from "lucide-react";
 export default function PortalSettings({
   showRyde,
   showMilestones,
+  clockInEnabled,
 }: {
   showRyde: boolean;
   showMilestones: boolean;
+  clockInEnabled: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -43,24 +45,40 @@ export default function PortalSettings({
           onToggle={() => toggle("show_milestones", showMilestones)}
           disabled={isPending}
         />
+        <ToggleRow
+          label="Driver Clock-In"
+          description="When on, drivers who are scheduled for the day are prompted at login: &quot;Are you at work today?&quot;"
+          enabled={clockInEnabled}
+          onToggle={() => toggle("clock_in_enabled", clockInEnabled)}
+          disabled={isPending}
+          badge="Coming Soon"
+        />
       </div>
     </div>
   );
 }
 
 function ToggleRow({
-  label, description, enabled, onToggle, disabled,
+  label, description, enabled, onToggle, disabled, badge,
 }: {
   label: string;
   description: string;
   enabled: boolean;
   onToggle: () => void;
   disabled: boolean;
+  badge?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
       <div>
-        <p className="text-[13px] font-semibold text-slate-800">{label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-semibold text-slate-800">{label}</p>
+          {badge && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+              {badge}
+            </span>
+          )}
+        </div>
         <p className="text-[11px] text-slate-400 mt-0.5">{description}</p>
       </div>
       <button

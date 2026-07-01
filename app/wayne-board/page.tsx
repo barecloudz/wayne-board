@@ -12,7 +12,7 @@ import { getSetting } from "@/lib/actions/settings";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 
 export default async function Home() {
-  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, workAreasList] =
+  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, clockInSetting, workAreasList] =
     await Promise.all([
       db.select({ vehicleCount: count() }).from(vehicles).where(eq(vehicles.active, true)),
       db.select({ driverCount: count() }).from(drivers).where(eq(drivers.active, true)),
@@ -20,11 +20,13 @@ export default async function Home() {
       db.select({ oosCount: count() }).from(inspections).where(eq(inspections.status, "Out of Service")),
       getSetting("show_ryde", "true"),
       getSetting("show_milestones", "true"),
+      getSetting("clock_in_enabled", "false"),
       getWorkAreas(),
     ]);
 
   const showRyde       = showRydeSetting === "true";
   const showMilestones = showMilestonesSetting === "true";
+  const clockInEnabled = clockInSetting === "true";
 
   return (
     <AppShell>
@@ -73,7 +75,7 @@ export default async function Home() {
         </div>
 
         {/* Driver portal feature toggles */}
-        <PortalSettings showRyde={showRyde} showMilestones={showMilestones} />
+        <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} />
 
         {/* Work Area Manager */}
         <WorkAreaManager initial={workAreasList as any} />
