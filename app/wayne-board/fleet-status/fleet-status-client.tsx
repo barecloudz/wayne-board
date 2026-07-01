@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Pencil, Check, Loader2, ChevronDown, ChevronUp, FileDown, Plus, X, Wrench } from "lucide-react";
 import { setVehicleActive, updateVehicleCompliance } from "@/lib/actions/vehicles";
-import { addCondition, updateCondition, deleteCondition, type Severity, type RouteStatus, type CondStatus } from "@/lib/actions/vehicle-conditions";
+import { addCondition, updateCondition, deleteCondition, type Severity, type CondStatus } from "@/lib/actions/vehicle-conditions";
 import Link from "next/link";
 
 type Vehicle = {
@@ -39,6 +39,7 @@ type Condition = {
   repairEstimate: number | null;
   note: string | null;
   reportedAt: Date | null;
+  resolvedAt: Date | null;
 };
 
 const INPUT = "w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-[12px] text-slate-800 outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-100 transition";
@@ -252,7 +253,6 @@ function VehicleRow({
 const BLANK_FORM = {
   description: "",
   severity: "high" as Severity,
-  routeStatus: "confirm" as RouteStatus,
   repairEstimate: "",
   note: "",
 };
@@ -261,10 +261,12 @@ export default function FleetStatusClient({
   vehicles: initialVehicles,
   drivers,
   conditionsByVehicle: initialConditions,
+  resolvedConditions: initialResolved,
 }: {
   vehicles: Vehicle[];
   drivers: Driver[];
   conditionsByVehicle: Record<number, Condition[]>;
+  resolvedConditions: Condition[];
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [vehicles, setVehicles] = useState(initialVehicles);
@@ -273,6 +275,8 @@ export default function FleetStatusClient({
 
   // Conditions state — mutable locally for optimistic updates
   const [conditionsMap, setConditionsMap] = useState<Record<number, Condition[]>>(initialConditions);
+  const [resolved, setResolved] = useState<Condition[]>(initialResolved);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Report issue modal
   const [reportTarget, setReportTarget] = useState<Vehicle | null>(null);
@@ -281,7 +285,7 @@ export default function FleetStatusClient({
 
   // Edit condition modal
   const [editCondition, setEditCondition] = useState<Condition | null>(null);
-  const [editForm, setEditForm] = useState({ ...BLANK_FORM, status: "open" as CondStatus });
+  const [editForm, setEditForm] = useState({ description: "", severity: "high" as Severity, repairEstimate: "", note: "", status: "open" as CondStatus });
   const [isEditing, startEdit] = useTransition();
 
   const driverByVehicleId = new Map(
@@ -305,12 +309,11 @@ export default function FleetStatusClient({
     startSubmit(async () => {
       const estimate = form.repairEstimate ? parseFloat(form.repairEstimate) : null;
       await addCondition({
-        vehicleId:     reportTarget.id,
-        description:   form.description,
-        severity:      form.severity,
-        routeStatus:   form.routeStatus,
+        vehicleId:      reportTarget.id,
+        description:    form.description,
+        severity:       form.severity,
         repairEstimate: estimate,
-        note:          form.note || undefined,
+        note:           form.note || undefined,
       });
       // Optimistic update
       const newCond: Condition = {
@@ -319,10 +322,11 @@ export default function FleetStatusClient({
         description: form.description,
         severity: form.severity,
         status: "open",
-        routeStatus: form.routeStatus,
+        routeStatus: "confirm",
         repairEstimate: estimate,
         note: form.note || null,
         reportedAt: new Date(),
+        resolvedAt: null,
       };
       setConditionsMap((prev) => ({
         ...prev,
@@ -337,7 +341,6 @@ export default function FleetStatusClient({
     setEditForm({
       description:    c.description,
       severity:       c.severity as Severity,
-      routeStatus:    c.routeStatus as RouteStatus,
       repairEstimate: c.repairEstimate?.toString() ?? "",
       note:           c.note ?? "",
       status:         c.status as CondStatus,
@@ -352,13 +355,17 @@ export default function FleetStatusClient({
         description:    editForm.description,
         severity:       editForm.severity,
         status:         editForm.status,
-        routeStatus:    editForm.routeStatus,
         repairEstimate: estimate,
         note:           editForm.note || undefined,
       });
       setConditionsMap((prev) => {
         const list = prev[editCondition.vehicleId] ?? [];
         if (editForm.status === "resolved") {
+          // Move to resolved history
+          const updated = { ...editCondition, description: editForm.description,
+            severity: editForm.severity, status: "resolved",
+            repairEstimate: estimate, note: editForm.note || null, resolvedAt: new Date() };
+          setResolved((r) => [updated, ...r]);
           return { ...prev, [editCondition.vehicleId]: list.filter((c) => c.id !== editCondition.id) };
         }
         return {
@@ -366,8 +373,7 @@ export default function FleetStatusClient({
           [editCondition.vehicleId]: list.map((c) =>
             c.id === editCondition.id
               ? { ...c, description: editForm.description, severity: editForm.severity,
-                  status: editForm.status, routeStatus: editForm.routeStatus,
-                  repairEstimate: estimate, note: editForm.note || null }
+                  status: editForm.status, repairEstimate: estimate, note: editForm.note || null }
               : c
           ),
         };
@@ -662,6 +668,67 @@ export default function FleetStatusClient({
           </section>
         )}
 
+        {/* ── Maintenance History ── */}
+        <section className="mt-4 mb-8">
+          <button
+            onClick={() => setShowHistory((p) => !p)}
+            className="flex items-center gap-2 text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors mb-3"
+          >
+            {showHistory ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            Maintenance History — {resolved.length} fixed issue{resolved.length !== 1 ? "s" : ""}
+          </button>
+          {showHistory && (
+            resolved.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200/80 px-6 py-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <p className="text-[13px] text-slate-400">No fixed issues yet. Mark an issue as Fixed ✓ to see it here.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <div className="divide-y divide-slate-100">
+                  {resolved.map((c) => {
+                    const vehicle = vehicles.find((v) => v.id === c.vehicleId);
+                    return (
+                      <div key={c.id} className="px-5 py-3 flex items-start gap-4">
+                        <div className="w-[90px] shrink-0">
+                          <p className="text-[12px] font-bold text-slate-700">{vehicle?.unitNumber ?? `#${c.vehicleId}`}</p>
+                          <p className="text-[10px] text-slate-400">{vehicle?.make} {vehicle?.model}</p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${SEVERITY_STYLE[c.severity] ?? SEVERITY_STYLE.medium}`}>
+                              {c.severity}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">
+                              Fixed ✓
+                            </span>
+                            {c.repairEstimate && (
+                              <span className="text-[11px] text-slate-400">${c.repairEstimate.toLocaleString()}</span>
+                            )}
+                          </div>
+                          <p className="text-[13px] text-slate-700">{c.description}</p>
+                          {c.note && <p className="text-[11px] text-slate-400 italic mt-0.5">{c.note}</p>}
+                        </div>
+                        <div className="text-right shrink-0">
+                          {c.resolvedAt && (
+                            <p className="text-[11px] text-slate-400">
+                              {new Date(c.resolvedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                          )}
+                          {c.reportedAt && (
+                            <p className="text-[10px] text-slate-300 mt-0.5">
+                              Reported {new Date(c.reportedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )
+          )}
+        </section>
+
         {/* Legend */}
         <div className="mt-8 flex flex-wrap items-center gap-4 text-[11px] text-slate-400">
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> OK</span>
@@ -698,24 +765,14 @@ export default function FleetStatusClient({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</label>
-                  <select value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as Severity }))} className={INPUT_LG}>
-                    <option value="critical">Critical</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Route Status</label>
-                  <select value={form.routeStatus} onChange={(e) => setForm((f) => ({ ...f, routeStatus: e.target.value as RouteStatus }))} className={INPUT_LG}>
-                    <option value="in_use">In Use</option>
-                    <option value="not_in_use">Not in Use</option>
-                    <option value="confirm">Confirm</option>
-                  </select>
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</label>
+                <select value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as Severity }))} className={INPUT_LG}>
+                  <option value="critical">Critical — safety issue, do not dispatch</option>
+                  <option value="high">High — needs repair soon</option>
+                  <option value="medium">Medium — monitor closely</option>
+                  <option value="low">Low — minor, note for next service</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -799,7 +856,7 @@ export default function FleetStatusClient({
                   <select value={editForm.status} onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value as CondStatus }))} className={INPUT_LG}>
                     <option value="open">Open</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
+                    <option value="resolved">Fixed ✓</option>
                   </select>
                 </div>
               </div>

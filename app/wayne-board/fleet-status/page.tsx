@@ -5,9 +5,10 @@ import { db } from "@/lib/db";
 import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import FleetStatusClient from "./fleet-status-client";
+import { getAllResolvedConditions } from "@/lib/actions/vehicle-conditions";
 
 export default async function FleetStatusPage() {
-  const [allVehicles, allDrivers, allConditions] = await Promise.all([
+  const [allVehicles, allDrivers, allConditions, resolvedConditions] = await Promise.all([
     db.select().from(vehicles).orderBy(vehicles.unitNumber),
     db.select({
       id:                drivers.id,
@@ -19,9 +20,10 @@ export default async function FleetStatusPage() {
     db.select().from(vehicleConditions)
       .where(eq(vehicleConditions.status, "open"))
       .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity),
+    getAllResolvedConditions(),
   ]);
 
-  // Group conditions by vehicleId
+  // Group open conditions by vehicleId
   const conditionsByVehicle: Record<number, typeof allConditions> = {};
   for (const c of allConditions) {
     if (!conditionsByVehicle[c.vehicleId]) conditionsByVehicle[c.vehicleId] = [];
@@ -34,6 +36,7 @@ export default async function FleetStatusPage() {
         vehicles={allVehicles as any}
         drivers={allDrivers}
         conditionsByVehicle={conditionsByVehicle as any}
+        resolvedConditions={resolvedConditions as any}
       />
     </AppShell>
   );

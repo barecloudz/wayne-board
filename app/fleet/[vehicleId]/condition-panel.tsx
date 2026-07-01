@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, Loader2, X, Check, ChevronDown } from "lucide-react";
 import {
   addCondition, updateCondition, deleteCondition,
-  type Severity, type CondStatus, type RouteStatus,
+  type Severity, type CondStatus,
 } from "@/lib/actions/vehicle-conditions";
 
 type Condition = {
@@ -32,21 +32,12 @@ const STATUS_STYLE: Record<string, string> = {
   resolved:    "bg-emerald-50 text-emerald-700 border-emerald-100",
 };
 
-const ROUTE_STYLE: Record<string, string> = {
-  in_use:    "bg-emerald-50 text-emerald-700 border-emerald-200",
-  not_in_use: "bg-slate-100 text-slate-500 border-slate-200",
-  confirm:   "bg-amber-50 text-amber-700 border-amber-200",
-};
-
-const ROUTE_LABEL: Record<string, string> = {
-  in_use: "In Use", not_in_use: "Not in Use", confirm: "Confirm",
-};
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 const BLANK = {
   description: "", severity: "high" as Severity, status: "open" as CondStatus,
-  routeStatus: "confirm" as RouteStatus, repairEstimate: "", note: "",
+  repairEstimate: "", note: "",
 };
 
 export default function ConditionPanel({ vehicleId, initial }: { vehicleId: number; initial: Condition[] }) {
@@ -71,7 +62,6 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
       description: c.description,
       severity:    c.severity as Severity,
       status:      c.status as CondStatus,
-      routeStatus: c.routeStatus as RouteStatus,
       repairEstimate: c.repairEstimate?.toString() ?? "",
       note:        c.note ?? "",
     });
@@ -88,24 +78,22 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
           description:    form.description,
           severity:       form.severity,
           status:         form.status,
-          routeStatus:    form.routeStatus,
           repairEstimate: estimate,
           note:           form.note || undefined,
         });
         setConditions((prev) => prev.map((c) =>
           c.id === editId ? { ...c, description: form.description, severity: form.severity,
-            status: form.status, routeStatus: form.routeStatus,
-            repairEstimate: estimate, note: form.note || null } : c
+            status: form.status, repairEstimate: estimate, note: form.note || null } : c
         ));
       } else {
         await addCondition({
           vehicleId, description: form.description, severity: form.severity,
-          routeStatus: form.routeStatus, repairEstimate: estimate, note: form.note || undefined,
+          repairEstimate: estimate, note: form.note || undefined,
         });
         // Refresh optimistically with a placeholder — revalidatePath will sync
         setConditions((prev) => [{
           id: Date.now(), vehicleId, description: form.description, severity: form.severity,
-          status: "open", routeStatus: form.routeStatus, repairEstimate: estimate,
+          status: "open", routeStatus: "confirm", repairEstimate: estimate,
           note: form.note || null, reportedAt: new Date(),
         }, ...prev]);
       }
@@ -185,19 +173,10 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</label>
               <select value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as Severity }))} className={INPUT}>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Route Status</label>
-              <select value={form.routeStatus} onChange={(e) => setForm((f) => ({ ...f, routeStatus: e.target.value as RouteStatus }))} className={INPUT}>
-                <option value="in_use">In Use</option>
-                <option value="not_in_use">Not in Use</option>
-                <option value="confirm">Confirm (Awaiting)</option>
+                <option value="critical">Critical — do not dispatch</option>
+                <option value="high">High — repair soon</option>
+                <option value="medium">Medium — monitor</option>
+                <option value="low">Low — note for next service</option>
               </select>
             </div>
 
@@ -207,7 +186,7 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
                 <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as CondStatus }))} className={INPUT}>
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
+                  <option value="resolved">Fixed ✓</option>
                 </select>
               </div>
             )}
@@ -272,9 +251,6 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${SEVERITY_STYLE[c.severity] ?? SEVERITY_STYLE.medium}`}>
                       {c.severity}
-                    </span>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ROUTE_STYLE[c.routeStatus] ?? ROUTE_STYLE.confirm}`}>
-                      {ROUTE_LABEL[c.routeStatus] ?? c.routeStatus}
                     </span>
                     {c.repairEstimate && (
                       <span className="text-[11px] font-semibold text-slate-500">

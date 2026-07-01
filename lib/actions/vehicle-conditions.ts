@@ -21,7 +21,7 @@ export async function addCondition(data: {
   vehicleId: number;
   description: string;
   severity: Severity;
-  routeStatus: RouteStatus;
+  routeStatus?: RouteStatus;
   repairEstimate?: number | null;
   note?: string;
 }) {
@@ -29,7 +29,7 @@ export async function addCondition(data: {
     vehicleId:      data.vehicleId,
     description:    data.description,
     severity:       data.severity,
-    routeStatus:    data.routeStatus,
+    routeStatus:    data.routeStatus ?? "confirm",
     repairEstimate: data.repairEstimate ?? null,
     note:           data.note ?? null,
     status:         "open",
@@ -41,7 +41,7 @@ export async function updateCondition(id: number, vehicleId: number, data: {
   description: string;
   severity: Severity;
   status: CondStatus;
-  routeStatus: RouteStatus;
+  routeStatus?: RouteStatus;
   repairEstimate?: number | null;
   note?: string;
 }) {
@@ -49,7 +49,7 @@ export async function updateCondition(id: number, vehicleId: number, data: {
     description:    data.description,
     severity:       data.severity,
     status:         data.status,
-    routeStatus:    data.routeStatus,
+    routeStatus:    data.routeStatus ?? "confirm",
     repairEstimate: data.repairEstimate ?? null,
     note:           data.note ?? null,
     resolvedAt:     data.status === "resolved" ? new Date() : null,
@@ -60,6 +60,15 @@ export async function updateCondition(id: number, vehicleId: number, data: {
 export async function deleteCondition(id: number, vehicleId: number) {
   await db.delete(vehicleConditions).where(eq(vehicleConditions.id, id));
   revalidatePath(`/fleet/${vehicleId}`);
+}
+
+// Used by Maintenance History — all resolved conditions across all vehicles
+export async function getAllResolvedConditions() {
+  return db
+    .select()
+    .from(vehicleConditions)
+    .where(eq(vehicleConditions.status, "resolved"))
+    .orderBy(desc(vehicleConditions.resolvedAt));
 }
 
 // Used by the Fleet Status Report PDF — returns all vehicles with their open conditions
