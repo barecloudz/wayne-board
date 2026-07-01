@@ -7,14 +7,16 @@ import { getWorkAreas } from "@/lib/actions/work-areas";
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [showRydeSetting, showMilestonesSetting, workAreasList] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, workAreasList] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
+    getSetting("clock_in_enabled", "false"),
     getWorkAreas(),
   ]);
 
   const showRyde       = showRydeSetting === "true";
   const showMilestones = showMilestonesSetting === "true";
+  const clockInEnabled = clockInSetting === "true";
 
   return (
     <AppShell>
@@ -25,7 +27,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <PortalSettings showRyde={showRyde} showMilestones={showMilestones} />
+          <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} />
           <WorkAreaManager initial={workAreasList as any} />
         </div>
       </main>
