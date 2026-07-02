@@ -142,7 +142,7 @@ export default async function DriverDashboard() {
         <div className="mb-6">
           <p className="text-[13px] text-white/60 mb-0.5">Welcome back,</p>
           <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-none">{session.name}</h1>
-          <p className="text-[12px] text-white/50 mt-1">Driver ID: {session.driverId}</p>
+          <p className="text-[12px] text-white/50 mt-1">Login: {session.driverId}</p>
           {todayWorkArea && (
             <div className="flex items-center gap-2 mt-2">
               <WorkAreaShape shape={todayWorkArea.shape} color={todayWorkArea.color} size={14} />
