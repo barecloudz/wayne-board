@@ -1,160 +1,45 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { vehicles, drivers } from "@/lib/schema";
-import {
-  renderToBuffer, Document, Page, View, Text, StyleSheet, Font,
-} from "@react-pdf/renderer";
+import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
+import { eq } from "drizzle-orm";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export const dynamic = "force-dynamic";
 
-Font.registerHyphenationCallback((w) => [w]);
+// ── Browser factory ───────────────────────────────────────────────────────────
+// If CHROMIUM_PATH is set (local dev / Windows), use that Chrome executable.
+// Otherwise use @sparticuz/chromium which provides a binary on Netlify/Lambda.
+async function getBrowser() {
+  const localChrome = process.env.CHROMIUM_PATH;
 
-// ── Palette (liquid-glass approximation) ─────────────────────────────────────
-const G = {
-  pageBg:     "#8faabf",
-  glassSheen: "#f2f7fd",
-  glassEdgeB: "#ffffff",
-  glassEdgeD: "#7a97b2",
-  ink:        "#0d1c2e",
-  inkSub:     "#2c4a66",
-  inkMuted:   "#6a8eaa",
-  accentBlue: "#1a6fe8",
-  accentGlow: "#c8deff",
-  overdue:    "#c8102e",
-  warn:       "#b45309",
-  ok:         "#1a5e35",
-  rowBase:    "#e5eff9",
-  rowAlt:     "#d0e2f2",
-  headFill:   "#0d1c2e",
-  headText:   "#7ab4e8",
-};
+  if (localChrome) {
+    return puppeteer.launch({
+      executablePath: localChrome,
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+  }
 
-const S = StyleSheet.create({
-  page: {
-    fontFamily: "Helvetica",
-    fontSize: 8.5,
-    color: G.ink,
-    backgroundColor: G.pageBg,
-    paddingBottom: 20,
-  },
-
-  // ── Masthead ─────────────────────────────────────────────────────────────
-  masthead: {
-    backgroundColor: G.glassSheen,
-    borderBottom: `1.5pt solid ${G.glassEdgeD}`,
-    borderTop:    `1.5pt solid ${G.glassEdgeB}`,
-    paddingTop: 18, paddingBottom: 15, paddingHorizontal: 28,
-    flexDirection: "row", alignItems: "flex-end",
-  },
-  mastheadLeft:  { flex: 1 },
-  eyebrow: {
-    fontSize: 6.5, fontFamily: "Helvetica-Bold",
-    color: G.accentBlue, letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 5,
-  },
-  pageTitle: {
-    fontSize: 34, fontFamily: "Helvetica-Bold",
-    color: G.ink, letterSpacing: -2, lineHeight: 1,
-  },
-  pageTitleMuted: {
-    fontSize: 34, fontFamily: "Helvetica-Bold",
-    color: G.inkMuted, letterSpacing: -2, lineHeight: 1,
-  },
-  mastheadDate: { fontSize: 7.5, color: G.inkSub, marginTop: 7 },
-  statBlock: { alignItems: "flex-end", marginLeft: 22 },
-  statNum:   { fontSize: 20, fontFamily: "Helvetica-Bold", color: G.ink, textAlign: "right" },
-  statLabel: {
-    fontSize: 6.5, color: G.inkMuted, textAlign: "right",
-    letterSpacing: 0.5, textTransform: "uppercase", marginTop: 1,
-  },
-  divider: { width: 0.75, backgroundColor: G.glassEdgeD, alignSelf: "stretch", marginHorizontal: 18 },
-
-  // ── Alert card ────────────────────────────────────────────────────────────
-  alertCard: {
-    marginHorizontal: 28, marginTop: 12,
-    backgroundColor: "#fce8eb",
-    borderTop: `0.75pt solid #f9bac4`, borderBottom: `0.75pt solid #d47a87`,
-    borderLeft: `2.5pt solid ${G.overdue}`, borderRight: `0.75pt solid #f9bac4`,
-    padding: "7pt 12pt",
-  },
-  alertTitle: {
-    fontSize: 7, fontFamily: "Helvetica-Bold", color: G.overdue,
-    letterSpacing: 1, textTransform: "uppercase", marginBottom: 3,
-  },
-  alertBody: { fontSize: 7.5, color: "#7f1d1d", lineHeight: 1.7 },
-
-  // ── Section ───────────────────────────────────────────────────────────────
-  section: { marginTop: 14, paddingHorizontal: 28 },
-  sectionHead: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
-  pill: {
-    backgroundColor: G.accentGlow,
-    borderTop: `0.5pt solid ${G.glassEdgeB}`, borderLeft: `0.5pt solid ${G.glassEdgeB}`,
-    borderBottom: `0.5pt solid ${G.glassEdgeD}`, borderRight: `0.5pt solid ${G.glassEdgeD}`,
-    paddingVertical: 2, paddingHorizontal: 8,
-  },
-  pillText: {
-    fontSize: 6.5, fontFamily: "Helvetica-Bold",
-    color: G.accentBlue, letterSpacing: 1, textTransform: "uppercase",
-  },
-  sectionCount: { fontSize: 7.5, color: G.inkMuted, marginLeft: 8 },
-  sectionRule:  { flex: 1, height: 0.5, backgroundColor: G.glassEdgeD, marginLeft: 8 },
-
-  // ── Table ─────────────────────────────────────────────────────────────────
-  table: {
-    width: "100%",
-    borderTop: `0.75pt solid ${G.glassEdgeB}`, borderLeft: `0.75pt solid ${G.glassEdgeB}`,
-    borderBottom: `0.75pt solid ${G.glassEdgeD}`, borderRight: `0.75pt solid ${G.glassEdgeD}`,
-  },
-  thead:   { flexDirection: "row", backgroundColor: G.headFill },
-  th: {
-    fontSize: 6.5, fontFamily: "Helvetica-Bold", color: G.headText,
-    letterSpacing: 0.8, textTransform: "uppercase", padding: "5pt 5pt",
-  },
-  trow:    { flexDirection: "row", backgroundColor: G.rowBase, borderTop: `0.5pt solid ${G.glassEdgeD}` },
-  trowAlt: { flexDirection: "row", backgroundColor: G.rowAlt,  borderTop: `0.5pt solid ${G.glassEdgeD}` },
-
-  td:       { fontSize: 8.5, color: G.ink,      padding: "5pt 5pt" },
-  tdBold:   { fontSize: 9,   fontFamily: "Helvetica-Bold", color: G.ink, padding: "5pt 5pt" },
-  tdMut:    { fontSize: 8,   color: G.inkMuted,  padding: "5pt 5pt", fontStyle: "italic" },
-
-  // Compliance cell — stacked lines, no padding on outer (we add per-line)
-  compCell: { padding: "4pt 5pt", flexDirection: "column", gap: 1 },
-  compLine: { flexDirection: "row", alignItems: "center" },
-  compLabel:   { fontSize: 6.5, fontFamily: "Helvetica-Bold", color: G.inkMuted,  width: 32, letterSpacing: 0.3 },
-  compDate:    { fontSize: 8,   color: G.ink },
-  compDateRed: { fontSize: 8,   color: G.overdue, fontFamily: "Helvetica-Bold" },
-  compDateAmb: { fontSize: 8,   color: G.warn,    fontFamily: "Helvetica-Bold" },
-  compDateMut: { fontSize: 8,   color: G.inkMuted },
-
-  // Status pill in last column
-  statusOk:  { fontSize: 7, color: G.ok,     fontFamily: "Helvetica-Bold", padding: "5pt 5pt" },
-  statusWarn:{ fontSize: 7, color: G.warn,   fontFamily: "Helvetica-Bold", padding: "5pt 5pt" },
-  statusBad: { fontSize: 7, color: G.overdue,fontFamily: "Helvetica-Bold", padding: "5pt 5pt" },
-
-  // ── Footer ────────────────────────────────────────────────────────────────
-  footer: {
-    flexDirection: "row", gap: 12, marginTop: 14,
-    paddingTop: 7, paddingHorizontal: 28,
-    borderTop: `0.5pt solid ${G.glassEdgeD}`,
-  },
-  footerText: { fontSize: 6.5, color: G.inkSub },
-
-  // ── Columns — sum = 100% ─────────────────────────────────────────────────
-  // Unit # | Vehicle | Own | Driver | Compliance (stacked) | Status
-  cUnit:   { width: "9%" },
-  cVeh:    { width: "23%" },
-  cOwn:    { width: "8%" },
-  cDriver: { width: "22%" },
-  cComp:   { width: "28%" },   // stacked: Reg / Fed Insp / MMR
-  cStatus: { width: "10%" },
-
-  dimmed: { opacity: 0.5 },
-});
+  return puppeteer.launch({
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: true,
+  });
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function fmt(d: string | null) {
-  if (!d) return null;
+function fmt(d: string | null): string {
+  if (!d) return "—";
   const [y, m, day] = d.split("-");
   return `${m}/${day}/${y}`;
+}
+
+function dateClass(raw: string | null, today: string, soon: string): string {
+  if (!raw) return "date-missing";
+  if (raw < today) return "date-bad";
+  if (raw <= soon) return "date-warn";
+  return "date-ok";
 }
 
 type VehicleRow = {
@@ -162,13 +47,13 @@ type VehicleRow = {
   type: string; ownership: string; active: boolean;
   mmrDue: string | null; federalInspectionDue: string | null; registrationExpiry: string | null;
 };
-type DriverRow = { id: number; name: string; assignedVehicleId: number | null };
 
-function statusOf(v: VehicleRow, today: string) {
-  const soonDate = new Date(today);
-  soonDate.setDate(soonDate.getDate() + 30);
-  const soon = soonDate.toISOString().slice(0, 10);
+type ConditionRow = {
+  id: number; vehicleId: number; description: string; severity: string;
+  repairEstimate: number | null; note: string | null;
+};
 
+function complianceStatus(v: VehicleRow, today: string, soon: string) {
   const overdue: string[] = [];
   if (v.registrationExpiry   && v.registrationExpiry   < today) overdue.push("Reg. Expired");
   if (v.federalInspectionDue && v.federalInspectionDue < today) overdue.push("Fed. Insp. Overdue");
@@ -176,231 +61,519 @@ function statusOf(v: VehicleRow, today: string) {
 
   const warning: string[] = [];
   if (v.registrationExpiry   && v.registrationExpiry   >= today && v.registrationExpiry   <= soon) warning.push("Reg. Expiring");
-  if (v.federalInspectionDue && v.federalInspectionDue >= today && v.federalInspectionDue <= soon) warning.push("Fed. Due Soon");
+  if (v.federalInspectionDue && v.federalInspectionDue >= today && v.federalInspectionDue <= soon) warning.push("Fed. Insp. Due Soon");
   if (v.mmrDue               && v.mmrDue               >= today && v.mmrDue               <= soon) warning.push("MMR Due Soon");
 
   return { overdue, warning };
 }
 
-function dateStyle(raw: string | null, today: string, soon: string) {
-  if (!raw) return S.compDateMut;
-  if (raw < today) return S.compDateRed;
-  if (raw <= soon) return S.compDateAmb;
-  return S.compDate;
+// ── HTML generator ────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function generateHTML(data: {
+  printDate: string;
+  today: string;
+  soon: string;
+  active: VehicleRow[];
+  owned: VehicleRow[];
+  rentals: VehicleRow[];
+  inactive: VehicleRow[];
+  allVehicles: VehicleRow[];
+  driverMap: Map<number, string>;
+  conditionsByVehicle: Map<number, ConditionRow[]>;
+  openIssueCount: number;
+  totalRepairCost: number;
+  vehiclesWithConditions: (VehicleRow & { conditions: ConditionRow[] })[];
+  issueVehicles: VehicleRow[];
+}): string {
+  const {
+    printDate, today, soon,
+    active, owned, rentals, inactive, allVehicles,
+    driverMap, conditionsByVehicle,
+    openIssueCount, totalRepairCost, vehiclesWithConditions, issueVehicles,
+  } = data;
+
+  const totalRepairStr = totalRepairCost > 0
+    ? `$${totalRepairCost.toLocaleString()}` : "—";
+
+  function severityBadge(s: string) {
+    const cls: Record<string, string> = {
+      critical: "sev-critical", high: "sev-high", medium: "sev-medium", low: "sev-low",
+    };
+    return `<span class="sev-badge ${cls[s] ?? "sev-low"}">${s.toUpperCase()}</span>`;
+  }
+
+  function vehicleRow(v: VehicleRow, idx: number, dimmed = false): string {
+    const driver = driverMap.get(v.id);
+    const { overdue, warning } = complianceStatus(v, today, soon);
+    const conditions = conditionsByVehicle.get(v.id) ?? [];
+    const condCost = conditions.reduce((s, c) => s + (c.repairEstimate ? Number(c.repairEstimate) : 0), 0);
+
+    const statusCls = overdue.length > 0 ? "status-bad" : warning.length > 0 ? "status-warn" : "status-ok";
+    const statusText = overdue.length > 0
+      ? `✗ ${overdue.join(", ")}`
+      : warning.length > 0
+        ? `⚠ ${warning.join(", ")}`
+        : "✓ Clear";
+
+    const rowCls = idx % 2 === 0 ? "tr-even" : "tr-odd";
+    const hasCritical = conditions.some((c) => c.severity === "critical");
+
+    return `
+      <tr class="${rowCls}${dimmed ? " dimmed" : ""}">
+        <td class="td-unit">${v.unitNumber}</td>
+        <td class="td-vehicle">${v.year} ${v.make} ${v.model}</td>
+        <td><span class="own-badge ${v.ownership === "rental" ? "own-rental" : "own-owned"}">${v.ownership === "rental" ? "Rental" : "Owned"}</span></td>
+        <td class="${driver ? "" : "td-muted"}">${driver ?? "Unassigned"}</td>
+        <td>
+          <div class="comp-stack">
+            <div class="comp-line">
+              <span class="comp-key">Reg.</span>
+              <span class="comp-val ${dateClass(v.registrationExpiry, today, soon)}">${fmt(v.registrationExpiry)}</span>
+            </div>
+            <div class="comp-line">
+              <span class="comp-key">Fed. Insp.</span>
+              <span class="comp-val ${dateClass(v.federalInspectionDue, today, soon)}">${fmt(v.federalInspectionDue)}</span>
+            </div>
+            <div class="comp-line">
+              <span class="comp-key">MMR</span>
+              <span class="comp-val ${dateClass(v.mmrDue, today, soon)}">${fmt(v.mmrDue)}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          ${conditions.length > 0
+            ? `<div class="issues-cell ${hasCritical ? "issues-critical" : ""}">
+                <span>${hasCritical ? "🔴" : "🟡"} ${conditions.length} issue${conditions.length !== 1 ? "s" : ""}</span>
+                ${condCost > 0 ? `<span class="cost-tag">$${condCost.toLocaleString()}</span>` : ""}
+               </div>`
+            : ""}
+        </td>
+        <td><span class="${statusCls}">${statusText}</span></td>
+      </tr>`;
+  }
+
+  function vehicleTable(rows: VehicleRow[], dimmed = false): string {
+    return `
+      <table>
+        <thead>
+          <tr class="thead-row">
+            <th style="width:8%">Unit #</th>
+            <th style="width:22%">Vehicle</th>
+            <th style="width:8%">Type</th>
+            <th style="width:18%">Driver</th>
+            <th style="width:24%">Compliance Dates</th>
+            <th style="width:10%">Issues</th>
+            <th style="width:10%">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((v, i) => vehicleRow(v, i, dimmed)).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  const alertBlock = issueVehicles.length > 0 ? `
+    <div class="alert-card">
+      <div class="alert-title">&#9888; ${issueVehicles.length} Vehicle${issueVehicles.length !== 1 ? "s" : ""} Require Compliance Attention</div>
+      <div class="alert-body">${issueVehicles.map((v) => {
+        const { overdue, warning } = complianceStatus(v, today, soon);
+        return `<span class="alert-unit">${v.unitNumber}</span> ${[...overdue, ...warning].join(", ")}`;
+      }).join("&ensp;&middot;&ensp;")}</div>
+    </div>` : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @page { size: 11in 8.5in; margin: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #f1f5f9;
+    color: #0f172a;
+    font-size: 10px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    orphans: 1;
+    widows: 1;
+  }
+
+  /* ── Main header ─────────────────────────────────────────────────── */
+  .pg-header {
+    background: #0a0f1e;
+    color: white;
+    padding: 10px 28px;
+  }
+
+  .pg-header-inner {
+    display: table;
+    width: 100%;
+  }
+
+  .pg-header-left  { display: table-cell; vertical-align: middle; }
+  .pg-header-right { display: table-cell; vertical-align: middle; text-align: right; white-space: nowrap; }
+
+  .eyebrow {
+    font-size: 7.5px; font-weight: 700; letter-spacing: 2.5px;
+    text-transform: uppercase; color: #6366f1; margin-bottom: 2px;
+  }
+
+  .report-title { font-size: 22px; font-weight: 900; color: white; line-height: 1; letter-spacing: -0.5px; }
+
+  .report-date { font-size: 8.5px; color: rgba(255,255,255,0.32); margin-top: 2px; }
+
+  .stat-box {
+    display: inline-block;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 6px;
+    padding: 5px 10px;
+    text-align: center;
+    min-width: 48px;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+
+  .stat-num   { display: block; font-size: 15px; font-weight: 800; color: white; line-height: 1; }
+  .stat-label { display: block; font-size: 7px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: rgba(255,255,255,0.30); margin-top: 2px; }
+  .stat-accent .stat-num { color: #f87171; }
+  .stat-cost .stat-num   { font-size: 11px; color: #38bdf8; }
+
+  /* ── Content wrapper ─────────────────────────────────────────────── */
+  .content { padding: 10px 28px; }
+
+  /* ── Alert ────────────────────────────────────────────────────────── */
+  .alert-card {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-left: 3px solid #dc2626;
+    padding: 7px 12px;
+    margin-bottom: 10px;
+  }
+
+  .alert-title { font-size: 8px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .alert-body  { font-size: 9px; color: #7f1d1d; line-height: 1.7; }
+  .alert-unit  { font-weight: 700; }
+
+  /* ── Section header — sits directly above a <table> ─────────────── */
+  .sec-head {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    padding: 5px 12px;
+    margin-top: 8px;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .sec-head::after { content: ""; display: block; clear: both; }
+  .sec-head-left  { float: left; vertical-align: middle; }
+  .sec-head-right { float: right; vertical-align: middle; }
+
+  .sec-title { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; }
+  .sec-meta  { font-size: 9px; color: #94a3b8; }
+
+  /* ── Tables ────────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; margin-bottom: 0; }
+
+  thead th {
+    background: #0f172a;
+    color: rgba(255,255,255,0.55);
+    font-size: 7px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.7px;
+    padding: 5px 10px; text-align: left;
+  }
+
+  tbody tr:nth-child(odd)  td { background: white; }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
+
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 9.5px; color: #0f172a;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .td-unit    { font-weight: 900; font-size: 11px; white-space: nowrap; }
+  .td-vehicle { color: #334155; }
+  .td-muted   { color: #94a3b8; font-style: italic; }
+
+  /* Compliance stack */
+  .comp-line { display: block; }
+  .comp-key  { display: inline-block; font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; width: 44px; padding-right: 4px; white-space: nowrap; vertical-align: middle; }
+  .comp-val  { display: inline-block; vertical-align: middle; }
+
+  .date-ok      { font-size: 9.5px; color: #0f172a; }
+  .date-warn    { font-size: 9.5px; color: #d97706; font-weight: 700; }
+  .date-bad     { font-size: 9.5px; color: #dc2626; font-weight: 800; }
+  .date-missing { font-size: 9.5px; color: #cbd5e1; }
+
+  .status-ok   { font-size: 8.5px; font-weight: 700; color: #16a34a; }
+  .status-warn { font-size: 8.5px; font-weight: 700; color: #d97706; }
+  .status-bad  { font-size: 8.5px; font-weight: 700; color: #dc2626; }
+
+  .own-badge  { display: inline-block; font-size: 7px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .own-owned  { background: #ede9fe; color: #6d28d9; }
+  .own-rental { background: #e0f2fe; color: #0369a1; }
+
+  .issues-cell { font-size: 9px; font-weight: 600; color: #d97706; }
+  .issues-critical { color: #dc2626; }
+  .cost-tag { font-size: 8px; font-weight: 600; color: #0284c7; display: block; }
+
+  /* Severity badges */
+  .sev-badge    { display: inline-block; font-size: 6.5px; font-weight: 800; padding: 2px 5px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.3px; vertical-align: middle; }
+  .sev-critical { background: #dc2626; color: white; }
+  .sev-high     { background: #d97706; color: white; }
+  .sev-medium   { background: #eab308; color: #422006; }
+  .sev-low      { background: #e2e8f0; color: #64748b; }
+
+  /* Mechanical issues table cells */
+  .mech-unit-td    { font-weight: 900; font-size: 11px; white-space: nowrap; vertical-align: top; }
+  .mech-vehicle-td { color: #334155; white-space: nowrap; vertical-align: top; }
+  .mech-issues-td  { vertical-align: top; }
+  .mech-cost-td    { text-align: right; white-space: nowrap; font-weight: 700; color: #0284c7; vertical-align: top; font-size: 9px; }
+
+  .mech-issue-line { margin-bottom: 3px; line-height: 1.5; }
+  .mech-issue-line:last-child { margin-bottom: 0; }
+  .mech-issue-note { font-size: 8.5px; color: #94a3b8; font-style: italic; display: block; margin-left: 2px; }
+
+  /* ── Inactive section — forced page break ────────────────────────── */
+  .inactive-section { page-break-before: always; break-before: page; }
+
+  /* ── Inactive mini-header ─────────────────────────────────────────── */
+  .inactive-pg-header {
+    background: #0a0f1e;
+    color: white;
+    padding: 8px 28px;
+  }
+  .inactive-pg-header::after { content: ""; display: block; clear: both; }
+  .inactive-pg-left  { float: left; }
+  .inactive-pg-right { float: right; }
+
+  .inactive-title { font-size: 18px; font-weight: 900; color: rgba(255,255,255,0.38); letter-spacing: -0.4px; line-height: 1; }
+
+  .inactive-stat {
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 5px 14px; text-align: center;
+    vertical-align: middle;
+  }
+
+  /* ── Legend bar ───────────────────────────────────────────────────── */
+  .legend-bar {
+    padding: 5px 28px 8px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 6px;
+    font-size: 7.5px;
+    color: #94a3b8;
+  }
+  .legend-bar::after { content: ""; display: block; clear: both; }
+  .legend-right { float: right; font-size: 7.5px; color: #cbd5e1; font-weight: 500; }
+
+  .legend-item { display: inline; font-size: 7.5px; color: #94a3b8; margin-right: 12px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 3px; }
+  .dot-red   { background: #dc2626; }
+  .dot-amber { background: #d97706; }
+  .dot-green { background: #16a34a; }
+
+  .dimmed td { opacity: 0.55; }
+</style>
+</head>
+<body>
+
+  <!-- ══ ACTIVE FLEET PAGE ══════════════════════════════════════════ -->
+  <div class="pg-header">
+    <div class="pg-header-inner">
+      <div class="pg-header-left">
+        <div class="eyebrow">742 Logistics &middot; Fleet Status Report</div>
+        <div class="report-title">Fleet Status</div>
+        <div class="report-date">Generated ${printDate}</div>
+      </div>
+      <div class="pg-header-right">
+        <div class="stat-box"><span class="stat-num">${active.length}</span><span class="stat-label">Active</span></div>
+        <div class="stat-box"><span class="stat-num">${owned.length}</span><span class="stat-label">Owned</span></div>
+        <div class="stat-box"><span class="stat-num">${rentals.length}</span><span class="stat-label">Rentals</span></div>
+        <div class="stat-box"><span class="stat-num">${allVehicles.length}</span><span class="stat-label">Total Fleet</span></div>
+        <div class="stat-box ${openIssueCount > 0 ? "stat-accent" : ""}"><span class="stat-num">${openIssueCount}</span><span class="stat-label">Open Issues</span></div>
+        <div class="stat-box ${totalRepairCost > 0 ? "stat-cost" : ""}"><span class="stat-num">${totalRepairStr}</span><span class="stat-label">Est. Repairs</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    ${alertBlock}
+
+    ${vehiclesWithConditions.length > 0 ? `
+    <div class="sec-head">
+      <span class="sec-head-left sec-title">Open Mechanical Issues</span>
+      <span class="sec-head-right sec-meta">${openIssueCount} open &middot; ${totalRepairStr} est. repairs</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:9%">Unit #</th>
+          <th style="width:20%">Vehicle</th>
+          <th style="width:55%">Issues</th>
+          <th style="width:16%">Est. Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${vehiclesWithConditions.map((v) => {
+          const total = v.conditions.reduce((s, c) => s + (c.repairEstimate ? Number(c.repairEstimate) : 0), 0);
+          return `
+          <tr>
+            <td class="mech-unit-td">${v.unitNumber}</td>
+            <td class="mech-vehicle-td">${v.year} ${v.make} ${v.model}</td>
+            <td class="mech-issues-td">${v.conditions.map((c) => `
+              <div class="mech-issue-line">
+                ${severityBadge(c.severity)}
+                <span> ${c.description}</span>
+                ${c.note ? `<span class="mech-issue-note">${c.note}</span>` : ""}
+              </div>`).join("")}
+            </td>
+            <td class="mech-cost-td">${total > 0 ? `~$${total.toLocaleString()}` : "&mdash;"}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>` : ""}
+
+    ${owned.length > 0 ? `
+    <div class="sec-head" style="margin-top:8px">
+      <span class="sec-head-left sec-title">Owned Vehicles</span>
+      <span class="sec-head-right sec-meta">${owned.length} vehicle${owned.length !== 1 ? "s" : ""}</span>
+    </div>
+    ${vehicleTable(owned)}` : ""}
+
+    ${rentals.length > 0 ? `
+    <div class="sec-head" style="margin-top:8px">
+      <span class="sec-head-left sec-title">Rental Vehicles</span>
+      <span class="sec-head-right sec-meta">${rentals.length} vehicle${rentals.length !== 1 ? "s" : ""}</span>
+    </div>
+    ${vehicleTable(rentals)}` : ""}
+  </div>
+
+  ${inactive.length > 0 ? `
+  <div class="inactive-section">
+    <div class="inactive-pg-header">
+      <div class="inactive-pg-left">
+        <div class="eyebrow">742 Logistics &middot; Fleet Status Report</div>
+        <div class="inactive-title">Inactive Fleet</div>
+        <div class="report-date">Generated ${printDate}</div>
+      </div>
+      <div class="inactive-pg-right">
+        <div class="inactive-stat">
+          <span class="stat-num">${inactive.length}</span>
+          <span class="stat-label">Inactive</span>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sec-head" style="margin-top:0">
+        <span class="sec-head-left sec-title">Inactive Fleet</span>
+        <span class="sec-head-right sec-meta">${inactive.length} vehicle${inactive.length !== 1 ? "s" : ""}</span>
+      </div>
+      ${vehicleTable(inactive, true)}
+    </div>
+    <div class="legend-bar">
+      <span class="legend-item"><span class="dot dot-red"></span>Overdue / Expired</span>
+      <span class="legend-item"><span class="dot dot-amber"></span>Due within 30 days</span>
+      <span class="legend-item"><span class="dot dot-green"></span>In good standing</span>
+      <span class="legend-right">742 Logistics &middot; Fleet Status &middot; ${printDate}</span>
+    </div>
+  </div>` : ""}
+
+</body>
+</html>`;
 }
 
-// ── Table sub-components ──────────────────────────────────────────────────────
-function THead() {
-  return (
-    <View style={S.thead}>
-      <Text style={[S.th, S.cUnit]}>Unit #</Text>
-      <Text style={[S.th, S.cVeh]}>Vehicle</Text>
-      <Text style={[S.th, S.cOwn]}>Ownership</Text>
-      <Text style={[S.th, S.cDriver]}>Assigned Driver</Text>
-      <Text style={[S.th, S.cComp]}>Compliance Dates</Text>
-      <Text style={[S.th, S.cStatus]}>Status</Text>
-    </View>
-  );
-}
-
-function TRow({ v, i, driverMap, today }: {
-  v: VehicleRow; i: number; driverMap: Map<number, DriverRow>; today: string;
-}) {
-  const driver = driverMap.get(v.id);
-  const { overdue, warning } = statusOf(v, today);
-
-  const soonDate = new Date(today);
-  soonDate.setDate(soonDate.getDate() + 30);
-  const soon = soonDate.toISOString().slice(0, 10);
-
-  const row = i % 2 === 0 ? S.trow : S.trowAlt;
-
-  // Determine overall status for the last column
-  const statusStyle = overdue.length > 0 ? S.statusBad : warning.length > 0 ? S.statusWarn : S.statusOk;
-  const statusText  = overdue.length > 0
-    ? `✗ ${overdue.length} Issue${overdue.length > 1 ? "s" : ""}`
-    : warning.length > 0
-      ? `⚠ ${warning.length} Due Soon`
-      : "✓ Clear";
-
-  return (
-    <View style={row}>
-      <Text style={[S.tdBold, S.cUnit]}>{v.unitNumber}</Text>
-      <Text style={[S.td, S.cVeh]}>{v.year} {v.make} {v.model}</Text>
-      <Text style={[S.td, S.cOwn]}>{v.ownership === "rental" ? "Rental" : "Owned"}</Text>
-      <Text style={[driver ? S.td : S.tdMut, S.cDriver]}>{driver?.name ?? "Unassigned"}</Text>
-
-      {/* Stacked compliance cell */}
-      <View style={[S.cComp, S.compCell]}>
-        {/* Line 1: Registration */}
-        <View style={S.compLine}>
-          <Text style={S.compLabel}>Reg.</Text>
-          <Text style={dateStyle(v.registrationExpiry, today, soon)}>
-            {fmt(v.registrationExpiry) ?? "—"}
-          </Text>
-        </View>
-        {/* Line 2: Federal Inspection */}
-        <View style={S.compLine}>
-          <Text style={S.compLabel}>Fed. Insp.</Text>
-          <Text style={dateStyle(v.federalInspectionDue, today, soon)}>
-            {fmt(v.federalInspectionDue) ?? "—"}
-          </Text>
-        </View>
-        {/* Line 3: MMR */}
-        <View style={S.compLine}>
-          <Text style={S.compLabel}>MMR</Text>
-          <Text style={dateStyle(v.mmrDue, today, soon)}>
-            {fmt(v.mmrDue) ?? "—"}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={[statusStyle, S.cStatus]}>{statusText}</Text>
-    </View>
-  );
-}
-
-function Section({ label, rows, driverMap, today, dimmed }: {
-  label: string; rows: VehicleRow[]; driverMap: Map<number, DriverRow>; today: string; dimmed?: boolean;
-}) {
-  if (rows.length === 0) return null;
-  return (
-    <View style={[S.section, dimmed ? S.dimmed : {}]}>
-      <View style={S.sectionHead}>
-        <View style={S.pill}><Text style={S.pillText}>{label}</Text></View>
-        <Text style={S.sectionCount}>{rows.length} vehicle{rows.length !== 1 ? "s" : ""}</Text>
-        <View style={S.sectionRule} />
-      </View>
-      <View style={S.table}>
-        <THead />
-        {rows.map((v, i) => <TRow key={v.id} v={v} i={i} driverMap={driverMap} today={today} />)}
-      </View>
-    </View>
-  );
-}
-
-function Footer({ date }: { date: string }) {
-  return (
-    <View style={S.footer}>
-      <Text style={S.footerText}>Red date = overdue / expired</Text>
-      <Text style={S.footerText}>Amber date = due within 30 days</Text>
-      <Text style={S.footerText}>— = date not on file</Text>
-      <Text style={[S.footerText, { marginLeft: "auto" }]}>742 Logistics · Fleet Status · {date}</Text>
-    </View>
-  );
-}
-
-// ── Handler ───────────────────────────────────────────────────────────────────
+// ── Route handler ─────────────────────────────────────────────────────────────
 export async function GET() {
   const today     = new Date().toISOString().slice(0, 10);
   const printDate = new Date().toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
   });
 
-  const [allVehicles, allDrivers] = await Promise.all([
+  const soonDate = new Date(today);
+  soonDate.setDate(soonDate.getDate() + 30);
+  const soon = soonDate.toISOString().slice(0, 10);
+
+  const [allVehicles, allDrivers, allConditions] = await Promise.all([
     db.select().from(vehicles).orderBy(vehicles.unitNumber),
     db.select({ id: drivers.id, name: drivers.name, assignedVehicleId: drivers.assignedVehicleId })
       .from(drivers),
+    db.select().from(vehicleConditions)
+      .where(eq(vehicleConditions.status, "open"))
+      .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity),
   ]);
 
-  const driverMap = new Map<number, DriverRow>(
-    allDrivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d])
+  const driverMap = new Map<number, string>(
+    allDrivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d.name])
   );
 
-  const active   = allVehicles.filter((v) => v.active);
-  const inactive = allVehicles.filter((v) => !v.active);
+  // Group conditions by vehicleId
+  const conditionsByVehicle = new Map<number, ConditionRow[]>();
+  for (const c of allConditions) {
+    const list = conditionsByVehicle.get(c.vehicleId) ?? [];
+    list.push(c as ConditionRow);
+    conditionsByVehicle.set(c.vehicleId, list);
+  }
+
+  const active   = allVehicles.filter((v) => v.active) as VehicleRow[];
+  const inactive = allVehicles.filter((v) => !v.active) as VehicleRow[];
   const owned    = active.filter((v) => v.ownership !== "rental");
   const rentals  = active.filter((v) => v.ownership === "rental");
 
-  const totalOwned   = allVehicles.filter((v) => v.ownership !== "rental").length;
-  const totalRentals = allVehicles.filter((v) => v.ownership === "rental").length;
+  const openIssueCount  = allConditions.length;
+  const totalRepairCost = allConditions.reduce(
+    (sum, c) => sum + (c.repairEstimate ? Number(c.repairEstimate) : 0), 0
+  );
 
-  const issueVehicles = allVehicles.filter((v) => {
-    const { overdue, warning } = statusOf(v as VehicleRow, today);
+  const vehiclesWithConditions = active
+    .filter((v) => (conditionsByVehicle.get(v.id)?.length ?? 0) > 0)
+    .map((v) => ({ ...v, conditions: conditionsByVehicle.get(v.id)! }));
+
+  const issueVehicles = (allVehicles as VehicleRow[]).filter((v) => {
+    const { overdue, warning } = complianceStatus(v, today, soon);
     return overdue.length > 0 || warning.length > 0;
   });
 
-  const pdf = (
-    <Document title="742 Logistics — Fleet Status Report">
-
-      {/* ═══════════════════ PAGE 1 · ACTIVE ═══════════════════ */}
-      <Page size="LETTER" orientation="landscape" style={S.page}>
-        <View style={S.masthead}>
-          <View style={S.mastheadLeft}>
-            <Text style={S.eyebrow}>742 Logistics · Fleet Status Report</Text>
-            <Text style={S.pageTitle}>ACTIVE</Text>
-            <Text style={S.mastheadDate}>Generated {printDate}</Text>
-          </View>
-          <View style={S.statBlock}>
-            <Text style={S.statNum}>{active.length}</Text>
-            <Text style={S.statLabel}>Active</Text>
-          </View>
-          <View style={S.divider} />
-          <View style={S.statBlock}>
-            <Text style={S.statNum}>{totalOwned}</Text>
-            <Text style={S.statLabel}>Owned</Text>
-          </View>
-          <View style={S.divider} />
-          <View style={S.statBlock}>
-            <Text style={S.statNum}>{totalRentals}</Text>
-            <Text style={S.statLabel}>Rentals</Text>
-          </View>
-          <View style={S.divider} />
-          <View style={S.statBlock}>
-            <Text style={S.statNum}>{allVehicles.length}</Text>
-            <Text style={S.statLabel}>Fleet Total</Text>
-          </View>
-        </View>
-
-        {issueVehicles.length > 0 && (
-          <View style={S.alertCard}>
-            <Text style={S.alertTitle}>
-              {issueVehicles.length} vehicle{issueVehicles.length !== 1 ? "s" : ""} require attention
-            </Text>
-            <Text style={S.alertBody}>
-              {issueVehicles.map((v) => {
-                const { overdue, warning } = statusOf(v as VehicleRow, today);
-                const all = [...overdue, ...warning];
-                return `${v.unitNumber}: ${all.join(", ")}`;
-              }).join("    ·    ")}
-            </Text>
-          </View>
-        )}
-
-        <Section label="Owned Vehicles"  rows={owned}   driverMap={driverMap} today={today} />
-        <Section label="Rental Vehicles" rows={rentals} driverMap={driverMap} today={today} />
-        <Footer date={printDate} />
-      </Page>
-
-      {/* ═══════════════════ PAGE 2 · INACTIVE ═══════════════════ */}
-      {inactive.length > 0 && (
-        <Page size="LETTER" orientation="landscape" style={S.page}>
-          <View style={S.masthead}>
-            <View style={S.mastheadLeft}>
-              <Text style={S.eyebrow}>742 Logistics · Fleet Status Report</Text>
-              <Text style={S.pageTitleMuted}>INACTIVE</Text>
-              <Text style={S.mastheadDate}>Generated {printDate}</Text>
-            </View>
-            <View style={S.statBlock}>
-              <Text style={[S.statNum, { color: G.inkMuted }]}>{inactive.length}</Text>
-              <Text style={S.statLabel}>Inactive</Text>
-            </View>
-          </View>
-
-          <Section label="Inactive Fleet" rows={inactive} driverMap={driverMap} today={today} dimmed />
-          <Footer date={printDate} />
-        </Page>
-      )}
-
-    </Document>
-  );
-
-  const buffer = await renderToBuffer(pdf);
-
-  return new NextResponse(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type":        "application/pdf",
-      "Content-Disposition": `attachment; filename="fleet-status-${today}.pdf"`,
-    },
+  const html = generateHTML({
+    printDate, today, soon,
+    active, owned, rentals, inactive,
+    allVehicles: allVehicles as VehicleRow[],
+    driverMap, conditionsByVehicle,
+    openIssueCount, totalRepairCost,
+    vehiclesWithConditions,
+    issueVehicles,
   });
+
+  const browser = await getBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1100, height: 850, deviceScaleFactor: 1 });
+    await page.setContent(html, { waitUntil: "load" });
+
+    const pdfBuffer = await page.pdf({
+      format: "Letter",
+      landscape: true,
+      printBackground: true,
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+    });
+
+    return new NextResponse(Buffer.from(pdfBuffer), {
+      headers: {
+        "Content-Type":        "application/pdf",
+        "Content-Disposition": `attachment; filename="fleet-status-${today}.pdf"`,
+        "X-Debug-Version":     "v7",
+      },
+    });
+  } finally {
+    await browser.close();
+  }
 }
