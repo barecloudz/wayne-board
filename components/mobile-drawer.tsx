@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
-  ClipboardCheck, UserCog, ChevronRight, Star, Wrench, CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
+  ClipboardCheck, UserCog, ChevronRight, Star, Wrench, CalendarDays, Trophy, WrenchIcon, Settings, Gauge, Route,
 } from "lucide-react";
 
 const reportItems = [
@@ -29,6 +29,7 @@ const adminItems = [
   { icon: WrenchIcon,   label: "Maintenance",     href: "/wayne-board/maintenance",  exact: true },
   { icon: Star,         label: "Ryde Scores",     href: "/wayne-board/ryde",         exact: true },
   { icon: Trophy,       label: "Milestones",      href: "/wayne-board/milestones",   exact: true },
+  { icon: Route,        label: "Auto DRO",        href: "/wayne-board/auto-dro",     exact: true },
   { icon: Settings,     label: "Settings",        href: "/wayne-board/settings",     exact: true },
 ];
 

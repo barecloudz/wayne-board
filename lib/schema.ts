@@ -1,6 +1,6 @@
 import {
   pgTable, serial, text, real, integer,
-  timestamp, boolean, date,
+  timestamp, boolean, date, doublePrecision,
 } from "drizzle-orm/pg-core";
 
 // ── Work Areas ───────────────────────────────────────────────────────────────
@@ -222,10 +222,113 @@ export const gateCodeReports = pgTable("gate_code_reports", {
   createdAt:   timestamp("created_at").defaultNow(),
 });
 
+// ── Auto DRO — Ephemeral Route Data ──────────────────────────────────────────
+// Wiped and reloaded on every sync. No long-term PII retention.
+
+export const droRoutes = pgTable("dro_routes", {
+  id:             serial("id").primaryKey(),
+  workAreaName:   text("work_area_name").notNull(),
+  workAreaNumber: text("work_area_number").notNull(),
+  routeType:      text("route_type").notNull().default(""),
+  stops:          integer("stops").notNull().default(0),
+  packages:       integer("packages").notNull().default(0),
+  distance:       real("distance").notNull().default(0),
+  timeHours:      real("time_hours").notNull().default(0),
+  cube:           real("cube").notNull().default(0),
+  vehicleCapacity: text("vehicle_capacity").notNull().default(""),
+  sortDate:       date("sort_date").notNull(),
+  syncedAt:       timestamp("synced_at").defaultNow(),
+});
+
+export const droStops = pgTable("dro_stops", {
+  id:             serial("id").primaryKey(),
+  waypointId:     text("waypoint_id").notNull(),
+  stopId:         text("stop_id").notNull(),
+  firmName:       text("firm_name").notNull().default(""),
+  address:        text("address").notNull().default(""),
+  city:           text("city").notNull().default(""),
+  state:          text("state").notNull().default(""),
+  postalCode:     text("postal_code").notNull().default(""),
+  actualRoute:    text("actual_route").notNull().default(""),
+  actualSequence: integer("actual_sequence"),
+  arrivalTime:    text("arrival_time").notNull().default(""),
+  stopClass:      text("stop_class").notNull().default(""),
+  noPackages:     integer("no_packages").notNull().default(0),
+  totalWeight:    real("total_weight").notNull().default(0),
+  totalCube:      real("total_cube").notNull().default(0),
+  isLpPackage:    boolean("is_lp_package").notNull().default(false),
+  isBulkStop:     boolean("is_bulk_stop").notNull().default(false),
+  workAreaNumber: text("work_area_number").notNull().default(""),
+  lat:            doublePrecision("lat"),
+  lng:            doublePrecision("lng"),
+  sortDate:       date("sort_date").notNull(),
+  syncedAt:       timestamp("synced_at").defaultNow(),
+});
+
+export const droDailyTotals = pgTable("dro_daily_totals", {
+  id:            serial("id").primaryKey(),
+  date:          date("date").notNull().unique(),
+  routes:        integer("routes").notNull().default(0),
+  totalStops:    integer("total_stops").notNull().default(0),
+  totalPackages: integer("total_packages").notNull().default(0),
+  totalDistance: real("total_distance").notNull().default(0),
+  syncedAt:      timestamp("synced_at").defaultNow(),
+});
+
+export const droAnchorAreas = pgTable("dro_anchor_areas", {
+  id:                 serial("id").primaryKey(),
+  anchorAreaId:       doublePrecision("anchor_area_id").notNull().unique(),
+  name:               text("name").notNull().default(""),
+  shapeJson:          text("shape_json").notNull().default("{}"),
+  enabledRoutePlans:  text("enabled_route_plans").notNull().default("[]"),
+  wktPoly:            text("wkt_poly"),
+  vehicleId:          integer("vehicle_id"),
+  hexCode:            text("hex_code"),
+  syncedAt:           timestamp("synced_at").defaultNow(),
+});
+
+// ── Daily Work Area Assignments ───────────────────────────────────────────────
 export const dailyWorkAreaAssignments = pgTable("daily_work_area_assignments", {
   id:         serial("id").primaryKey(),
   driverId:   text("driver_id").notNull().references(() => drivers.driverId, { onDelete: "cascade" }),
   date:       date("date").notNull(),
   workAreaId: integer("work_area_id").notNull().references(() => workAreas.id, { onDelete: "cascade" }),
   createdAt:  timestamp("created_at").defaultNow(),
+});
+
+// ── DSW (Daily Service Worksheet) Route Days ─────────────────────────────────
+export const dswRouteDays = pgTable("dsw_route_days", {
+  id:                serial("id").primaryKey(),
+  date:              date("date").notNull(),
+  driverId:          text("driver_id").references(() => drivers.driverId, { onDelete: "set null" }),
+  driverNameRaw:     text("driver_name_raw").notNull().default(""),
+  waName:            text("wa_name").notNull().default(""),
+  waNumber:          text("wa_number").notNull().default(""),
+  ilsPct:            real("ils_pct"),
+  actDelStps:        integer("act_del_stps"),
+  actDelPkgs:        integer("act_del_pkgs"),
+  nonDelvdStps:      integer("non_delvd_stps"),
+  allStatusCodePkgs: integer("all_status_code_pkgs"),
+  miles:             integer("miles"),
+  onRoadHours:       text("on_road_hours"),
+  onDutyHours:       text("on_duty_hours"),
+  vscanPkgs:         integer("vscan_pkgs"),
+  delStpsPlanned:    integer("del_stps_planned"),
+  syncedAt:          timestamp("synced_at").defaultNow(),
+});
+
+// ── GroundCloud Route Days ────────────────────────────────────────────────────
+export const gcRouteDays = pgTable("gc_route_days", {
+  id:            serial("id").primaryKey(),
+  gcRouteDayId:  integer("gc_route_day_id").notNull().unique(),
+  driverId:      text("driver_id").references(() => drivers.driverId, { onDelete: "set null" }),
+  driverName:    text("driver_name").notNull().default(""),
+  routeName:     text("route_name").notNull().default(""),
+  date:          date("date").notNull(),
+  stopsPerHour:  real("stops_per_hour"),
+  milesTotal:    real("miles_total"),
+  milesTraveled: real("miles_traveled"),
+  driveTime:     integer("drive_time"),   // seconds
+  status:        text("status").notNull().default(""),
+  syncedAt:      timestamp("synced_at").defaultNow(),
 });

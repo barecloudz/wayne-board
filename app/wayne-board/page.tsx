@@ -5,6 +5,7 @@ import DriversCard from "@/components/cards/drivers-card";
 import RoutesCard from "@/components/cards/routes-card";
 import PortalSettings from "./portal-settings";
 import WorkAreaManager from "./work-area-manager";
+import DswScorecard from "./dsw-scorecard";
 import { db } from "@/lib/db";
 import { vehicles, drivers, inspections } from "@/lib/schema";
 import { count, eq } from "drizzle-orm";
@@ -65,6 +66,9 @@ export default async function Home() {
             </div>
           ))}
         </div>
+
+        {/* DSW Service Scorecard */}
+        <DswScorecard />
 
         {/* Report cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments } from "@/lib/schema";
+import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays } from "@/lib/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
@@ -47,7 +47,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, gateAreas, myRequests, activeVehicles] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -64,10 +64,17 @@ export default async function DriverDashboard() {
     getGateAreas(),
     getMyMaintenanceRequests(session.driverId),
     db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
+    db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60),
   ]);
 
   const showRyde       = showRydeSetting === "true";
   const showMilestones = showMilestonesSetting === "true";
+
+  // DSW scorecard — latest date's rows only
+  const latestDswDate = latestDswRows[0]?.date ?? null;
+  const dswRows = latestDswDate
+    ? latestDswRows.filter(r => r.date === latestDswDate && !!r.driverNameRaw)
+    : [];
 
   // Resolve today's effective work area (daily override → default)
   let todayWorkArea: { id: number; name: string; shape: string; color: string } | null = null;
@@ -171,6 +178,7 @@ export default async function DriverDashboard() {
           activeVehicles={activeVehicles}
           isAdmin={session.isAdmin}
           driverName={session.name}
+          dswRows={dswRows as any}
         />
       </div>
     </div>

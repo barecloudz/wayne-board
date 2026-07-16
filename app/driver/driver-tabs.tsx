@@ -5,6 +5,8 @@ import { Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock, Truck, Calendar
 import { changeDriverPassword } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import MaintenanceTab from "./maintenance-tab";
+import ServiceTab from "./service-tab";
+import type { DswRow } from "./service-tab";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 
 type Review  = {
@@ -24,7 +26,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -46,9 +48,10 @@ export default function DriverTabs({
   activeVehicles: { id: number; unitNumber: string; model: string }[];
   isAdmin?: boolean;
   driverName: string;
+  dswRows: DswRow[];
 }) {
   const defaultTab = showRyde ? "score" : "schedule";
-  const [tab, setTab] = useState<"score" | "schedule" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
+  const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
 
   // Account / password change state
@@ -181,6 +184,7 @@ export default function DriverTabs({
         {([
           { key: "score",       label: "My Score",                  show: showRyde },
           { key: "schedule",    label: "Schedule",                   show: true },
+          { key: "service",     label: "Service",                    show: true },
           { key: "gatecodes",   label: "Gate Codes",                 show: true },
           { key: "maintenance", label: "Maintenance",                show: true },
           { key: "reviews",     label: `Reviews (${reviews.length})`, show: showRyde },
@@ -451,6 +455,11 @@ export default function DriverTabs({
             )}
           </div>
         </div>
+      )}
+
+      {/* Service tab */}
+      {tab === "service" && (
+        <ServiceTab rows={dswRows} myDriverId={driverId} />
       )}
 
       {/* Gate Codes tab */}
