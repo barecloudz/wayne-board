@@ -6,7 +6,8 @@
  * Driver-level metrics only. NO customer PII.
  */
 
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { neon } from "@neondatabase/serverless";
 
 const MYBIZ_BASE = "https://mybizaccount.fedex.com";
@@ -69,8 +70,9 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
   let browser: any;
   try {
     browser = await puppeteer.launch({
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
     });
 
     const page = await browser.newPage();

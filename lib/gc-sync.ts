@@ -7,7 +7,8 @@
  * or env vars GC_USERNAME, GC_PASSWORD.
  */
 
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import https from "https";
 import { neon } from "@neondatabase/serverless";
 
@@ -63,8 +64,9 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
   try {
     // ── Login via Puppeteer (Django form submit) ───────────────────────────────
     browser = await puppeteer.launch({
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
     });
 
     const page = await browser.newPage();

@@ -11,7 +11,8 @@
  *   - GitHub Actions nightly cron
  */
 
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { neon } from "@neondatabase/serverless";
 
 const DRO_BASE = "https://dro.routesmart.com";
@@ -43,8 +44,9 @@ export async function syncDro(): Promise<DroSyncResult> {
   try {
     // ── Step 1: Log in via Puppeteer / Okta ────────────────────────────────
     browser = await puppeteer.launch({
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
     });
 
     const context = browser.defaultBrowserContext();
