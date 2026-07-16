@@ -225,61 +225,57 @@ export default function AutoDroClient() {
 
       <div className="flex flex-col gap-6">
 
-        {/* ── Map + Stats row ── */}
-        <div className="flex gap-6">
-
-          {/* Map */}
-          <div className={`${CARD} flex-1 p-0 overflow-hidden`} style={{ minHeight: 480 }}>
-            <div className="flex items-center gap-2 px-6 pt-5 pb-4 border-b border-slate-100">
-              <Map className="w-4 h-4 text-slate-400" />
-              <h2 className="text-[14px] font-extrabold text-slate-900">Route Map</h2>
-              {dateLabel && (
-                <span className="ml-1 text-[11px] text-slate-400">{dateLabel}</span>
-              )}
-              {anchorAreas.length > 0 && (
-                <span className="ml-auto text-[11px] text-slate-400">
-                  {anchorAreas.length} anchor areas
-                </span>
-              )}
-            </div>
-            <div style={{ height: 432 }}>
-              {!hasData && !loading ? (
-                <div className="flex flex-col items-center justify-center h-full text-center px-8">
-                  <Map className="w-10 h-10 text-slate-200 mb-3" />
-                  <p className="text-[14px] font-semibold text-slate-400">No data yet</p>
-                  <p className="text-[12px] text-slate-300 mt-1">
-                    Set your DRO credentials below and click Sync Now
-                  </p>
-                </div>
-              ) : loading ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
-                </div>
-              ) : (
-                <DroMap
-                  anchorAreas={anchorAreas}
-                  stopCoords={stopCoords}
-                  routes={routes}
-                />
-              )}
-            </div>
+        {/* ── Stats strip (mobile: 3-col, always visible) ── */}
+        {hasData && (
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "ROUTES",   val: routes.length },
+              { label: "STOPS",    val: totalStops.toLocaleString() },
+              { label: "PACKAGES", val: totalPkgs.toLocaleString() },
+            ].map(({ label, val }) => (
+              <div key={label} className={`${CARD} p-4 text-center`}>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                <p className="text-[24px] font-extrabold text-slate-900 leading-none">{val}</p>
+              </div>
+            ))}
           </div>
+        )}
 
-          {/* Stats sidebar */}
-          {hasData && (
-            <div className="flex flex-col gap-4 w-[180px] shrink-0">
-              {[
-                { label: "ROUTES",   val: routes.length },
-                { label: "STOPS",    val: totalStops.toLocaleString() },
-                { label: "PACKAGES", val: totalPkgs.toLocaleString() },
-              ].map(({ label, val }) => (
-                <div key={label} className={`${CARD} p-5 text-center`}>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{label}</p>
-                  <p className="text-[32px] font-extrabold text-slate-900 leading-none">{val}</p>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* ── Map ── */}
+        <div className={`${CARD} p-0 overflow-hidden`}>
+          <div className="flex items-center gap-2 px-6 pt-5 pb-4 border-b border-slate-100">
+            <Map className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[14px] font-extrabold text-slate-900">Route Map</h2>
+            {dateLabel && (
+              <span className="ml-1 text-[11px] text-slate-400">{dateLabel}</span>
+            )}
+            {anchorAreas.length > 0 && (
+              <span className="ml-auto text-[11px] text-slate-400">
+                {anchorAreas.length} anchor areas
+              </span>
+            )}
+          </div>
+          <div className="h-[320px] md:h-[480px]">
+            {!hasData && !loading ? (
+              <div className="flex flex-col items-center justify-center h-full text-center px-8">
+                <Map className="w-10 h-10 text-slate-200 mb-3" />
+                <p className="text-[14px] font-semibold text-slate-400">No data yet</p>
+                <p className="text-[12px] text-slate-300 mt-1">
+                  Set your DRO credentials below and click Sync Now
+                </p>
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
+              </div>
+            ) : (
+              <DroMap
+                anchorAreas={anchorAreas}
+                stopCoords={stopCoords}
+                routes={routes}
+              />
+            )}
+          </div>
         </div>
 
         {/* ── Route cards ── */}

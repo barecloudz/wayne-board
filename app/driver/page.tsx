@@ -64,7 +64,7 @@ export default async function DriverDashboard() {
     getGateAreas(),
     getMyMaintenanceRequests(session.driverId),
     db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
-    db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60),
+    db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60).catch(() => []),
   ]);
 
   const showRyde       = showRydeSetting === "true";

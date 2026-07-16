@@ -27,7 +27,12 @@ function serviceRate(actDelStps: number | null, nonDelvdStps: number | null): nu
 }
 
 export default async function DswScorecard() {
-  const rows = await db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(80);
+  let rows: any[] = [];
+  try {
+    rows = await db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(80);
+  } catch {
+    return null;
+  }
 
   const latestDate = rows[0]?.date ?? null;
   if (!latestDate) return null;
