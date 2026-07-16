@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList } from "lucide-react";
+import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList, Scissors } from "lucide-react";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true };
 
@@ -14,9 +14,10 @@ const adminItems = [
   { icon: WrenchIcon,   label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
   { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
   { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
+  { icon: Scissors,     label: "Create Routes",    href: "/wayne-board/create-routes", exact: true },
   { icon: Route,        label: "Auto DRO",         href: "/wayne-board/auto-dro",     exact: true },
   { icon: TrendingUp,   label: "Auto GC",          href: "/wayne-board/auto-gc",      exact: true },
-  { icon: ClipboardList, label: "Auto DSW",         href: "/wayne-board/auto-dsw",     exact: true },
+  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",     exact: true },
   { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",     exact: true },
 ];
 
