@@ -113,7 +113,7 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
       </div>
 
       {/* ── Driver Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
         {sorted.map((r) => {
           const impacts   = ilsImpacts(r.vscanPkgs, r.ilsPct);
           const ilsFail   = r.ilsPct != null && r.ilsPct < 99.0;
@@ -130,17 +130,17 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
                                     "border-red-500"
             }`}>
               {/* Name bar */}
-              <div className={`px-4 py-3 flex items-center justify-between ${
+              <div className={`px-3 py-2.5 flex items-center justify-between ${
                 status === "green"  ? "bg-emerald-500" :
                 status === "yellow" ? "bg-amber-400" :
                                       "bg-red-500"
               }`}>
                 <div>
-                  <p className="text-[17px] font-extrabold text-white leading-tight">{name}</p>
+                  <p className="text-[15px] font-extrabold text-white leading-tight">{name}</p>
                   <p className="text-[11px] text-white/70">{r.waName || "—"}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[28px] font-extrabold text-white leading-none">
+                  <p className="text-[24px] font-extrabold text-white leading-none">
                     {impacts === 0 ? "✓" : impacts}
                   </p>
                   <p className="text-[10px] font-bold text-white/80">
