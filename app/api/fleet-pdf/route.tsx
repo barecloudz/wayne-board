@@ -3,7 +3,9 @@ import { db } from "@/lib/db";
 import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
+
+const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.tar";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,7 @@ async function getBrowser() {
 
   return puppeteer.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath(),
+    executablePath: await chromium.executablePath(CHROMIUM_PACK),
     headless: true,
   });
 }

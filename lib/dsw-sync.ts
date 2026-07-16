@@ -7,7 +7,9 @@
  */
 
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
+
+const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.tar";
 import { neon } from "@neondatabase/serverless";
 
 const MYBIZ_BASE = "https://mybizaccount.fedex.com";
@@ -70,7 +72,7 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
   let browser: any;
   try {
     browser = await puppeteer.launch({
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_PACK),
       headless: true,
       args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
     });

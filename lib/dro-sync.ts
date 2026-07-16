@@ -12,7 +12,9 @@
  */
 
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
+
+const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.tar";
 import { neon } from "@neondatabase/serverless";
 
 const DRO_BASE = "https://dro.routesmart.com";
@@ -44,7 +46,7 @@ export async function syncDro(): Promise<DroSyncResult> {
   try {
     // ── Step 1: Log in via Puppeteer / Okta ────────────────────────────────
     browser = await puppeteer.launch({
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_PACK),
       headless: true,
       args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
     });
