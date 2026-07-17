@@ -36,6 +36,9 @@ type PlannedRoute = {
   stopCount: number;
   packages: number;
   bulkStops: number;
+  totalCube: number;
+  vehicleCapacity: number;
+  cubePct: number;
   estMiles: number;
   centLat: number;
   centLng: number;
@@ -323,10 +326,10 @@ export default function CreateRoutesClient() {
           <div className="space-y-2">
             {plan.routes.map((r) => {
               const isOpen = expanded === r.routeIndex;
-              const loadPct = Math.round((r.stopCount / 120) * 100);
+              const loadPct = r.cubePct;
               const loadColor =
-                loadPct >= 95 ? "bg-red-400" :
-                loadPct >= 80 ? "bg-amber-400" : "bg-emerald-400";
+                loadPct >= 90 ? "bg-red-400" :
+                loadPct >= 70 ? "bg-amber-400" : "bg-emerald-400";
 
               return (
                 <div key={r.routeIndex} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -345,7 +348,7 @@ export default function CreateRoutesClient() {
                         <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
                           <div className={`h-full rounded-full ${loadColor}`} style={{ width: `${Math.min(100, loadPct)}%` }} />
                         </div>
-                        <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs · ~{r.estMiles}mi</span>
+                        <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs · {r.cubePct}% full · ~{r.estMiles}mi</span>
                         {r.bulkStops > 0 && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">
                             {r.bulkStops} bulk

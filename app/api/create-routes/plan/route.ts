@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { droStops, droAnchorAreas, settings } from "@/lib/schema";
+import { droStops, droAnchorAreas, droRoutes, settings } from "@/lib/schema";
 import { isNotNull, eq } from "drizzle-orm";
 
-const MAX_STOPS = 120;
+// DRO uses 85% of vehicle capacity as the load threshold (same as GroundSwell maxThresholdNormalized)
+const LOAD_THRESHOLD = 0.85;
+// Hard stop cap as a secondary safety net
+const MAX_STOPS = 150;
 
 // ── Haversine distance in miles ───────────────────────────────────────────────
 function dist(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -38,7 +41,7 @@ function centroid(stops: { lat: number; lng: number }[]): { lat: number; lng: nu
   return { lat, lng };
 }
 
-// ── Nearest-neighbor TSP (non-bulk stops only, from depot) ───────────────────
+// ── Nearest-neighbor TSP ──────────────────────────────────────────────────────
 function nearestNeighbor<T extends { lat: number; lng: number }>(
   stops: T[],
   depot: { lat: number; lng: number }
@@ -63,8 +66,6 @@ function nearestNeighbor<T extends { lat: number; lng: number }>(
 }
 
 // ── 2-opt improvement pass ────────────────────────────────────────────────────
-// Tries reversing every sub-segment; keeps the reversal if it shortens total distance.
-// Only runs on non-bulk stops (bulk stays pinned at end).
 function twoOpt<T extends { lat: number; lng: number }>(
   stops: T[],
   depot: { lat: number; lng: number }
@@ -77,23 +78,18 @@ function twoOpt<T extends { lat: number; lng: number }>(
     improved = false;
     for (let i = 0; i < route.length - 1; i++) {
       for (let j = i + 2; j < route.length; j++) {
-        // Cost before: ...→ route[i] → route[i+1] → ... → route[j] → route[j+1]→...
-        const a = i === 0 ? depot : route[i - 1];
-        const d_before =
+        const a  = i === 0 ? depot : route[i - 1];
+        const nxt = j + 1 < route.length ? route[j + 1] : depot;
+
+        const dBefore =
           dist(a.lat, a.lng, route[i].lat, route[i].lng) +
-          dist(route[j].lat, route[j].lng,
-            j + 1 < route.length ? route[j + 1].lat : depot.lat,
-            j + 1 < route.length ? route[j + 1].lng : depot.lng);
+          dist(route[j].lat, route[j].lng, nxt.lat, nxt.lng);
 
-        // Cost after reversing segment [i..j]:
-        const d_after =
+        const dAfter =
           dist(a.lat, a.lng, route[j].lat, route[j].lng) +
-          dist(route[i].lat, route[i].lng,
-            j + 1 < route.length ? route[j + 1].lat : depot.lat,
-            j + 1 < route.length ? route[j + 1].lng : depot.lng);
+          dist(route[i].lat, route[i].lng, nxt.lat, nxt.lng);
 
-        if (d_after < d_before - 0.0001) {
-          // Reverse the segment
+        if (dAfter < dBefore - 0.0001) {
           const seg = route.slice(i, j + 1).reverse();
           route = [...route.slice(0, i), ...seg, ...route.slice(j + 1)];
           improved = true;
@@ -104,7 +100,7 @@ function twoOpt<T extends { lat: number; lng: number }>(
   return route;
 }
 
-// ── Sequence a route: regular stops optimized, bulk pinned to end ─────────────
+// ── Sequence: regular stops optimized via NN+2opt, bulk pinned to end ─────────
 function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: boolean }>(
   stops: T[],
   depot: { lat: number; lng: number }
@@ -112,13 +108,8 @@ function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: boolean
   const regular = stops.filter(s => !s.isBulkStop);
   const bulk    = stops.filter(s => s.isBulkStop);
 
-  const nn       = nearestNeighbor(regular, depot);
-  const optimized = twoOpt(nn, depot);
-
-  // Sequence bulk among themselves (nearest-neighbor from last regular stop or depot)
-  const bulkStart = optimized.length > 0
-    ? optimized[optimized.length - 1]
-    : depot;
+  const optimized = twoOpt(nearestNeighbor(regular, depot), depot);
+  const bulkStart = optimized.length > 0 ? optimized[optimized.length - 1] : depot;
   const bulkOrdered = nearestNeighbor(bulk, bulkStart);
 
   return [...optimized, ...bulkOrdered];
@@ -138,9 +129,9 @@ function pointInPolygon(lat: number, lng: number, poly: [number, number][]): boo
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     const xi = poly[i][0], yi = poly[i][1];
     const xj = poly[j][0], yj = poly[j][1];
-    const intersect =
-      yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
+    if (yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
   }
   return inside;
 }
@@ -154,6 +145,7 @@ type Stop = {
   lat: number;
   lng: number;
   noPackages: number;
+  totalCube: number;
   totalWeight: number;
   isBulkStop: boolean;
   actualRoute: string;
@@ -163,6 +155,9 @@ type Stop = {
 type RouteGroup = {
   name: string;
   stops: Stop[];
+  totalCube: number;
+  vehicleCapacity: number;   // from DRO route plan
+  cubeCap: number;           // vehicleCapacity * LOAD_THRESHOLD
   centLat: number;
   centLng: number;
 };
@@ -179,6 +174,23 @@ export async function POST(req: NextRequest) {
       lng: parseFloat(depotLngRow?.value ?? "-82.5022"),
     };
 
+    // Pull vehicle capacities from DRO route plans (keyed by work area name)
+    const droRouteRows = await db.select({
+      workAreaName:    droRoutes.workAreaName,
+      vehicleCapacity: droRoutes.vehicleCapacity,
+    }).from(droRoutes);
+
+    const capacityMap: Record<string, number> = {};
+    for (const r of droRouteRows) {
+      const cap = parseFloat(r.vehicleCapacity);
+      if (!isNaN(cap) && cap > 0) capacityMap[r.workAreaName.trim()] = cap;
+    }
+
+    // Fallback capacity if a route isn't in DRO (e.g. after merge)
+    const defaultCapacity = droRouteRows.length > 0
+      ? Math.min(...Object.values(capacityMap).filter(v => v > 0))
+      : 300;
+
     // Pull all stops with coordinates
     const rawStops = await db.select({
       id:             droStops.id,
@@ -189,6 +201,7 @@ export async function POST(req: NextRequest) {
       lat:            droStops.lat,
       lng:            droStops.lng,
       noPackages:     droStops.noPackages,
+      totalCube:      droStops.totalCube,
       totalWeight:    droStops.totalWeight,
       isBulkStop:     droStops.isBulkStop,
       actualRoute:    droStops.actualRoute,
@@ -196,7 +209,6 @@ export async function POST(req: NextRequest) {
     }).from(droStops).where(isNotNull(droStops.lat));
 
     const stops = rawStops.filter(s => s.lat != null && s.lng != null) as Stop[];
-
     if (stops.length === 0) {
       return NextResponse.json({ error: "No stops with coordinates. Run DRO sync first." }, { status: 400 });
     }
@@ -213,7 +225,6 @@ export async function POST(req: NextRequest) {
 
     // ── Step 1: Group stops by actualRoute ───────────────────────────────────
     const groups: Map<string, Stop[]> = new Map();
-
     for (const s of stops) {
       const key = s.actualRoute?.trim() || "";
       if (key) {
@@ -222,8 +233,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Step 2: Assign unrouted stops via point-in-polygon, else nearest centroid
-    const unrouted = stops.filter(s => !s.actualRoute?.trim());
+    // ── Step 2: Assign unrouted stops ────────────────────────────────────────
+    const unrouted   = stops.filter(s => !s.actualRoute?.trim());
     const groupNames = [...groups.keys()];
 
     const getCentroid = (name: string) => {
@@ -234,7 +245,6 @@ export async function POST(req: NextRequest) {
     for (const s of unrouted) {
       let assigned = "";
 
-      // Point-in-polygon first
       for (const area of parsedAreas) {
         if (pointInPolygon(s.lat, s.lng, area.poly)) {
           const match = groupNames.find(n =>
@@ -244,7 +254,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Fall back to nearest centroid
       if (!assigned && groupNames.length > 0) {
         let bestName = groupNames[0];
         let bestDist = Infinity;
@@ -259,64 +268,80 @@ export async function POST(req: NextRequest) {
       if (assigned) groups.get(assigned)!.push(s);
     }
 
-    // ── Step 3: Convert to RouteGroup array ──────────────────────────────────
+    // ── Step 3: Build RouteGroup with cube totals and capacity ───────────────
     let routeGroups: RouteGroup[] = [...groups.entries()].map(([name, stps]) => {
-      const c = centroid(stps.map(s => ({ lat: s.lat, lng: s.lng })));
-      return { name, stops: stps, centLat: c.lat, centLng: c.lng };
+      const c    = centroid(stps.map(s => ({ lat: s.lat, lng: s.lng })));
+      const cube = stps.reduce((sum, s) => sum + (s.totalCube ?? 0), 0);
+      const cap  = capacityMap[name] ?? defaultCapacity;
+      return {
+        name,
+        stops: stps,
+        totalCube: cube,
+        vehicleCapacity: cap,
+        cubeCap: cap * LOAD_THRESHOLD,
+        centLat: c.lat,
+        centLng: c.lng,
+      };
     });
 
     const currentCount = routeGroups.length;
 
-    // ── Step 4: Merge routes to reach driverCount, respecting MAX_STOPS ──────
-    // Each merge iteration: find smallest route, try to merge into nearest
-    // neighbor that won't exceed MAX_STOPS. If no safe merge exists, stop.
+    // ── Step 4: Merge to reach driverCount — cube-cap + stop-cap aware ───────
     let mergeAttempts = 0;
     const maxAttempts = routeGroups.length * routeGroups.length;
 
     while (routeGroups.length > driverCount && mergeAttempts < maxAttempts) {
       mergeAttempts++;
-
-      // Sort by stop count ascending
-      routeGroups.sort((a, b) => a.stops.length - b.stops.length);
+      routeGroups.sort((a, b) => a.totalCube - b.totalCube);
       const smallest = routeGroups[0];
 
-      // Find nearest neighbor that can absorb smallest without exceeding cap
-      let bestIdx = -1;
+      // Find nearest route that can absorb smallest without busting cube or stop cap
+      let bestIdx  = -1;
       let bestDist = Infinity;
       for (let i = 1; i < routeGroups.length; i++) {
-        const combined = routeGroups[i].stops.length + smallest.stops.length;
-        if (combined > MAX_STOPS) continue; // would blow the cap
-        const d = dist(smallest.centLat, smallest.centLng, routeGroups[i].centLat, routeGroups[i].centLng);
+        const target       = routeGroups[i];
+        const combinedCube = target.totalCube + smallest.totalCube;
+        const combinedStops = target.stops.length + smallest.stops.length;
+        // Use the larger van's cap when merging (we'd assign the bigger vehicle)
+        const effectiveCap  = Math.max(target.cubeCap, smallest.cubeCap);
+        if (combinedCube > effectiveCap) continue;
+        if (combinedStops > MAX_STOPS)   continue;
+        const d = dist(smallest.centLat, smallest.centLng, target.centLat, target.centLng);
         if (d < bestDist) { bestDist = d; bestIdx = i; }
       }
 
-      if (bestIdx === -1) {
-        // No safe merge exists — can't cut any further
-        break;
-      }
+      if (bestIdx === -1) break; // no safe merge
 
       const target = routeGroups[bestIdx];
       target.stops = [...target.stops, ...smallest.stops];
+      target.totalCube += smallest.totalCube;
+      // Keep the larger vehicle capacity
+      target.vehicleCapacity = Math.max(target.vehicleCapacity, smallest.vehicleCapacity);
+      target.cubeCap         = target.vehicleCapacity * LOAD_THRESHOLD;
       const c = centroid(target.stops.map(s => ({ lat: s.lat, lng: s.lng })));
       target.centLat = c.lat;
       target.centLng = c.lng;
 
-      routeGroups.splice(0, 1); // remove smallest
+      routeGroups.splice(0, 1);
     }
 
-    // ── Step 5: Sequence each route (regular optimized, bulk last) ───────────
+    // ── Step 5: Sequence each route ──────────────────────────────────────────
     const planned = routeGroups.map((rg, idx) => {
       const sequenced = sequenceRoute(rg.stops, depot);
       const totalDist = routeDist(sequenced, depot);
+      const cubePct   = Math.round((rg.totalCube / rg.vehicleCapacity) * 100);
       return {
-        routeIndex: idx + 1,
-        name: rg.name,
-        stopCount: sequenced.length,
-        packages: sequenced.reduce((s, p) => s + (p.noPackages ?? 0), 0),
-        bulkStops: sequenced.filter(s => s.isBulkStop).length,
-        estMiles: Math.round(totalDist * 10) / 10,
-        centLat: rg.centLat,
-        centLng: rg.centLng,
+        routeIndex:      idx + 1,
+        name:            rg.name,
+        stopCount:       sequenced.length,
+        packages:        sequenced.reduce((s, p) => s + (p.noPackages ?? 0), 0),
+        bulkStops:       sequenced.filter(s => s.isBulkStop).length,
+        totalCube:       Math.round(rg.totalCube * 10) / 10,
+        vehicleCapacity: rg.vehicleCapacity,
+        cubePct,
+        estMiles:        Math.round(totalDist * 10) / 10,
+        centLat:         rg.centLat,
+        centLng:         rg.centLng,
         stops: sequenced.map((s, i) => ({
           seq:        i + 1,
           address:    s.address,
@@ -325,13 +350,13 @@ export async function POST(req: NextRequest) {
           lat:        s.lat,
           lng:        s.lng,
           packages:   s.noPackages,
+          cube:       Math.round((s.totalCube ?? 0) * 10) / 10,
           isBulk:     s.isBulkStop,
           waypointId: s.waypointId,
         })),
       };
     });
 
-    // Sort by centroid distance from depot
     planned.sort((a, b) =>
       dist(depot.lat, depot.lng, a.centLat, a.centLng) -
       dist(depot.lat, depot.lng, b.centLat, b.centLng)
@@ -342,14 +367,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       depot,
-      totalStops: stops.length,
+      totalStops:    stops.length,
       totalPackages: planned.reduce((s, r) => s + r.packages, 0),
       totalEstMiles: planned.reduce((s, r) => s + r.estMiles, 0),
-      routeCount: planned.length,
+      routeCount:    planned.length,
       originalRouteCount: currentCount,
-      merged: actualMerged,
-      cappedAt: actualMerged < (currentCount - driverCount)
-        ? `Could only cut ${actualMerged} (120-stop cap reached)`
+      merged:        actualMerged,
+      cappedAt:      actualMerged < currentCount - driverCount
+        ? `Could only cut ${actualMerged} — cube capacity would be exceeded`
         : null,
       routes: planned,
     });
