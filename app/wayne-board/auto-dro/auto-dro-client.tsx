@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import {
   RefreshCw, CheckCircle, XCircle, Eye, EyeOff,
   Clock, KeyRound, Map, BarChart3, Loader2,
+  ChevronDown, ChevronUp, AlertTriangle, Layers,
+  Package, TrendingUp,
 } from "lucide-react";
 
 // Leaflet must be loaded client-side only
@@ -25,6 +27,29 @@ type DroRoute = {
   distance: number;
   timeHours: number;
   sortDate: string;
+  lpStops: number;
+  lpPackages: number;
+  smStops: number;
+  smPackages: number;
+  bulkStops: number;
+  bulkPackages: number;
+  regStops: number;
+  regPackages: number;
+  exceededTargetDuration: boolean;
+  timeCriticalStops: number;
+};
+
+type RoutePlan = {
+  id: number;
+  planId: number;
+  name: string;
+  totalRoutes: number;
+  lpRoutes: number;
+  bulkRoutes: number;
+  regRoutes: number;
+  smallRoutes: number;
+  isActive: boolean;
+  lastUsedDate: string;
 };
 
 type AnchorArea = {
@@ -43,15 +68,40 @@ type StopCoord = {
   workAreaNumber: string;
 };
 
+type UnroutableStop = {
+  stopId: string;
+  firmName: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  packages: number;
+  isSmallStop: boolean;
+  isHazardous: boolean;
+  isHeavyweight: boolean;
+  isCdoStop: boolean;
+  reasonCode: string;
+  pickupType: string;
+  windowOpen: string;
+  windowClose: string;
+  overflowedRoute: string;
+  lat: number | null;
+  lng: number | null;
+};
+
 type Status = {
-  routes:        DroRoute[];
-  anchorAreas:   AnchorArea[];
-  stopCoords:    StopCoord[];
-  totalStops:    number;
-  totalPackages: number;
-  lastSynced:    string;
-  autoEnabled:   boolean;
-  autoTime:      string;
+  routes:            DroRoute[];
+  anchorAreas:       AnchorArea[];
+  stopCoords:        StopCoord[];
+  totalStops:        number;
+  totalPackages:     number;
+  lastSynced:        string;
+  autoEnabled:       boolean;
+  autoTime:          string;
+  routePlans:        RoutePlan[];
+  planningWindowOpen: boolean;
+  stopOverridesCount: number;
+  unroutableCount:   number;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -82,6 +132,39 @@ function routeColor(wan: string, idx: number): string {
 const CARD = "bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] p-6";
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
+// Stacked proportion bar for LP/SM/Bulk/Reg
+function PackageTypeBar({ route }: { route: DroRoute }) {
+  const total = route.lpPackages + route.smPackages + route.bulkPackages + route.regPackages;
+  if (total === 0) return null;
+  const segments = [
+    { key: "LP",   val: route.lpPackages,   color: "#6366f1" },
+    { key: "SM",   val: route.smPackages,   color: "#f59e0b" },
+    { key: "Bulk", val: route.bulkPackages, color: "#10b981" },
+    { key: "Reg",  val: route.regPackages,  color: "#94a3b8" },
+  ].filter(s => s.val > 0);
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      <div className="flex h-2 rounded-full overflow-hidden gap-px">
+        {segments.map(s => (
+          <div
+            key={s.key}
+            style={{ width: `${(s.val / total) * 100}%`, background: s.color }}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+        {segments.map(s => (
+          <span key={s.key} className="flex items-center gap-1 text-[9px] text-slate-500">
+            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
+            {s.key} {s.val}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 export default function AutoDroClient() {
   const [data,          setData]          = useState<Status | null>(null);
@@ -103,6 +186,11 @@ export default function AutoDroClient() {
   const [autoTime,      setAutoTime]      = useState("23:55");
   const [schedSaving,   setSchedSaving]   = useState(false);
   const [schedSaved,    setSchedSaved]    = useState(false);
+
+  // Unroutable panel
+  const [unroutableOpen,  setUnroutableOpen]  = useState(false);
+  const [unroutableStops, setUnroutableStops] = useState<UnroutableStop[]>([]);
+  const [unroutableLoading, setUnroutableLoading] = useState(false);
 
   async function loadStatus() {
     const res = await fetch("/api/auto-dro/status");
@@ -128,6 +216,19 @@ export default function AutoDroClient() {
     loadCreds();
   }, []);
 
+  async function toggleUnroutable() {
+    if (!unroutableOpen && unroutableStops.length === 0) {
+      setUnroutableLoading(true);
+      const res = await fetch("/api/auto-dro/unroutable");
+      if (res.ok) {
+        const d = await res.json();
+        setUnroutableStops(d.stops ?? []);
+      }
+      setUnroutableLoading(false);
+    }
+    setUnroutableOpen(v => !v);
+  }
+
   async function saveCreds() {
     setCredsSaving(true);
     await fetch("/api/auto-dro/credentials", {
@@ -148,6 +249,7 @@ export default function AutoDroClient() {
     setSyncing(false);
     if (r.success) {
       setSyncResult({ ok: true, msg: `${r.routes} routes · ${r.stops} stops loaded for ${r.sortDate}${r.stopsWithCoords ? ` · ${r.stopsWithCoords} with GPS` : ""}` });
+      setUnroutableStops([]); // reset so it reloads on next open
       await loadStatus();
     } else {
       setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
@@ -165,14 +267,18 @@ export default function AutoDroClient() {
     setTimeout(() => setSchedSaved(false), 3000);
   }
 
-  const routes      = data?.routes      ?? [];
-  const anchorAreas = data?.anchorAreas ?? [];
-  const stopCoords  = data?.stopCoords  ?? [];
-  const hasData     = routes.length > 0;
-  const lastSynced  = data?.lastSynced ? new Date(data.lastSynced) : null;
-  const totalStops  = data?.totalStops    ?? 0;
-  const totalPkgs   = data?.totalPackages ?? 0;
-  const dateLabel   = routes[0]?.sortDate
+  const routes             = data?.routes      ?? [];
+  const anchorAreas        = data?.anchorAreas ?? [];
+  const stopCoords         = data?.stopCoords  ?? [];
+  const routePlans         = data?.routePlans  ?? [];
+  const hasData            = routes.length > 0;
+  const lastSynced         = data?.lastSynced ? new Date(data.lastSynced) : null;
+  const totalStops         = data?.totalStops    ?? 0;
+  const totalPkgs          = data?.totalPackages ?? 0;
+  const unroutableCount    = data?.unroutableCount   ?? 0;
+  const stopOverridesCount = data?.stopOverridesCount ?? 0;
+  const planningWindowOpen = data?.planningWindowOpen ?? false;
+  const dateLabel          = routes[0]?.sortDate
     ? new Date(routes[0].sortDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     : null;
 
@@ -186,9 +292,21 @@ export default function AutoDroClient() {
         </p>
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
-              Auto DRO
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
+                Auto DRO
+              </h1>
+              {!loading && data && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                  planningWindowOpen
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-slate-100 text-slate-500 border-slate-200"
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${planningWindowOpen ? "bg-emerald-500" : "bg-slate-400"}`} />
+                  {planningWindowOpen ? "Window Open" : "Window Closed"}
+                </span>
+              )}
+            </div>
             {lastSynced && (
               <p className="text-[12px] text-slate-400 mt-1">
                 Last synced {lastSynced.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at{" "}
@@ -225,19 +343,89 @@ export default function AutoDroClient() {
 
       <div className="flex flex-col gap-6">
 
-        {/* ── Stats strip (mobile: 3-col, always visible) ── */}
+        {/* ── Stats strip ── */}
         {hasData && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
-              { label: "ROUTES",   val: routes.length },
-              { label: "STOPS",    val: totalStops.toLocaleString() },
-              { label: "PACKAGES", val: totalPkgs.toLocaleString() },
-            ].map(({ label, val }) => (
+              { label: "ROUTES",     val: routes.length,                  color: "" },
+              { label: "STOPS",      val: totalStops.toLocaleString(),     color: "" },
+              { label: "PACKAGES",   val: totalPkgs.toLocaleString(),      color: "" },
+              { label: "UNROUTABLE", val: unroutableCount.toLocaleString(), color: "amber" },
+              { label: "OVERRIDES",  val: stopOverridesCount.toLocaleString(), color: "" },
+            ].map(({ label, val, color }) => (
               <div key={label} className={`${CARD} p-4 text-center`}>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-                <p className="text-[24px] font-extrabold text-slate-900 leading-none">{val}</p>
+                <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                  color === "amber" ? "text-amber-500" : "text-slate-400"
+                }`}>{label}</p>
+                <p className={`text-[22px] font-extrabold leading-none ${
+                  color === "amber" && unroutableCount > 0 ? "text-amber-600" : "text-slate-900"
+                }`}>{val}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ── Route Plan Switcher ── */}
+        {routePlans.length > 0 && (
+          <div className={CARD}>
+            <div className="flex items-center gap-2 mb-4">
+              <Layers className="w-4 h-4 text-slate-400" />
+              <h2 className="text-[14px] font-extrabold text-slate-900">Route Plans</h2>
+              <span className="text-[11px] text-slate-400 ml-1">{routePlans.length} plans</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5">
+              {routePlans.map(plan => (
+                <div
+                  key={plan.id}
+                  className={`rounded-xl border p-3 transition-all ${
+                    plan.isActive
+                      ? "bg-slate-900 border-slate-900 text-white"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-1 mb-2">
+                    <p className={`text-[11px] font-bold leading-tight ${plan.isActive ? "text-white" : "text-slate-800"}`}>
+                      {plan.name || `Plan ${plan.planId}`}
+                    </p>
+                    {plan.isActive && (
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-white/20 text-white px-1.5 py-0.5 rounded-full">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className={`text-[13px] font-extrabold leading-none mb-2 ${plan.isActive ? "text-white" : "text-slate-900"}`}>
+                    {plan.totalRoutes} routes
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {plan.lpRoutes > 0 && (
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        plan.isActive ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"
+                      }`}>LP {plan.lpRoutes}</span>
+                    )}
+                    {plan.bulkRoutes > 0 && (
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        plan.isActive ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-700"
+                      }`}>Bulk {plan.bulkRoutes}</span>
+                    )}
+                    {plan.smallRoutes > 0 && (
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        plan.isActive ? "bg-white/20 text-white" : "bg-amber-50 text-amber-700"
+                      }`}>SM {plan.smallRoutes}</span>
+                    )}
+                    {plan.regRoutes > 0 && (
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        plan.isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                      }`}>Reg {plan.regRoutes}</span>
+                    )}
+                  </div>
+                  {plan.lastUsedDate && (
+                    <p className={`text-[9px] mt-2 ${plan.isActive ? "text-white/60" : "text-slate-400"}`}>
+                      {plan.lastUsedDate}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -295,10 +483,18 @@ export default function AutoDroClient() {
                     className="rounded-xl border border-slate-100 p-4 hover:shadow-sm transition-shadow"
                     style={{ borderLeftWidth: 3, borderLeftColor: color }}
                   >
-                    <p className="text-[12px] font-bold text-slate-800 leading-tight truncate">
-                      {r.workAreaName || "—"}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-mono mt-0.5 mb-3">
+                    <div className="flex items-start justify-between gap-1 mb-0.5">
+                      <p className="text-[12px] font-bold text-slate-800 leading-tight truncate">
+                        {r.workAreaName || "—"}
+                      </p>
+                      {r.exceededTargetDuration && (
+                        <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                          <TrendingUp className="w-2.5 h-2.5" />
+                          Over
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-mono mb-3">
                       {r.workAreaNumber}
                     </p>
                     <div className="grid grid-cols-3 gap-1.5 text-center">
@@ -313,13 +509,109 @@ export default function AutoDroClient() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-300 text-right mt-2 font-mono">
-                      {r.distance.toFixed(1)} mi
-                    </p>
+                    <PackageTypeBar route={r} />
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-[10px] text-slate-300 font-mono">
+                        {r.distance.toFixed(1)} mi
+                      </p>
+                      {r.timeCriticalStops > 0 && (
+                        <span className="text-[9px] text-red-500 font-semibold">
+                          ⏱ {r.timeCriticalStops} critical
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ── Unroutable Stops Panel ── */}
+        {hasData && unroutableCount > 0 && (
+          <div className={CARD}>
+            <button
+              onClick={toggleUnroutable}
+              className="w-full flex items-center gap-2 text-left"
+            >
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <h2 className="text-[14px] font-extrabold text-slate-900">Unroutable Stops</h2>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                {unroutableCount}
+              </span>
+              <span className="ml-auto text-slate-400">
+                {unroutableOpen
+                  ? <ChevronUp className="w-4 h-4" />
+                  : <ChevronDown className="w-4 h-4" />
+                }
+              </span>
+            </button>
+
+            {unroutableOpen && (
+              <div className="mt-5">
+                {unroutableLoading ? (
+                  <div className="flex items-center gap-2 text-[13px] text-slate-400 py-4">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading stops…
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 pr-3">Address</th>
+                          <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 pr-3">Postal</th>
+                          <th className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 pr-3">Pkgs</th>
+                          <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2 pr-3">Reason</th>
+                          <th className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-2">Flags</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unroutableStops.map(s => (
+                          <tr key={s.stopId} className="border-b border-slate-50 hover:bg-slate-50/50">
+                            <td className="py-2 pr-3">
+                              <p className="font-medium text-slate-700">{s.firmName || s.address}</p>
+                              {s.firmName && <p className="text-[11px] text-slate-400">{s.address}</p>}
+                              <p className="text-[11px] text-slate-400">{s.city}{s.city && s.state ? ", " : ""}{s.state}</p>
+                            </td>
+                            <td className="py-2 pr-3 font-mono text-slate-600">{s.postalCode}</td>
+                            <td className="py-2 pr-3 text-center font-bold text-slate-800">{s.packages}</td>
+                            <td className="py-2 pr-3">
+                              {s.reasonCode ? (
+                                <span className="font-mono text-[11px] text-slate-500">{s.reasonCode}</span>
+                              ) : (
+                                <span className="text-slate-300">—</span>
+                              )}
+                              {s.overflowedRoute && (
+                                <p className="text-[11px] text-slate-400">from {s.overflowedRoute}</p>
+                              )}
+                            </td>
+                            <td className="py-2">
+                              <div className="flex flex-wrap gap-1">
+                                {s.isHazardous && (
+                                  <span className="text-[9px] font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-200">HAZ</span>
+                                )}
+                                {s.isHeavyweight && (
+                                  <span className="text-[9px] font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-200">HVY</span>
+                                )}
+                                {s.isSmallStop && (
+                                  <span className="text-[9px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded border border-amber-200">SM</span>
+                                )}
+                                {s.isCdoStop && (
+                                  <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-200">CDO</span>
+                                )}
+                                {s.windowOpen && (
+                                  <span className="text-[9px] text-slate-400">{s.windowOpen}–{s.windowClose}</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

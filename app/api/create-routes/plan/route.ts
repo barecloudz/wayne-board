@@ -1,3 +1,5 @@
+export const maxDuration = 300;
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { droStops, droAnchorAreas, droRoutes, settings } from "@/lib/schema";
@@ -7,6 +9,10 @@ import { isNotNull, eq } from "drizzle-orm";
 const LOAD_THRESHOLD = 0.85;
 // Hard stop cap as a secondary safety net
 const MAX_STOPS = 150;
+// Minimum stops per route (Zirconia is exempt — it runs its own isolated area)
+const MIN_STOPS = 80;
+
+const isZirconia = (name: string) => name.toLowerCase().includes("zirconia");
 
 // ── Haversine distance in miles ───────────────────────────────────────────────
 function dist(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -41,7 +47,7 @@ function centroid(stops: { lat: number; lng: number }[]): { lat: number; lng: nu
   return { lat, lng };
 }
 
-// ── Nearest-neighbor TSP ──────────────────────────────────────────────────────
+// ── Nearest-neighbor TSP (haversine fallback) ─────────────────────────────────
 function nearestNeighbor<T extends { lat: number; lng: number }>(
   stops: T[],
   depot: { lat: number; lng: number }
@@ -50,10 +56,8 @@ function nearestNeighbor<T extends { lat: number; lng: number }>(
   const unvisited = [...stops];
   const ordered: T[] = [];
   let cur: { lat: number; lng: number } = depot;
-
   while (unvisited.length > 0) {
-    let bestIdx = 0;
-    let bestDist = Infinity;
+    let bestIdx = 0, bestDist = Infinity;
     for (let i = 0; i < unvisited.length; i++) {
       const d = dist(cur.lat, cur.lng, unvisited[i].lat, unvisited[i].lng);
       if (d < bestDist) { bestDist = d; bestIdx = i; }
@@ -65,7 +69,7 @@ function nearestNeighbor<T extends { lat: number; lng: number }>(
   return ordered;
 }
 
-// ── 2-opt improvement pass ────────────────────────────────────────────────────
+// ── 2-opt improvement pass (haversine fallback) ───────────────────────────────
 function twoOpt<T extends { lat: number; lng: number }>(
   stops: T[],
   depot: { lat: number; lng: number }
@@ -73,25 +77,16 @@ function twoOpt<T extends { lat: number; lng: number }>(
   if (stops.length < 4) return stops;
   let route = [...stops];
   let improved = true;
-
   while (improved) {
     improved = false;
     for (let i = 0; i < route.length - 1; i++) {
       for (let j = i + 2; j < route.length; j++) {
-        const a  = i === 0 ? depot : route[i - 1];
+        const a   = i === 0 ? depot : route[i - 1];
         const nxt = j + 1 < route.length ? route[j + 1] : depot;
-
-        const dBefore =
-          dist(a.lat, a.lng, route[i].lat, route[i].lng) +
-          dist(route[j].lat, route[j].lng, nxt.lat, nxt.lng);
-
-        const dAfter =
-          dist(a.lat, a.lng, route[j].lat, route[j].lng) +
-          dist(route[i].lat, route[i].lng, nxt.lat, nxt.lng);
-
+        const dBefore = dist(a.lat, a.lng, route[i].lat, route[i].lng) + dist(route[j].lat, route[j].lng, nxt.lat, nxt.lng);
+        const dAfter  = dist(a.lat, a.lng, route[j].lat, route[j].lng) + dist(route[i].lat, route[i].lng, nxt.lat, nxt.lng);
         if (dAfter < dBefore - 0.0001) {
-          const seg = route.slice(i, j + 1).reverse();
-          route = [...route.slice(0, i), ...seg, ...route.slice(j + 1)];
+          route = [...route.slice(0, i), ...route.slice(i, j + 1).reverse(), ...route.slice(j + 1)];
           improved = true;
         }
       }
@@ -100,18 +95,98 @@ function twoOpt<T extends { lat: number; lng: number }>(
   return route;
 }
 
-// ── Sequence: regular stops optimized via NN+2opt, bulk pinned to end ─────────
-function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: boolean }>(
+// ── OSRM drive-time matrix ────────────────────────────────────────────────────
+// Returns matrix[i][j] = drive seconds from point i to point j.
+// Points[0] is always the depot; 1..n are stops in order.
+async function getOsrmMatrix(points: { lat: number; lng: number }[]): Promise<number[][] | null> {
+  try {
+    const coords = points.map(p => `${p.lng},${p.lat}`).join(";");
+    const url = `https://router.project-osrm.org/table/v1/driving/${coords}?annotations=duration`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) return null;
+    const data = await res.json() as { code?: string; durations?: (number | null)[][] };
+    if (data.code !== "Ok" || !data.durations) return null;
+    // Replace null values (unreachable) with large fallback
+    return data.durations.map(row =>
+      row.map(v => (v == null || v < 0) ? 999999 : v)
+    );
+  } catch {
+    return null;
+  }
+}
+
+// ── Nearest-neighbor using matrix (index-based) ───────────────────────────────
+function nnByMatrix(candidates: number[], startIdx: number, matrix: number[][]): number[] {
+  const unvisited = [...candidates];
+  const ordered: number[] = [];
+  let cur = startIdx;
+  while (unvisited.length > 0) {
+    let bestPos = 0, bestTime = Infinity;
+    for (let i = 0; i < unvisited.length; i++) {
+      const t = matrix[cur]?.[unvisited[i]] ?? Infinity;
+      if (t < bestTime) { bestTime = t; bestPos = i; }
+    }
+    const next = unvisited.splice(bestPos, 1)[0];
+    ordered.push(next);
+    cur = next;
+  }
+  return ordered;
+}
+
+// ── 2-opt using matrix (index-based) ─────────────────────────────────────────
+function twoOptByMatrix(route: number[], depotIdx: number, matrix: number[][]): number[] {
+  if (route.length < 4) return route;
+  let r = [...route];
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let i = 0; i < r.length - 1; i++) {
+      for (let j = i + 2; j < r.length; j++) {
+        const a   = i === 0 ? depotIdx : r[i - 1];
+        const nxt = j + 1 < r.length ? r[j + 1] : depotIdx;
+        const before = (matrix[a]?.[r[i]] ?? 0) + (matrix[r[j]]?.[nxt] ?? 0);
+        const after  = (matrix[a]?.[r[j]] ?? 0) + (matrix[r[i]]?.[nxt] ?? 0);
+        if (after < before - 0.01) {
+          r = [...r.slice(0, i), ...r.slice(i, j + 1).reverse(), ...r.slice(j + 1)];
+          improved = true;
+        }
+      }
+    }
+  }
+  return r;
+}
+
+// ── Sequence: OSRM drive-time primary, haversine fallback ─────────────────────
+async function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: boolean }>(
   stops: T[],
   depot: { lat: number; lng: number }
-): T[] {
+): Promise<T[]> {
   const regular = stops.filter(s => !s.isBulkStop);
   const bulk    = stops.filter(s => s.isBulkStop);
 
-  const optimized = twoOpt(nearestNeighbor(regular, depot), depot);
-  const bulkStart = optimized.length > 0 ? optimized[optimized.length - 1] : depot;
-  const bulkOrdered = nearestNeighbor(bulk, bulkStart);
+  // Build point list: [depot=0, ...regular=1..r, ...bulk=r+1..r+b]
+  const points  = [depot, ...regular, ...bulk];
+  const matrix  = await getOsrmMatrix(points);
 
+  if (matrix) {
+    const DEPOT       = 0;
+    const regIdxs     = regular.map((_, i) => i + 1);
+    const bulkIdxs    = bulk.map((_, i) => regular.length + 1 + i);
+
+    const orderedReg  = twoOptByMatrix(nnByMatrix(regIdxs, DEPOT, matrix), DEPOT, matrix);
+    const lastReg     = orderedReg.length > 0 ? orderedReg[orderedReg.length - 1] : DEPOT;
+    const orderedBulk = nnByMatrix(bulkIdxs, lastReg, matrix);
+
+    return [
+      ...orderedReg.map(i => points[i] as T),
+      ...orderedBulk.map(i => points[i] as T),
+    ];
+  }
+
+  // Haversine fallback
+  const optimized   = twoOpt(nearestNeighbor(regular, depot), depot);
+  const bulkStart   = optimized.length > 0 ? optimized[optimized.length - 1] : depot;
+  const bulkOrdered = nearestNeighbor(bulk, bulkStart);
   return [...optimized, ...bulkOrdered];
 }
 
@@ -325,9 +400,60 @@ export async function POST(req: NextRequest) {
       routeGroups.splice(0, 1);
     }
 
-    // ── Step 5: Sequence each route ──────────────────────────────────────────
-    const planned = routeGroups.map((rg, idx) => {
-      const sequenced = sequenceRoute(rg.stops, depot);
+    // ── Step 4b: Enforce minimum stop count (80) via border redistribution ──────
+    // For each non-Zirconia route under MIN_STOPS, pull border stops from its
+    // closest neighbor — specifically the stops nearest to the shared boundary
+    // (closest to the receiving route's centroid from that neighbor only).
+    // Zirconia never donates.
+    {
+      const needsTopUp = () => routeGroups.find(rg => !isZirconia(rg.name) && rg.stops.length < MIN_STOPS);
+      let underMin = needsTopUp();
+      let guard = routeGroups.length * MIN_STOPS;
+
+      while (underMin && guard-- > 0) {
+        // Rank eligible neighbors by centroid distance (closest border first)
+        const neighbors = routeGroups
+          .filter(rg => rg !== underMin && !isZirconia(rg.name) && rg.stops.length > MIN_STOPS)
+          .sort((a, b) =>
+            dist(underMin!.centLat, underMin!.centLng, a.centLat, a.centLng) -
+            dist(underMin!.centLat, underMin!.centLng, b.centLat, b.centLng)
+          );
+
+        let moved = false;
+        for (const donor of neighbors) {
+          // From this specific neighbor, take the stop closest to underMin's centroid
+          // (= the stop sitting on the shared border between the two routes)
+          let borderStop: Stop | null = null;
+          let borderDist = Infinity;
+          for (const s of donor.stops) {
+            const d = dist(underMin.centLat, underMin.centLng, s.lat, s.lng);
+            if (d < borderDist) { borderDist = d; borderStop = s; }
+          }
+          if (!borderStop) continue;
+
+          // Transfer the border stop
+          donor.stops = donor.stops.filter(s => s !== borderStop);
+          donor.totalCube -= borderStop.totalCube ?? 0;
+          const dc = centroid(donor.stops.map(s => ({ lat: s.lat, lng: s.lng })));
+          donor.centLat = dc.lat; donor.centLng = dc.lng;
+
+          underMin.stops.push(borderStop);
+          underMin.totalCube += borderStop.totalCube ?? 0;
+          const uc = centroid(underMin.stops.map(s => ({ lat: s.lat, lng: s.lng })));
+          underMin.centLat = uc.lat; underMin.centLng = uc.lng;
+
+          moved = true;
+          break; // one stop at a time — re-evaluate after each move
+        }
+
+        if (!moved) break; // no neighbor could help
+        if (underMin.stops.length >= MIN_STOPS) underMin = needsTopUp();
+      }
+    }
+
+// ── Step 5: Sequence each route (OSRM drive-time, all routes in parallel) ──
+    const planned = await Promise.all(routeGroups.map(async (rg, idx) => {
+      const sequenced = await sequenceRoute(rg.stops, depot);
       const totalDist = routeDist(sequenced, depot);
       const cubePct   = Math.round((rg.totalCube / rg.vehicleCapacity) * 100);
       return {
@@ -355,7 +481,7 @@ export async function POST(req: NextRequest) {
           waypointId: s.waypointId,
         })),
       };
-    });
+    }));
 
     planned.sort((a, b) =>
       dist(depot.lat, depot.lng, a.centLat, a.centLng) -

@@ -3,22 +3,32 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck, UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList, Scissors } from "lucide-react";
+import { useState } from "react";
+import {
+  Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
+  UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
+  Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
+  Zap, ChevronDown, ChevronUp,
+} from "lucide-react";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true };
 
 const adminItems = [
-  { icon: UserCog,      label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
-  { icon: CalendarDays, label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
-  { icon: Gauge,        label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
-  { icon: WrenchIcon,   label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
-  { icon: Star,         label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
-  { icon: Trophy,       label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
-  { icon: Scissors,     label: "Create Routes",    href: "/wayne-board/create-routes", exact: true },
-  { icon: Route,        label: "Auto DRO",         href: "/wayne-board/auto-dro",     exact: true },
-  { icon: TrendingUp,   label: "Auto GC",          href: "/wayne-board/auto-gc",      exact: true },
-  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",     exact: true },
-  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",     exact: true },
+  { icon: UserCog,       label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
+  { icon: CalendarDays,  label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
+  { icon: Gauge,         label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
+  { icon: WrenchIcon,    label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
+  { icon: Star,          label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
+  { icon: Trophy,        label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
+  { icon: GraduationCap, label: "Trainee Days",     href: "/wayne-board/trainees",     exact: true },
+  { icon: Settings,      label: "Settings",         href: "/wayne-board/settings",     exact: true },
+];
+
+const automationItems = [
+  { icon: Scissors,      label: "Create Routes", href: "/wayne-board/create-routes", exact: true },
+  { icon: Route,         label: "Auto DRO",      href: "/wayne-board/auto-dro",      exact: true },
+  { icon: TrendingUp,    label: "Auto GC",       href: "/wayne-board/auto-gc",       exact: true },
+  { icon: ClipboardList, label: "Auto DSW",      href: "/wayne-board/auto-dsw",      exact: true },
 ];
 
 const complianceItems = [
@@ -27,14 +37,16 @@ const complianceItems = [
 ];
 
 const reportItems = [
-  { icon: Truck,      label: "Fleet",   href: "/reports/fleet",    exact: true },
-  { icon: DollarSign, label: "Payroll", href: "/reports/payroll",  exact: true },
-  { icon: Users,      label: "Drivers", href: "/reports/drivers",  exact: true },
-  { icon: Map,        label: "Routes",  href: "/reports/routes",   exact: true },
+  { icon: Truck,      label: "Fleet",   href: "/reports/fleet",   exact: true },
+  { icon: DollarSign, label: "Payroll", href: "/reports/payroll", exact: true },
+  { icon: Users,      label: "Drivers", href: "/reports/drivers", exact: true },
+  { icon: Map,        label: "Routes",  href: "/reports/routes",  exact: true },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const automationActive = automationItems.some(i => pathname === i.href);
+  const [autoOpen, setAutoOpen] = useState(automationActive);
 
   function NavLink({ icon: Icon, label, href, exact }: { icon: React.ElementType; label: string; href: string; exact: boolean }) {
     const active = exact ? pathname === href : pathname.startsWith(href);
@@ -65,7 +77,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col gap-0.5 p-3 flex-1 pt-4">
+      <nav className="flex flex-col gap-0.5 p-3 flex-1 pt-4 overflow-y-auto">
         <NavLink {...overviewItem} />
 
         <div className="my-3 border-t border-slate-100" />
@@ -76,6 +88,36 @@ export default function Sidebar() {
         {adminItems.map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
+
+        <div className="my-3 border-t border-slate-100" />
+
+        {/* Automation dropdown */}
+        <button
+          onClick={() => setAutoOpen(v => !v)}
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 w-full text-left ${
+            automationActive
+              ? "text-slate-900 bg-slate-50"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+          }`}
+        >
+          <Zap className={`w-4 h-4 flex-shrink-0 ${automationActive ? "text-slate-700" : "text-slate-400"}`} />
+          <span className="flex-1">Automation</span>
+          {automationActive && (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1" />
+          )}
+          {autoOpen
+            ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
+            : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+          }
+        </button>
+
+        {autoOpen && (
+          <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
+            {automationItems.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+          </div>
+        )}
 
         <div className="my-3 border-t border-slate-100" />
 

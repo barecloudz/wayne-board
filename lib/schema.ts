@@ -1,6 +1,6 @@
 import {
   pgTable, serial, text, real, integer,
-  timestamp, boolean, date, doublePrecision,
+  timestamp, boolean, date, doublePrecision, bigint, json,
 } from "drizzle-orm/pg-core";
 
 // ── Work Areas ───────────────────────────────────────────────────────────────
@@ -190,6 +190,16 @@ export const scheduleOverrides = pgTable("schedule_overrides", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Trainee Work Days ─────────────────────────────────────────────────────────
+// One row per trainee per day they were scheduled and worked (recorded at route push)
+export const traineeWorkDays = pgTable("trainee_work_days", {
+  id:        serial("id").primaryKey(),
+  driverId:  text("driver_id").notNull().references(() => drivers.driverId, { onDelete: "cascade" }),
+  date:      date("date").notNull(),
+  weekStart: date("week_start").notNull(),  // Monday of that week
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ── Maintenance Requests ──────────────────────────────────────────────────────
 export const maintenanceRequests = pgTable("maintenance_requests", {
   id:          serial("id").primaryKey(),
@@ -237,6 +247,17 @@ export const droRoutes = pgTable("dro_routes", {
   cube:           real("cube").notNull().default(0),
   vehicleCapacity: text("vehicle_capacity").notNull().default(""),
   sortDate:       date("sort_date").notNull(),
+  // Package type breakdown (from /report/packagedetail)
+  lpStops:        integer("lp_stops").notNull().default(0),
+  lpPackages:     integer("lp_packages").notNull().default(0),
+  smStops:        integer("sm_stops").notNull().default(0),
+  smPackages:     integer("sm_packages").notNull().default(0),
+  bulkStops:      integer("bulk_stops").notNull().default(0),
+  bulkPackages:   integer("bulk_packages").notNull().default(0),
+  regStops:       integer("reg_stops").notNull().default(0),
+  regPackages:    integer("reg_packages").notNull().default(0),
+  exceededTargetDuration: boolean("exceeded_target_duration").notNull().default(false),
+  timeCriticalStops:      integer("time_critical_stops").notNull().default(0),
   syncedAt:       timestamp("synced_at").defaultNow(),
 });
 
@@ -262,7 +283,55 @@ export const droStops = pgTable("dro_stops", {
   lat:            doublePrecision("lat"),
   lng:            doublePrecision("lng"),
   sortDate:       date("sort_date").notNull(),
+  // Extended waypoint fields
+  wid:                  bigint("wid", { mode: "number" }),
+  optimalRoute:         text("optimal_route").notNull().default(""),
+  optimalSequence:      integer("optimal_sequence"),
+  windowOpen:           text("window_open").notNull().default(""),
+  windowClose:          text("window_close").notNull().default(""),
+  isSmallStop:          boolean("is_small_stop").notNull().default(false),
+  isCdoStop:            boolean("is_cdo_stop").notNull().default(false),
+  isHazardous:          boolean("is_hazardous").notNull().default(false),
+  isHeavyweight:        boolean("is_heavyweight").notNull().default(false),
+  trackingIds:          json("tracking_ids"),
+  actualAssignmentType: text("actual_assignment_type").notNull().default(""),
+  pickupType:           text("pickup_type").notNull().default(""),
+  reasonCode:           text("reason_code").notNull().default(""),
+  overflowedRoute:      text("overflowed_route").notNull().default(""),
+  numLpPackages:        integer("num_lp_packages").notNull().default(0),
   syncedAt:       timestamp("synced_at").defaultNow(),
+});
+
+// ── DRO Route Plans (all plans, active flagged) ───────────────────────────────
+export const droRoutePlans = pgTable("dro_route_plans", {
+  id:           serial("id").primaryKey(),
+  planId:       integer("plan_id").notNull().unique(),
+  name:         text("name").notNull().default(""),
+  totalRoutes:  integer("total_routes").notNull().default(0),
+  lpRoutes:     integer("lp_routes").notNull().default(0),
+  bulkRoutes:   integer("bulk_routes").notNull().default(0),
+  regRoutes:    integer("reg_routes").notNull().default(0),
+  smallRoutes:  integer("small_routes").notNull().default(0),
+  isActive:     boolean("is_active").notNull().default(false),
+  lastUsedDate: text("last_used_date").notNull().default(""),
+  syncedAt:     timestamp("synced_at").defaultNow(),
+});
+
+// ── DRO Permanent Stop Overrides (stops pinned to specific routes) ────────────
+export const droStopOverrides = pgTable("dro_stop_overrides", {
+  id:            serial("id").primaryKey(),
+  overrideId:    text("override_id").notNull().unique(),
+  stopId:        text("stop_id").notNull().default(""),
+  recipientName: text("recipient_name").notNull().default(""),
+  address:       text("address").notNull().default(""),
+  postalCode:    text("postal_code").notNull().default(""),
+  type:          text("type").notNull().default(""),
+  value:         text("value").notNull().default(""),
+  windowOpen:    text("window_open").notNull().default(""),
+  windowClose:   text("window_close").notNull().default(""),
+  workAreaNum:   text("work_area_num").notNull().default(""),
+  routePlanIds:  json("route_plan_ids"),
+  syncedAt:      timestamp("synced_at").defaultNow(),
 });
 
 export const droDailyTotals = pgTable("dro_daily_totals", {

@@ -24,8 +24,12 @@ export type DroSyncResult = {
   sortDate: string;
   routes: number;
   stops: number;
+  unroutable?: number;
   anchorAreas?: number;
   stopsWithCoords?: number;
+  routePlans?: number;
+  stopOverrides?: number;
+  planningWindowOpen?: boolean;
   error?: string;
 };
 
@@ -120,11 +124,33 @@ export async function syncDro(): Promise<DroSyncResult> {
     const sdText   = (await (await fetch(`${DRO_BASE}/api/api/stations/${STATION_ID}/sortDate`, { headers })).text()).trim().replace(/^"|"$/g, "");
     const sortDate: string = /^\d{4}-\d{2}-\d{2}$/.test(sdText) ? sdText : new Date().toISOString().slice(0, 10);
 
-    const routes    = await (await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-summary?stationId=${STATION_ID}&solutionType=actual`, { headers })).json() as any[];
-    const waypoints = await (await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/waypoints?solutionType=actual&routePlanId=${planId}`, { headers })).json() as any[];
+    // Fetch core data in parallel
+    const [routes, waypoints, anchorAreasRaw, allRoutePlans, stopOverridesRaw, packageDetail, planningWindowRaw] = await Promise.all([
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-summary?stationId=${STATION_ID}&solutionType=actual`, { headers }).then(r => r.json()) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/waypoints?solutionType=actual&routePlanId=${planId}`, { headers }).then(r => r.json()) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers }).then(r => r.json()) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/stop-overrides`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/report/packagedetail?routePlanId=${planId}`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/station/${STATION_ID}/planningWindowState`, { headers }).then(r => r.json()).catch(() => false),
+    ]);
 
-    // Pull anchor areas (polygon shapes in EPSG:3857)
-    const anchorAreas = await (await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers })).json() as any[];
+    const anchorAreas = anchorAreasRaw;
+    const planningWindowOpen = !!planningWindowRaw;
+
+    // Build packageDetail lookup: workAreaNumber → detail row
+    const pkgDetailByRoute: Record<string, any> = {};
+    for (const d of (packageDetail ?? [])) {
+      if (d.workAreaNumber) pkgDetailByRoute[d.workAreaNumber] = d;
+    }
+
+    // Pull unroutable/unassigned waypoints — DRO couldn't assign these to any route
+    let unroutableWaypoints: any[] = [];
+    try {
+      const unroutRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/UnroutableWaypoints?`, { headers });
+      const unroutData = await unroutRes.json() as any;
+      unroutableWaypoints = unroutData?.eligible ?? [];
+    } catch { /* non-fatal */ }
 
     // Pull stop GPS coordinates from ArcGIS Layer 8
     // Encode single quotes as %27 (DRO's encoding convention)
@@ -167,13 +193,17 @@ export async function syncDro(): Promise<DroSyncResult> {
     await sql`DELETE FROM dro_routes`;
     await sql`DELETE FROM dro_anchor_areas`;
 
-    // Insert routes
+    // Insert routes with LP/SM/bulk/reg breakdown from packagedetail
     if (routes.length > 0) {
       for (const r of routes) {
+        const pd = pkgDetailByRoute[r.workAreaNumber ?? ""] ?? {};
         await sql`
           INSERT INTO dro_routes
             (work_area_name, work_area_number, route_type, stops, packages,
-             distance, time_hours, cube, vehicle_capacity, sort_date)
+             distance, time_hours, cube, vehicle_capacity, sort_date,
+             lp_stops, lp_packages, sm_stops, sm_packages,
+             bulk_stops, bulk_packages, reg_stops, reg_packages,
+             exceeded_target_duration, time_critical_stops)
           VALUES (
             ${r.workAreaName     ?? ""},
             ${r.workAreaNumber   ?? ""},
@@ -184,7 +214,17 @@ export async function syncDro(): Promise<DroSyncResult> {
             ${parseFloat(r.time) || 0},
             ${r.cube             ?? 0},
             ${r.vehicleCapacity  ?? ""},
-            ${sortDate}
+            ${sortDate},
+            ${pd.lpStops         ?? 0},
+            ${pd.lpPackages      ?? 0},
+            ${pd.smStops         ?? 0},
+            ${pd.smPackages      ?? 0},
+            ${pd.bulkStops       ?? 0},
+            ${pd.bulkPackages    ?? 0},
+            ${pd.regStops        ?? 0},
+            ${pd.regPackages     ?? 0},
+            ${pd.exceededTargetDuration ?? false},
+            ${pd.timeCriticalStops ?? 0}
           )
         `;
       }
@@ -201,7 +241,11 @@ export async function syncDro(): Promise<DroSyncResult> {
             (waypoint_id, stop_id, firm_name, address, city, state, postal_code,
              actual_route, actual_sequence, arrival_time, stop_class,
              no_packages, total_weight, total_cube, is_lp_package, is_bulk_stop,
-             work_area_number, lat, lng, sort_date)
+             work_area_number, lat, lng, sort_date,
+             wid, optimal_route, optimal_sequence, window_open, window_close,
+             is_small_stop, is_cdo_stop, is_hazardous, is_heavyweight,
+             tracking_ids, actual_assignment_type, pickup_type, reason_code,
+             overflowed_route, num_lp_packages)
           VALUES (
             ${w.waypointId       ?? ""},
             ${w.stopId           ?? ""},
@@ -222,11 +266,139 @@ export async function syncDro(): Promise<DroSyncResult> {
             ${w.workAreaNumber   ?? ""},
             ${coords[0]},
             ${coords[1]},
-            ${sortDate}
+            ${sortDate},
+            ${w.wid              ?? null},
+            ${w.optimalRoute     ?? ""},
+            ${w.optimalSequence  ?? null},
+            ${w.windowOpen       ?? ""},
+            ${w.windowClose      ?? ""},
+            ${w.isSmallStop      ?? false},
+            ${w.isCdoStop        ?? false},
+            ${w.isHazardous      ?? false},
+            ${w.isHeavyweight    ?? false},
+            ${JSON.stringify(w.trackingIds ?? [])},
+            ${w.actualAssignmentType ?? ""},
+            ${w.pickupType       ?? ""},
+            ${w.reasonCode       ?? ""},
+            ${w.overflowedRoute  ?? ""},
+            ${w.numLPPackages    ?? 0}
           )
         `;
       }
     }
+
+    // Insert unroutable stops (no actualRoute — plan engine will assign them)
+    for (let i = 0; i < unroutableWaypoints.length; i += BATCH) {
+      const batch = unroutableWaypoints.slice(i, i + BATCH);
+      for (const w of batch) {
+        const coords = widCoords[String(w.wid)] ?? [null, null];
+        await sql`
+          INSERT INTO dro_stops
+            (waypoint_id, stop_id, firm_name, address, city, state, postal_code,
+             actual_route, actual_sequence, arrival_time, stop_class,
+             no_packages, total_weight, total_cube, is_lp_package, is_bulk_stop,
+             work_area_number, lat, lng, sort_date,
+             wid, optimal_route, optimal_sequence, window_open, window_close,
+             is_small_stop, is_cdo_stop, is_hazardous, is_heavyweight,
+             tracking_ids, actual_assignment_type, pickup_type, reason_code,
+             overflowed_route, num_lp_packages)
+          VALUES (
+            ${w.waypointId       ?? ""},
+            ${w.stopId           ?? ""},
+            ${w.firmName         ?? ""},
+            ${w.address          ?? ""},
+            ${w.city             ?? ""},
+            ${w.state            ?? ""},
+            ${w.postalCode       ?? ""},
+            ${""},
+            ${null},
+            ${""},
+            ${w.stopClass        ?? ""},
+            ${w.noPackages       ?? 0},
+            ${w.totalWeight      ?? 0},
+            ${w.totalCube        ?? 0},
+            ${w.isLPPackage      ?? false},
+            ${w.isBulkStop       ?? false},
+            ${w.workAreaNumber   ?? ""},
+            ${coords[0]},
+            ${coords[1]},
+            ${sortDate},
+            ${w.wid              ?? null},
+            ${w.optimalRoute     ?? ""},
+            ${w.optimalSequence  ?? null},
+            ${w.windowOpen       ?? ""},
+            ${w.windowClose      ?? ""},
+            ${w.isSmallStop      ?? false},
+            ${w.isCdoStop        ?? false},
+            ${w.isHazardous      ?? false},
+            ${w.isHeavyweight    ?? false},
+            ${JSON.stringify(w.trackingIds ?? [])},
+            ${w.actualAssignmentType ?? ""},
+            ${w.pickupType       ?? ""},
+            ${w.reasonCode       ?? ""},
+            ${w.overflowedRoute  ?? ""},
+            ${w.numLPPackages    ?? 0}
+          )
+        `;
+      }
+    }
+
+    // Upsert route plans
+    for (const p of (allRoutePlans ?? [])) {
+      await sql`
+        INSERT INTO dro_route_plans
+          (plan_id, name, total_routes, lp_routes, bulk_routes, reg_routes, small_routes, is_active, last_used_date)
+        VALUES (
+          ${p.planId},
+          ${p.name ?? ""},
+          ${p.totalRoutes ?? 0},
+          ${p.lpRoutes    ?? 0},
+          ${p.bulkRoutes  ?? 0},
+          ${p.regRoutes   ?? 0},
+          ${p.smallRoutes ?? 0},
+          ${p.planId === planId},
+          ${p.lastUsedDate ?? ""}
+        )
+        ON CONFLICT (plan_id) DO UPDATE SET
+          name           = EXCLUDED.name,
+          total_routes   = EXCLUDED.total_routes,
+          is_active      = EXCLUDED.is_active,
+          last_used_date = EXCLUDED.last_used_date,
+          synced_at      = NOW()
+      `;
+    }
+
+    // Upsert permanent stop overrides
+    for (const o of (stopOverridesRaw ?? [])) {
+      await sql`
+        INSERT INTO dro_stop_overrides
+          (override_id, stop_id, recipient_name, address, postal_code,
+           type, value, window_open, window_close, work_area_num, route_plan_ids)
+        VALUES (
+          ${String(o.stopOverride_id ?? o.id ?? "")},
+          ${o.stopId        ?? ""},
+          ${o.recipientName ?? ""},
+          ${o.address       ?? ""},
+          ${o.postal_code   ?? ""},
+          ${o.type          ?? ""},
+          ${String(o.value  ?? "")},
+          ${String(o.open   ?? "")},
+          ${String(o.closed ?? "")},
+          ${String(o.workAreaNum ?? "")},
+          ${JSON.stringify(o.routePlanIds ?? o.activeRoutePlans ?? [])}
+        )
+        ON CONFLICT (override_id) DO UPDATE SET
+          value         = EXCLUDED.value,
+          work_area_num = EXCLUDED.work_area_num,
+          synced_at     = NOW()
+      `;
+    }
+
+    // Persist planning window state
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('dro_planning_window_open', ${String(planningWindowOpen)})
+      ON CONFLICT (key) DO UPDATE SET value = ${String(planningWindowOpen)}
+    `;
 
     // Insert anchor areas
     for (const a of anchorAreas) {
@@ -268,7 +440,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       ON CONFLICT (key) DO UPDATE SET value = NOW()::text
     `;
 
-    return { success: true, sortDate, routes: routes.length, stops: waypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length };
+    return { success: true, sortDate, routes: routes.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };
 
   } catch (err: any) {
     if (browser) await browser.close().catch(() => {});

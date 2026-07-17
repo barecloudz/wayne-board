@@ -4,7 +4,71 @@ import { useEffect, useState } from "react";
 import {
   Users, Package, Route, ChevronRight, Minus, Plus,
   RefreshCw, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin,
+  Hash, ListChecks, Send, PartyPopper,
 } from "lucide-react";
+
+// ── Wizard Step Bar ─────────────────────────────────────────────────────────
+const WIZARD_STEPS = [
+  { id: "review",  short: "Pick Cuts",   label: "Step 1 — Pick your cuts" },
+  { id: "plan",    short: "Review Plan", label: "Step 2 — Review the plan" },
+  { id: "confirm", short: "Confirm",     label: "Step 3 — Confirm & send" },
+  { id: "done",    short: "Done",        label: "All done!" },
+] as const;
+
+function WizardBar({ step }: { step: Step }) {
+  const activeIdx = step === "planning" ? 0 : WIZARD_STEPS.findIndex(s => s.id === step);
+  return (
+    <div className="flex items-center gap-0 mb-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-1 overflow-hidden">
+      {WIZARD_STEPS.map((s, i) => {
+        const done    = i < activeIdx;
+        const active  = i === activeIdx;
+        return (
+          <div
+            key={s.id}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[12px] font-semibold transition-all ${
+              active  ? "bg-slate-900 text-white"
+              : done  ? "text-emerald-600"
+              :         "text-slate-400"
+            }`}
+          >
+            {done ? (
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            ) : (
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400"
+              }`}>{i + 1}</span>
+            )}
+            <span className="hidden sm:inline truncate">{s.short}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Per-step helper callout ──────────────────────────────────────────────────
+const STEP_HELP: Record<string, { icon: React.ElementType; headline: string; body: string }> = {
+  review: {
+    icon: Hash,
+    headline: "How many drivers are you cutting today?",
+    body: "Look at your driver count. If someone called out or you're short-staffed, dial down the number of routes here. The system will automatically spread the stops across fewer drivers. Aim to keep each driver under 120 stops.",
+  },
+  plan: {
+    icon: ListChecks,
+    headline: "Does the plan look right?",
+    body: "Scroll through the routes below. Each card shows how many stops and packages a driver will have. Green bar = light load, amber = getting full, red = heavy. If a route looks off, hit Back and adjust your cut number.",
+  },
+  confirm: {
+    icon: Send,
+    headline: "Ready to send this to DRO?",
+    body: "When you click Apply, the system will log into DRO, load these routes, and trigger a solve. This takes 30–60 seconds. The stops will be sequenced automatically — you don't need to do anything else in DRO.",
+  },
+  done: {
+    icon: PartyPopper,
+    headline: "Routes are in DRO!",
+    body: "The solve has been triggered. Give it a minute or two, then check DRO to confirm all routes are sequenced. You're done here.",
+  },
+};
 
 type RouteData = {
   today: string;
@@ -57,7 +121,7 @@ type PlanResult = {
   routes: PlannedRoute[];
 };
 
-type Step = "review" | "planning" | "plan" | "confirm" | "done";
+type Step = "review" | "planning" | "plan" | "confirm" | "pushing" | "done";
 
 export default function CreateRoutesClient() {
   const [data, setData]         = useState<RouteData | null>(null);
@@ -67,6 +131,8 @@ export default function CreateRoutesClient() {
   const [plan, setPlan]         = useState<PlanResult | null>(null);
   const [planError, setPlanError] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [pushError, setPushError] = useState("");
+  const [pushResult, setPushResult] = useState<{ jobId?: string; transferCount?: number } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -118,6 +184,35 @@ export default function CreateRoutesClient() {
     }
   }
 
+  async function handlePush() {
+    if (!plan || !data) return;
+    setStep("pushing");
+    setPushError("");
+    setPushResult(null);
+    try {
+      const routes = plan.routes.map(r => ({
+        name:  r.name,
+        stops: r.stops.map(s => ({ waypointId: s.waypointId })),
+      }));
+      const res = await fetch("/api/create-routes/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routes, sortDate: data.today }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setPushError(json.error ?? "Push to DRO failed");
+        setStep("confirm");
+        return;
+      }
+      setPushResult({ jobId: json.jobId, transferCount: json.transferCount });
+      setStep("done");
+    } catch (e: any) {
+      setPushError(e?.message ?? String(e));
+      setStep("confirm");
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -139,7 +234,7 @@ export default function CreateRoutesClient() {
     <div className="max-w-4xl mx-auto px-4 py-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Create Routes</h1>
           <p className="text-sm text-slate-500 mt-0.5">{dateLabel}</p>
@@ -151,6 +246,29 @@ export default function CreateRoutesClient() {
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
       </div>
+
+      {/* Wizard progress bar */}
+      {step !== "planning" && <WizardBar step={step} />}
+      {step === "planning" && <WizardBar step="review" />}
+
+      {/* Per-step help callout */}
+      {(() => {
+        const helpKey = step === "planning" ? "review" : step;
+        const help = STEP_HELP[helpKey];
+        if (!help) return null;
+        const Icon = help.icon;
+        return (
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+              <Icon className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-blue-900">{help.headline}</p>
+              <p className="text-[12px] text-blue-700 mt-0.5 leading-relaxed">{help.body}</p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Step: Review / Select Cut ── */}
       {(step === "review" || step === "planning") && (
@@ -440,9 +558,16 @@ export default function CreateRoutesClient() {
             ))}
           </div>
 
-          <p className="text-[12px] text-slate-400 mb-6">
-            This plan has been calculated and sequenced. Apply it to DRO to push to drivers.
+          <p className="text-[12px] text-slate-400 mb-4">
+            This plan has been calculated and sequenced. Clicking Apply will log into DRO, transfer all stops, and trigger a solve.
           </p>
+
+          {pushError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2 mb-4 text-left">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{pushError}</p>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <button
@@ -452,12 +577,21 @@ export default function CreateRoutesClient() {
               Back
             </button>
             <button
-              onClick={() => setStep("done")}
+              onClick={handlePush}
               className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors"
             >
-              ✓ Plan Ready
+              Apply to DRO →
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── Step: Pushing ── */}
+      {step === "pushing" && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
+          <RefreshCw className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-extrabold text-slate-900 mb-2">Pushing to DRO…</h2>
+          <p className="text-sm text-slate-500">Logging in, transferring stops, and triggering solve. This may take 30–60 seconds.</p>
         </div>
       )}
 
@@ -465,12 +599,15 @@ export default function CreateRoutesClient() {
       {step === "done" && plan && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
           <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h2 className="text-xl font-extrabold text-slate-900 mb-2">Route plan ready</h2>
-          <p className="text-sm text-slate-500 mb-6">
-            {plan.routeCount} routes · ~{Math.ceil(plan.totalStops / plan.routeCount)} stops each
+          <h2 className="text-xl font-extrabold text-slate-900 mb-2">Routes applied to DRO</h2>
+          <p className="text-sm text-slate-500 mb-2">
+            {plan.routeCount} routes · {plan.totalStops} stops transferred
           </p>
+          {pushResult?.jobId && (
+            <p className="text-[11px] text-slate-400 mb-6">Solve job ID: {pushResult.jobId}</p>
+          )}
           <button
-            onClick={() => { setStep("review"); setPlan(null); setCut(0); load(); }}
+            onClick={() => { setStep("review"); setPlan(null); setCut(0); setPushResult(null); load(); }}
             className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
           >
             Start Over
