@@ -62,6 +62,7 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@sparticuz/chromium-min", "puppeteer-core"],
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);
