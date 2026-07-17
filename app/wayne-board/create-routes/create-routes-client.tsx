@@ -36,6 +36,7 @@ type PlannedRoute = {
   stopCount: number;
   packages: number;
   bulkStops: number;
+  estMiles: number;
   centLat: number;
   centLng: number;
   stops: PlannedStop[];
@@ -45,9 +46,11 @@ type PlanResult = {
   depot: { lat: number; lng: number };
   totalStops: number;
   totalPackages: number;
+  totalEstMiles: number;
   routeCount: number;
   originalRouteCount: number;
   merged: number;
+  cappedAt: string | null;
   routes: PlannedRoute[];
 };
 
@@ -277,6 +280,11 @@ export default function CreateRoutesClient() {
               <p className="text-[10px] font-bold text-white/50 uppercase tracking-wide">Packages</p>
               <p className="text-[32px] font-extrabold text-white leading-none">{plan.totalPackages}</p>
             </div>
+              <div className="w-px h-10 bg-white/10" />
+            <div className="text-center">
+              <p className="text-[10px] font-bold text-white/50 uppercase tracking-wide">Est. Miles</p>
+              <p className="text-[32px] font-extrabold text-white leading-none">{Math.round(plan.totalEstMiles)}</p>
+            </div>
             {plan.merged > 0 && (
               <>
                 <div className="w-px h-10 bg-white/10" />
@@ -302,6 +310,14 @@ export default function CreateRoutesClient() {
               </button>
             </div>
           </div>
+
+          {/* Cap warning */}
+          {plan.cappedAt && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 mb-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-700">{plan.cappedAt}</p>
+            </div>
+          )}
 
           {/* Route Cards */}
           <div className="space-y-2">
@@ -329,7 +345,7 @@ export default function CreateRoutesClient() {
                         <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
                           <div className={`h-full rounded-full ${loadColor}`} style={{ width: `${Math.min(100, loadPct)}%` }} />
                         </div>
-                        <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs</span>
+                        <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs · ~{r.estMiles}mi</span>
                         {r.bulkStops > 0 && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">
                             {r.bulkStops} bulk

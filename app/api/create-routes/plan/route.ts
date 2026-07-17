@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { droStops, droAnchorAreas, settings } from "@/lib/schema";
 import { isNotNull, eq } from "drizzle-orm";
 
+const MAX_STOPS = 120;
+
 // ── Haversine distance in miles ───────────────────────────────────────────────
 function dist(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3958.8;
@@ -16,6 +18,19 @@ function dist(lat1: number, lng1: number, lat2: number, lng2: number): number {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ── Total route distance (depot → s[0] → ... → s[n-1]) ───────────────────────
+function routeDist(
+  stops: { lat: number; lng: number }[],
+  depot: { lat: number; lng: number }
+): number {
+  if (stops.length === 0) return 0;
+  let total = dist(depot.lat, depot.lng, stops[0].lat, stops[0].lng);
+  for (let i = 1; i < stops.length; i++) {
+    total += dist(stops[i - 1].lat, stops[i - 1].lng, stops[i].lat, stops[i].lng);
+  }
+  return total;
+}
+
 // ── Centroid of a set of stops ────────────────────────────────────────────────
 function centroid(stops: { lat: number; lng: number }[]): { lat: number; lng: number } {
   const lat = stops.reduce((s, p) => s + p.lat, 0) / stops.length;
@@ -23,15 +38,15 @@ function centroid(stops: { lat: number; lng: number }[]): { lat: number; lng: nu
   return { lat, lng };
 }
 
-// ── Nearest-neighbor TSP from depot ──────────────────────────────────────────
-function nearestNeighbor(
-  stops: { lat: number; lng: number; [k: string]: any }[],
+// ── Nearest-neighbor TSP (non-bulk stops only, from depot) ───────────────────
+function nearestNeighbor<T extends { lat: number; lng: number }>(
+  stops: T[],
   depot: { lat: number; lng: number }
-): typeof stops {
+): T[] {
   if (stops.length === 0) return [];
   const unvisited = [...stops];
-  const ordered: typeof stops = [];
-  let cur = depot;
+  const ordered: T[] = [];
+  let cur: { lat: number; lng: number } = depot;
 
   while (unvisited.length > 0) {
     let bestIdx = 0;
@@ -47,9 +62,70 @@ function nearestNeighbor(
   return ordered;
 }
 
+// ── 2-opt improvement pass ────────────────────────────────────────────────────
+// Tries reversing every sub-segment; keeps the reversal if it shortens total distance.
+// Only runs on non-bulk stops (bulk stays pinned at end).
+function twoOpt<T extends { lat: number; lng: number }>(
+  stops: T[],
+  depot: { lat: number; lng: number }
+): T[] {
+  if (stops.length < 4) return stops;
+  let route = [...stops];
+  let improved = true;
+
+  while (improved) {
+    improved = false;
+    for (let i = 0; i < route.length - 1; i++) {
+      for (let j = i + 2; j < route.length; j++) {
+        // Cost before: ...→ route[i] → route[i+1] → ... → route[j] → route[j+1]→...
+        const a = i === 0 ? depot : route[i - 1];
+        const d_before =
+          dist(a.lat, a.lng, route[i].lat, route[i].lng) +
+          dist(route[j].lat, route[j].lng,
+            j + 1 < route.length ? route[j + 1].lat : depot.lat,
+            j + 1 < route.length ? route[j + 1].lng : depot.lng);
+
+        // Cost after reversing segment [i..j]:
+        const d_after =
+          dist(a.lat, a.lng, route[j].lat, route[j].lng) +
+          dist(route[i].lat, route[i].lng,
+            j + 1 < route.length ? route[j + 1].lat : depot.lat,
+            j + 1 < route.length ? route[j + 1].lng : depot.lng);
+
+        if (d_after < d_before - 0.0001) {
+          // Reverse the segment
+          const seg = route.slice(i, j + 1).reverse();
+          route = [...route.slice(0, i), ...seg, ...route.slice(j + 1)];
+          improved = true;
+        }
+      }
+    }
+  }
+  return route;
+}
+
+// ── Sequence a route: regular stops optimized, bulk pinned to end ─────────────
+function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: boolean }>(
+  stops: T[],
+  depot: { lat: number; lng: number }
+): T[] {
+  const regular = stops.filter(s => !s.isBulkStop);
+  const bulk    = stops.filter(s => s.isBulkStop);
+
+  const nn       = nearestNeighbor(regular, depot);
+  const optimized = twoOpt(nn, depot);
+
+  // Sequence bulk among themselves (nearest-neighbor from last regular stop or depot)
+  const bulkStart = optimized.length > 0
+    ? optimized[optimized.length - 1]
+    : depot;
+  const bulkOrdered = nearestNeighbor(bulk, bulkStart);
+
+  return [...optimized, ...bulkOrdered];
+}
+
 // ── Point-in-polygon (ray casting, WGS84) ────────────────────────────────────
 function parseWkt(wkt: string): [number, number][] {
-  // "POLYGON ((-82.4 35.3, -82.5 35.4, ...))"
   const inner = wkt.replace(/^POLYGON\s*\(\(/i, "").replace(/\)\)$/, "");
   return inner.split(",").map(p => {
     const [lngStr, latStr] = p.trim().split(/\s+/);
@@ -95,7 +171,7 @@ export async function POST(req: NextRequest) {
   try {
     const { driverCount } = await req.json() as { driverCount: number };
 
-    // Depot from settings, default to FedEx Ground Fletcher NC
+    // Depot from settings, default to FedEx Ground Fletcher NC station
     const depotLatRow = await db.select().from(settings).where(eq(settings.key, "depot_lat")).then(r => r[0]);
     const depotLngRow = await db.select().from(settings).where(eq(settings.key, "depot_lng")).then(r => r[0]);
     const depot = {
@@ -125,7 +201,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No stops with coordinates. Run DRO sync first." }, { status: 400 });
     }
 
-    // Pull anchor area polygons for unassigned stop resolution
+    // Pull anchor area polygons
     const anchorAreas = await db.select({
       name:    droAnchorAreas.name,
       wktPoly: droAnchorAreas.wktPoly,
@@ -150,18 +226,17 @@ export async function POST(req: NextRequest) {
     const unrouted = stops.filter(s => !s.actualRoute?.trim());
     const groupNames = [...groups.keys()];
 
-    // Build current centroids for unrouted assignment
     const getCentroid = (name: string) => {
       const g = groups.get(name)!;
       return centroid(g.map(s => ({ lat: s.lat, lng: s.lng })));
     };
 
     for (const s of unrouted) {
-      // Try point-in-polygon first
       let assigned = "";
+
+      // Point-in-polygon first
       for (const area of parsedAreas) {
         if (pointInPolygon(s.lat, s.lng, area.poly)) {
-          // Find the route group whose name most closely matches this anchor area
           const match = groupNames.find(n =>
             n.toLowerCase().includes(area.name.toLowerCase().slice(0, 5))
           );
@@ -169,7 +244,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Fall back to nearest route centroid
+      // Fall back to nearest centroid
       if (!assigned && groupNames.length > 0) {
         let bestName = groupNames[0];
         let bestDist = Infinity;
@@ -181,9 +256,7 @@ export async function POST(req: NextRequest) {
         assigned = bestName;
       }
 
-      if (assigned) {
-        groups.get(assigned)!.push(s);
-      }
+      if (assigned) groups.get(assigned)!.push(s);
     }
 
     // ── Step 3: Convert to RouteGroup array ──────────────────────────────────
@@ -194,44 +267,58 @@ export async function POST(req: NextRequest) {
 
     const currentCount = routeGroups.length;
 
-    // ── Step 4: Merge routes if cutting ──────────────────────────────────────
-    while (routeGroups.length > driverCount) {
-      // Find the group with fewest stops
+    // ── Step 4: Merge routes to reach driverCount, respecting MAX_STOPS ──────
+    // Each merge iteration: find smallest route, try to merge into nearest
+    // neighbor that won't exceed MAX_STOPS. If no safe merge exists, stop.
+    let mergeAttempts = 0;
+    const maxAttempts = routeGroups.length * routeGroups.length;
+
+    while (routeGroups.length > driverCount && mergeAttempts < maxAttempts) {
+      mergeAttempts++;
+
+      // Sort by stop count ascending
       routeGroups.sort((a, b) => a.stops.length - b.stops.length);
       const smallest = routeGroups[0];
 
-      // Find nearest neighbor (by centroid distance, excluding itself)
-      let nearestIdx = 1;
-      let nearestDist = Infinity;
+      // Find nearest neighbor that can absorb smallest without exceeding cap
+      let bestIdx = -1;
+      let bestDist = Infinity;
       for (let i = 1; i < routeGroups.length; i++) {
+        const combined = routeGroups[i].stops.length + smallest.stops.length;
+        if (combined > MAX_STOPS) continue; // would blow the cap
         const d = dist(smallest.centLat, smallest.centLng, routeGroups[i].centLat, routeGroups[i].centLng);
-        if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
       }
 
-      // Merge smallest into nearest
-      const target = routeGroups[nearestIdx];
+      if (bestIdx === -1) {
+        // No safe merge exists — can't cut any further
+        break;
+      }
+
+      const target = routeGroups[bestIdx];
       target.stops = [...target.stops, ...smallest.stops];
       const c = centroid(target.stops.map(s => ({ lat: s.lat, lng: s.lng })));
       target.centLat = c.lat;
       target.centLng = c.lng;
 
-      // Name: keep the larger route's name
-      routeGroups.splice(0, 1); // remove smallest (it was sorted to [0])
+      routeGroups.splice(0, 1); // remove smallest
     }
 
-    // ── Step 5: Sequence each route nearest-neighbor from depot ──────────────
+    // ── Step 5: Sequence each route (regular optimized, bulk last) ───────────
     const planned = routeGroups.map((rg, idx) => {
-      const sequenced = nearestNeighbor(rg.stops, depot);
+      const sequenced = sequenceRoute(rg.stops, depot);
+      const totalDist = routeDist(sequenced, depot);
       return {
         routeIndex: idx + 1,
         name: rg.name,
         stopCount: sequenced.length,
         packages: sequenced.reduce((s, p) => s + (p.noPackages ?? 0), 0),
         bulkStops: sequenced.filter(s => s.isBulkStop).length,
+        estMiles: Math.round(totalDist * 10) / 10,
         centLat: rg.centLat,
         centLng: rg.centLng,
         stops: sequenced.map((s, i) => ({
-          seq: i + 1,
+          seq:        i + 1,
           address:    s.address,
           city:       s.city,
           firmName:   s.firmName || null,
@@ -244,20 +331,26 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Sort planned routes by centroid distance from depot (closest first)
+    // Sort by centroid distance from depot
     planned.sort((a, b) =>
       dist(depot.lat, depot.lng, a.centLat, a.centLng) -
       dist(depot.lat, depot.lng, b.centLat, b.centLng)
     );
     planned.forEach((r, i) => { r.routeIndex = i + 1; });
 
+    const actualMerged = currentCount - planned.length;
+
     return NextResponse.json({
       depot,
       totalStops: stops.length,
       totalPackages: planned.reduce((s, r) => s + r.packages, 0),
+      totalEstMiles: planned.reduce((s, r) => s + r.estMiles, 0),
       routeCount: planned.length,
       originalRouteCount: currentCount,
-      merged: currentCount - planned.length,
+      merged: actualMerged,
+      cappedAt: actualMerged < (currentCount - driverCount)
+        ? `Could only cut ${actualMerged} (120-stop cap reached)`
+        : null,
       routes: planned,
     });
 
