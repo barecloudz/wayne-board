@@ -65,12 +65,12 @@ export default async function DriverDashboard() {
     getMyMaintenanceRequests(session.driverId),
     db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
     db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60).catch(() => []),
-    // Last 14 days of DSW data for this specific driver (for streak calculation)
+    // Last 14 days of ALL drivers' DSW data (team streak calculation)
     (() => {
       const d14 = new Date(); d14.setDate(d14.getDate() - 14);
       const since = d14.toISOString().slice(0, 10);
       return db.select().from(dswRouteDays)
-        .where(and(eq(dswRouteDays.driverId, session.driverId), gte(dswRouteDays.date, since)))
+        .where(gte(dswRouteDays.date, since))
         .orderBy(desc(dswRouteDays.date))
         .catch(() => []);
     })(),

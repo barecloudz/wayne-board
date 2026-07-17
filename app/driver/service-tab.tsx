@@ -86,18 +86,30 @@ function thisWeekSlots(): { date: string; dow: string }[] {
   });
 }
 
-// Count consecutive passing days going back from most recent
+// Team ILS per day: sum all vscan and impacts across all drivers
+// A day passes only if team ILS ≥ 99%
+function teamDailyPass(history: DswRow[]): Record<string, boolean> {
+  const byDate: Record<string, { vscan: number; impacts: number }> = {};
+  for (const r of history) {
+    if (!r.vscanPkgs) continue;
+    if (!byDate[r.date]) byDate[r.date] = { vscan: 0, impacts: 0 };
+    byDate[r.date].vscan   += r.vscanPkgs;
+    byDate[r.date].impacts += ilsImpacts(r);
+  }
+  const result: Record<string, boolean> = {};
+  for (const [date, { vscan, impacts }] of Object.entries(byDate)) {
+    if (vscan === 0) continue;
+    const teamIls = ((vscan - impacts) / vscan) * 100;
+    result[date] = teamIls >= 99.0;
+  }
+  return result;
+}
+
+// Count consecutive team-passing days going back from most recent
 function calcStreak(history: DswRow[]): number {
   if (history.length === 0) return 0;
-  // Group by date → pass/fail
-  const byDate: Record<string, boolean> = {};
-  for (const r of history) {
-    const impacts = ilsImpacts(r);
-    // If any row for that date has impacts > 0, that day fails
-    if (byDate[r.date] === undefined) byDate[r.date] = true;
-    if (impacts > 0) byDate[r.date] = false;
-  }
-  const dates = Object.keys(byDate).sort().reverse();
+  const byDate = teamDailyPass(history);
+  const dates  = Object.keys(byDate).sort().reverse();
   let streak = 0;
   for (const d of dates) {
     if (byDate[d]) streak++;
@@ -147,15 +159,10 @@ export default function ServiceTab({
   const myTier     = myRow ? ilsTier(myImpacts, true) : "none";
   const svcFail    = mySvcRate != null && mySvcRate < 99.0;
 
-  // Week calendar — build pass/fail per day from myHistory
+  // Week calendar — team pass/fail per day
   const weekSlots = thisWeekSlots();
   const today = new Date().toISOString().slice(0, 10);
-  const historyByDate: Record<string, boolean> = {};
-  for (const r of myHistory) {
-    const impacts = ilsImpacts(r);
-    if (historyByDate[r.date] === undefined) historyByDate[r.date] = true;
-    if (impacts > 0) historyByDate[r.date] = false;
-  }
+  const historyByDate = teamDailyPass(myHistory);
 
   const ilsStreak = calcStreak(myHistory);
   const streakPct = Math.min(100, (ilsStreak / STREAK_GOAL) * 100);
@@ -187,7 +194,7 @@ export default function ServiceTab({
             : "linear-gradient(135deg, #1e293b, #334155)",
         }}>
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">
-            {earned ? "🎉 Reward Unlocked!" : "Clean ILS Streak"}
+            {earned ? "🎉 Team Reward Unlocked!" : "Team Clean ILS Streak"}
           </p>
           <div className="flex items-center justify-between">
             <div>
@@ -196,10 +203,10 @@ export default function ServiceTab({
               </p>
               <p className="text-[11px] text-white/60 mt-0.5">
                 {earned
-                  ? "You passed service every day for 2 weeks. Show this to your manager."
+                  ? "The whole team passed service for 2 weeks. Show this to your manager!"
                   : daysLeft === 1
-                  ? "1 more day of clean ILS to earn free Chick-fil-A!"
-                  : `${daysLeft} more days of 0 impacts to earn free Chick-fil-A`}
+                  ? "1 more team clean day — everyone gets Chick-fil-A!"
+                  : `${daysLeft} more team clean days — one bad day resets everyone`}
               </p>
             </div>
             <span className="text-4xl shrink-0 ml-3">{CFA_EMOJI}</span>
