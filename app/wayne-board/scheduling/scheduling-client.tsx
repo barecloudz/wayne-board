@@ -107,7 +107,7 @@ export default function SchedulingClient({
   workAreas: WorkAreaRow[];
   dailyAssignments: DailyAssignmentRow[];
 }) {
-  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage">("schedules");
+  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added">("schedules");
   const [isPending, startTransition] = useTransition();
 
   // ── Schedule editing ──────────────────────────────────────────────────────
@@ -380,9 +380,10 @@ export default function SchedulingClient({
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
         {([
-          { key: "schedules", label: "Weekly Schedules", icon: Clock },
-          { key: "timeoff",   label: "Time Off",         icon: Calendar },
+          { key: "schedules", label: "Weekly Schedules",  icon: Clock },
+          { key: "timeoff",   label: "Time Off",          icon: Calendar },
           { key: "coverage",  label: "Coverage (14 Days)", icon: AlertTriangle },
+          { key: "added",     label: "Added Days",        icon: CalendarPlus },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -1053,6 +1054,133 @@ export default function SchedulingClient({
           )}
         </div>
       )}
+
+      {/* ── ADDED DAYS TAB ───────────────────────────────────────────────── */}
+      {tab === "added" && (() => {
+        // Build a lookup: driverId → schedule days
+        const scheduleByDriver = new Map(schedules.map(s => [s.driverId, s]));
+
+        // Group all overrides by date, sorted newest first
+        const byDate = new Map<string, OverrideRow[]>();
+        for (const o of allOverrides) {
+          const list = byDate.get(o.date) ?? [];
+          list.push(o);
+          byDate.set(o.date, list);
+        }
+        const sortedDates = [...byDate.keys()].sort((a, b) => b.localeCompare(a));
+
+        return (
+          <div className="flex flex-col gap-4">
+            <p className="text-[13px] text-slate-500">
+              Days a driver was <span className="font-semibold text-violet-700">manually added</span> to work outside their regular weekly schedule — including trainee days. Most recent first.
+            </p>
+
+            {sortedDates.length === 0 && (
+              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center">
+                <CalendarPlus className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-[14px] font-semibold text-slate-400">No added days on record</p>
+                <p className="text-[12px] text-slate-400 mt-1">When you add a driver to a day they&apos;re not normally scheduled, it will appear here.</p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              {sortedDates.map((dateStr) => {
+                const entries = byDate.get(dateStr)!;
+                const d = parseISO(dateStr);
+                const isToday = dateStr === today;
+                const isPast  = dateStr < today;
+
+                return (
+                  <div key={dateStr} className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+                    {/* Date header */}
+                    <div className={`px-5 py-3 border-b border-slate-100 flex items-center gap-3 ${
+                      isToday ? "bg-slate-900" : isPast ? "bg-slate-50" : "bg-violet-50"
+                    }`}>
+                      <div>
+                        <p className={`text-[11px] font-bold uppercase tracking-wider ${isToday ? "text-slate-400" : "text-slate-400"}`}>
+                          {format(d, "EEEE")}
+                        </p>
+                        <p className={`text-[16px] font-extrabold leading-tight ${isToday ? "text-white" : "text-slate-800"}`}>
+                          {format(d, "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      {isToday && (
+                        <span className="ml-auto text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500 text-white">TODAY</span>
+                      )}
+                      {!isToday && !isPast && (
+                        <span className="ml-auto text-[11px] font-bold px-2.5 py-1 rounded-full bg-violet-500 text-white">UPCOMING</span>
+                      )}
+                      {isPast && !isToday && (
+                        <span className="ml-auto text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-200 text-slate-500">PAST</span>
+                      )}
+                      <span className="text-[12px] font-semibold text-slate-500 ml-2">
+                        {entries.length} driver{entries.length !== 1 ? "s" : ""} added
+                      </span>
+                    </div>
+
+                    {/* Driver rows */}
+                    <div className="divide-y divide-slate-100">
+                      {entries.map((o) => {
+                        const driverRow = scheduleByDriver.get(o.driverId);
+                        const isTrainee = driverRow?.isTrainee ?? false;
+                        const name = driverRow?.name ?? o.driverId;
+                        const dayKey = JS_DAY_TO_KEY[d.getDay()];
+                        const normallyScheduled = driverRow?.schedule?.[dayKey] ?? false;
+
+                        return (
+                          <div key={o.id} className="px-5 py-3 flex items-center gap-3">
+                            {/* Trainee or extra day badge */}
+                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                              isTrainee ? "bg-blue-500" : "bg-violet-500"
+                            }`} />
+
+                            <span className="font-semibold text-slate-800 text-[14px] flex-1">{name}</span>
+
+                            {isTrainee && (
+                              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                                TRAINEE
+                              </span>
+                            )}
+
+                            {normallyScheduled && !isTrainee && (
+                              <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                Also on regular schedule
+                              </span>
+                            )}
+
+                            {!normallyScheduled && !isTrainee && (
+                              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+                                EXTRA DAY
+                              </span>
+                            )}
+
+                            {o.note && (
+                              <span className="text-[12px] text-slate-400 italic hidden sm:block max-w-[200px] truncate">
+                                {o.note}
+                              </span>
+                            )}
+
+                            {/* Remove button (only for upcoming/today) */}
+                            {dateStr >= today && (
+                              <button
+                                onClick={() => handleRemoveOverride(o.id)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                title="Remove added day"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── COVERAGE DRIVER MODAL ────────────────────────────────────────── */}
       {coverageModal && (() => {
