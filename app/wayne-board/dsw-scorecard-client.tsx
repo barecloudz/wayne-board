@@ -8,51 +8,27 @@ function driverName(raw: string): string {
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() + " " + last.trim().charAt(0).toUpperCase() + ".";
 }
 
-type WeekDriver = {
-  driverNameRaw: string;
-  waName: string;
-  totalVscan: number;
-  totalImpacts: number;
-  days: string[];
-};
+function ilsImpacts(vscan: number | null, ilsPct: number | null): number {
+  if (vscan && vscan > 0 && ilsPct != null) return Math.round(vscan * (100 - ilsPct) / 100);
+  return 0;
+}
 
-export default function DswScorecardClient({
-  drivers,
-  weekStart,
-  weekEnd,
-  latestDate,
-}: {
-  drivers: WeekDriver[];
-  weekStart: string;
-  weekEnd: string;
-  latestDate: string;
-}) {
-  const weekLabel = (() => {
-    try {
-      const fmt = (s: string) => {
-        const [y, m, d] = s.split("-").map(Number);
-        return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      };
-      return `Week of ${fmt(weekStart)} – ${fmt(weekEnd)}`;
-    } catch { return weekStart; }
-  })();
-
-  const latestLabel = (() => {
+export default function DswScorecardClient({ drivers, latestDate }: { drivers: any[]; latestDate: string }) {
+  const dateLabel = (() => {
     try {
       const [y, m, d] = latestDate.split("-").map(Number);
       return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     } catch { return latestDate; }
   })();
 
-  const totalVscan   = drivers.reduce((s, r) => s + r.totalVscan, 0);
-  const totalImpacts = drivers.reduce((s, r) => s + r.totalImpacts, 0);
-  const impactBudget = totalVscan > 0 ? Math.floor(totalVscan * 0.01) : 0;
+  const totalVscan   = drivers.reduce((s, r) => s + (r.vscanPkgs ?? 0), 0);
+  const totalImpacts = drivers.reduce((s, r) => s + ilsImpacts(r.vscanPkgs, r.ilsPct), 0);
   const teamIlsPct   = totalVscan > 0 ? ((totalVscan - totalImpacts) / totalVscan) * 100 : null;
   const teamPassing  = teamIlsPct == null || teamIlsPct >= 99.0;
+  const impactBudget = totalVscan > 0 ? Math.floor(totalVscan * 0.01) : 0;
   const remaining    = Math.max(0, impactBudget - totalImpacts);
 
-  // Sort: fewest impacts first (clean drivers at top)
-  const sorted = [...drivers].sort((a, b) => a.totalImpacts - b.totalImpacts);
+  const sorted = [...drivers].sort((a, b) => ilsImpacts(a.vscanPkgs, a.ilsPct) - ilsImpacts(b.vscanPkgs, b.ilsPct));
 
   return (
     <div className="mb-8">
@@ -61,7 +37,7 @@ export default function DswScorecardClient({
       <div className={`rounded-2xl p-5 mb-5 ${teamPassing ? "bg-emerald-500" : "bg-red-500"}`}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-1">{weekLabel}</p>
+            <p className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-1">{dateLabel}</p>
             <h2 className="text-[22px] font-extrabold text-white leading-tight">
               {teamPassing ? "✅ Team is Passing Service" : "🚨 Team is FAILING Service"}
             </h2>
@@ -70,11 +46,10 @@ export default function DswScorecardClient({
                 ? "Keep it up — every driver needs to deliver everything on their truck."
                 : "We are below 99% ILS. Every undelivered package hurts the whole team."}
             </p>
-            <p className="text-[11px] text-white/60 mt-1">Last sync: {latestLabel}</p>
           </div>
           <div className="flex items-center gap-5">
             <div className="text-center">
-              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Week ILS</p>
+              <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Team ILS</p>
               <p className="text-[34px] font-extrabold text-white leading-none">
                 {teamIlsPct != null ? teamIlsPct.toFixed(1) + "%" : "—"}
               </p>
@@ -92,12 +67,10 @@ export default function DswScorecardClient({
             <div className="text-center">
               <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Budget</p>
               <p className="text-[34px] font-extrabold text-white leading-none">{impactBudget}</p>
-              <p className="text-[10px] font-semibold text-white/70">1% of week total</p>
+              <p className="text-[10px] font-semibold text-white/70">{totalVscan} pkgs × 1%</p>
             </div>
           </div>
         </div>
-
-        {/* Budget bar */}
         <div className="mt-4">
           <div className="h-3 bg-white/20 rounded-full overflow-hidden">
             <div
@@ -117,32 +90,27 @@ export default function DswScorecardClient({
         <span className="text-lg shrink-0">⚠️</span>
         <p className="text-[12px] text-slate-300 leading-relaxed">
           <span className="text-white font-bold">ILS impacts come from status codes 2, 3, 12, and 27.</span>{" "}
-          These mean a package was not delivered. Deliver everything on your truck — zero impacts is the standard, not a goal.
+          These mean a package was not delivered. Deliver everything on your truck — zero impacts is the standard.
         </p>
       </div>
 
-      {/* ── Leaderboard ── */}
+      {/* ── Driver Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
-        {sorted.map((r, i) => {
-          const impacts = r.totalImpacts;
+        {sorted.map((r) => {
+          const impacts = ilsImpacts(r.vscanPkgs, r.ilsPct);
+          const ilsFail = r.ilsPct != null && r.ilsPct < 99.0;
           const name    = driverName(r.driverNameRaw);
           const status  = impacts === 0 ? "green" : impacts <= 3 ? "yellow" : "red";
-          const rank    = i + 1;
 
           return (
-            <div
-              key={r.driverNameRaw}
-              className={`rounded-2xl overflow-hidden border-2 shadow-sm bg-white ${
-                status === "green"  ? "border-emerald-400" :
-                status === "yellow" ? "border-amber-400" :
-                                      "border-red-500"
-              }`}
-            >
+            <div key={r.id} className={`rounded-2xl overflow-hidden border-2 shadow-sm bg-white ${
+              status === "green"  ? "border-emerald-400" :
+              status === "yellow" ? "border-amber-400"   : "border-red-500"
+            }`}>
               {/* Header */}
               <div className={`px-3 py-2.5 flex items-center justify-between ${
                 status === "green"  ? "bg-emerald-500" :
-                status === "yellow" ? "bg-amber-400" :
-                                      "bg-red-500"
+                status === "yellow" ? "bg-amber-400"   : "bg-red-500"
               }`}>
                 <div className="min-w-0">
                   <p className="text-[15px] font-extrabold text-white leading-tight truncate">{name}</p>
@@ -158,19 +126,15 @@ export default function DswScorecardClient({
                 </div>
               </div>
 
-              {/* Week stats */}
-              <div className="py-3 px-3 flex items-center justify-between">
-                <div className="text-center flex-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Days</p>
-                  <p className="text-[18px] font-extrabold text-slate-800 leading-none">{r.days.length}</p>
-                  <p className="text-[9px] text-slate-400">this week</p>
-                </div>
-                <div className="w-px h-8 bg-slate-100" />
-                <div className="text-center flex-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Rank</p>
-                  <p className="text-[18px] font-extrabold text-slate-800 leading-none">#{rank}</p>
-                  <p className="text-[9px] text-slate-400">of {sorted.length}</p>
-                </div>
+              {/* ILS stat */}
+              <div className="py-3 px-3 text-center">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">ILS %</p>
+                <p className={`text-[20px] font-extrabold leading-none ${ilsFail ? "text-red-500" : "text-emerald-600"}`}>
+                  {r.ilsPct != null ? r.ilsPct.toFixed(1) : "—"}
+                </p>
+                <p className={`text-[10px] font-bold mt-0.5 ${ilsFail ? "text-red-400" : "text-emerald-500"}`}>
+                  {r.ilsPct != null ? (ilsFail ? "FAIL" : "PASS") : "—"}
+                </p>
               </div>
             </div>
           );

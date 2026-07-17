@@ -16,6 +16,9 @@ export type DswRow = {
   delStpsPlanned: number | null;
 };
 
+const STREAK_GOAL = 14; // days of clean ILS for Chick-fil-A
+const CFA_EMOJI   = "🍗";
+
 function dswInitials(raw: string): string {
   if (!raw) return "?";
   const [last, ...rest] = raw.split(",");
@@ -53,7 +56,7 @@ const tierStyles = {
   green:  { row: "bg-emerald-50/60 border-l-2 border-emerald-400", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-400", label: "CLEAN" },
   yellow: { row: "bg-amber-50/60 border-l-2 border-amber-400",    badge: "bg-amber-100 text-amber-700",    dot: "bg-amber-400",   label: "WATCH" },
   red:    { row: "bg-red-50/60 border-l-2 border-red-400",        badge: "bg-red-100 text-red-600",        dot: "bg-red-500",     label: "HIGH"  },
-  none:   { row: "bg-slate-50 border-l-2 border-slate-200",        badge: "bg-slate-100 text-slate-400",    dot: "bg-slate-300",   label: "—"     },
+  none:   { row: "bg-slate-50 border-l-2 border-slate-200",       badge: "bg-slate-100 text-slate-400",    dot: "bg-slate-300",   label: "—"     },
 };
 
 function svcBadge(rate: number | null) {
@@ -68,12 +71,49 @@ function svcBadge(rate: number | null) {
   );
 }
 
+// Build Mon–Sun slots for this week
+function thisWeekSlots(): { date: string; dow: string }[] {
+  const now  = new Date();
+  const day  = now.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon  = new Date(now);
+  mon.setDate(now.getDate() + diff);
+  const days = ["M","T","W","T","F","S","S"];
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return { date: d.toISOString().slice(0, 10), dow: days[i] };
+  });
+}
+
+// Count consecutive passing days going back from most recent
+function calcStreak(history: DswRow[]): number {
+  if (history.length === 0) return 0;
+  // Group by date → pass/fail
+  const byDate: Record<string, boolean> = {};
+  for (const r of history) {
+    const impacts = ilsImpacts(r);
+    // If any row for that date has impacts > 0, that day fails
+    if (byDate[r.date] === undefined) byDate[r.date] = true;
+    if (impacts > 0) byDate[r.date] = false;
+  }
+  const dates = Object.keys(byDate).sort().reverse();
+  let streak = 0;
+  for (const d of dates) {
+    if (byDate[d]) streak++;
+    else break;
+  }
+  return streak;
+}
+
 export default function ServiceTab({
   rows,
   myDriverId,
+  myHistory = [],
 }: {
   rows: DswRow[];
   myDriverId: string;
+  myHistory?: DswRow[];
 }) {
   if (rows.length === 0) {
     return (
@@ -101,33 +141,125 @@ export default function ServiceTab({
     } catch { return rows[0].date; }
   })();
 
-  const myRow = rows.find(r => r.driverId === myDriverId) ?? null;
-  const myImpacts = myRow ? ilsImpacts(myRow) : 0;
-  const mySvcRate = myRow ? serviceRate(myRow) : null;
-  const myTier    = myRow ? ilsTier(myImpacts, true) : "none";
+  const myRow      = rows.find(r => r.driverId === myDriverId) ?? null;
+  const myImpacts  = myRow ? ilsImpacts(myRow) : 0;
+  const mySvcRate  = myRow ? serviceRate(myRow) : null;
+  const myTier     = myRow ? ilsTier(myImpacts, true) : "none";
+  const svcFail    = mySvcRate != null && mySvcRate < 99.0;
+
+  // Week calendar — build pass/fail per day from myHistory
+  const weekSlots = thisWeekSlots();
+  const today = new Date().toISOString().slice(0, 10);
+  const historyByDate: Record<string, boolean> = {};
+  for (const r of myHistory) {
+    const impacts = ilsImpacts(r);
+    if (historyByDate[r.date] === undefined) historyByDate[r.date] = true;
+    if (impacts > 0) historyByDate[r.date] = false;
+  }
+
+  const ilsStreak = calcStreak(myHistory);
+  const streakPct = Math.min(100, (ilsStreak / STREAK_GOAL) * 100);
+  const daysLeft  = Math.max(0, STREAK_GOAL - ilsStreak);
+  const earned    = ilsStreak >= STREAK_GOAL;
 
   const statusConfig = {
-    green:  { headline: "Looking Good!", sub: "Clean ILS and solid service rate.", emoji: "✅" },
+    green:  { headline: "Looking Good!", sub: "Clean ILS — keep everything off the truck delivered.", emoji: "✅" },
     yellow: { headline: "Watch Your ILS", sub: `${myImpacts} ILS impact${myImpacts !== 1 ? "s" : ""} — keep it under 4.`, emoji: "⚠️" },
     red:    { headline: "Needs Attention", sub: `${myImpacts} ILS impacts — talk to your manager.`, emoji: "🔴" },
     none:   { headline: "No Data Found", sub: "Your route may not have synced yet.", emoji: "❓" },
   }[myTier];
 
-  // Sort: fewest ILS impacts first; within same impact count, best service rate first
   const sorted = [...rows].sort((a, b) => {
     const ia = ilsImpacts(a), ib = ilsImpacts(b);
     if (ia !== ib) return ia - ib;
     return (serviceRate(b) ?? 0) - (serviceRate(a) ?? 0);
   });
 
-  const svcFail = mySvcRate != null && mySvcRate < 99.0;
-
   return (
     <div className="flex flex-col gap-4">
 
-      {/* Personal card */}
+      {/* ── Chick-fil-A Streak Card ── */}
+      <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+        {/* Header */}
+        <div className="px-5 pt-4 pb-3" style={{
+          background: earned
+            ? "linear-gradient(135deg, #dc2626, #ef4444)"
+            : "linear-gradient(135deg, #1e293b, #334155)",
+        }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">
+            {earned ? "🎉 Reward Unlocked!" : "Clean ILS Streak"}
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[20px] font-extrabold text-white leading-tight">
+                {earned ? `${CFA_EMOJI} Free Chick-fil-A!` : `${ilsStreak} / ${STREAK_GOAL} days`}
+              </p>
+              <p className="text-[11px] text-white/60 mt-0.5">
+                {earned
+                  ? "You passed service every day for 2 weeks. Show this to your manager."
+                  : daysLeft === 1
+                  ? "1 more day of clean ILS to earn free Chick-fil-A!"
+                  : `${daysLeft} more days of 0 impacts to earn free Chick-fil-A`}
+              </p>
+            </div>
+            <span className="text-4xl shrink-0 ml-3">{CFA_EMOJI}</span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="px-5 pt-3 pb-2">
+          <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${streakPct}%`,
+                background: earned
+                  ? "linear-gradient(90deg, #dc2626, #ef4444)"
+                  : "linear-gradient(90deg, #10b981, #34d399)",
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[10px] text-slate-400">Day 0</span>
+            <span className="text-[10px] text-slate-400">Day {STREAK_GOAL}</span>
+          </div>
+        </div>
+
+        {/* This week's days */}
+        <div className="px-5 pb-4">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">This Week</p>
+          <div className="flex gap-1.5">
+            {weekSlots.map((slot) => {
+              const isPast   = slot.date < today;
+              const isToday  = slot.date === today;
+              const hasDat   = historyByDate[slot.date] !== undefined;
+              const passed   = historyByDate[slot.date] === true;
+              const failed   = historyByDate[slot.date] === false;
+              const isFuture = slot.date > today;
+
+              return (
+                <div key={slot.date} className="flex flex-col items-center gap-1 flex-1">
+                  <span className={`text-[10px] font-bold uppercase ${isToday ? "text-slate-900" : "text-slate-400"}`}>
+                    {slot.dow}
+                  </span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold border-2 ${
+                    passed  ? "bg-emerald-500 border-emerald-500 text-white" :
+                    failed  ? "bg-red-500 border-red-500 text-white" :
+                    isToday ? "bg-slate-100 border-slate-900 text-slate-600" :
+                    isFuture ? "bg-slate-50 border-slate-200 text-slate-300" :
+                               "bg-slate-100 border-slate-200 text-slate-400"
+                  }`}>
+                    {passed ? "✓" : failed ? "✗" : isToday ? "·" : "–"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Today's personal card ── */}
       <div className="bg-white rounded-2xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.2)]">
-        {/* Header stripe */}
         <div
           className="px-5 pt-5 pb-4"
           style={{
@@ -140,7 +272,7 @@ export default function ServiceTab({
               : "linear-gradient(135deg, #1e293b, #475569)",
           }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">How You&apos;re Doing</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Today — {dateLabel}</p>
           <div className="flex items-center gap-3">
             <span className="text-2xl leading-none">{statusConfig.emoji}</span>
             <div>
@@ -152,60 +284,45 @@ export default function ServiceTab({
 
         {myRow ? (
           <>
-            {/* Metric row */}
             <div className="grid grid-cols-3 divide-x divide-slate-100">
-              {/* Service rate */}
               <div className="px-4 py-4 text-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Service Rate</p>
                 {mySvcRate != null ? (
                   <>
-                    <p className={`text-[24px] font-extrabold leading-none ${
-                      mySvcRate >= 99 ? "text-emerald-600" : "text-red-500"
-                    }`}>{mySvcRate.toFixed(1)}%</p>
-                    <p className={`text-[11px] font-bold mt-1 ${
-                      mySvcRate >= 99 ? "text-emerald-500" : "text-red-500"
-                    }`}>{mySvcRate >= 99 ? "PASS" : "FAIL"}</p>
+                    <p className={`text-[24px] font-extrabold leading-none ${mySvcRate >= 99 ? "text-emerald-600" : "text-red-500"}`}>
+                      {mySvcRate.toFixed(1)}%
+                    </p>
+                    <p className={`text-[11px] font-bold mt-1 ${mySvcRate >= 99 ? "text-emerald-500" : "text-red-500"}`}>
+                      {mySvcRate >= 99 ? "PASS" : "FAIL"}
+                    </p>
                   </>
                 ) : (
                   <p className="text-[22px] font-extrabold text-slate-300">—</p>
                 )}
               </div>
-
-              {/* ILS impacts */}
               <div className="px-4 py-4 text-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">ILS Impacts</p>
                 <p className={`text-[24px] font-extrabold leading-none ${
-                  myImpacts === 0 ? "text-emerald-600"
-                  : myImpacts <= 3 ? "text-amber-500"
-                  : "text-red-500"
+                  myImpacts === 0 ? "text-emerald-600" : myImpacts <= 3 ? "text-amber-500" : "text-red-500"
                 }`}>{myImpacts}</p>
                 <p className={`text-[11px] font-bold mt-1 ${
-                  myImpacts === 0 ? "text-emerald-500"
-                  : myImpacts <= 3 ? "text-amber-500"
-                  : "text-red-500"
+                  myImpacts === 0 ? "text-emerald-500" : myImpacts <= 3 ? "text-amber-500" : "text-red-500"
                 }`}>{myImpacts === 0 ? "CLEAN" : myImpacts <= 3 ? "WATCH" : "HIGH"}</p>
               </div>
-
-              {/* Stops */}
               <div className="px-4 py-4 text-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stops Del&apos;d</p>
-                <p className="text-[24px] font-extrabold text-slate-800 leading-none">
-                  {myRow.actDelStps ?? "—"}
-                </p>
-                {myRow.delStpsPlanned ? (
-                  <p className="text-[11px] text-slate-400 mt-1">of {myRow.delStpsPlanned} planned</p>
-                ) : (
-                  <p className="text-[11px] text-slate-400 mt-1">&nbsp;</p>
-                )}
+                <p className="text-[24px] font-extrabold text-slate-800 leading-none">{myRow.actDelStps ?? "—"}</p>
+                {myRow.delStpsPlanned
+                  ? <p className="text-[11px] text-slate-400 mt-1">of {myRow.delStpsPlanned}</p>
+                  : <p className="text-[11px] text-slate-400 mt-1">&nbsp;</p>}
               </div>
             </div>
 
-            {/* Vscan vs delivered row */}
             {(myRow.vscanPkgs != null || myRow.actDelPkgs != null) && (
               <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-6 text-center">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loaded (Vscan)</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loaded</p>
                     <p className="text-[16px] font-extrabold text-slate-700">{myRow.vscanPkgs ?? "—"}</p>
                   </div>
                   <span className="text-slate-300 text-lg">→</span>
@@ -213,7 +330,7 @@ export default function ServiceTab({
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivered</p>
                     <p className="text-[16px] font-extrabold text-slate-700">{myRow.actDelPkgs ?? "—"}</p>
                   </div>
-                  {myRow.nonDelvdStps != null && myRow.nonDelvdStps > 0 && (
+                  {(myRow.nonDelvdStps ?? 0) > 0 && (
                     <>
                       <span className="text-slate-300 text-lg">·</span>
                       <div>
@@ -230,21 +347,16 @@ export default function ServiceTab({
                 )}
               </div>
             )}
-
-            {/* Date footer */}
-            <div className="px-5 py-2.5 border-t border-slate-100">
-              <p className="text-[11px] text-slate-400">{dateLabel}</p>
-            </div>
           </>
         ) : (
           <div className="px-5 py-5 text-center">
-            <p className="text-[13px] text-slate-400">Your route wasn&apos;t found in yesterday&apos;s data.</p>
+            <p className="text-[13px] text-slate-400">Your route wasn&apos;t found in today&apos;s data.</p>
             <p className="text-[11px] text-slate-300 mt-1">Make sure your Wayne Board profile is linked to your FedEx account.</p>
           </div>
         )}
       </div>
 
-      {/* Team list */}
+      {/* ── Team list ── */}
       <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-[15px] font-extrabold text-slate-900">Team Service</h2>
@@ -253,11 +365,11 @@ export default function ServiceTab({
 
         <div className="divide-y divide-slate-100">
           {sorted.map((row, i) => {
-            const impacts = ilsImpacts(row);
-            const svc     = serviceRate(row);
-            const tier    = ilsTier(impacts, row.ilsPct != null);
-            const ts      = tierStyles[tier];
-            const isMe    = row.driverId === myDriverId;
+            const impacts  = ilsImpacts(row);
+            const svc      = serviceRate(row);
+            const tier     = ilsTier(impacts, row.ilsPct != null);
+            const ts       = tierStyles[tier];
+            const isMe     = row.driverId === myDriverId;
             const initials = dswInitials(row.driverNameRaw);
 
             return (
@@ -265,38 +377,26 @@ export default function ServiceTab({
                 key={row.id}
                 className={`flex items-center gap-3 px-5 py-3.5 transition-colors ${ts.row} ${isMe ? "ring-1 ring-inset ring-blue-200" : ""}`}
               >
-                {/* Rank */}
                 <span className="text-[12px] font-bold text-slate-400 w-5 shrink-0 text-center">{i + 1}</span>
-
-                {/* Color dot */}
                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ts.dot}`} />
-
-                {/* Driver initials */}
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-[12px] font-extrabold ${
-                  isMe ? "text-white" : "text-slate-600 bg-slate-100"
-                }`}
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-[12px] font-extrabold ${
+                    isMe ? "text-white" : "text-slate-600 bg-slate-100"
+                  }`}
                   style={isMe ? { background: "linear-gradient(135deg, #4D148C, #7B2FC0)" } : {}}
                 >
                   {initials.replace(/\./g, "")}
                 </div>
-
-                {/* Route name */}
                 <div className="flex-1 min-w-0">
                   <p className={`text-[13px] font-bold truncate ${isMe ? "text-purple-800" : "text-slate-700"}`}>
                     {initials}{isMe ? " (You)" : ""}
                   </p>
                   <p className="text-[11px] text-slate-400 truncate">{row.waName || "—"}</p>
                 </div>
-
-                {/* Service rate */}
                 <div className="shrink-0">{svcBadge(svc)}</div>
-
-                {/* ILS */}
                 <div className="shrink-0 text-right min-w-[52px]">
                   <p className={`text-[13px] font-extrabold ${
-                    impacts === 0 ? "text-emerald-600"
-                    : impacts <= 3 ? "text-amber-500"
-                    : "text-red-500"
+                    impacts === 0 ? "text-emerald-600" : impacts <= 3 ? "text-amber-500" : "text-red-500"
                   }`}>{impacts} ILS</p>
                   <p className={`text-[10px] font-bold ${ts.badge.split(" ").slice(1).join(" ")}`}>{ts.label}</p>
                 </div>
@@ -309,7 +409,7 @@ export default function ServiceTab({
           <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" /><span className="text-[11px] text-slate-400">0 impacts</span></div>
           <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /><span className="text-[11px] text-slate-400">1–3 impacts</span></div>
           <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /><span className="text-[11px] text-slate-400">4+ impacts</span></div>
-          <span className="ml-auto text-[10px] text-slate-300">Names shown as initials only</span>
+          <span className="ml-auto text-[10px] text-slate-300">Initials only</span>
         </div>
       </div>
 

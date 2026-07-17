@@ -26,7 +26,7 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 const RATING_GOAL = 4.0;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -49,6 +49,7 @@ export default function DriverTabs({
   isAdmin?: boolean;
   driverName: string;
   dswRows: DswRow[];
+  myDswHistory: DswRow[];
 }) {
   const defaultTab = showRyde ? "score" : "schedule";
   const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
@@ -459,7 +460,7 @@ export default function DriverTabs({
 
       {/* Service tab */}
       {tab === "service" && (
-        <ServiceTab rows={dswRows} myDriverId={driverId} />
+        <ServiceTab rows={dswRows} myDriverId={driverId} myHistory={myDswHistory} />
       )}
 
       {/* Gate Codes tab */}

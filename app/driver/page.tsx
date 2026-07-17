@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays } from "@/lib/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
@@ -47,7 +47,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -65,6 +65,15 @@ export default async function DriverDashboard() {
     getMyMaintenanceRequests(session.driverId),
     db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
     db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60).catch(() => []),
+    // Last 14 days of DSW data for this specific driver (for streak calculation)
+    (() => {
+      const d14 = new Date(); d14.setDate(d14.getDate() - 14);
+      const since = d14.toISOString().slice(0, 10);
+      return db.select().from(dswRouteDays)
+        .where(and(eq(dswRouteDays.driverId, session.driverId), gte(dswRouteDays.date, since)))
+        .orderBy(desc(dswRouteDays.date))
+        .catch(() => []);
+    })(),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -179,6 +188,7 @@ export default async function DriverDashboard() {
           isAdmin={session.isAdmin}
           driverName={session.name}
           dswRows={dswRows as any}
+          myDswHistory={myDswHistory as any}
         />
       </div>
     </div>
