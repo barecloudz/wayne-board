@@ -70,7 +70,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/stop-overrides`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/report/packagedetail?routePlanId=${planId}`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/station/${STATION_ID}/planningWindowState`, { headers }).then(r => r.json()).catch(() => false),
-      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans/${planId}/vehicle-set`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans/${planId}/advanced-vehicle-set`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
     ]);
 
     const anchorAreas = anchorAreasRaw;
@@ -137,8 +137,8 @@ export async function syncDro(): Promise<DroSyncResult> {
     const routesToInsert: any[] = routes.length > 0
       ? routes
       : (Array.isArray(vehicleSet) ? vehicleSet : []).map((v: any) => ({
-          workAreaName:   v.vehicleName  ?? "",
-          workAreaNumber: String(v.vehicleOrder ?? v.vehicleId ?? ""),
+          workAreaName:   v.workAreaName ?? v.vehicleName ?? "",
+          workAreaNumber: v.workAreaNumber ?? String(v.vehicleOrder ?? ""),
           routeType:      v.routeType    ?? "REG",
           stops:          0,
           packages:       0,
