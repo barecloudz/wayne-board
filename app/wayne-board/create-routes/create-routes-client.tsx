@@ -129,6 +129,8 @@ type Step = "review" | "planning" | "plan" | "confirm" | "pushing" | "done";
 export default function CreateRoutesClient() {
   const [data, setData]           = useState<RouteData | null>(null);
   const [loading, setLoading]     = useState(true);
+  const [syncing, setSyncing]     = useState(false);
+  const [syncMsg, setSyncMsg]     = useState<{ ok: boolean; text: string } | null>(null);
   const [activeWorkAreas, setActiveWorkAreas] = useState<Set<string>>(new Set());
   const [step, setStep]           = useState<Step>("review");
   const [plan, setPlan]           = useState<PlanResult | null>(null);
@@ -151,6 +153,25 @@ export default function CreateRoutesClient() {
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res  = await fetch("/api/auto-dro/sync", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setSyncMsg({ ok: false, text: json.error ?? "Sync failed" });
+      } else {
+        setSyncMsg({ ok: true, text: `Synced — ${json.stops} stops, ${json.routes} routes` });
+        await load(); // refresh route data after sync
+      }
+    } catch (e: any) {
+      setSyncMsg({ ok: false, text: e?.message ?? "Sync failed" });
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const dateLabel = (() => {
     if (!data) return "";
@@ -239,18 +260,44 @@ export default function CreateRoutesClient() {
     <div className="max-w-4xl mx-auto px-4 py-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Create Routes</h1>
           <p className="text-sm text-slate-500 mt-0.5">{dateLabel}</p>
         </div>
-        <button
-          onClick={() => { setStep("review"); setPlan(null); setPlanError(""); load(); }}
-          className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setStep("review"); setPlan(null); setPlanError(""); load(); }}
+            disabled={loading || syncing}
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 disabled:opacity-40 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing || loading}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-xl transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing DRO…" : "Sync DRO"}
+          </button>
+        </div>
       </div>
+
+      {/* Sync result banner */}
+      {syncMsg && (
+        <div className={`flex items-center gap-3 rounded-xl px-4 py-3 mb-4 text-sm font-semibold ${
+          syncMsg.ok
+            ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+            : "bg-red-50 border border-red-200 text-red-700"
+        }`}>
+          {syncMsg.ok
+            ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            : <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />}
+          {syncMsg.text}
+          <button onClick={() => setSyncMsg(null)} className="ml-auto text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+      )}
 
       {/* Wizard progress bar */}
       {step !== "planning" && <WizardBar step={step} />}
