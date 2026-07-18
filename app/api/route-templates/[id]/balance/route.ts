@@ -82,6 +82,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id } = await params;
   const templateId = parseInt(id, 10);
   if (isNaN(templateId)) {
@@ -374,4 +375,9 @@ export async function GET(
     stddevBefore: parseFloat(stddevBefore.toFixed(1)),
     stddevAfter: parseFloat(stddevAfter.toFixed(1)),
   });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[balance]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

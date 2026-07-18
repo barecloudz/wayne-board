@@ -7,6 +7,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
   const { id } = await params;
   const templateId = parseInt(id, 10);
   if (isNaN(templateId)) {
@@ -72,6 +73,11 @@ export async function GET(
   const routes = Array.from(slotMap.values()).sort((a, b) => a.slot - b.slot);
 
   return NextResponse.json({ template, routes });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[areas GET]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 export async function PUT(
@@ -92,21 +98,27 @@ export async function PUT(
     return NextResponse.json({ error: "No areas provided" }, { status: 400 });
   }
 
-  const sql = neon(process.env.DATABASE_URL_POOLER ?? process.env.DATABASE_URL!);
+  try {
+    const sql = neon(process.env.DATABASE_URL_POOLER ?? process.env.DATABASE_URL!);
 
-  // Bulk update — one query per area (neon serverless doesn't support transactions easily)
-  await Promise.all(
-    areas.map((a) =>
-      sql`
-        UPDATE route_template_areas
-        SET
-          route_slot       = ${a.route_slot},
-          route_label      = ${a.route_label},
-          work_area_number = ${a.work_area_number}
-        WHERE id = ${a.id} AND template_id = ${templateId}
-      `
-    )
-  );
+    // Bulk update — one query per area (neon serverless doesn't support transactions easily)
+    await Promise.all(
+      areas.map((a) =>
+        sql`
+          UPDATE route_template_areas
+          SET
+            route_slot       = ${a.route_slot},
+            route_label      = ${a.route_label},
+            work_area_number = ${a.work_area_number}
+          WHERE id = ${a.id} AND template_id = ${templateId}
+        `
+      )
+    );
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[areas PUT]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }

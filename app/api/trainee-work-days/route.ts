@@ -23,38 +23,44 @@ function weekDates(monday: string): string[] {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const weekParam = searchParams.get("weekStart");
+  try {
+    const { searchParams } = new URL(req.url);
+    const weekParam = searchParams.get("weekStart");
 
-  // Default to current week's Monday
-  const today = new Date().toISOString().slice(0, 10);
-  const monday = weekParam ? weekMonday(weekParam) : weekMonday(today);
-  const sunday = weekDates(monday)[6];
+    // Default to current week's Monday
+    const today = new Date().toISOString().slice(0, 10);
+    const monday = weekParam ? weekMonday(weekParam) : weekMonday(today);
+    const sunday = weekDates(monday)[6];
 
-  // All active trainees
-  const allTrainees = await db
-    .select({ driverId: drivers.driverId, name: drivers.name })
-    .from(drivers)
-    .where(and(eq(drivers.active, true), eq(drivers.isTrainee, true)))
-    .orderBy(drivers.name);
+    // All active trainees
+    const allTrainees = await db
+      .select({ driverId: drivers.driverId, name: drivers.name })
+      .from(drivers)
+      .where(and(eq(drivers.active, true), eq(drivers.isTrainee, true)))
+      .orderBy(drivers.name);
 
-  // Work days in this week
-  const workDays = await db
-    .select({ driverId: traineeWorkDays.driverId, date: traineeWorkDays.date })
-    .from(traineeWorkDays)
-    .where(and(gte(traineeWorkDays.date, monday), lte(traineeWorkDays.date, sunday)));
+    // Work days in this week
+    const workDays = await db
+      .select({ driverId: traineeWorkDays.driverId, date: traineeWorkDays.date })
+      .from(traineeWorkDays)
+      .where(and(gte(traineeWorkDays.date, monday), lte(traineeWorkDays.date, sunday)));
 
-  // Build per-trainee lookup
-  const byDriver: Record<string, Set<string>> = {};
-  for (const { driverId, date } of workDays) {
-    if (!byDriver[driverId]) byDriver[driverId] = new Set();
-    byDriver[driverId].add(date);
+    // Build per-trainee lookup
+    const byDriver: Record<string, Set<string>> = {};
+    for (const { driverId, date } of workDays) {
+      if (!byDriver[driverId]) byDriver[driverId] = new Set();
+      byDriver[driverId].add(date);
+    }
+
+    const trainees = allTrainees.map((t) => {
+      const days = byDriver[t.driverId] ? [...byDriver[t.driverId]].sort() : [];
+      return { driverId: t.driverId, name: t.name, days, total: days.length };
+    });
+
+    return NextResponse.json({ weekStart: monday, dates: weekDates(monday), trainees });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[trainee-work-days]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
-
-  const trainees = allTrainees.map((t) => {
-    const days = byDriver[t.driverId] ? [...byDriver[t.driverId]].sort() : [];
-    return { driverId: t.driverId, name: t.name, days, total: days.length };
-  });
-
-  return NextResponse.json({ weekStart: monday, dates: weekDates(monday), trainees });
 }
