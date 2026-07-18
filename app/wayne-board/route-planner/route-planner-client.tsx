@@ -80,6 +80,7 @@ type BalanceResult = {
   proposals: BalanceProposal[];
   stddevBefore: number;
   stddevAfter: number;
+  areaStops?: Record<string, number>;
 };
 
 // ── Toast helpers ─────────────────────────────────────────────────────────────
@@ -128,6 +129,7 @@ export default function RoutePlannerClient({
   const [balancePanelOpen, setBalancePanelOpen] = useState(true);
   const [acceptedProposals, setAcceptedProposals] = useState<Set<number>>(new Set());
   const [rejectedProposals, setRejectedProposals] = useState<Set<number>>(new Set());
+  const [areaStops, setAreaStops] = useState<Record<string, number> | undefined>(undefined);
 
   // ── Fetch template areas ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -135,6 +137,7 @@ export default function RoutePlannerClient({
     setLoading(true);
     setChanges(new Map());
     setBalanceResult(null);
+    setAreaStops(undefined);
     setAcceptedProposals(new Set());
     setRejectedProposals(new Set());
 
@@ -145,6 +148,14 @@ export default function RoutePlannerClient({
       })
       .catch(() => addToast("Failed to load template areas", "error"))
       .finally(() => setLoading(false));
+
+    // Silently fetch balance data to populate areaStops for map tooltips
+    fetch(`/api/route-templates/${selectedTemplateId}/balance`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.areaStops) setAreaStops(data.areaStops as Record<string, number>);
+      })
+      .catch(() => { /* silent — areaStops just won't show */ });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplateId]);
 
@@ -289,6 +300,7 @@ export default function RoutePlannerClient({
       if (!res.ok) throw new Error("Balance request failed");
       const data: BalanceResult = await res.json();
       setBalanceResult(data);
+      if (data.areaStops) setAreaStops(data.areaStops);
       setBalancePanelOpen(true);
       if (data.proposals.length === 0) {
         addToast("Routes are already balanced — no swaps needed", "info");
@@ -692,6 +704,7 @@ export default function RoutePlannerClient({
             onReassign={handleReassign}
             highlightedAreas={highlightedAreas}
             proposalMap={proposalMap}
+            areaStops={areaStops}
           />
         )}
       </div>

@@ -369,11 +369,23 @@ export async function GET(
       ? Math.sqrt(valsAfter.reduce((s, v) => s + (v - meanAfter) ** 2, 0) / valsAfter.length)
       : 0;
 
+  // Build areaStops: anchorAreaName → estimatedStops (routeAvgStops / routeAreaCount, 1 decimal)
+  const areaStops: Record<string, number> = {};
+  for (const route of Object.values(routes)) {
+    if (route.avgStops != null && route.areas.length > 0) {
+      const est = parseFloat((route.avgStops / route.areas.length).toFixed(1));
+      for (const area of route.areas) {
+        areaStops[area.name] = est;
+      }
+    }
+  }
+
   return NextResponse.json({
     routesBefore,
     proposals,
     stddevBefore: parseFloat(stddevBefore.toFixed(1)),
     stddevAfter: parseFloat(stddevAfter.toFixed(1)),
+    areaStops,
   });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

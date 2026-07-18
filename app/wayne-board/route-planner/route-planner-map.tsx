@@ -71,6 +71,7 @@ type Props = {
   ) => void;
   highlightedAreas?: Set<string>;
   proposalMap?: Map<string, { from: string; to: string }>;
+  areaStops?: Record<string, number>;
 };
 
 // ── Parsed polygon shape ───────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ function parseAreaPolygons(areas: MapArea[]): ParsedPoly[] {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function RoutePlannerMap({ areas, routes, onReassign, highlightedAreas, proposalMap }: Props) {
+export default function RoutePlannerMap({ areas, routes, onReassign, highlightedAreas, proposalMap, areaStops }: Props) {
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
   const [moveToSlot, setMoveToSlot] = useState<string>("");
 
@@ -201,7 +202,12 @@ export default function RoutePlannerMap({ areas, routes, onReassign, highlighted
                     Proposed: move to {proposal.to}
                   </span>
                 ) : (
-                  <span className="text-[10px] text-slate-500">{poly.route_label}</span>
+                  <span className="text-[10px] text-slate-500">
+                    {poly.route_label}
+                    {areaStops?.[poly.name] != null && (
+                      <> · ~{areaStops[poly.name]} stops/day</>
+                    )}
+                  </span>
                 )}
               </Tooltip>
             </Polygon>

@@ -18,6 +18,7 @@ export const maxDuration = 180; // 3 minutes for Netlify
 
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { saveDroSession } from "@/lib/dro-session";
 
 const DRO_BASE   = "https://dro.routesmart.com";
 const SA_ID      = "3060743";
@@ -107,6 +108,11 @@ export async function POST(request: Request) {
         hint: "Run 'node scripts/push-dro-routes.mjs' locally instead",
       }, { status: 503 });
     }
+
+    // Persist cookie for cron reuse
+    await saveDroSession(cookieHeader).catch((e) =>
+      console.warn("[push-routes] Failed to save DRO session cookie:", e)
+    );
 
     const headers = { Cookie: cookieHeader, "Content-Type": "application/json" };
 

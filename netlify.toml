@@ -16,3 +16,7 @@
 # 5:30 AM ET — assign drivers to their routes in GroundCloud
 [functions."cron-assign-gc-drivers"]
   schedule = "30 9 * * *"
+
+# 2:00 AM ET — push default route template to DRO and trigger solve
+[functions."cron-push-dro-routes"]
+  schedule = "0 6 * * *"
