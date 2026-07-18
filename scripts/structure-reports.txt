@@ -1,0 +1,39 @@
+<body class="dashboard">
+  <div id="wrapper" class="toggled">
+    <div id="sidebar-wrapper">
+      <nav class="sidebar-nav">
+        <div class="logo">
+          <a class="img-responsive">
+            <img>
+        <div id="nav-toggleable-sm" class="collapse nav-toggleable-sm">
+          <form class="sidebar-form">
+            <input class="form-control">
+            <button class="btn-link">
+          <ul class="nav nav-pills nav-stacked">
+            <div id="sidebar_viewapp">
+          <hr class="visible-xs m-t d-none mt-16">
+    <div id="page-content-wrapper">
+      <div class="container-fluid content d-table">
+        <div class="topbar legacy">
+          <div class="dashhead">
+            <button class="nav-toggler nav-toggler-md sidebar-toggler">
+            <div class="dashhead-titles">
+        <div class="main-content">
+          <div class="row">
+            <div class="col-12">
+          <div class="row mt-3">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+            <div class="col-md-6">
+  <div id="viewnotify">
+    <div id="flash-alert">
+  <button id="_pendo-badge_33XGJ_tOvyywzOG5yYgMjXvBTm8" class="_pendo-badge _pendo-resource-center-badge-container _pendo-badge_">
+    <img id="pendo-image-badge-c69a8423" class="_pendo-image _pendo-badge-image _pendo-resource-center-badge-image">
+    <div class="pendo-resource-center-badge-notification-bubble">
+      <div class="pendo-notification-bubble-unread-count">4

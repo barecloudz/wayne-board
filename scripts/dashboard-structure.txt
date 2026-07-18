@@ -1,0 +1,18 @@
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col mt-24">
+        <img class="mb-16">
+        <div class="card">
+          <div class="card-header lead">Page not found
+          <div class="pt-3 card-body">
+            <p>
+  <script>try {
+      window.initSentryVue()
+    }
+  <style>#flash-alert-wrapper {
+  position:fixed;
+  <script id="flash-alert-template"><div id="flash-alert">
+    <div id="flas
+  <script>var FlashAlertEvents = new Vue({})
+Vue.c

@@ -1,0 +1,1002 @@
+[
+  {
+    "tag": "STYLE",
+    "class": "",
+    "id": "",
+    "text": ".gm-style img{max-width: none;}.gm-style {font: 400 11px Roboto, Arial, sans-serif; text-decoration: none;}",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "STYLE",
+    "class": "vjs-styles-defaults",
+    "id": "",
+    "text": ".video-js {\n        width: 300px;\n        height: 150px;\n      }\n\n      .vjs-fluid:not(.vjs-audio-only-mode) {\n        padding-top: 56.25%\n      }",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TITLE",
+    "class": "",
+    "id": "",
+    "text": "GroundCloud Web Dashboard | Jul 2, 2026",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SCRIPT",
+    "class": "",
+    "id": "gc-sentry-user",
+    "text": "{\"id\": 768107, \"username\": \"Blake742Logistics\"}",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SCRIPT",
+    "class": "",
+    "id": "gc-sentry-tags",
+    "text": "{\"customer.id\": 439, \"customer.name\": \"742 Logistics Inc\"}",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "NOSCRIPT",
+    "class": "",
+    "id": "",
+    "text": "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&display=swap\">",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__completed_tests",
+    "id": "",
+    "text": "Completed Tests",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "A",
+    "class": "nav-link",
+    "id": "",
+    "text": "Completed Tests",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "dashboard-heading border-bottom ps-3 w-100 d-inline-flex justify-content-between",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD\nJul 2, 2026",
+    "rect": {
+      "top": 0,
+      "left": 250
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "feature-status alert alert-danger mb-3",
+    "id": "",
+    "text": "All device events have coaching marked complete Details",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "d-flex align-items-center pt-1 flex-column flex-lg-row",
+    "id": "",
+    "text": "All device events have coaching marked complete Details",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "LABEL",
+    "class": "feature-status__summary mb-0 font-weight-bold",
+    "id": "",
+    "text": "All device events have coaching marked complete",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "198C38B6-7C0E-4849-8530-7E0C3BB33DC9",
+    "text": "←Move left→Move right↑Move up↓Move down+Zoom in-Zoom outHomeJump left by 75%EndJump right by 75%Page UpJump up by 75%Page DownJump down by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "LGLeeN-keyboard-shortcuts-view",
+    "id": "",
+    "text": "←Move left→Move right↑Move up↓Move down+Zoom in-Zoom outHomeJump left by 75%EndJump right by 75%Page UpJump up by 75%Page DownJump down by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TABLE",
+    "class": "",
+    "id": "",
+    "text": "←Move left→Move right↑Move up↓Move down+Zoom in-Zoom outHomeJump left by 75%EndJump right by 75%Page UpJump up by 75%Page DownJump down by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TR",
+    "class": "",
+    "id": "",
+    "text": "HomeJump left by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TD",
+    "class": "",
+    "id": "",
+    "text": "Jump left by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TR",
+    "class": "",
+    "id": "",
+    "text": "EndJump right by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TD",
+    "class": "",
+    "id": "",
+    "text": "Jump right by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TR",
+    "class": "",
+    "id": "",
+    "text": "Page UpJump up by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TD",
+    "class": "",
+    "id": "",
+    "text": "Jump up by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TR",
+    "class": "",
+    "id": "",
+    "text": "Page DownJump down by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TD",
+    "class": "",
+    "id": "",
+    "text": "Jump down by 75%",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "gmnoscreen",
+    "id": "",
+    "text": "Map data ©2026 Google",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "Map data ©2026 Google",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "BUTTON",
+    "class": "gm-style-cc",
+    "id": "",
+    "text": "2 km Click to toggle between metric and imperial units",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "2 km",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "",
+    "id": "",
+    "text": "2 km",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-0",
+    "id": "",
+    "text": "0 / 0 Drivers Assigned",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__drivers-assigned",
+    "id": "",
+    "text": "0 / 0 Drivers Assigned",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0 / 0 Drivers Assigned",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "H3",
+    "class": "mb-0 text-nowrap",
+    "id": "",
+    "text": "0 / 0",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-3",
+    "id": "",
+    "text": "0 / 0 Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__impacts_and_exceptions",
+    "id": "",
+    "text": "0 / 0 Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0 / 0 Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "H3",
+    "class": "mb-0",
+    "id": "",
+    "text": "0 / 0",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-1",
+    "id": "",
+    "text": "0/0(0 left)Stops (0/Hour)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__stops",
+    "id": "",
+    "text": "0/0(0 left)Stops (0/Hour)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0/0(0 left)Stops (0/Hour)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "gc-overview-progress-bar",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "overview-progress-text d-flex justify-content-between flex-wrap",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "me-1",
+    "id": "",
+    "text": "0/0",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "text-nowrap",
+    "id": "",
+    "text": "(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "row text-nowrap",
+    "id": "",
+    "text": "Stops (0/Hour)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col-xl-4",
+    "id": "",
+    "text": "Stops",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col-xl-8 text-xl-right",
+    "id": "",
+    "text": "(0/Hour)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-2",
+    "id": "",
+    "text": "0/0(0 left) Packages",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__packages",
+    "id": "",
+    "text": "0/0(0 left) Packages",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0/0(0 left) Packages",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "gc-overview-progress-bar",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "overview-progress-text d-flex justify-content-between flex-wrap",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "me-1",
+    "id": "",
+    "text": "0/0",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "text-nowrap",
+    "id": "",
+    "text": "(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-4",
+    "id": "",
+    "text": "0h 0m Drive Time",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__drive-time",
+    "id": "",
+    "text": "0h 0m Drive Time",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0h 0m Drive Time",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "H3",
+    "class": "mb-0",
+    "id": "",
+    "text": "0h 0m",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col order-md-5",
+    "id": "",
+    "text": "0/0(0 left) Act / Est Miles",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card h-100 route-list-totals-bar-card__miles",
+    "id": "",
+    "text": "0/0(0 left) Act / Est Miles",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-2",
+    "id": "",
+    "text": "0/0(0 left) Act / Est Miles",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "gc-overview-progress-bar",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "overview-progress-text d-flex justify-content-between flex-wrap",
+    "id": "",
+    "text": "0/0(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "me-1",
+    "id": "",
+    "text": "0/0",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "text-nowrap",
+    "id": "",
+    "text": "(0 left)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "table-responsive mt-3",
+    "id": "",
+    "text": "NameDriverVehicleStops TCs Stops with Time Commits (Deliveries / Pickups)Packages Imps/Excs Impacts / ExceptionsStops/HourAct/Est MilesEst Drive",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TABLE",
+    "class": "route-table table",
+    "id": "",
+    "text": "NameDriverVehicleStops TCs Stops with Time Commits (Deliveries / Pickups)Packages Imps/Excs Impacts / ExceptionsStops/HourAct/Est MilesEst Drive",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "THEAD",
+    "class": "",
+    "id": "",
+    "text": "NameDriverVehicleStops TCs Stops with Time Commits (Deliveries / Pickups)Packages Imps/Excs Impacts / ExceptionsStops/HourAct/Est MilesEst Drive",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TH",
+    "class": "",
+    "id": "",
+    "text": "Stops",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TH",
+    "class": "",
+    "id": "",
+    "text": "TCs Stops with Time Commits (Deliveries / Pickups)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "",
+    "id": "",
+    "text": "Stops with Time Commits (Deliveries / Pickups)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "tooltip b-tooltip fade bs-tooltip-bottom",
+    "id": "BootstrapVueNext__ID__v-0__popover___",
+    "text": "Stops with Time Commits (Deliveries / Pickups)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "overflow-auto",
+    "id": "",
+    "text": "Stops with Time Commits (Deliveries / Pickups)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "position-sticky top-0 tooltip-inner",
+    "id": "",
+    "text": "Stops with Time Commits (Deliveries / Pickups)",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TH",
+    "class": "",
+    "id": "",
+    "text": "Packages",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TH",
+    "class": "",
+    "id": "",
+    "text": "Imps/Excs Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "",
+    "id": "",
+    "text": "Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "tooltip b-tooltip fade bs-tooltip-bottom",
+    "id": "BootstrapVueNext__ID__v-0__popover___",
+    "text": "Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "overflow-auto",
+    "id": "",
+    "text": "Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "position-sticky top-0 tooltip-inner",
+    "id": "",
+    "text": "Impacts / Exceptions",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "TH",
+    "class": "",
+    "id": "",
+    "text": "Stops/Hour",
+    "rect": {
+      "top": 0,
+      "left": 0
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": " pendo-resource-center-badge-notification-bubble",
+    "id": "",
+    "text": "4",
+    "rect": {
+      "top": 7,
+      "left": 1277
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "dashboard-titles mt-2",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD\nJul 2, 2026",
+    "rect": {
+      "top": 8,
+      "left": 266
+    }
+  },
+  {
+    "tag": "H6",
+    "class": "dashboard-subtitle text-light text-uppercase mb-2",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD",
+    "rect": {
+      "top": 8,
+      "left": 266
+    }
+  },
+  {
+    "tag": "BUTTON",
+    "class": "_pendo-badge _pendo-resource-center-badge-container _pendo-badge_",
+    "id": "_pendo-badge_33XGJ_tOvyywzOG5yYgMjXvBTm8",
+    "text": "4",
+    "rect": {
+      "top": 10,
+      "left": 1290
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": " pendo-notification-bubble-unread-count",
+    "id": "",
+    "text": "4",
+    "rect": {
+      "top": 20,
+      "left": 1287
+    }
+  },
+  {
+    "tag": "H2",
+    "class": "dashboard-title",
+    "id": "dashboardTitle",
+    "text": "Jul 2, 2026",
+    "rect": {
+      "top": 29,
+      "left": 266
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "row mt-3",
+    "id": "",
+    "text": "All Terminals\nDrivers View fleet map\nMap\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 110,
+      "left": 250
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "col-sm-12",
+    "id": "",
+    "text": "Drivers View fleet map\nMap\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 153,
+      "left": 250
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card",
+    "id": "",
+    "text": "Map\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 174,
+      "left": 262
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "card-body p-0",
+    "id": "",
+    "text": "Map\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 175,
+      "left": 263
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "w-100",
+    "id": "fleet-map",
+    "text": "Map\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 175,
+      "left": 263
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "fleet-map-pane",
+    "text": "Map\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 175,
+      "left": 263
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "Map\nSatellite\nKeyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 175,
+      "left": 263
+    }
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "Keyboard shortcuts\nMap data ©2026 Google\nTerms\nReport a map error",
+    "rect": {
+      "top": 175,
+      "left": 263
+    }
+  },
+  {
+    "tag": "LI",
+    "class": "",
+    "id": "",
+    "text": "Routes",
+    "rect": {
+      "top": 377,
+      "left": 0
+    }
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__routes",
+    "id": "",
+    "text": "Routes",
+    "rect": {
+      "top": 377,
+      "left": 0
+    }
+  }
+]

@@ -1,0 +1,164 @@
+[
+  {
+    "tag": "TITLE",
+    "class": "",
+    "id": "",
+    "text": "GroundCloud Web Dashboard | Routes"
+  },
+  {
+    "tag": "LI",
+    "class": "",
+    "id": "",
+    "text": "Routes"
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__routes",
+    "id": "",
+    "text": "Routes"
+  },
+  {
+    "tag": "A",
+    "class": "nav-link active",
+    "id": "",
+    "text": "Routes"
+  },
+  {
+    "tag": "LI",
+    "class": "",
+    "id": "",
+    "text": "Package Search"
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__package_search",
+    "id": "",
+    "text": "Package Search"
+  },
+  {
+    "tag": "A",
+    "class": "nav-link",
+    "id": "",
+    "text": "Package Search"
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__completed_tests",
+    "id": "",
+    "text": "Completed Tests"
+  },
+  {
+    "tag": "A",
+    "class": "nav-link",
+    "id": "",
+    "text": "Completed Tests"
+  },
+  {
+    "tag": "LI",
+    "class": "",
+    "id": "",
+    "text": "ACCOUNT"
+  },
+  {
+    "tag": "DIV",
+    "class": "",
+    "id": "",
+    "text": "ACCOUNT"
+  },
+  {
+    "tag": "DIV",
+    "class": "nav-header nav-header__account",
+    "id": "",
+    "text": "ACCOUNT"
+  },
+  {
+    "tag": "SPAN",
+    "class": "nav-item nav-item__your_account",
+    "id": "",
+    "text": "Your Account"
+  },
+  {
+    "tag": "A",
+    "class": "nav-link",
+    "id": "",
+    "text": "Your Account"
+  },
+  {
+    "tag": "DIV",
+    "class": "topbar legacy",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD\nRoutes"
+  },
+  {
+    "tag": "DIV",
+    "class": "dashhead",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD\nRoutes"
+  },
+  {
+    "tag": "DIV",
+    "class": "dashhead-titles",
+    "id": "",
+    "text": "742 LOGISTICS INC'S GROUNDCLOUD\nRoutes"
+  },
+  {
+    "tag": "H2",
+    "class": "dashhead-title",
+    "id": "",
+    "text": "Routes"
+  },
+  {
+    "tag": "DIV",
+    "class": "row",
+    "id": "",
+    "text": "Go\nOnly Active Routes\n Stop Search Configure FedEx Route Sync Add Route"
+  },
+  {
+    "tag": "DIV",
+    "class": "col col-12 col-lg-auto mb-2 align-items-center",
+    "id": "",
+    "text": "Only Active Routes"
+  },
+  {
+    "tag": "DIV",
+    "class": "route-list__only-active-routes-checkbox mr-3 d-inline custom-control custom-switch b-custom-control-lg",
+    "id": "",
+    "text": "Only Active Routes"
+  },
+  {
+    "tag": "LABEL",
+    "class": "custom-control-label",
+    "id": "",
+    "text": "Only Active Routes"
+  },
+  {
+    "tag": "SPAN",
+    "class": "badge badge-primary",
+    "id": "",
+    "text": "Only Active Routes"
+  },
+  {
+    "tag": "DIV",
+    "class": "col col-12 col-lg-auto ml-auto",
+    "id": "",
+    "text": "Stop Search Configure FedEx Route Sync Add Route"
+  },
+  {
+    "tag": "A",
+    "class": "btn route-list__stop-search-btn mb-2 mr-4 btn-gc-legacy-success",
+    "id": "",
+    "text": "Stop Search"
+  },
+  {
+    "tag": "A",
+    "class": "btn route-list__configure-fedex-route-sync-btn mb-2 mr-4 btn-gc-legacy-success",
+    "id": "",
+    "text": "Configure FedEx Route Sync"
+  },
+  {
+    "tag": "A",
+    "class": "btn route-list__add-route-btn mb-2 btn-gc-legacy-success",
+    "id": "",
+    "text": "Add Route"
+  }
+]

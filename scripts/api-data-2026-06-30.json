@@ -1,0 +1,1476 @@
+{
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 71759592743,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 1,
+      "value": "319686.37000"
+    },
+    {
+      "id": 71759588209,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 100,
+      "value": "87.00000"
+    },
+    {
+      "id": 71759588210,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71759588214,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 120,
+      "value": "3.00000"
+    },
+    {
+      "id": 71759588215,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 121,
+      "value": "5.00000"
+    },
+    {
+      "id": 71759588216,
+      "route_day": 88428082,
+      "source": 1,
+      "stat_type": 200,
+      "value": "113.00000"
+    },
+    {
+      "id": 71759588222,
+      "route_day": 88428082,
+      "source": 2,
+      "stat_type": 103,
+      "value": "87.00000"
+    },
+    {
+      "id": 71759588230,
+      "route_day": 88428082,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71759588231,
+      "route_day": 88428082,
+      "source": 2,
+      "stat_type": 203,
+      "value": "112.00000"
+    },
+    {
+      "id": 71759588237,
+      "route_day": 88428082,
+      "source": 3,
+      "stat_type": 103,
+      "value": "87.00000"
+    },
+    {
+      "id": 71759977615,
+      "route_day": 88428082,
+      "source": 3,
+      "stat_type": 150,
+      "value": "14.54579"
+    },
+    {
+      "id": 71759588247,
+      "route_day": 88428082,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71759588248,
+      "route_day": 88428082,
+      "source": 3,
+      "stat_type": 203,
+      "value": "112.00000"
+    },
+    {
+      "id": 71759588249,
+      "route_day": 88428082,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71759095340,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 1,
+      "value": "97014.26000"
+    },
+    {
+      "id": 71758249084,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 100,
+      "value": "100.00000"
+    },
+    {
+      "id": 71758249085,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758249089,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 120,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758249090,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 121,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758249091,
+      "route_day": 88398739,
+      "source": 1,
+      "stat_type": 200,
+      "value": "122.00000"
+    },
+    {
+      "id": 71758249097,
+      "route_day": 88398739,
+      "source": 2,
+      "stat_type": 103,
+      "value": "99.00000"
+    },
+    {
+      "id": 71758249105,
+      "route_day": 88398739,
+      "source": 2,
+      "stat_type": 202,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758249106,
+      "route_day": 88398739,
+      "source": 2,
+      "stat_type": 203,
+      "value": "121.00000"
+    },
+    {
+      "id": 71758249112,
+      "route_day": 88398739,
+      "source": 3,
+      "stat_type": 103,
+      "value": "99.00000"
+    },
+    {
+      "id": 71759737941,
+      "route_day": 88398739,
+      "source": 3,
+      "stat_type": 150,
+      "value": "18.39199"
+    },
+    {
+      "id": 71758249122,
+      "route_day": 88398739,
+      "source": 3,
+      "stat_type": 202,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758249123,
+      "route_day": 88398739,
+      "source": 3,
+      "stat_type": 203,
+      "value": "121.00000"
+    },
+    {
+      "id": 71758249124,
+      "route_day": 88398739,
+      "source": 3,
+      "stat_type": 205,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758881075,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 1,
+      "value": "179617.23000"
+    },
+    {
+      "id": 71758014569,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 100,
+      "value": "106.00000"
+    },
+    {
+      "id": 71758014570,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014575,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 120,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758014576,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014577,
+      "route_day": 88393633,
+      "source": 1,
+      "stat_type": 200,
+      "value": "147.00000"
+    },
+    {
+      "id": 71758014583,
+      "route_day": 88393633,
+      "source": 2,
+      "stat_type": 103,
+      "value": "64.00000"
+    },
+    {
+      "id": 71758014596,
+      "route_day": 88393633,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014598,
+      "route_day": 88393633,
+      "source": 2,
+      "stat_type": 203,
+      "value": "97.00000"
+    },
+    {
+      "id": 71758014610,
+      "route_day": 88393633,
+      "source": 3,
+      "stat_type": 103,
+      "value": "106.00000"
+    },
+    {
+      "id": 71759977316,
+      "route_day": 88393633,
+      "source": 3,
+      "stat_type": 150,
+      "value": "15.40003"
+    },
+    {
+      "id": 71758014629,
+      "route_day": 88393633,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014631,
+      "route_day": 88393633,
+      "source": 3,
+      "stat_type": 203,
+      "value": "147.00000"
+    },
+    {
+      "id": 71758014633,
+      "route_day": 88393633,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758827707,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 1,
+      "value": "200318.95000"
+    },
+    {
+      "id": 71758014636,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 100,
+      "value": "109.00000"
+    },
+    {
+      "id": 71758014639,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014650,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014653,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 121,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014656,
+      "route_day": 88393632,
+      "source": 1,
+      "stat_type": 200,
+      "value": "133.00000"
+    },
+    {
+      "id": 71758014681,
+      "route_day": 88393632,
+      "source": 2,
+      "stat_type": 103,
+      "value": "86.00000"
+    },
+    {
+      "id": 71758014711,
+      "route_day": 88393632,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014715,
+      "route_day": 88393632,
+      "source": 2,
+      "stat_type": 203,
+      "value": "100.00000"
+    },
+    {
+      "id": 71758014739,
+      "route_day": 88393632,
+      "source": 3,
+      "stat_type": 103,
+      "value": "109.00000"
+    },
+    {
+      "id": 71759991033,
+      "route_day": 88393632,
+      "source": 3,
+      "stat_type": 150,
+      "value": "19.72771"
+    },
+    {
+      "id": 71758014789,
+      "route_day": 88393632,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014793,
+      "route_day": 88393632,
+      "source": 3,
+      "stat_type": 203,
+      "value": "133.00000"
+    },
+    {
+      "id": 71758014800,
+      "route_day": 88393632,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758750488,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 1,
+      "value": "111422.62000"
+    },
+    {
+      "id": 71758016121,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 100,
+      "value": "94.00000"
+    },
+    {
+      "id": 71758016125,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758016140,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758016145,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758016149,
+      "route_day": 88393630,
+      "source": 1,
+      "stat_type": 200,
+      "value": "147.00000"
+    },
+    {
+      "id": 71758016172,
+      "route_day": 88393630,
+      "source": 2,
+      "stat_type": 103,
+      "value": "76.00000"
+    },
+    {
+      "id": 71758016212,
+      "route_day": 88393630,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758016217,
+      "route_day": 88393630,
+      "source": 2,
+      "stat_type": 203,
+      "value": "124.00000"
+    },
+    {
+      "id": 71758016247,
+      "route_day": 88393630,
+      "source": 3,
+      "stat_type": 103,
+      "value": "93.00000"
+    },
+    {
+      "id": 71760023795,
+      "route_day": 88393630,
+      "source": 3,
+      "stat_type": 150,
+      "value": "10.84887"
+    },
+    {
+      "id": 71758016296,
+      "route_day": 88393630,
+      "source": 3,
+      "stat_type": 202,
+      "value": "21.00000"
+    },
+    {
+      "id": 71758016299,
+      "route_day": 88393630,
+      "source": 3,
+      "stat_type": 203,
+      "value": "146.00000"
+    },
+    {
+      "id": 71758016302,
+      "route_day": 88393630,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758699226,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 1,
+      "value": "115879.32000"
+    },
+    {
+      "id": 71758014822,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 100,
+      "value": "97.00000"
+    },
+    {
+      "id": 71758014829,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014853,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 120,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014859,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014863,
+      "route_day": 88393629,
+      "source": 1,
+      "stat_type": 200,
+      "value": "107.00000"
+    },
+    {
+      "id": 71758014890,
+      "route_day": 88393629,
+      "source": 2,
+      "stat_type": 103,
+      "value": "96.00000"
+    },
+    {
+      "id": 71758014926,
+      "route_day": 88393629,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014932,
+      "route_day": 88393629,
+      "source": 2,
+      "stat_type": 203,
+      "value": "104.00000"
+    },
+    {
+      "id": 71758014954,
+      "route_day": 88393629,
+      "source": 3,
+      "stat_type": 103,
+      "value": "97.00000"
+    },
+    {
+      "id": 71759959121,
+      "route_day": 88393629,
+      "source": 3,
+      "stat_type": 150,
+      "value": "19.30135"
+    },
+    {
+      "id": 71758014997,
+      "route_day": 88393629,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758015001,
+      "route_day": 88393629,
+      "source": 3,
+      "stat_type": 203,
+      "value": "107.00000"
+    },
+    {
+      "id": 71758015005,
+      "route_day": 88393629,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758604892,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 1,
+      "value": "212408.64000"
+    },
+    {
+      "id": 71758014422,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 100,
+      "value": "77.00000"
+    },
+    {
+      "id": 71758014424,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014432,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014433,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014435,
+      "route_day": 88393627,
+      "source": 1,
+      "stat_type": 200,
+      "value": "92.00000"
+    },
+    {
+      "id": 71758014445,
+      "route_day": 88393627,
+      "source": 2,
+      "stat_type": 103,
+      "value": "77.00000"
+    },
+    {
+      "id": 71758014453,
+      "route_day": 88393627,
+      "source": 2,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014454,
+      "route_day": 88393627,
+      "source": 2,
+      "stat_type": 203,
+      "value": "92.00000"
+    },
+    {
+      "id": 71758014460,
+      "route_day": 88393627,
+      "source": 3,
+      "stat_type": 103,
+      "value": "77.00000"
+    },
+    {
+      "id": 71759882235,
+      "route_day": 88393627,
+      "source": 3,
+      "stat_type": 150,
+      "value": "10.45288"
+    },
+    {
+      "id": 71758014470,
+      "route_day": 88393627,
+      "source": 3,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014471,
+      "route_day": 88393627,
+      "source": 3,
+      "stat_type": 203,
+      "value": "92.00000"
+    },
+    {
+      "id": 71758014473,
+      "route_day": 88393627,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758522251,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 1,
+      "value": "218319.71000"
+    },
+    {
+      "id": 71758014373,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 100,
+      "value": "105.00000"
+    },
+    {
+      "id": 71758014375,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014383,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 120,
+      "value": "5.00000"
+    },
+    {
+      "id": 71758014385,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014387,
+      "route_day": 88393625,
+      "source": 1,
+      "stat_type": 200,
+      "value": "126.00000"
+    },
+    {
+      "id": 71758014399,
+      "route_day": 88393625,
+      "source": 2,
+      "stat_type": 103,
+      "value": "104.00000"
+    },
+    {
+      "id": 71758014408,
+      "route_day": 88393625,
+      "source": 2,
+      "stat_type": 202,
+      "value": "8.00000"
+    },
+    {
+      "id": 71758014409,
+      "route_day": 88393625,
+      "source": 2,
+      "stat_type": 203,
+      "value": "126.00000"
+    },
+    {
+      "id": 71758014415,
+      "route_day": 88393625,
+      "source": 3,
+      "stat_type": 103,
+      "value": "105.00000"
+    },
+    {
+      "id": 71759792284,
+      "route_day": 88393625,
+      "source": 3,
+      "stat_type": 150,
+      "value": "12.32635"
+    },
+    {
+      "id": 71758014429,
+      "route_day": 88393625,
+      "source": 3,
+      "stat_type": 202,
+      "value": "8.00000"
+    },
+    {
+      "id": 71758014431,
+      "route_day": 88393625,
+      "source": 3,
+      "stat_type": 203,
+      "value": "126.00000"
+    },
+    {
+      "id": 71758014434,
+      "route_day": 88393625,
+      "source": 3,
+      "stat_type": 205,
+      "value": "8.00000"
+    },
+    {
+      "id": 71758430536,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 1,
+      "value": "85270.98000"
+    },
+    {
+      "id": 71758014472,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 100,
+      "value": "106.00000"
+    },
+    {
+      "id": 71758014474,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014482,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 120,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758014483,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 121,
+      "value": "7.00000"
+    },
+    {
+      "id": 71758014484,
+      "route_day": 88393623,
+      "source": 1,
+      "stat_type": 200,
+      "value": "181.00000"
+    },
+    {
+      "id": 71758014490,
+      "route_day": 88393623,
+      "source": 2,
+      "stat_type": 103,
+      "value": "105.00000"
+    },
+    {
+      "id": 71758014498,
+      "route_day": 88393623,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014500,
+      "route_day": 88393623,
+      "source": 2,
+      "stat_type": 203,
+      "value": "180.00000"
+    },
+    {
+      "id": 71758014512,
+      "route_day": 88393623,
+      "source": 3,
+      "stat_type": 103,
+      "value": "106.00000"
+    },
+    {
+      "id": 71759735852,
+      "route_day": 88393623,
+      "source": 3,
+      "stat_type": 150,
+      "value": "16.77363"
+    },
+    {
+      "id": 71758014532,
+      "route_day": 88393623,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014534,
+      "route_day": 88393623,
+      "source": 3,
+      "stat_type": 203,
+      "value": "181.00000"
+    },
+    {
+      "id": 71758014536,
+      "route_day": 88393623,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758355715,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 1,
+      "value": "195351.30000"
+    },
+    {
+      "id": 71758014117,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 100,
+      "value": "90.00000"
+    },
+    {
+      "id": 71758014118,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014122,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014123,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014124,
+      "route_day": 88393621,
+      "source": 1,
+      "stat_type": 200,
+      "value": "125.00000"
+    },
+    {
+      "id": 71758014130,
+      "route_day": 88393621,
+      "source": 2,
+      "stat_type": 103,
+      "value": "58.00000"
+    },
+    {
+      "id": 71758014143,
+      "route_day": 88393621,
+      "source": 2,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014144,
+      "route_day": 88393621,
+      "source": 2,
+      "stat_type": 203,
+      "value": "87.00000"
+    },
+    {
+      "id": 71758014156,
+      "route_day": 88393621,
+      "source": 3,
+      "stat_type": 103,
+      "value": "59.00000"
+    },
+    {
+      "id": 71760020710,
+      "route_day": 88393621,
+      "source": 3,
+      "stat_type": 150,
+      "value": "11.70248"
+    },
+    {
+      "id": 71758014189,
+      "route_day": 88393621,
+      "source": 3,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014193,
+      "route_day": 88393621,
+      "source": 3,
+      "stat_type": 203,
+      "value": "87.00000"
+    },
+    {
+      "id": 71758014197,
+      "route_day": 88393621,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758297924,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 1,
+      "value": "209414.54000"
+    },
+    {
+      "id": 71758014959,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 100,
+      "value": "88.00000"
+    },
+    {
+      "id": 71758014964,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014981,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014985,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 121,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014990,
+      "route_day": 88393619,
+      "source": 1,
+      "stat_type": 200,
+      "value": "122.00000"
+    },
+    {
+      "id": 71758015012,
+      "route_day": 88393619,
+      "source": 2,
+      "stat_type": 103,
+      "value": "86.00000"
+    },
+    {
+      "id": 71758015030,
+      "route_day": 88393619,
+      "source": 2,
+      "stat_type": 202,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758015032,
+      "route_day": 88393619,
+      "source": 2,
+      "stat_type": 203,
+      "value": "122.00000"
+    },
+    {
+      "id": 71758015044,
+      "route_day": 88393619,
+      "source": 3,
+      "stat_type": 103,
+      "value": "88.00000"
+    },
+    {
+      "id": 71759722514,
+      "route_day": 88393619,
+      "source": 3,
+      "stat_type": 150,
+      "value": "12.04838"
+    },
+    {
+      "id": 71758015058,
+      "route_day": 88393619,
+      "source": 3,
+      "stat_type": 202,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758015059,
+      "route_day": 88393619,
+      "source": 3,
+      "stat_type": 203,
+      "value": "122.00000"
+    },
+    {
+      "id": 71758015060,
+      "route_day": 88393619,
+      "source": 3,
+      "stat_type": 205,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758293954,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 1,
+      "value": "202500.02000"
+    },
+    {
+      "id": 71758014027,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 100,
+      "value": "80.00000"
+    },
+    {
+      "id": 71758014028,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014032,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 120,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014033,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 121,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014034,
+      "route_day": 88393617,
+      "source": 1,
+      "stat_type": 200,
+      "value": "114.00000"
+    },
+    {
+      "id": 71758014040,
+      "route_day": 88393617,
+      "source": 2,
+      "stat_type": 103,
+      "value": "80.00000"
+    },
+    {
+      "id": 71758014048,
+      "route_day": 88393617,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014049,
+      "route_day": 88393617,
+      "source": 2,
+      "stat_type": 203,
+      "value": "113.00000"
+    },
+    {
+      "id": 71758014061,
+      "route_day": 88393617,
+      "source": 3,
+      "stat_type": 103,
+      "value": "80.00000"
+    },
+    {
+      "id": 71760022209,
+      "route_day": 88393617,
+      "source": 3,
+      "stat_type": 150,
+      "value": "8.00222"
+    },
+    {
+      "id": 71758014079,
+      "route_day": 88393617,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014080,
+      "route_day": 88393617,
+      "source": 3,
+      "stat_type": 203,
+      "value": "114.00000"
+    },
+    {
+      "id": 71758014082,
+      "route_day": 88393617,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758292285,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 1,
+      "value": "89226.14000"
+    },
+    {
+      "id": 71758014167,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 100,
+      "value": "103.00000"
+    },
+    {
+      "id": 71758014171,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758014190,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014194,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 121,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014198,
+      "route_day": 88393616,
+      "source": 1,
+      "stat_type": 200,
+      "value": "214.00000"
+    },
+    {
+      "id": 71758014223,
+      "route_day": 88393616,
+      "source": 2,
+      "stat_type": 103,
+      "value": "93.00000"
+    },
+    {
+      "id": 71758014255,
+      "route_day": 88393616,
+      "source": 2,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014260,
+      "route_day": 88393616,
+      "source": 2,
+      "stat_type": 203,
+      "value": "197.00000"
+    },
+    {
+      "id": 71758014284,
+      "route_day": 88393616,
+      "source": 3,
+      "stat_type": 103,
+      "value": "103.00000"
+    },
+    {
+      "id": 71759735139,
+      "route_day": 88393616,
+      "source": 3,
+      "stat_type": 150,
+      "value": "22.48499"
+    },
+    {
+      "id": 71758014314,
+      "route_day": 88393616,
+      "source": 3,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014316,
+      "route_day": 88393616,
+      "source": 3,
+      "stat_type": 203,
+      "value": "214.00000"
+    },
+    {
+      "id": 71758014318,
+      "route_day": 88393616,
+      "source": 3,
+      "stat_type": 205,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758289229,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 1,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758013958,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 100,
+      "value": "89.00000"
+    },
+    {
+      "id": 71758013960,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 104,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758013968,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 120,
+      "value": "4.00000"
+    },
+    {
+      "id": 71758013970,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 121,
+      "value": "5.00000"
+    },
+    {
+      "id": 71758013972,
+      "route_day": 88393614,
+      "source": 1,
+      "stat_type": 200,
+      "value": "153.00000"
+    },
+    {
+      "id": 71758013984,
+      "route_day": 88393614,
+      "source": 2,
+      "stat_type": 103,
+      "value": "84.00000"
+    },
+    {
+      "id": 71758014000,
+      "route_day": 88393614,
+      "source": 2,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014002,
+      "route_day": 88393614,
+      "source": 2,
+      "stat_type": 203,
+      "value": "153.00000"
+    },
+    {
+      "id": 71758014010,
+      "route_day": 88393614,
+      "source": 3,
+      "stat_type": 103,
+      "value": "84.00000"
+    },
+    {
+      "id": 71759955776,
+      "route_day": 88393614,
+      "source": 3,
+      "stat_type": 150,
+      "value": "10.50182"
+    },
+    {
+      "id": 71758014020,
+      "route_day": 88393614,
+      "source": 3,
+      "stat_type": 202,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014021,
+      "route_day": 88393614,
+      "source": 3,
+      "stat_type": 203,
+      "value": "153.00000"
+    },
+    {
+      "id": 71758014022,
+      "route_day": 88393614,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758287247,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 1,
+      "value": "230528.01000"
+    },
+    {
+      "id": 71758014906,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 100,
+      "value": "84.00000"
+    },
+    {
+      "id": 71758014912,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 104,
+      "value": "1.00000"
+    },
+    {
+      "id": 71758014931,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 120,
+      "value": "2.00000"
+    },
+    {
+      "id": 71758014935,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 121,
+      "value": "11.00000"
+    },
+    {
+      "id": 71758014939,
+      "route_day": 88393613,
+      "source": 1,
+      "stat_type": 200,
+      "value": "145.00000"
+    },
+    {
+      "id": 71758014965,
+      "route_day": 88393613,
+      "source": 2,
+      "stat_type": 103,
+      "value": "82.00000"
+    },
+    {
+      "id": 71758014995,
+      "route_day": 88393613,
+      "source": 2,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758015000,
+      "route_day": 88393613,
+      "source": 2,
+      "stat_type": 203,
+      "value": "144.00000"
+    },
+    {
+      "id": 71758015019,
+      "route_day": 88393613,
+      "source": 3,
+      "stat_type": 103,
+      "value": "82.00000"
+    },
+    {
+      "id": 71759737943,
+      "route_day": 88393613,
+      "source": 3,
+      "stat_type": 150,
+      "value": "12.95078"
+    },
+    {
+      "id": 71758015039,
+      "route_day": 88393613,
+      "source": 3,
+      "stat_type": 202,
+      "value": "0.00000"
+    },
+    {
+      "id": 71758015041,
+      "route_day": 88393613,
+      "source": 3,
+      "stat_type": 203,
+      "value": "144.00000"
+    },
+    {
+      "id": 71758015043,
+      "route_day": 88393613,
+      "source": 3,
+      "stat_type": 205,
+      "value": "0.00000"
+    }
+  ]
+}

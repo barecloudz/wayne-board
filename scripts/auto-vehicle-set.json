@@ -1,0 +1,1910 @@
+{
+  "advancedVehicleSet": [
+    {
+      "capacity": 700,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780171,
+      "waveId": null,
+      "vehicleId": 611610,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 ASHE HWY",
+      "vehicleOrder": 1,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017237,
+          "serviceAreaId": 3060743,
+          "name": "7th Ave",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108127,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017200,
+          "serviceAreaId": 3060743,
+          "name": "Airport/Advent Health",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108128,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017227,
+          "serviceAreaId": 3060743,
+          "name": "Ashe Hwy/Highland Ave",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108129,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017236,
+          "serviceAreaId": 3060743,
+          "name": "Clear Creek",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108130,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699240,
+          "serviceAreaId": 3060743,
+          "name": "Duncan Hill",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108150,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "David",
+      "driverId": 267581,
+      "fedexVehicleId": "445658",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"circle\",\"color\":\"#AA6E28\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 275,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780172,
+      "waveId": null,
+      "vehicleId": 611623,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 ETOWAH",
+      "vehicleOrder": 4,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 13853746,
+          "serviceAreaId": 3060743,
+          "name": "E allen/ flatrock",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108200,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017193,
+          "serviceAreaId": 3060743,
+          "name": "Kenmure ",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108188,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405611,
+          "serviceAreaId": 3060743,
+          "name": "Lower Zirconia",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108189,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017229,
+          "serviceAreaId": 3060743,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108190,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405215,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/ MineGapRd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108191,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405417,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/BellMountainRd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108192,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405600,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/BobsCreek",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108193,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405587,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/Cliffs",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108194,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405593,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/Gap Creek",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108195,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405591,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/Kingdom Place",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108196,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405226,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/MondaminRd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108197,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405224,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/NorthLakeSummit",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108198,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405420,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/OldUs25",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108199,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405218,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/OldZirconiaRd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108201,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405230,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/SouthLakeSummit",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108202,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 6405217,
+          "serviceAreaId": 3060743,
+          "name": "Zirconia/ZirconiaRd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108203,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": null,
+      "driverId": 0,
+      "fedexVehicleId": "476714",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"diamond\",\"color\":\"#F58231\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 600,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780173,
+      "waveId": null,
+      "vehicleId": 1501071,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 EXTRA 5",
+      "vehicleOrder": 5,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017254,
+          "serviceAreaId": 3060743,
+          "name": "Brevard Rd/Blythe",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108131,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 3,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017224,
+          "serviceAreaId": 3060743,
+          "name": "Downtown Hendo East",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108132,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 1,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017223,
+          "serviceAreaId": 3060743,
+          "name": "Downtown Hendo/Pardee",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108133,
+          "zone": "First",
+          "zoneAbbr": "F",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017247,
+          "serviceAreaId": 3060743,
+          "name": "Downtown West",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108134,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 2,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017246,
+          "serviceAreaId": 3060743,
+          "name": "Downtown West Laurel Park",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108135,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 4,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017198,
+          "serviceAreaId": 3060743,
+          "name": "Downtown/Jackson Pk",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108136,
+          "zone": "Last",
+          "zoneAbbr": "L",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "James",
+      "driverId": 267574,
+      "fedexVehicleId": "",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"circle\",\"color\":\"#9b1b9d\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"#000000\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 600,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780174,
+      "waveId": null,
+      "vehicleId": 611603,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 GREEN HWY",
+      "vehicleOrder": 6,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017204,
+          "serviceAreaId": 3060743,
+          "name": "Champion Hills/Laurel Park",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108170,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017199,
+          "serviceAreaId": 3060743,
+          "name": "Downtown/Old Spartanburg",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108154,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017243,
+          "serviceAreaId": 3060743,
+          "name": "Erkwood/Greenville Hwy",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108155,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017205,
+          "serviceAreaId": 3060743,
+          "name": "Greenville Hwy",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108156,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Blake",
+      "driverId": 267579,
+      "fedexVehicleId": "447905",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"diamond\",\"color\":\"#E6194B\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 275,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780175,
+      "waveId": null,
+      "vehicleId": 611624,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 KANUGA 39",
+      "vehicleOrder": 7,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017253,
+          "serviceAreaId": 3060743,
+          "name": "Inner Crab Creek",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108137,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017207,
+          "serviceAreaId": 3060743,
+          "name": "Little River ",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108138,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017255,
+          "serviceAreaId": 3060743,
+          "name": "Outer Crab Creek",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108139,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 7321056,
+          "serviceAreaId": 3060743,
+          "name": "Pleasant Grove",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108140,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 KANUGA 39",
+      "workAreaNumber": "0314",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "466",
+      "driverId": 267572,
+      "fedexVehicleId": "",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#AA6E28\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 210,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780176,
+      "waveId": null,
+      "vehicleId": 611627,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 MILLS RIVER",
+      "vehicleOrder": 9,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 21008965,
+          "serviceAreaId": 3060743,
+          "name": "Bat Cave",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108179,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 3,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21008962,
+          "serviceAreaId": 3060743,
+          "name": "Gerton",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108180,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 2,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21008966,
+          "serviceAreaId": 3060743,
+          "name": "Lake Lure",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108181,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 4,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21008967,
+          "serviceAreaId": 3060743,
+          "name": "upper Bearwallow Gerton",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108182,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 1,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21008988,
+          "serviceAreaId": 3060743,
+          "name": "west Chimney Rock Rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108184,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 1,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Tyler ",
+      "driverId": 267582,
+      "fedexVehicleId": "476710",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#808000\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 900,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780177,
+      "waveId": null,
+      "vehicleId": 611629,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 SUGARLOAF",
+      "vehicleOrder": 11,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 5699214,
+          "serviceAreaId": 3060743,
+          "name": "4Season/Sugarloaf",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108149,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 3,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699247,
+          "serviceAreaId": 3060743,
+          "name": "Blue Ridge Mall",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108148,
+          "zone": "Last",
+          "zoneAbbr": "L",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699219,
+          "serviceAreaId": 3060743,
+          "name": "Carolina Village",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108147,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 4,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699251,
+          "serviceAreaId": 3060743,
+          "name": "Dana/Tracy Grove Rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108146,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 7,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699236,
+          "serviceAreaId": 3060743,
+          "name": "Linda Vista",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108145,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 6,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699225,
+          "serviceAreaId": 3060743,
+          "name": "Thompson St",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108144,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 5,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699210,
+          "serviceAreaId": 3060743,
+          "name": "Walmart/Francis Rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108143,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 2,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699208,
+          "serviceAreaId": 3060743,
+          "name": "Walmart/Nix Rd 3",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108142,
+          "zone": "Sequence",
+          "zoneAbbr": "S",
+          "sequence": 1,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 5699200,
+          "serviceAreaId": 3060743,
+          "name": "Walmart/Sams 1",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108141,
+          "zone": "First",
+          "zoneAbbr": "F",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13308648,
+          "serviceAreaId": 3060743,
+          "name": "Willowbrook",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108186,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Joseph Gearhart",
+      "driverId": 267566,
+      "fedexVehicleId": "476718",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#E6BEFF\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 275,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780178,
+      "waveId": null,
+      "vehicleId": 611622,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 ERKWOOD",
+      "vehicleOrder": 3,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017213,
+          "serviceAreaId": 3060743,
+          "name": "Brevard Rd/Davis Mtn",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108163,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017208,
+          "serviceAreaId": 3060743,
+          "name": "Brevard Rd/Laurel Park",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108164,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017209,
+          "serviceAreaId": 3060743,
+          "name": "Laurel Park/Country Club",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108165,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017211,
+          "serviceAreaId": 3060743,
+          "name": "Laurel Park/Somersby",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108166,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "444",
+      "driverId": 267586,
+      "fedexVehicleId": "476717",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"diamond\",\"color\":\"#73ff00\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 420,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780179,
+      "waveId": null,
+      "vehicleId": 611642,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 7TH AVE",
+      "vehicleOrder": 0,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017238,
+          "serviceAreaId": 3060743,
+          "name": "Airport/Ashe Hwy",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108157,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017202,
+          "serviceAreaId": 3060743,
+          "name": "Asheville Hwy/Brookside Camp",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108158,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017203,
+          "serviceAreaId": 3060743,
+          "name": "Asheville Hwy/Mtn Home",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108159,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13442886,
+          "serviceAreaId": 3060743,
+          "name": "E glenwood",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108160,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13442888,
+          "serviceAreaId": 3060743,
+          "name": "Huff n Puff",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108161,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13305785,
+          "serviceAreaId": 3060743,
+          "name": "NAPLES RD FRONT",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108162,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Liam",
+      "driverId": 267580,
+      "fedexVehicleId": "447904",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#F58231\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 500,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780180,
+      "waveId": null,
+      "vehicleId": 611621,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 CHIMNEY ROC",
+      "vehicleOrder": 2,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017242,
+          "serviceAreaId": 3060743,
+          "name": "Erkwood/Kanuga",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108151,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017201,
+          "serviceAreaId": 3060743,
+          "name": "Kanuga/Town",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108152,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017233,
+          "serviceAreaId": 3060743,
+          "name": "Osceola Lake",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108153,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Wendy",
+      "driverId": 267583,
+      "fedexVehicleId": "446178",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"circle\",\"color\":\"#AAFFC3\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 300,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780181,
+      "waveId": null,
+      "vehicleId": 611612,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 CUMMINGS CV",
+      "vehicleOrder": 8,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 13308653,
+          "serviceAreaId": 3060743,
+          "name": "Pressley rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108167,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13442743,
+          "serviceAreaId": 3060743,
+          "name": "Sugarloaf Mtn rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108183,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13308652,
+          "serviceAreaId": 3060743,
+          "name": "Sunrise Ridge",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108168,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13308650,
+          "serviceAreaId": 3060743,
+          "name": "Union Hill",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108169,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21008982,
+          "serviceAreaId": 3060743,
+          "name": "Upper East Chimney Rock rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108185,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21010369,
+          "serviceAreaId": 3060743,
+          "name": "upper east edneyville",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108187,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "454",
+      "driverId": 267585,
+      "fedexVehicleId": "476713",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#3CB44B\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 275,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780182,
+      "waveId": null,
+      "vehicleId": 611628,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 N RUGBY",
+      "vehicleOrder": 10,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4216848,
+          "serviceAreaId": 3060743,
+          "name": "Chimney Rock",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108171,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4216736,
+          "serviceAreaId": 3060743,
+          "name": "Chimney Rock/Sugarloaf",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108172,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 14004806,
+          "serviceAreaId": 3060743,
+          "name": "Fruiland",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108173,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13305302,
+          "serviceAreaId": 3060743,
+          "name": "KYLES CREEK",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108174,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13309053,
+          "serviceAreaId": 3060743,
+          "name": "Locust ridge",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108175,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 14004805,
+          "serviceAreaId": 3060743,
+          "name": "Oak Hill",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108176,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13305306,
+          "serviceAreaId": 3060743,
+          "name": "OLD CLEAR CREEK",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108177,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13308649,
+          "serviceAreaId": 3060743,
+          "name": "Ridge rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108178,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": "Joe",
+      "driverId": 267571,
+      "fedexVehicleId": "476712",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"circle\",\"color\":\"#F032E6\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    },
+    {
+      "capacity": 420,
+      "width": 0,
+      "height": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "vehicleSetId": 41780183,
+      "waveId": null,
+      "vehicleId": 611600,
+      "dispatchTime": "08:30",
+      "targetTime": "08:00",
+      "targetReturnTime": "16:30",
+      "strictReturnTime": false,
+      "routeType": "REG",
+      "vehicleName": "742 EXTRA 2",
+      "vehicleOrder": 12,
+      "serviceAreaId": null,
+      "anchorAreas": [
+        {
+          "anchorAreaId": 4017215,
+          "serviceAreaId": 3060743,
+          "name": "Brevard/Horseshoe",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108204,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017226,
+          "serviceAreaId": 3060743,
+          "name": "Cummings Cove CC",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108205,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 4017225,
+          "serviceAreaId": 3060743,
+          "name": "Cummings Cove/Big Willow",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108206,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 13442901,
+          "serviceAreaId": 3060743,
+          "name": "Etowah school rd",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108207,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        },
+        {
+          "anchorAreaId": 21010371,
+          "serviceAreaId": 3060743,
+          "name": "upper Cummings Cove",
+          "station": "",
+          "shape": null,
+          "sequenceClusterId": 501108208,
+          "zone": "",
+          "zoneAbbr": "",
+          "sequence": null,
+          "anchorAreaType": "REG",
+          "isDynamicZone": false,
+          "availableAnchorAreaTypes": [
+            "REG"
+          ]
+        }
+      ],
+      "workAreaName": "742 EXTRA 2",
+      "workAreaNumber": "0386",
+      "relayStart": null,
+      "relayEnd": null,
+      "driverLabel": null,
+      "driverId": 0,
+      "fedexVehicleId": "",
+      "numHelpers": 0,
+      "seqPickupsLast": false,
+      "endRouteAtLastStop": false,
+      "manualAssignmentOnly": false,
+      "maxStops": null,
+      "minStops": null,
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"diamond\",\"color\":\"#808000\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "overflowDispatchable": true,
+      "overflowHelpable": true,
+      "overflowPriorityHelpers": [],
+      "breaks": null,
+      "sdocEligible": true,
+      "cartage": false,
+      "overflowPriorityHelpRecipients": [],
+      "overflowPriorityHelperNames": [],
+      "useAnchorAreasForSdoc": false,
+      "allowHeavyPackage": false
+    }
+  ],
+  "routeTypes": [
+    {
+      "routeType": "REG",
+      "label": "REG",
+      "ennabled": true
+    },
+    {
+      "routeType": "LP",
+      "label": "LP",
+      "ennabled": false
+    },
+    {
+      "routeType": "BULK",
+      "label": "Bulk",
+      "ennabled": false
+    },
+    {
+      "routeType": "SM",
+      "label": "Small",
+      "ennabled": false
+    }
+  ]
+}

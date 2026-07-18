@@ -1,0 +1,910 @@
+{
+  "capturedFromBrowser": [
+    {
+      "method": "GET",
+      "path": "/api/api/admin-log/download-globalization/en-US",
+      "query": "",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/auth/me",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/companies",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/contractors",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/country-language",
+      "query": "",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/disabled-features",
+      "query": "",
+      "status": 200,
+      "count": 4
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/ThirdPartyLogins",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/version",
+      "query": "",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/organizations",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/profile",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/alerts",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/audit",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/audit-log",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/bulk-stops",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/business-exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/capacity",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/config",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/deliveries",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/drivers",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/geofences",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/kpi",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/manifests",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/metrics",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/notes",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/notifications",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/packages",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/performance",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/priority-stops",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/regions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/packagedetail?",
+      "query": "?unassigned=true",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/capacity",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/fleet",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/kpi",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/metrics",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/routes",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/solve-history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/stop-overrides",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/vehicle-set",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/waypoints",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/routingstatus",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/service-area",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/settings",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/solutions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/solve-history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/solve-results",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/stop-exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/stop-overrides",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/stops",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/time-windows",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/UnroutableWaypoints",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/users",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/waypoints/exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/waypoints/overrides",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/waypoints/unroutable",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/zones",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/settings/default-version",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/alerts",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/config",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/dispatch-settings",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/drivers",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/kpi",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/manifests",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/packages",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/performance",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/routes",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/settings",
+      "query": "",
+      "status": 401,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/sortDate",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/stationvolume",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/waves",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/user/V2",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/user/V2?",
+      "query": "?service_area_id=3060743&",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/users/current",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/users/me",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/internal/device/nonce",
+      "query": "",
+      "status": 200,
+      "count": 2
+    }
+  ],
+  "probeResults": [
+    {
+      "path": "/api/api/service-areas/3060743/drivers",
+      "status": 200,
+      "preview": "[{\"driverId\":267575,\"driverName\":\"111\",\"fedexDriverId\":null,\"hourlyWage\":0,\"overtimeWage\":0,\"otBegins\":8,\"defaultVehicleId\":611625,\"vehicleName\":\"742 "
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stop-overrides",
+      "status": 200,
+      "preview": "[{\"stopOverride_id\":25531240,\"serviceAreaId\":3060743,\"stopId\":\"201709-I-4ukcjn3oq0lu36e8f5a6dqs0t\",\"recipientName\":\"TRACY FARLEY\",\"address\":\"401 LINDA"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/vehicle-set",
+      "status": 200,
+      "preview": "[{\"vehicleSetId\":40449667,\"waveId\":null,\"vehicleOrder\":1,\"vehicleId\":611610,\"driverId\":267581,\"loadProfile\":\"Section\",\"routeType\":\"REG\",\"vehicleName\":"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/stop-overrides",
+      "status": 200,
+      "preview": "[25113567,25162544,19048960,19048962,19275991,19550829,19573094,19573126,19737973,19809665,19809681,19824750,19824788,20027653,19912364,20198643,20387"
+    },
+    {
+      "path": "/api/api/stations/259/settings",
+      "status": 401,
+      "preview": "{\"message\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/users",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/alerts",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/notifications",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/manifests",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/notes",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stops",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/packages",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/deliveries",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/metrics",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/kpi",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/performance",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/audit-log",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/audit",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/settings",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/config",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/zones",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/regions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/geofences",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/service-area",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/capacity",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/solve-history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/solutions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/solve-results",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/waypoints/unroutable",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/waypoints/overrides",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/waypoints/exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stop-exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/business-exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/time-windows",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/priority-stops",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/bulk-stops",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/drivers",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/manifests",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/packages",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/performance",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/alerts",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/config",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/waves",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/routes",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/kpi",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/routes",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/waypoints",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/solve-history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/metrics",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/kpi",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/capacity",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/fleet",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/users/me",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/users/current",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/auth/me",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/profile",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/companies",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/organizations",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/contractors",
+      "status": 404,
+      "preview": ""
+    }
+  ],
+  "summary": {
+    "totalUnique": 82,
+    "responding200": 4,
+    "totalProbed": 65
+  }
+}

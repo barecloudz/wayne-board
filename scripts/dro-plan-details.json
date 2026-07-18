@@ -1,0 +1,3328 @@
+{
+  "AUTO (active)": [
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 KANUGA 39",
+      "workAreaNumber": "0314",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 21008965,
+          "name": "Bat Cave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008962,
+          "name": "Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008966,
+          "name": "Lake Lure",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008967,
+          "name": "upper Bearwallow Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008988,
+          "name": "west Chimney Rock Rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008982,
+          "name": "Upper East Chimney Rock rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010369,
+          "name": "upper east edneyville",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 2",
+      "workAreaNumber": "0386",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010371,
+          "name": "upper Cummings Cove",
+          "workAreaNumber": ""
+        }
+      ]
+    }
+  ],
+  "Saturday": [
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    }
+  ],
+  "Mon-Fri": [
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 KENMURE",
+      "workAreaNumber": "5104",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 KANUGA 39",
+      "workAreaNumber": "0314",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 7",
+      "workAreaNumber": "7773",
+      "routeType": "REG",
+      "anchorAreas": []
+    }
+  ],
+  "11 People": [
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010371,
+          "name": "upper Cummings Cove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 21008965,
+          "name": "Bat Cave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008962,
+          "name": "Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008966,
+          "name": "Lake Lure",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008967,
+          "name": "upper Bearwallow Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008988,
+          "name": "west Chimney Rock Rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008982,
+          "name": "Upper East Chimney Rock rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010369,
+          "name": "upper east edneyville",
+          "workAreaNumber": ""
+        }
+      ]
+    }
+  ],
+  "Sat Less PPl": [
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 21008965,
+          "name": "Bat Cave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008962,
+          "name": "Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008967,
+          "name": "upper Bearwallow Gerton",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "routeType": "REG",
+      "anchorAreas": []
+    },
+    {
+      "vehicleName": "742 EXTRA 2",
+      "workAreaNumber": "0386",
+      "routeType": "REG",
+      "anchorAreas": []
+    },
+    {
+      "vehicleName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "routeType": "REG",
+      "anchorAreas": []
+    }
+  ],
+  "Wednesday": [
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010371,
+          "name": "upper Cummings Cove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 KANUGA 39",
+      "workAreaNumber": "0314",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 21008965,
+          "name": "Bat Cave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008962,
+          "name": "Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008966,
+          "name": "Lake Lure",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008967,
+          "name": "upper Bearwallow Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008988,
+          "name": "west Chimney Rock Rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008982,
+          "name": "Upper East Chimney Rock rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010369,
+          "name": "upper east edneyville",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 DWNTWN HEND",
+      "workAreaNumber": "7762",
+      "routeType": "REG",
+      "anchorAreas": []
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        }
+      ]
+    }
+  ],
+  "Thursday": [
+    {
+      "vehicleName": "742 ASHE HWY",
+      "workAreaNumber": "0255",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017237,
+          "name": "7th Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017200,
+          "name": "Airport/Advent Health",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017227,
+          "name": "Ashe Hwy/Highland Ave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017236,
+          "name": "Clear Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699240,
+          "name": "Duncan Hill",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ETOWAH",
+      "workAreaNumber": "0442",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017215,
+          "name": "Brevard/Horseshoe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017226,
+          "name": "Cummings Cove CC",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017225,
+          "name": "Cummings Cove/Big Willow",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442901,
+          "name": "Etowah school rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010371,
+          "name": "upper Cummings Cove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 5",
+      "workAreaNumber": "0211",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017254,
+          "name": "Brevard Rd/Blythe",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017224,
+          "name": "Downtown Hendo East",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017223,
+          "name": "Downtown Hendo/Pardee",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017247,
+          "name": "Downtown West",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017246,
+          "name": "Downtown West Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017198,
+          "name": "Downtown/Jackson Pk",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 GREEN HWY",
+      "workAreaNumber": "0275",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017204,
+          "name": "Champion Hills/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017199,
+          "name": "Downtown/Old Spartanburg",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017243,
+          "name": "Erkwood/Greenville Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017205,
+          "name": "Greenville Hwy",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 KANUGA 39",
+      "workAreaNumber": "0314",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017253,
+          "name": "Inner Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017207,
+          "name": "Little River ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017255,
+          "name": "Outer Crab Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 7321056,
+          "name": "Pleasant Grove",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 MILLS RIVER",
+      "workAreaNumber": "0326",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 21008965,
+          "name": "Bat Cave",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008962,
+          "name": "Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008966,
+          "name": "Lake Lure",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008967,
+          "name": "upper Bearwallow Gerton",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008988,
+          "name": "west Chimney Rock Rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 SUGARLOAF",
+      "workAreaNumber": "0351",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 5699214,
+          "name": "4Season/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699247,
+          "name": "Blue Ridge Mall",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699219,
+          "name": "Carolina Village",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699251,
+          "name": "Dana/Tracy Grove Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699236,
+          "name": "Linda Vista",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699225,
+          "name": "Thompson St",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699210,
+          "name": "Walmart/Francis Rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699208,
+          "name": "Walmart/Nix Rd 3",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 5699200,
+          "name": "Walmart/Sams 1",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308648,
+          "name": "Willowbrook",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ZIRCONIA",
+      "workAreaNumber": "",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13853746,
+          "name": "E allen/ flatrock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017193,
+          "name": "Kenmure ",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405611,
+          "name": "Lower Zirconia",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017229,
+          "name": "Spartanburg Hwy/Boyd Chevy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405215,
+          "name": "Zirconia/ MineGapRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405417,
+          "name": "Zirconia/BellMountainRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405600,
+          "name": "Zirconia/BobsCreek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405587,
+          "name": "Zirconia/Cliffs",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405593,
+          "name": "Zirconia/Gap Creek",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405591,
+          "name": "Zirconia/Kingdom Place",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405226,
+          "name": "Zirconia/MondaminRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405224,
+          "name": "Zirconia/NorthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405420,
+          "name": "Zirconia/OldUs25",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405218,
+          "name": "Zirconia/OldZirconiaRd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405230,
+          "name": "Zirconia/SouthLakeSummit",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 6405217,
+          "name": "Zirconia/ZirconiaRd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 ERKWOOD",
+      "workAreaNumber": "0418",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017213,
+          "name": "Brevard Rd/Davis Mtn",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017208,
+          "name": "Brevard Rd/Laurel Park",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017209,
+          "name": "Laurel Park/Country Club",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017211,
+          "name": "Laurel Park/Somersby",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 7TH AVE",
+      "workAreaNumber": "0454",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017238,
+          "name": "Airport/Ashe Hwy",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017202,
+          "name": "Asheville Hwy/Brookside Camp",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017203,
+          "name": "Asheville Hwy/Mtn Home",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442886,
+          "name": "E glenwood",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442888,
+          "name": "Huff n Puff",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305785,
+          "name": "NAPLES RD FRONT",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CHIMNEY ROC",
+      "workAreaNumber": "0354",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4017242,
+          "name": "Erkwood/Kanuga",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017201,
+          "name": "Kanuga/Town",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4017233,
+          "name": "Osceola Lake",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 CUMMINGS CV",
+      "workAreaNumber": "0470",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 13308653,
+          "name": "Pressley rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13442743,
+          "name": "Sugarloaf Mtn rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308652,
+          "name": "Sunrise Ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308650,
+          "name": "Union Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21008982,
+          "name": "Upper East Chimney Rock rd",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 21010369,
+          "name": "upper east edneyville",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 N RUGBY",
+      "workAreaNumber": "0247",
+      "routeType": "REG",
+      "anchorAreas": [
+        {
+          "id": 4216848,
+          "name": "Chimney Rock",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 4216736,
+          "name": "Chimney Rock/Sugarloaf",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004806,
+          "name": "Fruiland",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305302,
+          "name": "KYLES CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13309053,
+          "name": "Locust ridge",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 14004805,
+          "name": "Oak Hill",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13305306,
+          "name": "OLD CLEAR CREEK",
+          "workAreaNumber": ""
+        },
+        {
+          "id": 13308649,
+          "name": "Ridge rd",
+          "workAreaNumber": ""
+        }
+      ]
+    },
+    {
+      "vehicleName": "742 EXTRA 8",
+      "workAreaNumber": "7758",
+      "routeType": "REG",
+      "anchorAreas": []
+    }
+  ]
+}

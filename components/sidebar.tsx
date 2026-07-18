@@ -25,6 +25,7 @@ const adminItems = [
 ];
 
 const automationItems = [
+  { icon: Map,           label: "Route Planner", href: "/wayne-board/route-planner", exact: true },
   { icon: Scissors,      label: "Create Routes", href: "/wayne-board/create-routes", exact: true },
   { icon: Route,         label: "Auto DRO",      href: "/wayne-board/auto-dro",      exact: true },
   { icon: TrendingUp,    label: "Auto GC",       href: "/wayne-board/auto-gc",       exact: true },

@@ -1,0 +1,198 @@
+[
+  {
+    "text": "Upgrade to Pro Tier",
+    "href": "https://www.groundcloud.io/dashboard/billing/tiers/"
+  },
+  {
+    "text": "Overview",
+    "href": "https://www.groundcloud.io/dashboard/"
+  },
+  {
+    "text": "Help",
+    "href": "https://www.groundcloud.io/dashboard/help/article/60130560"
+  },
+  {
+    "text": "Manifests",
+    "href": "https://www.groundcloud.io/dashboard/manifests"
+  },
+  {
+    "text": "Drivers",
+    "href": "https://www.groundcloud.io/dashboard/drivers/"
+  },
+  {
+    "text": "Driver Documents",
+    "href": "https://www.groundcloud.io/dashboard/drivers/documents/"
+  },
+  {
+    "text": "Routes",
+    "href": "https://www.groundcloud.io/dashboard/routes/"
+  },
+  {
+    "text": "P&D Time Commits",
+    "href": "https://www.groundcloud.io/dashboard/stop_service_times/"
+  },
+  {
+    "text": "Pick-Ups",
+    "href": "https://www.groundcloud.io/dashboard/pick-ups/"
+  },
+  {
+    "text": "Package Search",
+    "href": "https://www.groundcloud.io/dashboard/routes/stop_package_search"
+  },
+  {
+    "text": "Location Updates",
+    "href": "https://www.groundcloud.io/dashboard/address_locations/"
+  },
+  {
+    "text": "Fleet Map",
+    "href": "https://www.groundcloud.io/dashboard/fleet/"
+  },
+  {
+    "text": "Messages",
+    "href": "https://www.groundcloud.io/dashboard/messages"
+  },
+  {
+    "text": "Logs",
+    "href": "https://www.groundcloud.io/dashboard/logs/"
+  },
+  {
+    "text": "Reports",
+    "href": "https://www.groundcloud.io/dashboard/reports"
+  },
+  {
+    "text": "CSA Map",
+    "href": "https://www.groundcloud.io/dashboard/csa"
+  },
+  {
+    "text": "Map Features",
+    "href": "https://www.groundcloud.io/dashboard/map_features/"
+  },
+  {
+    "text": "Vehicles",
+    "href": "https://www.groundcloud.io/dashboard/vehicles/"
+  },
+  {
+    "text": "Vehicle Reminders",
+    "href": "https://www.groundcloud.io/dashboard/maintenance/vehicle_service_reminders/"
+  },
+  {
+    "text": "Maintenance Reminders",
+    "href": "https://www.groundcloud.io/dashboard/maintenance/vehicle_maintenance_reminders/"
+  },
+  {
+    "text": "Work Orders",
+    "href": "https://www.groundcloud.io/dashboard/maintenance/vehicle_work_order/"
+  },
+  {
+    "text": "Maintenance Records",
+    "href": "https://www.groundcloud.io/dashboard/maintenance/vehicle_maintenance/"
+  },
+  {
+    "text": "Inspection Records",
+    "href": "https://www.groundcloud.io/dashboard/reports/dvir_completed/"
+  },
+  {
+    "text": "Inspection Settings",
+    "href": "https://www.groundcloud.io/dashboard/reports/dvir_config"
+  },
+  {
+    "text": "Driver Schedule",
+    "href": "https://www.groundcloud.io/dashboard/driver_scheduler/"
+  },
+  {
+    "text": "Time-Off Requests",
+    "href": "https://www.groundcloud.io/dashboard/driver_time_off_requests/"
+  },
+  {
+    "text": "Timecards",
+    "href": "https://www.groundcloud.io/dashboard/timecards/"
+  },
+  {
+    "text": "Schedule",
+    "href": "https://www.groundcloud.io/dashboard/training/schedule"
+  },
+  {
+    "text": "Training & Coaching",
+    "href": "https://www.groundcloud.io/dashboard/training/completed"
+  },
+  {
+    "text": "Completed Tests",
+    "href": "https://www.groundcloud.io/dashboard/training/test_sessions"
+  },
+  {
+    "text": "Proactive Enrollments",
+    "href": "https://www.groundcloud.io/dashboard/training/enrollments/"
+  },
+  {
+    "text": "Proactive Certification",
+    "href": "https://www.groundcloud.io/dashboard/training/ongoing_certification"
+  },
+  {
+    "text": "Training Courses",
+    "href": "https://www.groundcloud.io/dashboard/training/eld_training_enrollments/"
+  },
+  {
+    "text": "Supplemental Training",
+    "href": "https://www.groundcloud.io/dashboard/training/manual/"
+  },
+  {
+    "text": "KI Dashboard MV/AI",
+    "href": "https://www.groundcloud.io/dashboard/vedr/ki_dashboard_2024/"
+  },
+  {
+    "text": "Devices",
+    "href": "https://www.groundcloud.io/dashboard/vedr/devices/"
+  },
+  {
+    "text": "Device Map",
+    "href": "https://www.groundcloud.io/dashboard/vedr/device_map/"
+  },
+  {
+    "text": "Events",
+    "href": "https://www.groundcloud.io/dashboard/vedr/events/"
+  },
+  {
+    "text": "Event Map",
+    "href": "https://www.groundcloud.io/dashboard/vedr/event_map/"
+  },
+  {
+    "text": "Footage Requests",
+    "href": "https://www.groundcloud.io/dashboard/vedr/footage/"
+  },
+  {
+    "text": "Driver Scorecards",
+    "href": "https://www.groundcloud.io/dashboard/vedr/driver_scorecards/"
+  },
+  {
+    "text": "Settings",
+    "href": "https://www.groundcloud.io/dashboard/customer/settings"
+  },
+  {
+    "text": "Billing",
+    "href": "https://www.groundcloud.io/dashboard/billing/"
+  },
+  {
+    "text": "Contact & Terminals",
+    "href": "https://www.groundcloud.io/dashboard/customer/"
+  },
+  {
+    "text": "Contracted Service Areas",
+    "href": "https://www.groundcloud.io/dashboard/contracted_service_areas/"
+  },
+  {
+    "text": "Contract IDs",
+    "href": "https://www.groundcloud.io/dashboard/contracts/"
+  },
+  {
+    "text": "Fleet Managers",
+    "href": "https://www.groundcloud.io/dashboard/users/"
+  },
+  {
+    "text": "Your Account",
+    "href": "https://www.groundcloud.io/dashboard/users/me"
+  },
+  {
+    "text": "Logout",
+    "href": ""
+  }
+]

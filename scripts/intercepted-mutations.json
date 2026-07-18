@@ -1,0 +1,376 @@
+[
+  {
+    "method": "POST",
+    "url": "https://purpleid.okta.com/api/v1/internal/device/nonce",
+    "body": null,
+    "responseStatus": 200,
+    "response": {
+      "nonce": "LtO-MaQQliNfaWL72LbcJG0QKvtGhooZ",
+      "expiresAt": 1784320105301
+    },
+    "tab": "popup"
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/api/service-areas/3060743/route-plans/2352850/vehicle-set",
+    "body": [
+      {
+        "vehicleSetId": 41790307
+      }
+    ],
+    "responseStatus": 200,
+    "response": {
+      "code": "",
+      "message": ""
+    }
+  },
+  {
+    "method": "PUT",
+    "url": "/api/api/service-areas/3060743/route-plans/",
+    "body": {
+      "planId": 2352850,
+      "name": "AUTO",
+      "optimize_on_full_fleet": true
+    },
+    "responseStatus": 200,
+    "response": {
+      "code": "API.AddUpdateVehicleType.Ok(0)-F",
+      "message": "Nothing Updated."
+    }
+  },
+  {
+    "method": "PUT",
+    "url": "/api/api/service-areas/3060743/fleet-al",
+    "body": {
+      "work_area": "0454",
+      "vehId": 611642,
+      "wave": 1,
+      "workAreaName": "742 7TH AVE",
+      "fedexVehicleId": "447904",
+      "vehicleTypeId": 9,
+      "vehicleCapacity": "400",
+      "route_type": "REG",
+      "bulkhead": true,
+      "shelves": false,
+      "loadProfile": "Section",
+      "sids": [
+        {
+          "section": 1000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 1500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 2000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 2500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "isFloor": false,
+          "section": 3000,
+          "enabled": true
+        },
+        {
+          "section": 3500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 4000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 4500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 5000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 5500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 6000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 6500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 7000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 7500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 8000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 8500,
+          "enabled": false,
+          "isFloor": false
+        }
+      ],
+      "floorSids": [
+        {
+          "section": 1000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 2000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 3000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 4000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 5000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 6000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 7000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 8000,
+          "enabled": false,
+          "isFloor": true
+        }
+      ],
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#F58231\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "height": 0,
+      "width": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "engineType": "Gas",
+      "serviceDate": "1970",
+      "classification": "",
+      "openModal": false
+    },
+    "responseStatus": 201,
+    "response": {
+      "code": "",
+      "message": ""
+    }
+  },
+  {
+    "method": "PUT",
+    "url": "/api/api/service-areas/3060743/fleet-al",
+    "body": {
+      "work_area": "0454",
+      "vehId": 611642,
+      "wave": 1,
+      "workAreaName": "742 7TH AVE",
+      "fedexVehicleId": "447904",
+      "vehicleTypeId": 9,
+      "vehicleCapacity": 400,
+      "route_type": "REG",
+      "bulkhead": true,
+      "shelves": true,
+      "loadProfile": "Section",
+      "sids": [
+        {
+          "section": 1000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 1500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 2000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 2500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "isFloor": false,
+          "section": 3000,
+          "enabled": false
+        },
+        {
+          "section": 3500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 4000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 4500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 5000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 5500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 6000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 6500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 7000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 7500,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 8000,
+          "enabled": false,
+          "isFloor": false
+        },
+        {
+          "section": 8500,
+          "enabled": false,
+          "isFloor": false
+        }
+      ],
+      "floorSids": [
+        {
+          "section": 1000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 2000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 3000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 4000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 5000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 6000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 7000,
+          "enabled": false,
+          "isFloor": true
+        },
+        {
+          "section": 8000,
+          "enabled": false,
+          "isFloor": true
+        }
+      ],
+      "symbol": "{\"type\":\"simple-marker\",\"style\":\"square\",\"color\":\"#F58231\",\"size\":7,\"outline\":{\"width\":1,\"color\":\"black\"}}",
+      "height": 0,
+      "width": 0,
+      "weight": 0,
+      "envZoneEligible": false,
+      "engineType": "Gas",
+      "serviceDate": "1970",
+      "classification": "",
+      "openModal": false
+    },
+    "responseStatus": 201,
+    "response": {
+      "code": "",
+      "message": ""
+    }
+  },
+  {
+    "method": "POST",
+    "url": "/api/api/service-areas/3060743/CopyRoutePlan/2352850",
+    "body": {
+      "RoutePlanId": 2352850,
+      "NewName": "delete after duplicate"
+    },
+    "responseStatus": 200,
+    "response": {
+      "code": "",
+      "message": ""
+    }
+  },
+  {
+    "method": "DELETE",
+    "url": "/api/api/service-areas/3060743/route-plans/",
+    "body": {
+      "planId": 2353061
+    },
+    "responseStatus": 200,
+    "response": {
+      "code": "",
+      "message": ""
+    }
+  }
+]

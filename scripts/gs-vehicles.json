@@ -1,0 +1,306 @@
+[
+  {
+    "id": 7069,
+    "hexCode": "#0082C8",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "24T EXTRA 4"
+  },
+  {
+    "id": 7070,
+    "hexCode": "#F58231",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0454",
+    "customerUid": "742 7TH AVE"
+  },
+  {
+    "id": 7071,
+    "hexCode": "#AA6E28",
+    "capacity": 540,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0255",
+    "customerUid": "742 ASHE HWY"
+  },
+  {
+    "id": 7072,
+    "hexCode": "#00ff11",
+    "capacity": 300,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 910,
+    "customerUid": "742 BREVARD RD"
+  },
+  {
+    "id": 7073,
+    "hexCode": "#AAFFC3",
+    "capacity": 420,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0354",
+    "customerUid": "742 CHIMNEY ROC"
+  },
+  {
+    "id": 7074,
+    "hexCode": "#3CB44B",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0470",
+    "customerUid": "742 CUMMINGS CV"
+  },
+  {
+    "id": 7075,
+    "hexCode": "#000000",
+    "capacity": 300,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "7757",
+    "customerUid": "742 DWNTWN HEND"
+  },
+  {
+    "id": 7076,
+    "hexCode": "#00ff11",
+    "capacity": 600,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 7783,
+    "customerUid": "742 EAST FL ROC"
+  },
+  {
+    "id": 7077,
+    "hexCode": "#73ff00",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0418",
+    "customerUid": "742 ERKWOOD"
+  },
+  {
+    "id": 7078,
+    "hexCode": "#F58231",
+    "capacity": 420,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0442",
+    "customerUid": "742 ETOWAH"
+  },
+  {
+    "id": 7079,
+    "hexCode": "#AAFFC3",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 1"
+  },
+  {
+    "id": 7080,
+    "hexCode": "#E6194B",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 10"
+  },
+  {
+    "id": 7081,
+    "hexCode": "#911EB4",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 11"
+  },
+  {
+    "id": 7082,
+    "hexCode": "#F032E6",
+    "capacity": 600,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 12"
+  },
+  {
+    "id": 7083,
+    "hexCode": "#E6BEFF",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 13"
+  },
+  {
+    "id": 7084,
+    "hexCode": "#AA6E28",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 14"
+  },
+  {
+    "id": 7085,
+    "hexCode": "#F58231",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 15"
+  },
+  {
+    "id": 7086,
+    "hexCode": "#911EB4",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 16"
+  },
+  {
+    "id": 7087,
+    "hexCode": "#F032E6",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 17"
+  },
+  {
+    "id": 7088,
+    "hexCode": "#E6BEFF",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 18"
+  },
+  {
+    "id": 7089,
+    "hexCode": "#AA6E28",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 19"
+  },
+  {
+    "id": 7090,
+    "hexCode": "#808000",
+    "capacity": 420,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 7779,
+    "customerUid": "742 EXTRA 2"
+  },
+  {
+    "id": 7091,
+    "hexCode": "#AAFFC3",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 20"
+  },
+  {
+    "id": 7092,
+    "hexCode": "#E6194B",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 5108,
+    "customerUid": "742 EXTRA 3"
+  },
+  {
+    "id": 7093,
+    "hexCode": "#808000",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 4"
+  },
+  {
+    "id": 7094,
+    "hexCode": "#9b1b9d",
+    "capacity": 600,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0211",
+    "customerUid": "742 EXTRA 5"
+  },
+  {
+    "id": 7095,
+    "hexCode": "#0082C8",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 7163,
+    "customerUid": "742 EXTRA 6"
+  },
+  {
+    "id": 7096,
+    "hexCode": "#911EB4",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 7773,
+    "customerUid": "742 EXTRA 7"
+  },
+  {
+    "id": 7097,
+    "hexCode": "#3CB44B",
+    "capacity": 300,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0426",
+    "customerUid": "742 EXTRA 8"
+  },
+  {
+    "id": 7098,
+    "hexCode": "#0082C8",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": null,
+    "customerUid": "742 EXTRA 9"
+  },
+  {
+    "id": 7099,
+    "hexCode": "#E6194B",
+    "capacity": 600,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0275",
+    "customerUid": "742 GREEN HWY"
+  },
+  {
+    "id": 7100,
+    "hexCode": "#AA6E28",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0314",
+    "customerUid": "742 KANUGA 39"
+  },
+  {
+    "id": 7101,
+    "hexCode": "#911EB4",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 5104,
+    "customerUid": "742 KENMURE"
+  },
+  {
+    "id": 7102,
+    "hexCode": "#0082C8",
+    "capacity": 210,
+    "maxThreshold": 0.85,
+    "workAreaNumber": 7764,
+    "customerUid": "742 LAUREL PARK"
+  },
+  {
+    "id": 7103,
+    "hexCode": "#808000",
+    "capacity": 300,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0326",
+    "customerUid": "742 MILLS RIVER"
+  },
+  {
+    "id": 7104,
+    "hexCode": "#F032E6",
+    "capacity": 420,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0247",
+    "customerUid": "742 N RUGBY"
+  },
+  {
+    "id": 7105,
+    "hexCode": "#E6BEFF",
+    "capacity": 420,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0351",
+    "customerUid": "742 SUGARLOAF"
+  },
+  {
+    "id": 7106,
+    "hexCode": "#E6194B",
+    "capacity": 600,
+    "maxThreshold": 0.85,
+    "workAreaNumber": "0446",
+    "customerUid": "742 ZIRCONIA"
+  }
+]

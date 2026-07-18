@@ -1,0 +1,13 @@
+<body class="dashboard">
+  <div class="frontend3_generic_viewapp">
+    <div class="orchestrator-container">
+    <div class="wrapper">
+      <aside class="dashboard-sidebar d-none d-lg-block">
+        <div id="BootstrapVueNext__ID__v-0__offcanvas___" class="offcanvas-lg offcanvas-start show gc-sidebar border-right">
+      <main class="pb-3 w-100">
+        <div class="dashboard-heading border-bottom ps-3 w-100 d-inline-flex justify-content-between">
+        <div class="container-fluid dashboard-content">
+  <button id="_pendo-badge_33XGJ_tOvyywzOG5yYgMjXvBTm8" class="_pendo-badge _pendo-resource-center-badge-container _pendo-badge_">
+    <img id="pendo-image-badge-c69a8423" class="_pendo-image _pendo-badge-image _pendo-resource-center-badge-image">
+    <div class="pendo-resource-center-badge-notification-bubble">
+      <div class="pendo-notification-bubble-unread-count">4

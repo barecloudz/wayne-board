@@ -1,0 +1,34 @@
+<body class="dashboard">
+  <div class="frontend3_generic_viewapp">
+    <div class="orchestrator-container">
+    <div class="wrapper">
+      <aside class="dashboard-sidebar d-none d-lg-block">
+        <div id="BootstrapVueNext__ID__v-0__offcanvas___" class="offcanvas-lg offcanvas-start show gc-sidebar border-right">
+          <div class="offcanvas-body p-0">
+            <div class="w-100">
+      <main class="pb-3 w-100">
+        <div class="dashboard-heading border-bottom ps-3 w-100 d-inline-flex justify-content-between">
+          <div class="dashboard-titles mt-2">
+            <h6 class="dashboard-subtitle text-light text-uppercase mb-2">742 LOGISTICS INC'S GROUNDCLOUD
+            <h2 id="dashboardTitle" class="dashboard-title">Jul 2, 2026
+          <div class="mobile-sidebar-btn d-block d-lg-none">
+            <button id="toggleSidebarBtn" class="btn btn-sm btn-secondary mt-2 me-3">
+        <div class="container-fluid dashboard-content">
+          <div class="alert alert-danger customer-not-in-good-standing-message mb-3">
+            <div class="d-flex gap-2">
+          <div class="feature-status alert alert-danger mb-3">
+            <div class="d-flex align-items-center pt-1 flex-column flex-lg-row">
+          <div class="feature-status alert alert-danger mb-3">
+            <div class="d-flex align-items-center pt-1 flex-column flex-lg-row">
+          <div class="feature-status alert alert-danger mb-3">
+            <div class="d-flex align-items-center pt-1 flex-column flex-lg-row">
+          <div class="feature-status alert alert-danger mb-3">
+            <div class="d-flex align-items-center pt-1 flex-column flex-lg-row">
+          <div class="feature-status alert alert-danger mb-3">
+            <div class="d-flex align-items-center pt-1 flex-column flex-lg-row">
+          <div class="row">
+            <div class="col">
+  <button id="_pendo-badge_33XGJ_tOvyywzOG5yYgMjXvBTm8" class="_pendo-badge _pendo-resource-center-badge-container _pendo-badge_">
+    <img id="pendo-image-badge-c69a8423" class="_pendo-image _pendo-badge-image _pendo-resource-center-badge-image">
+    <div class="pendo-resource-center-badge-notification-bubble">
+      <div class="pendo-notification-bubble-unread-count">4

@@ -1,0 +1,18 @@
+{
+  "count": 15,
+  "sample_keys": [
+    "id",
+    "route",
+    "day",
+    "driver",
+    "vehicle",
+    "est_travel_time",
+    "est_distance",
+    "status",
+    "miles_total",
+    "current",
+    "miles_traveled",
+    "estimate_only",
+    "time_zone"
+  ]
+}

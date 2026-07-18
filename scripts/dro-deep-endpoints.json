@@ -1,0 +1,614 @@
+{
+  "browserCaptured": [
+    {
+      "method": "GET",
+      "path": "/api/api/admin-log/download-globalization/en-US",
+      "query": "",
+      "status": 200,
+      "count": 6
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/country-language",
+      "query": "",
+      "status": 200,
+      "count": 4
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/disabled-features",
+      "query": "",
+      "status": 200,
+      "count": 5
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/logout",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/ThirdPartyLogins",
+      "query": "",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/home/version",
+      "query": "",
+      "status": 200,
+      "count": 3
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/drivers/267575",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/drivers/267575/performance",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/exceptions",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/exports",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/imports",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/jobs",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/manifest",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/package-types",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/plan-settings",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/daily",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/driverperformance",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/manifest",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/packagedetail",
+      "query": "?unassigned=true",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/performance",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/routedetail",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/stops",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/report/volume",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/driver-assignments",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/route-summary",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/sequence",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/solve-status",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/timing",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/routing-jobs",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/routing-settings",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/routingstatus",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/sequence",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/service-types",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/solve-status",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/solver-settings",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/stop-overrides-temp",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/stops/unassigned",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/time-windows",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/UnroutableWaypoints",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/upload",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/service-areas/3060743/upload-history",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/settings/default-version",
+      "query": "",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/active-route-plan",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/daily-volume",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/dispatch-settings",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/route-plans",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/service-areas",
+      "query": "",
+      "status": 401,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/sort-date",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/sortDate",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/stationvolume",
+      "query": "",
+      "status": 200,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/stations/259/volume",
+      "query": "",
+      "status": 404,
+      "count": 1
+    },
+    {
+      "method": "GET",
+      "path": "/api/api/user/V2",
+      "query": "",
+      "status": 200,
+      "count": 2
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/internal/device/nonce",
+      "query": "",
+      "status": 200,
+      "count": 1
+    }
+  ],
+  "extraProbes": [
+    {
+      "path": "/api/api/service-areas/3060743/report/packagedetail",
+      "status": 200,
+      "preview": "[{\"csa\":\"\",\"solutionType\":\"actual\",\"wave\":null,\"workAreaName\":\"742 7TH AVE\",\"workAreaNumber\":\"0454\",\"routeType\":\"REG\",\"distance\":55.3,\"totalTime\":\"7.03\",\"lpStops\":7,\"lpPackages\":18,\"smStops\":30,\"smPac"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stop-overrides-temp",
+      "status": 200,
+      "preview": "[{\"tempOverrideId\":228040893,\"serviceAreaId\":3060743,\"csa\":\"304169\",\"waypointId\":\"b5ac8c70-3653-3141-a9f7-f02b7316ff17\",\"stopName\":\"LOCKE PACE\",\"address\":\"1202 CHEROKEE DR\",\"postalCode\":\"28739\",\"stopT"
+    }
+  ],
+  "allProbes": [
+    {
+      "path": "/api/api/service-areas/3060743/report/routedetail",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/driverperformance",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/performance",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/manifest",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/stops",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/volume",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/daily",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/report/packagedetail",
+      "status": 200,
+      "preview": "[{\"csa\":\"\",\"solutionType\":\"actual\",\"wave\":null,\"workAreaName\":\"742 7TH AVE\",\"workAreaNumber\":\"0454\",\"routeType\":\"REG\",\"distance\":55.3,\"totalTime\":\"7.03\",\"lpStops\":7,\"lpPackages\":18,\"smStops\":30,\"smPac"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stop-overrides-temp",
+      "status": 200,
+      "preview": "[{\"tempOverrideId\":228040893,\"serviceAreaId\":3060743,\"csa\":\"304169\",\"waypointId\":\"b5ac8c70-3653-3141-a9f7-f02b7316ff17\",\"stopName\":\"LOCKE PACE\",\"address\":\"1202 CHEROKEE DR\",\"postalCode\":\"28739\",\"stopT"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/drivers/267575",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/drivers/267575/performance",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/route-summary",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/driver-assignments",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/sequence",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/solve-status",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/route-plans/2291698/timing",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/sequence",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/solve-status",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/routing-jobs",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/jobs",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/manifest",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/upload",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/imports",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/exports",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/sort-date",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/volume",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/daily-volume",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/active-route-plan",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/route-plans",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/stations/259/service-areas",
+      "status": 401,
+      "preview": "{\"message\":\"Unauthorized\"}"
+    },
+    {
+      "path": "/api/api/service-areas/3060743/plan-settings",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/routing-settings",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/solver-settings",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/time-windows",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/exceptions",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/upload-history",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/package-types",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/service-types",
+      "status": 404,
+      "preview": ""
+    },
+    {
+      "path": "/api/api/service-areas/3060743/stops/unassigned",
+      "status": 404,
+      "preview": ""
+    }
+  ],
+  "summary": {
+    "browserCaptured": 56,
+    "extraProbes200": 2
+  }
+}
