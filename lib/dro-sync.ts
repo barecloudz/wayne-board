@@ -62,14 +62,15 @@ export async function syncDro(): Promise<DroSyncResult> {
     const sortDate: string = /^\d{4}-\d{2}-\d{2}$/.test(sdText) ? sdText : new Date().toISOString().slice(0, 10);
 
     // Fetch core data in parallel
-    const [routes, waypoints, anchorAreasRaw, allRoutePlans, stopOverridesRaw, packageDetail, planningWindowRaw] = await Promise.all([
-      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-summary?stationId=${STATION_ID}&solutionType=actual`, { headers }).then(r => r.json()) as Promise<any[]>,
+    const [routes, waypoints, anchorAreasRaw, allRoutePlans, stopOverridesRaw, packageDetail, planningWindowRaw, vehicleSet] = await Promise.all([
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-summary?stationId=${STATION_ID}&solutionType=actual`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/waypoints?solutionType=actual&routePlanId=${planId}`, { headers }).then(r => r.json()) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers }).then(r => r.json()) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/stop-overrides`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/report/packagedetail?routePlanId=${planId}`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/station/${STATION_ID}/planningWindowState`, { headers }).then(r => r.json()).catch(() => false),
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans/${planId}/vehicle-set`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
     ]);
 
     const anchorAreas = anchorAreasRaw;
@@ -130,41 +131,55 @@ export async function syncDro(): Promise<DroSyncResult> {
     await sql`DELETE FROM dro_routes`;
     await sql`DELETE FROM dro_anchor_areas`;
 
-    // Insert routes with LP/SM/bulk/reg breakdown from packagedetail
-    if (routes.length > 0) {
-      for (const r of routes) {
-        const pd = pkgDetailByRoute[r.workAreaNumber ?? ""] ?? {};
-        await sql`
-          INSERT INTO dro_routes
-            (work_area_name, work_area_number, route_type, stops, packages,
-             distance, time_hours, cube, vehicle_capacity, sort_date,
-             lp_stops, lp_packages, sm_stops, sm_packages,
-             bulk_stops, bulk_packages, reg_stops, reg_packages,
-             exceeded_target_duration, time_critical_stops)
-          VALUES (
-            ${r.workAreaName     ?? ""},
-            ${r.workAreaNumber   ?? ""},
-            ${r.routeType        ?? ""},
-            ${r.stops            ?? 0},
-            ${r.packages         ?? 0},
-            ${r.distance         ?? 0},
-            ${parseFloat(r.time) || 0},
-            ${r.cube             ?? 0},
-            ${r.vehicleCapacity  ?? ""},
-            ${sortDate},
-            ${pd.lpStops         ?? 0},
-            ${pd.lpPackages      ?? 0},
-            ${pd.smStops         ?? 0},
-            ${pd.smPackages      ?? 0},
-            ${pd.bulkStops       ?? 0},
-            ${pd.bulkPackages    ?? 0},
-            ${pd.regStops        ?? 0},
-            ${pd.regPackages     ?? 0},
-            ${pd.exceededTargetDuration ?? false},
-            ${pd.timeCriticalStops ?? 0}
-          )
-        `;
-      }
+    // Insert routes with LP/SM/bulk/reg breakdown from packagedetail.
+    // If route-summary is empty (pre-solve planning window), fall back to vehicle-set
+    // so the work area checklist always has entries.
+    const routesToInsert: any[] = routes.length > 0
+      ? routes
+      : (Array.isArray(vehicleSet) ? vehicleSet : []).map((v: any) => ({
+          workAreaName:   v.vehicleName  ?? "",
+          workAreaNumber: String(v.vehicleOrder ?? v.vehicleId ?? ""),
+          routeType:      v.routeType    ?? "REG",
+          stops:          0,
+          packages:       0,
+          distance:       0,
+          time:           "0",
+          cube:           0,
+          vehicleCapacity: "",
+        }));
+
+    for (const r of routesToInsert) {
+      const pd = pkgDetailByRoute[r.workAreaNumber ?? ""] ?? {};
+      await sql`
+        INSERT INTO dro_routes
+          (work_area_name, work_area_number, route_type, stops, packages,
+           distance, time_hours, cube, vehicle_capacity, sort_date,
+           lp_stops, lp_packages, sm_stops, sm_packages,
+           bulk_stops, bulk_packages, reg_stops, reg_packages,
+           exceeded_target_duration, time_critical_stops)
+        VALUES (
+          ${r.workAreaName     ?? ""},
+          ${r.workAreaNumber   ?? ""},
+          ${r.routeType        ?? ""},
+          ${r.stops            ?? 0},
+          ${r.packages         ?? 0},
+          ${r.distance         ?? 0},
+          ${parseFloat(r.time) || 0},
+          ${r.cube             ?? 0},
+          ${r.vehicleCapacity  ?? ""},
+          ${sortDate},
+          ${pd.lpStops         ?? 0},
+          ${pd.lpPackages      ?? 0},
+          ${pd.smStops         ?? 0},
+          ${pd.smPackages      ?? 0},
+          ${pd.bulkStops       ?? 0},
+          ${pd.bulkPackages    ?? 0},
+          ${pd.regStops        ?? 0},
+          ${pd.regPackages     ?? 0},
+          ${pd.exceededTargetDuration ?? false},
+          ${pd.timeCriticalStops ?? 0}
+        )
+      `;
     }
 
     // Insert stops in batches of 100
@@ -356,8 +371,13 @@ export async function syncDro(): Promise<DroSyncResult> {
     }
 
     // Upsert daily totals aggregate (kept permanently, no PII)
-    const totalStops    = routes.reduce((s: number, r: any) => s + (r.stops    ?? 0), 0);
-    const totalPackages = routes.reduce((s: number, r: any) => s + (r.packages ?? 0), 0);
+    // When route-summary is empty (pre-solve), derive totals from waypoints instead
+    const totalStops    = routes.length > 0
+      ? routes.reduce((s: number, r: any) => s + (r.stops    ?? 0), 0)
+      : waypoints.length;
+    const totalPackages = routes.length > 0
+      ? routes.reduce((s: number, r: any) => s + (r.packages ?? 0), 0)
+      : waypoints.reduce((s: number, w: any) => s + (w.noPackages ?? 0), 0);
     const totalDistance = routes.reduce((s: number, r: any) => s + (r.distance ?? 0), 0);
 
     await sql`
@@ -377,7 +397,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       ON CONFLICT (key) DO UPDATE SET value = NOW()::text
     `;
 
-    return { success: true, sortDate, routes: routes.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };
+    return { success: true, sortDate, routes: routesToInsert.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };
 
   } catch (err: any) {
     const msg = err?.message ?? String(err);
