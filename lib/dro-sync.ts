@@ -67,8 +67,14 @@ export async function syncDro(): Promise<DroSyncResult> {
 
     // Get active route plan ID
     const planRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/active-route-plan`, { headers });
-    const plan     = await planRes.json() as any;
+    const planText = await planRes.text();
+    let plan: any = {};
+    try { plan = planText ? JSON.parse(planText) : {}; } catch {}
     const planId = plan.planId as number;
+    if (!planId) {
+      const preview = planText.slice(0, 200);
+      throw new Error(`DRO active-route-plan returned no planId (HTTP ${planRes.status}). Response: ${preview}`);
+    }
 
     // Get sort date
     // Sort date is a plain string like "2026-07-16"

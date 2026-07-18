@@ -38,7 +38,10 @@ export async function GET(req: NextRequest) {
 
     // Fetch all anchor areas from DRO
     const areasRes = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers });
-    const areasRaw: any[] = await areasRes.json();
+    const areasText = await areasRes.text();
+    let areasRaw: any[];
+    try { areasRaw = areasText ? JSON.parse(areasText) : []; }
+    catch { throw new Error(`DRO anchor-area returned non-JSON (HTTP ${areasRes.status}): ${areasText.slice(0, 200)}`); }
 
     const areas = areasRaw.map((a: any) => {
       const shape = typeof a.shape === "string" ? JSON.parse(a.shape) : (a.shape ?? {});
