@@ -185,11 +185,11 @@ export default function RoutePlannerMap({ areas, routes, onReassign, highlighted
                       dashArray: "8,4",
                     }
                   : {
-                      color: isSelected ? "#ffffff" : color,
+                      color: "#000000",
                       fillColor: color,
                       fillOpacity: isSelected ? 0.55 : 0.28,
-                      weight: isSelected ? 2.5 : 1.5,
-                      opacity: 0.9,
+                      weight: isSelected ? 2.5 : 1,
+                      opacity: isSelected ? 1 : 0.35,
                     }
               }
               eventHandlers={{ click: () => handlePolygonClick(poly.areaId) }}
