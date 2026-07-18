@@ -1,0 +1,3523 @@
+{
+  "template": "AUTO — 13 drivers",
+  "parameters": {
+    "MAX_NEIGHBOR_MILES": 3,
+    "MAX_MOVE_MILES": 8,
+    "TARGET_TOLERANCE": 8,
+    "DAYS_BACK": 30
+  },
+  "routesBefore": {
+    "GREEN HWY": {
+      "avgStops": 105.98103695063509,
+      "areas": 4,
+      "wan": "0275"
+    },
+    "7TH AVE": {
+      "avgStops": 103.5623510384504,
+      "areas": 6,
+      "wan": "0454"
+    },
+    "KANUGA 39": {
+      "avgStops": 100.51039290814174,
+      "areas": 4,
+      "wan": "0314"
+    },
+    "ETOWAH / ZIRCONIA": {
+      "avgStops": 96.46988110955787,
+      "areas": 16,
+      "wan": "0442"
+    },
+    "CHIMNEY ROC": {
+      "avgStops": 94.18414012510421,
+      "areas": 3,
+      "wan": "0354"
+    },
+    "N RUGBY": {
+      "avgStops": 90.38685947864775,
+      "areas": 8,
+      "wan": "0247"
+    },
+    "EXTRA 5 / DOWNTOWN": {
+      "avgStops": 90.30808525252544,
+      "areas": 6,
+      "wan": "0211"
+    },
+    "ASHE HWY": {
+      "avgStops": 81.87858480475396,
+      "areas": 5,
+      "wan": "0255"
+    },
+    "ERKWOOD": {
+      "avgStops": 80.81257034335667,
+      "areas": 4,
+      "wan": "0418"
+    },
+    "EXTRA 2": {
+      "avgStops": 79.10856533474393,
+      "areas": 5,
+      "wan": "0386"
+    },
+    "SUGARLOAF": {
+      "avgStops": 77.81559098521868,
+      "areas": 10,
+      "wan": "0351"
+    },
+    "CUMMINGS CV": {
+      "avgStops": 75.80548305228568,
+      "areas": 6,
+      "wan": "0470"
+    },
+    "MILLS RIVER": {
+      "avgStops": 58.24343674237912,
+      "areas": 5,
+      "wan": "0326"
+    }
+  },
+  "neighborGraph": {
+    "7th Ave": [
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.39"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.59"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.75"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.92"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.15"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.18"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.19"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.32"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.35"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.47"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.49"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.61"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.83"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.89"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.95"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.01"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.10"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.12"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.12"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.16"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.31"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.35"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.50"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.51"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.56"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.66"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.69"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.72"
+      }
+    ],
+    "Airport/Advent Health": [
+      {
+        "route": "7TH AVE",
+        "dist": "0.38"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "0.67"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.35"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.60"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.03"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.35"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.54"
+      }
+    ],
+    "Ashe Hwy/Highland Ave": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.19"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.35"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.37"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.39"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.42"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.46"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.57"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.58"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.63"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.68"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.68"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.85"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.88"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.01"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.05"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.10"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.11"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.29"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.46"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.48"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.49"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.71"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.98"
+      }
+    ],
+    "Clear Creek": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.86"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.91"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.96"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.09"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.23"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.28"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.40"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.42"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.47"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.55"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.64"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.75"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.81"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.96"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.98"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.99"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.44"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.45"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.64"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.67"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.69"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.76"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.96"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.97"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.98"
+      }
+    ],
+    "Duncan Hill": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.23"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.46"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.64"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.67"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.78"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.06"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.13"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.22"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.31"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.38"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.43"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.47"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.70"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.88"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.91"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.93"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.05"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.08"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.10"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.21"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.42"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.47"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.67"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.72"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.76"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.84"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.87"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.90"
+      }
+    ],
+    "E allen/ flatrock": [
+      {
+        "route": "GREEN HWY",
+        "dist": "0.38"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.11"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.25"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.37"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.64"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.76"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.84"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.99"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.08"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.14"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.16"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.21"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.25"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.26"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.38"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.47"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.59"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.69"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.79"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.92"
+      }
+    ],
+    "Kenmure ": [
+      {
+        "route": "KANUGA 39",
+        "dist": "2.26"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.44"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.82"
+      }
+    ],
+    "Lower Zirconia": [],
+    "Spartanburg Hwy/Boyd Chevy": [
+      {
+        "route": "GREEN HWY",
+        "dist": "0.82"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "0.83"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.05"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.37"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.38"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.21"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.39"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.40"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.45"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.51"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.55"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.66"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.86"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.87"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.87"
+      }
+    ],
+    "Zirconia/ MineGapRd": [
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.87"
+      }
+    ],
+    "Zirconia/BellMountainRd": [],
+    "Zirconia/BobsCreek": [],
+    "Zirconia/Cliffs": [],
+    "Zirconia/Gap Creek": [],
+    "Zirconia/Kingdom Place": [],
+    "Zirconia/MondaminRd": [],
+    "Zirconia/NorthLakeSummit": [],
+    "Zirconia/OldUs25": [],
+    "Zirconia/OldZirconiaRd": [],
+    "Zirconia/SouthLakeSummit": [],
+    "Zirconia/ZirconiaRd": [],
+    "Brevard Rd/Blythe": [
+      {
+        "route": "ERKWOOD",
+        "dist": "0.72"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.35"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.35"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.49"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.82"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.98"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.99"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.08"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.19"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.21"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.24"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.37"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.53"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.56"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.59"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.66"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.72"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.80"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.93"
+      }
+    ],
+    "Downtown Hendo East": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.59"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.03"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.22"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.45"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.47"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.52"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.56"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.58"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.68"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.76"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.81"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.84"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.86"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.96"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.00"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.07"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.12"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.21"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.36"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.39"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.57"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.65"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.70"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.88"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.97"
+      }
+    ],
+    "Downtown Hendo/Pardee": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.39"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.06"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.25"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.28"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.39"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.44"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.46"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.65"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.67"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.70"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.75"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.83"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.97"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.98"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.99"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.01"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.19"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.29"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.33"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.40"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.43"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.48"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.67"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.83"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.89"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.93"
+      }
+    ],
+    "Downtown West": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.75"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.21"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.25"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.47"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.57"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.62"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.64"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.68"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.85"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.87"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.91"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.99"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.99"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.10"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.21"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.26"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.29"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.45"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.55"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.58"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.73"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.75"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.85"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.86"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.89"
+      }
+    ],
+    "Downtown West Laurel Park": [
+      {
+        "route": "ERKWOOD",
+        "dist": "0.88"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.03"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.18"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.19"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.61"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.73"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.88"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.88"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.97"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.01"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.10"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.18"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.25"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.26"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.26"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.31"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.39"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.45"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.52"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.64"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.81"
+      }
+    ],
+    "Downtown/Jackson Pk": [
+      {
+        "route": "GREEN HWY",
+        "dist": "0.47"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "0.75"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.02"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.11"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.32"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.38"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.43"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.61"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.70"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.77"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.87"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.92"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.94"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.28"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.45"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.46"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.55"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.56"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.64"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.73"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.77"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.86"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.89"
+      }
+    ],
+    "Champion Hills/Laurel Park": [
+      {
+        "route": "ERKWOOD",
+        "dist": "1.11"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.60"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.94"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.05"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.14"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.15"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.35"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.37"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.46"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.80"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.81"
+      }
+    ],
+    "Downtown/Old Spartanburg": [
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "0.38"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.75"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "0.82"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.41"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.52"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.67"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.70"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.88"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.89"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.91"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.05"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.06"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.24"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.25"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.33"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.50"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.51"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.65"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.69"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.92"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.95"
+      }
+    ],
+    "Erkwood/Greenville Hwy": [
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "0.44"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "0.83"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.02"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.25"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.62"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.73"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.76"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.97"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.99"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.24"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.31"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.49"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.54"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.72"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.82"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.83"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.85"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.94"
+      }
+    ],
+    "Greenville Hwy": [
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.47"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.03"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.03"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.08"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.25"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.25"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.35"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.37"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.37"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.61"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.69"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.07"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.10"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.31"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.33"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.37"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.44"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.63"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.70"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.71"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.87"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.97"
+      }
+    ],
+    "Inner Crab Creek": [
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.21"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.35"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.97"
+      }
+    ],
+    "Little River ": [
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.59"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.26"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.35"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.42"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.83"
+      }
+    ],
+    "Outer Crab Creek": [],
+    "Pleasant Grove": [
+      {
+        "route": "EXTRA 2",
+        "dist": "2.64"
+      }
+    ],
+    "Bat Cave": [],
+    "Gerton": [],
+    "Lake Lure": [],
+    "upper Bearwallow Gerton": [
+      {
+        "route": "N RUGBY",
+        "dist": "2.12"
+      }
+    ],
+    "west Chimney Rock Rd": [
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.29"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.04"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.17"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.77"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.97"
+      }
+    ],
+    "4Season/Sugarloaf": [
+      {
+        "route": "ASHE HWY",
+        "dist": "1.31"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.45"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.58"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.59"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.81"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.01"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.29"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.29"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.39"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.47"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.51"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.55"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.66"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.73"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.92"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.96"
+      }
+    ],
+    "Blue Ridge Mall": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.46"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.15"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.28"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.44"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.56"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.58"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.72"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.87"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.87"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.06"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.14"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.26"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.31"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.42"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.45"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.53"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.63"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.68"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.85"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.87"
+      }
+    ],
+    "Carolina Village": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.78"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "0.86"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.13"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.39"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.47"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.83"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.00"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.07"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.20"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.21"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.22"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.45"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.45"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.59"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.64"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.69"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.79"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.87"
+      }
+    ],
+    "Dana/Tracy Grove Rd": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.67"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.19"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.39"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.47"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.61"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.64"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.70"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.76"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.85"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.88"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.06"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.07"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.18"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.44"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.51"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.54"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.54"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.66"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.98"
+      }
+    ],
+    "Linda Vista": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.23"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "0.91"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "0.92"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.19"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.28"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.45"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.68"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.68"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.92"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.10"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.19"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.24"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.31"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.31"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.33"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.38"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.66"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.77"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.87"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.89"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.94"
+      }
+    ],
+    "Thompson St": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.64"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "0.96"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.30"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.35"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.42"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.70"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.86"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.10"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.23"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.26"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.28"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.33"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.43"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.50"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.52"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.56"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.59"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.70"
+      }
+    ],
+    "Walmart/Francis Rd": [
+      {
+        "route": "N RUGBY",
+        "dist": "0.81"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.09"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.13"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.68"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.83"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.89"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.07"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.19"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.20"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.30"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.36"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.58"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.77"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.81"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.89"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.93"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.95"
+      }
+    ],
+    "Walmart/Nix Rd 3": [
+      {
+        "route": "N RUGBY",
+        "dist": "0.52"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.23"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.43"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.74"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.85"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.00"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.12"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.14"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.30"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.48"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.50"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.63"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.65"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.86"
+      }
+    ],
+    "Walmart/Sams 1": [
+      {
+        "route": "N RUGBY",
+        "dist": "0.95"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.38"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.49"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.55"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.74"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.10"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.11"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.43"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.49"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.57"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.75"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.84"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.85"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.86"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.92"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.92"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.98"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.98"
+      }
+    ],
+    "Willowbrook": [
+      {
+        "route": "N RUGBY",
+        "dist": "1.34"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.78"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.91"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.93"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.08"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.25"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.33"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.50"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.56"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.67"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.67"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.70"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.76"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.86"
+      }
+    ],
+    "Brevard Rd/Davis Mtn": [
+      {
+        "route": "EXTRA 2",
+        "dist": "1.38"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "1.85"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.99"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.37"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.77"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.93"
+      }
+    ],
+    "Brevard Rd/Laurel Park": [
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.72"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.61"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.62"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.01"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.05"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.07"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.07"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.12"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.15"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.63"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.68"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.69"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.73"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.76"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.77"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.81"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.89"
+      }
+    ],
+    "Laurel Park/Country Club": [
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "0.88"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "0.91"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.21"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.35"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.58"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.65"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.69"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "1.73"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.94"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.94"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.95"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.24"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.33"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.48"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.65"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.67"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.87"
+      }
+    ],
+    "Laurel Park/Somersby": [
+      {
+        "route": "GREEN HWY",
+        "dist": "1.11"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.82"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.09"
+      },
+      {
+        "route": "CHIMNEY ROC",
+        "dist": "2.16"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.26"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.29"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.45"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.58"
+      },
+      {
+        "route": "EXTRA 2",
+        "dist": "2.74"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.88"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.89"
+      }
+    ],
+    "Airport/Ashe Hwy": [
+      {
+        "route": "ASHE HWY",
+        "dist": "1.37"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.40"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.20"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.22"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.24"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.30"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.30"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.31"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.33"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.35"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.42"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.51"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.68"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.75"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.77"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.83"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.89"
+      }
+    ],
+    "Asheville Hwy/Brookside Camp": [
+      {
+        "route": "ASHE HWY",
+        "dist": "1.42"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.63"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.81"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.00"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.03"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.07"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.07"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.23"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.31"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.47"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.49"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.62"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.63"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.72"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.72"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.92"
+      }
+    ],
+    "Asheville Hwy/Mtn Home": [
+      {
+        "route": "ASHE HWY",
+        "dist": "1.35"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.44"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.49"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.81"
+      }
+    ],
+    "E glenwood": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.67"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.37"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.67"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.76"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.98"
+      }
+    ],
+    "Huff n Puff": [
+      {
+        "route": "N RUGBY",
+        "dist": "0.94"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.60"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.13"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.63"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.89"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.98"
+      }
+    ],
+    "NAPLES RD FRONT": [
+      {
+        "route": "ASHE HWY",
+        "dist": "0.38"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.89"
+      }
+    ],
+    "Erkwood/Kanuga": [
+      {
+        "route": "GREEN HWY",
+        "dist": "0.44"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.05"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.08"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.41"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.43"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "1.64"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.97"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.12"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.29"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.33"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.33"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.42"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.44"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.69"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.87"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.98"
+      }
+    ],
+    "Kanuga/Town": [
+      {
+        "route": "KANUGA 39",
+        "dist": "1.59"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.60"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "1.73"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.16"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.21"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.31"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.44"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.49"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.68"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.75"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.89"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.97"
+      }
+    ],
+    "Osceola Lake": [
+      {
+        "route": "ERKWOOD",
+        "dist": "0.91"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.19"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.35"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "1.62"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.64"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.77"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.81"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "1.98"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.07"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.09"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.14"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.21"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.33"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.35"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.35"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.45"
+      },
+      {
+        "route": "ETOWAH / ZIRCONIA",
+        "dist": "2.69"
+      }
+    ],
+    "Pressley rd": [
+      {
+        "route": "MILLS RIVER",
+        "dist": "2.04"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "2.72"
+      }
+    ],
+    "Sugarloaf Mtn rd": [],
+    "Sunrise Ridge": [
+      {
+        "route": "N RUGBY",
+        "dist": "1.27"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.44"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.53"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "1.87"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.76"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.96"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.98"
+      }
+    ],
+    "Union Hill": [
+      {
+        "route": "N RUGBY",
+        "dist": "1.84"
+      },
+      {
+        "route": "N RUGBY",
+        "dist": "3.00"
+      }
+    ],
+    "Upper East Chimney Rock rd": [
+      {
+        "route": "MILLS RIVER",
+        "dist": "2.77"
+      }
+    ],
+    "upper east edneyville": [
+      {
+        "route": "MILLS RIVER",
+        "dist": "1.29"
+      }
+    ],
+    "Chimney Rock": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.49"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.53"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.58"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.74"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.78"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.89"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.22"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.26"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.42"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.54"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.66"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.84"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.96"
+      }
+    ],
+    "Chimney Rock/Sugarloaf": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.34"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.44"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.59"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.74"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.14"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.20"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.43"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.44"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.45"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.45"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.77"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.90"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "3.00"
+      }
+    ],
+    "Fruiland": [
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.27"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "2.72"
+      }
+    ],
+    "KYLES CREEK": [
+      {
+        "route": "MILLS RIVER",
+        "dist": "2.97"
+      }
+    ],
+    "Locust ridge": [
+      {
+        "route": "7TH AVE",
+        "dist": "0.94"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.37"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.50"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.54"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.62"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.81"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.84"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.89"
+      }
+    ],
+    "OLD CLEAR CREEK": [
+      {
+        "route": "MILLS RIVER",
+        "dist": "2.12"
+      },
+      {
+        "route": "MILLS RIVER",
+        "dist": "2.17"
+      }
+    ],
+    "Oak Hill": [
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.52"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.81"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "0.95"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.13"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.30"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.45"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.47"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.68"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.72"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "1.81"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "1.91"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.06"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.10"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.13"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.22"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.33"
+      },
+      {
+        "route": "ASHE HWY",
+        "dist": "2.56"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.67"
+      },
+      {
+        "route": "7TH AVE",
+        "dist": "2.81"
+      },
+      {
+        "route": "EXTRA 5 / DOWNTOWN",
+        "dist": "2.93"
+      }
+    ],
+    "Ridge rd": [
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.84"
+      },
+      {
+        "route": "CUMMINGS CV",
+        "dist": "1.87"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "1.91"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.66"
+      },
+      {
+        "route": "SUGARLOAF",
+        "dist": "2.98"
+      }
+    ],
+    "Brevard/Horseshoe": [
+      {
+        "route": "ERKWOOD",
+        "dist": "1.38"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.74"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.81"
+      }
+    ],
+    "Cummings Cove CC": [
+      {
+        "route": "ERKWOOD",
+        "dist": "1.85"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.29"
+      },
+      {
+        "route": "GREEN HWY",
+        "dist": "2.46"
+      }
+    ],
+    "Cummings Cove/Big Willow": [
+      {
+        "route": "GREEN HWY",
+        "dist": "2.05"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.58"
+      },
+      {
+        "route": "ERKWOOD",
+        "dist": "2.93"
+      },
+      {
+        "route": "KANUGA 39",
+        "dist": "2.97"
+      }
+    ],
+    "Etowah school rd": [
+      {
+        "route": "KANUGA 39",
+        "dist": "2.64"
+      }
+    ],
+    "upper Cummings Cove": [
+      {
+        "route": "ERKWOOD",
+        "dist": "2.77"
+      }
+    ]
+  },
+  "proposals": [
+    {
+      "area": "Airport/Ashe Hwy",
+      "from": "7TH AVE",
+      "to": "ERKWOOD",
+      "stopsTransferred": 17.260391839741732,
+      "heavyBefore": 103.5623510384504,
+      "lightBefore": 80.81257034335667,
+      "heavyAfter": 86.30195919870867,
+      "lightAfter": 98.0729621830984,
+      "diffBefore": 22.749780695093733,
+      "diffAfter": 11.771002984389725,
+      "improvement": 10.978777710704009,
+      "distToLight": "3.2"
+    },
+    {
+      "area": "E allen/ flatrock",
+      "from": "ETOWAH / ZIRCONIA",
+      "to": "ASHE HWY",
+      "stopsTransferred": 6.029367569347367,
+      "heavyBefore": 96.46988110955787,
+      "lightBefore": 81.87858480475396,
+      "heavyAfter": 90.4405135402105,
+      "lightAfter": 87.90795237410133,
+      "diffBefore": 14.591296304803919,
+      "diffAfter": 2.5325611661091756,
+      "improvement": 12.058735138694743,
+      "distToLight": "3.5"
+    },
+    {
+      "area": "KYLES CREEK",
+      "from": "N RUGBY",
+      "to": "MILLS RIVER",
+      "stopsTransferred": 11.298357434830969,
+      "heavyBefore": 90.38685947864775,
+      "lightBefore": 58.24343674237912,
+      "heavyAfter": 79.08850204381679,
+      "lightAfter": 69.54179417721008,
+      "diffBefore": 32.14342273626863,
+      "diffAfter": 9.54670786660671,
+      "improvement": 22.596714869661923,
+      "distToLight": "5.3"
+    }
+  ],
+  "routesAfter": {
+    "ASHE HWY": [
+      "7th Ave",
+      "Airport/Advent Health",
+      "Ashe Hwy/Highland Ave",
+      "Clear Creek",
+      "Duncan Hill",
+      "E allen/ flatrock"
+    ],
+    "ETOWAH / ZIRCONIA": [
+      "Kenmure ",
+      "Lower Zirconia",
+      "Spartanburg Hwy/Boyd Chevy",
+      "Zirconia/ MineGapRd",
+      "Zirconia/BellMountainRd",
+      "Zirconia/BobsCreek",
+      "Zirconia/Cliffs",
+      "Zirconia/Gap Creek",
+      "Zirconia/Kingdom Place",
+      "Zirconia/MondaminRd",
+      "Zirconia/NorthLakeSummit",
+      "Zirconia/OldUs25",
+      "Zirconia/OldZirconiaRd",
+      "Zirconia/SouthLakeSummit",
+      "Zirconia/ZirconiaRd"
+    ],
+    "EXTRA 5 / DOWNTOWN": [
+      "Brevard Rd/Blythe",
+      "Downtown Hendo East",
+      "Downtown Hendo/Pardee",
+      "Downtown West",
+      "Downtown West Laurel Park",
+      "Downtown/Jackson Pk"
+    ],
+    "GREEN HWY": [
+      "Champion Hills/Laurel Park",
+      "Downtown/Old Spartanburg",
+      "Erkwood/Greenville Hwy",
+      "Greenville Hwy"
+    ],
+    "KANUGA 39": [
+      "Inner Crab Creek",
+      "Little River ",
+      "Outer Crab Creek",
+      "Pleasant Grove"
+    ],
+    "MILLS RIVER": [
+      "Bat Cave",
+      "Gerton",
+      "Lake Lure",
+      "upper Bearwallow Gerton",
+      "west Chimney Rock Rd",
+      "KYLES CREEK"
+    ],
+    "SUGARLOAF": [
+      "4Season/Sugarloaf",
+      "Blue Ridge Mall",
+      "Carolina Village",
+      "Dana/Tracy Grove Rd",
+      "Linda Vista",
+      "Thompson St",
+      "Walmart/Francis Rd",
+      "Walmart/Nix Rd 3",
+      "Walmart/Sams 1",
+      "Willowbrook"
+    ],
+    "ERKWOOD": [
+      "Brevard Rd/Davis Mtn",
+      "Brevard Rd/Laurel Park",
+      "Laurel Park/Country Club",
+      "Laurel Park/Somersby",
+      "Airport/Ashe Hwy"
+    ],
+    "7TH AVE": [
+      "Asheville Hwy/Brookside Camp",
+      "Asheville Hwy/Mtn Home",
+      "E glenwood",
+      "Huff n Puff",
+      "NAPLES RD FRONT"
+    ],
+    "CHIMNEY ROC": [
+      "Erkwood/Kanuga",
+      "Kanuga/Town",
+      "Osceola Lake"
+    ],
+    "CUMMINGS CV": [
+      "Pressley rd",
+      "Sugarloaf Mtn rd",
+      "Sunrise Ridge",
+      "Union Hill",
+      "Upper East Chimney Rock rd",
+      "upper east edneyville"
+    ],
+    "N RUGBY": [
+      "Chimney Rock",
+      "Chimney Rock/Sugarloaf",
+      "Fruiland",
+      "Locust ridge",
+      "OLD CLEAR CREEK",
+      "Oak Hill",
+      "Ridge rd"
+    ],
+    "EXTRA 2": [
+      "Brevard/Horseshoe",
+      "Cummings Cove CC",
+      "Cummings Cove/Big Willow",
+      "Etowah school rd",
+      "upper Cummings Cove"
+    ]
+  }
+}
