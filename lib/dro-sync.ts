@@ -12,7 +12,7 @@
  */
 
 import { neon } from "@neondatabase/serverless";
-import { getDroHeaders } from "@/lib/dro-client";
+import { getDroHeadersStrict } from "@/lib/dro-client";
 
 const DRO_BASE = "https://dro.routesmart.com";
 
@@ -44,8 +44,8 @@ export async function syncDro(): Promise<DroSyncResult> {
   }
 
   try {
-    // ── Step 1: Get headers (uses cached session, re-logins only if expired) ─
-    const headers = await getDroHeaders();
+    // ── Step 1: Get headers (strict — cached session only, never runs Puppeteer) ─
+    const headers = await getDroHeadersStrict();
 
     // ── Step 2: Pull data via DRO REST API ────────────────────────────────
     const SA_ID = process.env.DRO_SERVICE_AREA_ID || "3060743";
@@ -380,6 +380,10 @@ export async function syncDro(): Promise<DroSyncResult> {
     return { success: true, sortDate, routes: routes.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };
 
   } catch (err: any) {
-    return { success: false, sortDate: "", routes: 0, stops: 0, error: err?.message ?? String(err) };
+    const msg = err?.message ?? String(err);
+    if (msg === "SESSION_EXPIRED") {
+      return { success: false, sortDate: "", routes: 0, stops: 0, error: "DRO session expired. Go to Auto DRO → click Connect to DRO first, then sync again." };
+    }
+    return { success: false, sortDate: "", routes: 0, stops: 0, error: msg };
   }
 }

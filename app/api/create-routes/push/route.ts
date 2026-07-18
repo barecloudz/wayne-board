@@ -1,85 +1,18 @@
-export const maxDuration = 300;
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
-import { db } from "@/lib/db";
-import { settings } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { getDroHeadersStrict } from "@/lib/dro-client";
 import { recordTraineeWorkDays } from "@/lib/record-trainee-days";
 
-const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
-const DRO_BASE      = "https://dro.routesmart.com";
-const SA_ID         = process.env.DRO_SERVICE_AREA_ID || "3060743";
-const STATION_ID    = process.env.DRO_STATION_ID      || "259";
+const DRO_BASE   = "https://dro.routesmart.com";
+const SA_ID      = process.env.DRO_SERVICE_AREA_ID || "3060743";
+const STATION_ID = process.env.DRO_STATION_ID      || "259";
 
 type PushRoute = {
   name: string;       // DRO work area name e.g. "742 ERKWOOD"
   stops: { waypointId: string }[];
 };
-
-async function getDroSession(): Promise<string> {
-  const credsRows = await db.select().from(settings)
-    .where(eq(settings.key, "dro_username"))
-    .then(async (r) => {
-      const pw = await db.select().from(settings).where(eq(settings.key, "dro_password"));
-      return { username: r[0]?.value, password: pw[0]?.value };
-    });
-
-  const { username, password } = credsRows;
-  if (!username || !password) throw new Error("DRO credentials not set in settings");
-
-  const isDev = process.env.NODE_ENV === "development";
-  const browser = await puppeteer.launch({
-    executablePath: isDev
-      ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-      : await chromium.executablePath(CHROMIUM_PACK),
-    headless: true,
-    args: isDev ? ["--no-sandbox", "--disable-setuid-sandbox"] : [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
-  });
-
-  try {
-    const page = await browser.newPage();
-    page.on("dialog", async (d) => { try { await d.dismiss(); } catch {} });
-    await page.goto(DRO_BASE, { waitUntil: "networkidle2" });
-
-    const popupPromise = new Promise<any>(resolve =>
-      browser.once("targetcreated", (t: any) => resolve(t.page()))
-    );
-    await page.click('button::-p-text(Service Provider)');
-    const popup = await popupPromise;
-    await popup.waitForNavigation({ waitUntil: "networkidle2" }).catch(() => {});
-    popup.on("dialog", async (d: any) => { try { await d.dismiss(); } catch {} });
-
-    try {
-      await popup.waitForSelector('button::-p-text(Block)', { timeout: 4000 });
-      await popup.click('button::-p-text(Block)');
-    } catch {}
-
-    await popup.waitForSelector('input[name="identifier"]', { timeout: 10000 });
-    await popup.type('input[name="identifier"]', username);
-    await popup.click('input[type="submit"]');
-    await popup.waitForSelector('input[type="password"]', { timeout: 10000 });
-    await popup.type('input[type="password"]', password);
-    const pwSubmit = await popup.$('input[type="submit"], button[type="submit"]');
-    if (pwSubmit) await pwSubmit.click();
-    else await popup.keyboard.press("Enter");
-
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
-    await new Promise(r => setTimeout(r, 3000));
-
-    // Select station
-    await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
-    const stations = await page.$$('[class*="station" i]');
-    if (stations.length > 0) await stations[0].click();
-    await new Promise(r => setTimeout(r, 3000));
-
-    const cookies = await page.cookies();
-    return cookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
-  } finally {
-    await browser.close();
-  }
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -89,18 +22,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No routes provided" }, { status: 400 });
     }
 
-    // ── Step 1: Login and get session cookies ────────────────────────────────
-    let cookieHeader: string;
+    // ── Step 1: Get session headers (cached — never runs Puppeteer) ──────────
+    let headers: Record<string, string>;
     try {
-      cookieHeader = await getDroSession();
-    } catch (e: any) {
-      return NextResponse.json({ error: `DRO login failed: ${e?.message}` }, { status: 500 });
+      headers = await getDroHeadersStrict();
+    } catch {
+      return NextResponse.json({
+        error: "DRO session expired. Go to Auto DRO → click Connect to DRO first, then try again.",
+      }, { status: 401 });
     }
-
-    const headers = {
-      Cookie:         cookieHeader,
-      "Content-Type": "application/json",
-    };
 
     // ── Step 2: Get active route plan ────────────────────────────────────────
     const planRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/active-route-plan`, { headers });

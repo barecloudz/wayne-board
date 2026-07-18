@@ -207,6 +207,10 @@ export default function AutoDroClient() {
   const [credsSaving,   setCredsSaving]   = useState(false);
   const [credsSaved,    setCredsSaved]    = useState(false);
 
+  // Connect (Puppeteer login / session warm-up)
+  const [connecting,    setConnecting]    = useState(false);
+  const [connectResult, setConnectResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
   // Sync
   const [syncing,       setSyncing]       = useState(false);
   const [syncResult,    setSyncResult]    = useState<{ ok: boolean; msg: string } | null>(null);
@@ -269,6 +273,24 @@ export default function AutoDroClient() {
     setCredsSaving(false);
     setCredsSaved(true);
     setTimeout(() => setCredsSaved(false), 3000);
+  }
+
+  async function handleConnect() {
+    setConnecting(true);
+    setConnectResult(null);
+    try {
+      const res = await fetch("/api/auto-dro/connect", { method: "POST" });
+      const r   = await res.json();
+      if (r.success) {
+        setConnectResult({ ok: true, msg: "DRO session established — you can now Sync." });
+      } else {
+        setConnectResult({ ok: false, msg: r.error ?? "Connection failed" });
+      }
+    } catch (e: any) {
+      setConnectResult({ ok: false, msg: e?.message ?? "Connection failed" });
+    } finally {
+      setConnecting(false);
+    }
   }
 
   async function handleSync() {
@@ -344,15 +366,27 @@ export default function AutoDroClient() {
               </p>
             )}
           </div>
-          <button
-            onClick={handleSync}
-            disabled={syncing || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold
-              bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-sm"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing…" : "Sync Now"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleConnect}
+              disabled={connecting || syncing || loading}
+              title="Run once per day to establish a DRO login session. Required before syncing."
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold
+                bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50 transition-colors shadow-sm"
+            >
+              <KeyRound className={`w-4 h-4 ${connecting ? "animate-pulse" : ""}`} />
+              {connecting ? "Connecting…" : "Connect to DRO"}
+            </button>
+            <button
+              onClick={handleSync}
+              disabled={syncing || loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold
+                bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-sm"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Now"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -375,6 +409,22 @@ export default function AutoDroClient() {
         ))}
       </div>
 
+      {/* ── Connect result banner ── */}
+      {connectResult && (
+        <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium mb-3 border ${
+          connectResult.ok
+            ? "bg-violet-50 text-violet-700 border-violet-200"
+            : "bg-red-50 text-red-700 border-red-200"
+        }`}>
+          {connectResult.ok
+            ? <CheckCircle className="w-4 h-4 shrink-0" />
+            : <XCircle className="w-4 h-4 shrink-0" />
+          }
+          {connectResult.msg}
+          <button onClick={() => setConnectResult(null)} className="ml-auto text-current opacity-50 hover:opacity-100">✕</button>
+        </div>
+      )}
+
       {/* ── Sync result banner ── */}
       {syncResult && activeTab === "overview" && (
         <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium mb-6 border ${
@@ -387,6 +437,16 @@ export default function AutoDroClient() {
             : <XCircle className="w-4 h-4 shrink-0" />
           }
           {syncResult.msg}
+          {!syncResult.ok && syncResult.msg.includes("Connect to DRO") && (
+            <button
+              onClick={handleConnect}
+              disabled={connecting}
+              className="ml-auto flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <KeyRound className="w-3 h-3" />
+              {connecting ? "Connecting…" : "Connect Now"}
+            </button>
+          )}
         </div>
       )}
 

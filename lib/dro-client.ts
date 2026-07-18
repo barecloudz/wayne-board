@@ -128,6 +128,32 @@ export async function getDroHeaders(): Promise<Record<string, string>> {
   };
 }
 
+/**
+ * Strict version — only returns cached headers, never runs Puppeteer.
+ * Throws SESSION_EXPIRED if no valid session is cached.
+ * Use this in sync/data endpoints so they never time out on login.
+ */
+export async function getDroHeadersStrict(): Promise<Record<string, string>> {
+  const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
+
+  const rows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
+  const cache = Object.fromEntries(rows.map((r: any) => [r.key, r.value]));
+
+  const cookies: string = cache["dro_session_cookies"] ?? "";
+  const expiresAt: string = cache["dro_session_expires_at"] ?? "";
+
+  const isValid = cookies && expiresAt && new Date(expiresAt) > new Date();
+
+  if (!isValid) {
+    throw new Error("SESSION_EXPIRED");
+  }
+
+  return {
+    Cookie: cookies,
+    "Content-Type": "application/json",
+  };
+}
+
 // ── Low-level fetch wrapper ────────────────────────────────────────────────────
 
 export type DroFetchResult<T = unknown> = {
@@ -140,7 +166,7 @@ export async function droFetch<T = unknown>(
   path: string,
   opts: RequestInit = {}
 ): Promise<DroFetchResult<T>> {
-  const headers = await getDroHeaders();
+  const headers = await getDroHeadersStrict();
   const res = await fetch(`${DRO_BASE}${path}`, {
     ...opts,
     headers: {

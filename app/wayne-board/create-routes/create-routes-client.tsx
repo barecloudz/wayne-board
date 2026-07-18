@@ -159,7 +159,14 @@ export default function CreateRoutesClient() {
     setSyncMsg(null);
     try {
       const res  = await fetch("/api/auto-dro/sync", { method: "POST" });
-      const json = await res.json();
+      let json: any;
+      try {
+        json = await res.json();
+      } catch {
+        // 504 or non-JSON response
+        setSyncMsg({ ok: false, text: "Sync timed out. Go to Auto DRO and click Connect to DRO first, then try again." });
+        return;
+      }
       if (!res.ok || json.error) {
         setSyncMsg({ ok: false, text: json.error ?? "Sync failed" });
       } else {
