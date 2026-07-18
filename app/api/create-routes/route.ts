@@ -55,13 +55,36 @@ export async function GET() {
   const [stopRow] = await db.select({ count: sql<number>`count(*)::int` }).from(droStops);
   const totalStops = stopRow?.count ?? 0;
 
-  // Route info from DRO
-  const routes = await db.select({
+  // Route info from DRO — prefer dro_routes (from route-summary), fall back to
+  // aggregating dro_stops by work_area_number (works during planning window when
+  // solutionType=actual returns nothing yet)
+  let routes = await db.select({
     workAreaName:   droRoutes.workAreaName,
     workAreaNumber: droRoutes.workAreaNumber,
     stops:          droRoutes.stops,
     packages:       droRoutes.packages,
   }).from(droRoutes).orderBy(droRoutes.workAreaName);
+
+  if (routes.length === 0 && totalStops > 0) {
+    // Derive routes from stop records — group by work_area_number
+    const derived = await db.execute(sql`
+      SELECT
+        COALESCE(NULLIF(optimal_route, ''), NULLIF(actual_route, ''), work_area_number) AS work_area_name,
+        work_area_number,
+        COUNT(*)::int AS stops,
+        SUM(no_packages)::int AS packages
+      FROM dro_stops
+      WHERE work_area_number != ''
+      GROUP BY work_area_number, COALESCE(NULLIF(optimal_route, ''), NULLIF(actual_route, ''), work_area_number)
+      ORDER BY work_area_number
+    `);
+    routes = (derived as any[]).map(r => ({
+      workAreaName:   String(r.work_area_name ?? r.work_area_number),
+      workAreaNumber: String(r.work_area_number),
+      stops:          Number(r.stops),
+      packages:       Number(r.packages),
+    }));
+  }
 
   const driverCount = allDrivers.length;
   // Max 120 stops per driver → minimum routes needed
