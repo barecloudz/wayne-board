@@ -78,7 +78,8 @@ export async function GET() {
       GROUP BY work_area_number, COALESCE(NULLIF(optimal_route, ''), NULLIF(actual_route, ''), work_area_number)
       ORDER BY work_area_number
     `);
-    routes = ((derived as unknown) as any[]).map(r => ({
+    const derivedRows: any[] = (derived as any).rows ?? (derived as any) ?? [];
+    routes = derivedRows.map((r: any) => ({
       workAreaName:   String(r.work_area_name ?? r.work_area_number),
       workAreaNumber: String(r.work_area_number),
       stops:          Number(r.stops),
