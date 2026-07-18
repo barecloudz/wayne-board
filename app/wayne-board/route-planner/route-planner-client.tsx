@@ -711,8 +711,8 @@ export default function RoutePlannerClient({
 
       {/* ── Push to DRO confirmation modal ────────────────────────────────────── */}
       {showDroModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-[380px] mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" style={{ marginLeft: 0 }}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 w-[420px] mx-auto relative z-50">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
