@@ -44,6 +44,7 @@ export type DroSyncResult = {
 };
 
 export async function syncDro(): Promise<DroSyncResult> {
+  try {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
   // Read credentials from DB settings first, fall back to env vars
@@ -427,5 +428,9 @@ export async function syncDro(): Promise<DroSyncResult> {
       return { success: false, sortDate: "", routes: 0, stops: 0, error: "DRO session expired. Go to Auto DRO → click Connect to DRO first, then sync again." };
     }
     return { success: false, sortDate: "", routes: 0, stops: 0, error: msg };
+  }
+  } catch (err: any) {
+    // Outer catch: covers DB connection errors and anything outside the inner try
+    return { success: false, sortDate: "", routes: 0, stops: 0, error: err?.message ?? String(err) };
   }
 }
