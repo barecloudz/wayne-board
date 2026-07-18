@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
-import { ChevronDown, ChevronUp, Loader2, Save, Zap, X, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Save, Zap, X, CheckCircle, AlertCircle } from "lucide-react";
 import type { MapArea, RouteSlot } from "./route-planner-map";
 
 // ── Dynamic import for Leaflet map (no SSR) ────────────────────────────────────
@@ -87,6 +87,20 @@ export default function RoutePlannerClient({
   const [expandedSlots, setExpandedSlots] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
   const [showDroModal, setShowDroModal] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pushResult, setPushResult] = useState<{
+    success: boolean;
+    sortDate?: string;
+    activePlan?: { id: number; name: string };
+    routesSent?: number;
+    totalStops?: number;
+    skippedStops?: number;
+    solveOk?: boolean;
+    solveJobId?: number;
+    routes?: { route: string; stops: number; ok: boolean }[];
+    error?: string;
+    hint?: string;
+  } | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // ── Fetch template areas ─────────────────────────────────────────────────────
@@ -218,9 +232,31 @@ export default function RoutePlannerClient({
   }
 
   // ── Push to DRO ───────────────────────────────────────────────────────────────
-  function handleDroConfirm() {
+  async function handleDroConfirm() {
+    if (!selectedTemplateId) return;
     setShowDroModal(false);
-    addToast("Push to DRO coming in Phase 4", "info");
+    setPushing(true);
+    setPushResult(null);
+
+    try {
+      const res = await fetch("/api/dro/push-routes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId: selectedTemplateId }),
+      });
+      const data = await res.json();
+      setPushResult(data);
+      if (data.success) {
+        addToast(`Pushed ${data.routesSent} routes, ${data.totalStops} stops — solve ${data.solveOk ? "triggered ✓" : "failed"}`, "success");
+      } else {
+        addToast(data.error ?? "Push failed", "error");
+      }
+    } catch (err: any) {
+      setPushResult({ success: false, error: err?.message ?? "Network error" });
+      addToast("Push failed — check console", "error");
+    } finally {
+      setPushing(false);
+    }
   }
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
@@ -375,16 +411,46 @@ export default function RoutePlannerClient({
           </button>
 
           <button
-            onClick={() => setShowDroModal(true)}
-            disabled={!selectedTemplate}
+            onClick={() => { setPushResult(null); setShowDroModal(true); }}
+            disabled={!selectedTemplate || pushing}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] font-bold
               tracking-wide transition-all border border-slate-200
               bg-white text-slate-700 hover:bg-slate-50
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Zap className="w-3.5 h-3.5" />
-            Push to DRO
+            {pushing ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Zap className="w-3.5 h-3.5" />
+            )}
+            {pushing ? "Pushing…" : "Push to DRO"}
           </button>
+
+          {/* Push result summary */}
+          {pushResult && !pushing && (
+            <div className={`rounded-lg px-3 py-2 text-[11px] border
+              ${pushResult.success
+                ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+                : "bg-red-50 border-red-100 text-red-700"}`}>
+              {pushResult.success ? (
+                <>
+                  <p className="font-bold">✓ Routes pushed</p>
+                  <p>{pushResult.routesSent} routes · {pushResult.totalStops} stops</p>
+                  <p>Sort date: {pushResult.sortDate}</p>
+                  <p>Plan: {pushResult.activePlan?.name}</p>
+                  <p>Solve: {pushResult.solveOk ? "triggered ✓" : "⚠ failed (outside window?)"}</p>
+                  {(pushResult.skippedStops ?? 0) > 0 && (
+                    <p className="text-emerald-600">{pushResult.skippedStops} stops kept as-is (no WAN)</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="font-bold">✗ {pushResult.error}</p>
+                  {pushResult.hint && <p className="mt-0.5 text-red-600">{pushResult.hint}</p>}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -424,11 +490,17 @@ export default function RoutePlannerClient({
               </button>
             </div>
 
-            <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-3">
               This will push{" "}
               <strong className="text-slate-900">{selectedTemplate?.name}</strong> to
-              DRO and trigger a solve. Are you sure?
+              the currently active DRO plan and trigger a solve.
             </p>
+            <ul className="text-[11px] text-slate-500 mb-5 space-y-0.5 pl-3 list-disc">
+              <li>Stops are assigned by anchor area → route (not geometry)</li>
+              <li>Stops without a work area number stay where they are</li>
+              <li>Solve runs immediately after — takes ~1 min</li>
+              <li>Takes ~60–90 seconds total (login + push + solve)</li>
+            </ul>
 
             <div className="flex gap-2">
               <button
