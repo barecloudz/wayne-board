@@ -72,17 +72,9 @@ export default function AutoDswClient() {
   useEffect(() => { loadStatus(); }, []);
 
   async function handleSync() {
-    setSyncing(true);
-    setSyncResult(null);
-    const res = await fetch("/api/auto-dsw/sync", { method: "POST" });
-    const r   = await res.json();
-    setSyncing(false);
-    if (r.success) {
-      setSyncResult({ ok: true, msg: `${r.rows} routes pulled for ${r.date} · ${r.matched} matched to Wayne Board drivers` });
-      await loadStatus();
-    } else {
-      setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
-    }
+    // DSW requires full browser automation (2-3 min) — runs automatically at 6 AM ET via cron.
+    // Manual sync can't run on Netlify due to 26-second function timeout.
+    setSyncResult({ ok: false, msg: "Manual sync isn't available on Netlify — DSW data syncs automatically every morning at 6 AM ET." });
   }
 
   async function saveSchedule() {
