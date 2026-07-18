@@ -12,7 +12,7 @@
  */
 
 import { neon } from "@neondatabase/serverless";
-import { getDroHeadersStrict } from "@/lib/dro-client";
+import { getDroHeaders } from "@/lib/dro-client";
 
 const DRO_BASE = "https://dro.routesmart.com";
 
@@ -59,7 +59,7 @@ export async function syncDro(): Promise<DroSyncResult> {
 
   try {
     // ── Step 1: Get headers (strict — cached session only, never runs Puppeteer) ─
-    const headers = await getDroHeadersStrict();
+    const headers = await getDroHeaders();
 
     // ── Step 2: Pull data via DRO REST API ────────────────────────────────
     const SA_ID = process.env.DRO_SERVICE_AREA_ID || "3060743";

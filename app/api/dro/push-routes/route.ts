@@ -4,13 +4,13 @@
  *
  * Algorithm (template-based, NOT geometry-based):
  *  1. Load template areas → workAreaNumber→routeLabel map
- *  2. Fetch waypoints from active DRO plan
- *  3. Group waypointIds by routeLabel (via workAreaNumber lookup)
- *  4. Call transferRoute for each non-empty group
- *  5. Trigger solve
+ *  2. Login to DRO via getDroHeaders (uses @sparticuz/chromium-min, works on Netlify)
+ *  3. Fetch waypoints from active DRO plan
+ *  4. Group waypointIds by routeLabel (via workAreaNumber lookup)
+ *  5. Call transferRoute for each non-empty group
+ *  6. Trigger solve
  *
  * Body: { templateId: number }
- * Runs Puppeteer locally. Will return 503 if Chrome is unavailable.
  */
 
 export const dynamic = "force-dynamic";
@@ -18,54 +18,11 @@ export const maxDuration = 180; // 3 minutes for Netlify
 
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
-import { saveDroSession } from "@/lib/dro-session";
+import { getDroHeaders } from "@/lib/dro-client";
 
 const DRO_BASE   = "https://dro.routesmart.com";
 const SA_ID      = "3060743";
 const STATION_ID = "259";
-
-async function droLogin(): Promise<string> {
-  // Dynamically import puppeteer-core so this fails gracefully if unavailable
-  const puppeteer = await import("puppeteer-core").then(m => m.default ?? m);
-  const CHROME = process.env.CHROMIUM_PATH ?? "C:/Program Files/Google/Chrome/Application/chrome.exe";
-  const username = process.env.DRO_USERNAME ?? "";
-  const password = process.env.DRO_PASSWORD ?? "";
-
-  const browser = await (puppeteer as any).launch({
-    executablePath: CHROME,
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-
-  try {
-    const page = await browser.newPage();
-    page.on("dialog", async (d: any) => { try { await d.dismiss(); } catch {} });
-    await page.goto(DRO_BASE, { waitUntil: "networkidle2" });
-    const popupPromise = new Promise<any>(resolve => browser.once("targetcreated", (t: any) => resolve(t.page())));
-    await page.click("button::-p-text(Service Provider)");
-    const popup = await popupPromise;
-    await popup.waitForNavigation({ waitUntil: "networkidle2" }).catch(() => {});
-    popup.on("dialog", async (d: any) => { try { await d.dismiss(); } catch {} });
-    try { await popup.waitForSelector("button::-p-text(Block)", { timeout: 4000 }); await popup.click("button::-p-text(Block)"); } catch {}
-    await popup.waitForSelector('input[name="identifier"]', { timeout: 10000 });
-    await popup.type('input[name="identifier"]', username);
-    await popup.click('input[type="submit"]');
-    await popup.waitForSelector('input[type="password"]', { timeout: 10000 });
-    await popup.type('input[type="password"]', password);
-    const btn = await popup.$('input[type="submit"], button[type="submit"]');
-    if (btn) await btn.click(); else await popup.keyboard.press("Enter");
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
-    await new Promise(r => setTimeout(r, 3000));
-    await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
-    const stations = await page.$$('[class*="station" i]');
-    if (stations.length) await (stations[0] as any).click();
-    await new Promise(r => setTimeout(r, 3000));
-    const cookies = await page.cookies() as any[];
-    return cookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
-  } finally {
-    await browser.close();
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -95,26 +52,9 @@ export async function POST(request: Request) {
     for (const row of templateRows as any[]) {
       wanToRoute[row.work_area_number] = row.route_label;
     }
-    const uniqueRoutes = [...new Set(Object.values(wanToRoute))];
 
-    // Login to DRO
-    let cookieHeader: string;
-    try {
-      cookieHeader = await droLogin();
-    } catch (err: any) {
-      return NextResponse.json({
-        error: "DRO login failed — Chrome not available on this host",
-        detail: err?.message,
-        hint: "Run 'node scripts/push-dro-routes.mjs' locally instead",
-      }, { status: 503 });
-    }
-
-    // Persist cookie for cron reuse
-    await saveDroSession(cookieHeader).catch((e) =>
-      console.warn("[push-routes] Failed to save DRO session cookie:", e)
-    );
-
-    const headers = { Cookie: cookieHeader, "Content-Type": "application/json" };
+    // Login to DRO (uses cached session or runs Puppeteer via @sparticuz/chromium-min)
+    const headers = await getDroHeaders();
 
     // Get sort date
     const sdText = (await (await fetch(`${DRO_BASE}/api/api/stations/${STATION_ID}/sortDate`, { headers })).text())
