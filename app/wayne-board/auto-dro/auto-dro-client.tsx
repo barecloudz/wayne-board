@@ -215,6 +215,10 @@ export default function AutoDroClient() {
   const [syncing,       setSyncing]       = useState(false);
   const [syncResult,    setSyncResult]    = useState<{ ok: boolean; msg: string } | null>(null);
 
+  // Diagnose
+  const [diagnosing,    setDiagnosing]    = useState(false);
+  const [diagResult,    setDiagResult]    = useState<{ allOk: boolean; checks: { label: string; ok: boolean; detail: string }[] } | null>(null);
+
   // Schedule
   const [autoEnabled,   setAutoEnabled]   = useState(false);
   const [autoTime,      setAutoTime]      = useState("23:55");
@@ -319,6 +323,20 @@ export default function AutoDroClient() {
     }
   }
 
+  async function handleDiagnose() {
+    setDiagnosing(true);
+    setDiagResult(null);
+    try {
+      const res = await fetch("/api/auto-dro/diagnose");
+      const json = await res.json();
+      setDiagResult(json);
+    } catch (e: any) {
+      setDiagResult({ allOk: false, checks: [{ label: "Request failed", ok: false, detail: e?.message ?? String(e) }] });
+    } finally {
+      setDiagnosing(false);
+    }
+  }
+
   async function saveSchedule() {
     setSchedSaving(true);
     await Promise.all([
@@ -379,6 +397,16 @@ export default function AutoDroClient() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={handleDiagnose}
+              disabled={diagnosing || syncing || connecting}
+              title="Run a step-by-step check to see exactly what's failing"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold
+                bg-amber-500 text-white hover:bg-amber-400 disabled:opacity-50 transition-colors shadow-sm"
+            >
+              <RefreshCw className={`w-4 h-4 ${diagnosing ? "animate-spin" : ""}`} />
+              {diagnosing ? "Diagnosing…" : "Diagnose"}
+            </button>
+            <button
               onClick={handleConnect}
               disabled={connecting || syncing || loading}
               title="Run once per day to establish a DRO login session. Required before syncing."
@@ -433,6 +461,29 @@ export default function AutoDroClient() {
           }
           {connectResult.msg}
           <button onClick={() => setConnectResult(null)} className="ml-auto text-current opacity-50 hover:opacity-100">✕</button>
+        </div>
+      )}
+
+      {/* ── Diagnose results ── */}
+      {diagResult && (
+        <div className="mb-4 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className={`px-4 py-2.5 flex items-center justify-between ${diagResult.allOk ? "bg-emerald-50 border-b border-emerald-100" : "bg-red-50 border-b border-red-100"}`}>
+            <p className={`text-[13px] font-bold ${diagResult.allOk ? "text-emerald-700" : "text-red-700"}`}>
+              {diagResult.allOk ? "✓ All systems go" : "✗ Issues found — see below"}
+            </p>
+            <button onClick={() => setDiagResult(null)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {diagResult.checks.map((c, i) => (
+              <div key={i} className="flex items-start gap-3 px-4 py-2.5">
+                <span className={`mt-0.5 text-[13px] shrink-0 ${c.ok ? "text-emerald-500" : "text-red-500"}`}>{c.ok ? "✓" : "✗"}</span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-slate-800">{c.label}</p>
+                  <p className={`text-[11px] mt-0.5 break-words ${c.ok ? "text-slate-400" : "text-red-600 font-medium"}`}>{c.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
