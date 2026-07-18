@@ -1,3 +1,6 @@
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { syncDro } from "@/lib/dro-sync";
 
