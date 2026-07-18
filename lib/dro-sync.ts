@@ -78,8 +78,8 @@ export async function syncDro(): Promise<DroSyncResult> {
     // Fetch core data in parallel
     const [routes, waypoints, anchorAreasRaw, allRoutePlans, stopOverridesRaw, packageDetail, planningWindowRaw, vehicleSet] = await Promise.all([
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-summary?stationId=${STATION_ID}&solutionType=actual`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
-      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/waypoints?solutionType=actual&routePlanId=${planId}`, { headers }).then(r => r.json()) as Promise<any[]>,
-      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers }).then(r => r.json()) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/waypoints?solutionType=actual&routePlanId=${planId}`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
+      fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/anchor-area`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/route-plans`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/stop-overrides`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
       fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/report/packagedetail?routePlanId=${planId}`, { headers }).then(r => r.json()).catch(() => []) as Promise<any[]>,
