@@ -11,11 +11,8 @@
  *   - GitHub Actions nightly cron
  */
 
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
-
-const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
 import { neon } from "@neondatabase/serverless";
+import { getDroHeaders } from "@/lib/dro-client";
 
 const DRO_BASE = "https://dro.routesmart.com";
 
@@ -46,71 +43,11 @@ export async function syncDro(): Promise<DroSyncResult> {
     return { success: false, sortDate: "", routes: 0, stops: 0, error: "DRO credentials not configured. Set them in Auto DRO settings." };
   }
 
-  let browser;
   try {
-    // ── Step 1: Log in via Puppeteer / Okta ────────────────────────────────
-    browser = await puppeteer.launch({
-      executablePath: await chromium.executablePath(CHROMIUM_PACK),
-      headless: true,
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
-    });
+    // ── Step 1: Get headers (uses cached session, re-logins only if expired) ─
+    const headers = await getDroHeaders();
 
-    const context = browser.defaultBrowserContext();
-    await context.overridePermissions(DRO_BASE, []);
-
-    const page = await browser.newPage();
-    page.on("dialog", async (d) => { try { await d.dismiss(); } catch {} });
-
-    await page.goto(DRO_BASE, { waitUntil: "networkidle2" });
-
-    // Click "Service Provider" → opens Okta popup
-    const popupPromise = new Promise<any>(resolve =>
-      browser!.once("targetcreated", (t: any) => resolve(t.page()))
-    );
-
-    await page.click('button::-p-text(Service Provider)');
-    const popup = await popupPromise;
-    await popup.waitForNavigation({ waitUntil: "networkidle2" }).catch(() => {});
-    popup.on("dialog", async (d: any) => { try { await d.dismiss(); } catch {} });
-
-    // Dismiss passkey dialog if present
-    try {
-      await popup.waitForSelector('button::-p-text(Block)', { timeout: 4000 });
-      await popup.click('button::-p-text(Block)');
-    } catch {}
-
-    // Fill username
-    await popup.waitForSelector('input[name="identifier"]', { timeout: 10000 });
-    await popup.type('input[name="identifier"]', username);
-    await popup.click('input[type="submit"]');
-
-    // Fill password
-    await popup.waitForSelector('input[type="password"]', { timeout: 10000 });
-    await popup.type('input[type="password"]', password);
-    // Okta password page uses input[type="submit"] with value "Verify"
-    const pwSubmit = await popup.$('input[type="submit"], button[type="submit"], input[value="Verify"]');
-    if (pwSubmit) await pwSubmit.click();
-    else await popup.keyboard.press("Enter");
-
-    // Wait for redirect back to DRO
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
-    await new Promise(r => setTimeout(r, 3000));
-
-    // ── Step 2: Select the single service area ──────────────────────────────
-    await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
-    const stationEls = await page.$$('[class*="station" i]');
-    if (stationEls.length > 0) await stationEls[0].click();
-    await new Promise(r => setTimeout(r, 4000));
-
-    // ── Step 3: Extract session cookies from the main page ─────────────────
-    const cookies = await page.cookies();
-    const cookieHeader = cookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
-
-    await browser.close();
-    browser = undefined;
-
-    // ── Step 4: Pull data via DRO REST API ─────────────────────────────────
-    const headers = { Cookie: cookieHeader, "Content-Type": "application/json" };
+    // ── Step 2: Pull data via DRO REST API ────────────────────────────────
     const SA_ID = process.env.DRO_SERVICE_AREA_ID || "3060743";
     const STATION_ID = process.env.DRO_STATION_ID || "259";
 
@@ -443,7 +380,6 @@ export async function syncDro(): Promise<DroSyncResult> {
     return { success: true, sortDate, routes: routes.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };
 
   } catch (err: any) {
-    if (browser) await browser.close().catch(() => {});
     return { success: false, sortDate: "", routes: 0, stops: 0, error: err?.message ?? String(err) };
   }
 }
