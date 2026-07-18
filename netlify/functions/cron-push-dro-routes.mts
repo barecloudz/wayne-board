@@ -1,8 +1,8 @@
 /**
- * Netlify scheduled function — runs nightly at 2 AM Eastern (6 AM UTC).
+ * Netlify scheduled function — runs nightly at 11:30 PM Eastern (3:30 AM UTC).
  * Pushes the default route template to DRO using a stored session cookie.
  *
- * Schedule: 0 6 * * *  (6:00 UTC = 2:00 AM Eastern — inside DRO planning window)
+ * Schedule: 30 3 * * *  (3:30 UTC = 11:30 PM Eastern — inside DRO planning window)
  *
  * Requirements:
  *  - A valid DRO session cookie must be stored in settings (key: 'dro_session_cookie')
@@ -15,7 +15,7 @@ import { neon } from "@neondatabase/serverless";
 import { getDroSession } from "../../lib/dro-session";
 
 export const config: Config = {
-  schedule: "0 6 * * *",
+  schedule: "30 3 * * *",
 };
 
 const DRO_BASE   = "https://dro.routesmart.com";
