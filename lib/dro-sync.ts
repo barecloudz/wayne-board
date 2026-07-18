@@ -352,20 +352,42 @@ export async function syncDro(): Promise<DroSyncResult> {
       ON CONFLICT (key) DO UPDATE SET value = ${String(planningWindowOpen)}
     `;
 
+    // Convert EPSG:3857 rings → WKT POLYGON (WGS84) for plan API polygon checks
+    function rings2wkt(rings: number[][][]): string | null {
+      const ring = rings?.[0];
+      if (!ring || ring.length < 3) return null;
+      const pts = ring.map(([x, y]) => {
+        const lng = (x / 20037508.34) * 180;
+        const lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((y / 20037508.34) * Math.PI)) - Math.PI / 2);
+        return `${lng} ${lat}`;
+      });
+      if (pts[0] !== pts[pts.length - 1]) pts.push(pts[0]);
+      return `POLYGON ((${pts.join(", ")}))`;
+    }
+
     // Insert anchor areas
     for (const a of anchorAreas) {
+      const shapeStr = typeof a.shape === "string" ? a.shape : JSON.stringify(a.shape ?? {});
+      let wktPoly: string | null = null;
+      try {
+        const shape = typeof a.shape === "string" ? JSON.parse(a.shape) : (a.shape ?? {});
+        wktPoly = rings2wkt(shape.rings ?? []);
+      } catch {}
+
       await sql`
-        INSERT INTO dro_anchor_areas (anchor_area_id, name, shape_json, enabled_route_plans)
+        INSERT INTO dro_anchor_areas (anchor_area_id, name, shape_json, enabled_route_plans, wkt_poly)
         VALUES (
           ${a.anchorAreaId},
           ${a.name ?? ""},
-          ${typeof a.shape === "string" ? a.shape : JSON.stringify(a.shape ?? {})},
-          ${JSON.stringify(a.enabledRoutePlans ?? [])}
+          ${shapeStr},
+          ${JSON.stringify(a.enabledRoutePlans ?? [])},
+          ${wktPoly}
         )
         ON CONFLICT (anchor_area_id) DO UPDATE SET
           name                = EXCLUDED.name,
           shape_json          = EXCLUDED.shape_json,
           enabled_route_plans = EXCLUDED.enabled_route_plans,
+          wkt_poly            = EXCLUDED.wkt_poly,
           synced_at           = NOW()
       `;
     }

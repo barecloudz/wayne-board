@@ -190,6 +190,13 @@ async function sequenceRoute<T extends { lat: number; lng: number; isBulkStop: b
   return [...optimized, ...bulkOrdered];
 }
 
+// ── EPSG:3857 → WGS84 ────────────────────────────────────────────────────────
+function merc2ll(x: number, y: number): [number, number] {
+  const lng = (x / 20037508.34) * 180;
+  const lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((y / 20037508.34) * Math.PI)) - Math.PI / 2);
+  return [lng, lat];
+}
+
 // ── Point-in-polygon (ray casting, WGS84) ────────────────────────────────────
 function parseWkt(wkt: string): [number, number][] {
   const inner = wkt.replace(/^POLYGON\s*\(\(/i, "").replace(/\)\)$/, "");
@@ -264,10 +271,10 @@ export async function POST(req: NextRequest) {
       if (!isNaN(cap) && cap > 0) capacityMap[r.workAreaName.trim()] = cap;
     }
 
-    // Fallback capacity if a route isn't in DRO (e.g. after merge)
-    const defaultCapacity = droRouteRows.length > 0
-      ? Math.min(...Object.values(capacityMap).filter(v => v > 0))
-      : 300;
+    // Fallback capacity — guard against Math.min(...[]) = Infinity when all caps empty
+    const capValues = Object.values(capacityMap).filter(v => v > 0);
+    const rawMin = capValues.length > 0 ? Math.min(...capValues) : Infinity;
+    const defaultCapacity = isFinite(rawMin) && rawMin > 0 ? rawMin : 300;
 
     // Pull all stops with coordinates
     const rawStops = await db.select({
@@ -291,15 +298,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No stops with coordinates. Run DRO sync first." }, { status: 400 });
     }
 
-    // Pull anchor area polygons
-    const anchorAreas = await db.select({
-      name:    droAnchorAreas.name,
-      wktPoly: droAnchorAreas.wktPoly,
+    // Pull anchor area polygons (wktPoly preferred, shapeJson EPSG:3857 rings as fallback)
+    const anchorAreaRows = await db.select({
+      name:      droAnchorAreas.name,
+      wktPoly:   droAnchorAreas.wktPoly,
+      shapeJson: droAnchorAreas.shapeJson,
     }).from(droAnchorAreas);
 
-    const parsedAreas = anchorAreas
-      .filter(a => a.wktPoly)
-      .map(a => ({ name: a.name, poly: parseWkt(a.wktPoly!) }));
+    const parsedAreas: { name: string; poly: [number, number][]; centLat: number; centLng: number }[] =
+      anchorAreaRows.flatMap(a => {
+        let poly: [number, number][] | null = null;
+        if (a.wktPoly) {
+          try { poly = parseWkt(a.wktPoly); } catch {}
+        }
+        if (!poly && a.shapeJson) {
+          try {
+            const shape = JSON.parse(a.shapeJson);
+            const ring = (shape.rings?.[0] ?? []) as number[][];
+            if (ring.length > 2) poly = ring.map(([x, y]) => merc2ll(x, y));
+          } catch {}
+        }
+        if (!poly || poly.length < 3) return [];
+        // Compute centroid of polygon vertices (lng,lat pairs)
+        const centLng = poly.reduce((s, p) => s + p[0], 0) / poly.length;
+        const centLat = poly.reduce((s, p) => s + p[1], 0) / poly.length;
+        return [{ name: a.name, poly, centLat, centLng }];
+      });
 
     // ── Step 1: Group stops by actualRoute ───────────────────────────────────
     const groups: Map<string, Stop[]> = new Map();
@@ -311,28 +335,55 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Planning-window fallback: if no stops have actualRoute yet (pre-solve),
+    // seed empty groups from dro_routes so unrouted stops have targets.
+    if (groups.size === 0) {
+      for (const r of droRouteRows) {
+        const name = r.workAreaName?.trim();
+        if (name) groups.set(name, []);
+      }
+    }
+
     // ── Step 2: Assign unrouted stops ────────────────────────────────────────
     const unrouted   = stops.filter(s => !s.actualRoute?.trim());
     const groupNames = [...groups.keys()];
 
+    // getCentroid falls back to the anchor area centroid when a group is empty (planning window)
     const getCentroid = (name: string) => {
       const g = groups.get(name)!;
-      return centroid(g.map(s => ({ lat: s.lat, lng: s.lng })));
+      if (g.length > 0) return centroid(g.map(s => ({ lat: s.lat, lng: s.lng })));
+      // Try to find a matching anchor area centroid as a warm seed
+      for (const area of parsedAreas) {
+        if (name.toLowerCase().includes(area.name.toLowerCase().slice(0, 6)) ||
+            area.name.toLowerCase().includes(name.toLowerCase().replace(/^742\s*/i, "").slice(0, 6))) {
+          return { lat: area.centLat, lng: area.centLng };
+        }
+      }
+      return { lat: depot.lat, lng: depot.lng };
     };
 
     for (const s of unrouted) {
-      let assigned = "";
+      if (groupNames.length === 0) continue;
 
+      // If stop falls inside an anchor area polygon, assign to the group
+      // whose centroid is geographically closest to that anchor area's centroid
+      let assigned = "";
       for (const area of parsedAreas) {
         if (pointInPolygon(s.lat, s.lng, area.poly)) {
-          const match = groupNames.find(n =>
-            n.toLowerCase().includes(area.name.toLowerCase().slice(0, 5))
-          );
-          if (match) { assigned = match; break; }
+          let bestName = groupNames[0];
+          let bestDist = Infinity;
+          for (const name of groupNames) {
+            const c = getCentroid(name);
+            const d = dist(area.centLat, area.centLng, c.lat, c.lng);
+            if (d < bestDist) { bestDist = d; bestName = name; }
+          }
+          assigned = bestName;
+          break;
         }
       }
 
-      if (!assigned && groupNames.length > 0) {
+      // Fallback: nearest group centroid to the stop itself
+      if (!assigned) {
         let bestName = groupNames[0];
         let bestDist = Infinity;
         for (const name of groupNames) {
@@ -343,7 +394,7 @@ export async function POST(req: NextRequest) {
         assigned = bestName;
       }
 
-      if (assigned) groups.get(assigned)!.push(s);
+      groups.get(assigned)!.push(s);
     }
 
     // ── Step 3: Build RouteGroup with cube totals and capacity ───────────────
