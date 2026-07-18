@@ -18,6 +18,7 @@ const adminItems = [
   { icon: CalendarDays,  label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
   { icon: Gauge,         label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
   { icon: WrenchIcon,    label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
+  { icon: TrendingUp,    label: "Performance",      href: "/wayne-board/performance",  exact: true },
   { icon: Star,          label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
   { icon: Trophy,        label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
   { icon: GraduationCap, label: "Trainee Days",     href: "/wayne-board/trainees",     exact: true },
