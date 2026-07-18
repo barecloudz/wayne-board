@@ -150,6 +150,7 @@ export default function CreateRoutesClient() {
   const [data, setData]           = useState<RouteData | null>(null);
   const [loading, setLoading]     = useState(true);
   const [syncing, setSyncing]     = useState(false);
+  const [syncPhase, setSyncPhase] = useState<"connecting" | "syncing" | null>(null);
   const [syncMsg, setSyncMsg]     = useState<{ ok: boolean; text: string } | null>(null);
   const [activeWorkAreas, setActiveWorkAreas] = useState<Set<string>>(new Set());
   const [step, setStep]           = useState<Step>("review");
@@ -182,27 +183,45 @@ export default function CreateRoutesClient() {
 
   async function handleSync() {
     setSyncing(true);
+    setSyncPhase("syncing");
     setSyncMsg(null);
     try {
-      const res  = await fetch("/api/auto-dro/sync", { method: "POST" });
-      let json: any;
-      try {
-        json = await res.json();
-      } catch {
-        // 504 or non-JSON response
-        setSyncMsg({ ok: false, text: "Sync timed out. Go to Auto DRO and click Connect to DRO first, then try again." });
+      // Attempt sync
+      let res  = await fetch("/api/auto-dro/sync", { method: "POST" });
+      let json: any = await res.json().catch(() => null);
+
+      // If session expired, auto-connect first then retry — no manual nav required
+      if (json?.error?.includes("session expired") || json?.error?.includes("SESSION_EXPIRED")) {
+        setSyncPhase("connecting");
+        setSyncMsg({ ok: false, text: "Reconnecting to DRO…" });
+        const connRes  = await fetch("/api/auto-dro/connect", { method: "POST" });
+        const connJson = await connRes.json().catch(() => ({}));
+        if (!connRes.ok || connJson.error) {
+          setSyncMsg({ ok: false, text: `Auto-connect failed: ${connJson.error ?? "unknown error"}` });
+          return;
+        }
+        // Retry sync with fresh session
+        setSyncPhase("syncing");
+        setSyncMsg(null);
+        res  = await fetch("/api/auto-dro/sync", { method: "POST" });
+        json = await res.json().catch(() => null);
+      }
+
+      if (!json) {
+        setSyncMsg({ ok: false, text: "Sync timed out or returned an invalid response." });
         return;
       }
       if (!res.ok || json.error) {
         setSyncMsg({ ok: false, text: json.error ?? "Sync failed" });
       } else {
         setSyncMsg({ ok: true, text: `Synced — ${json.stops} stops, ${json.routes} routes` });
-        await load(); // refresh route data after sync
+        await load();
       }
     } catch (e: any) {
       setSyncMsg({ ok: false, text: e?.message ?? "Sync failed" });
     } finally {
       setSyncing(false);
+      setSyncPhase(null);
     }
   }
 
@@ -312,7 +331,7 @@ export default function CreateRoutesClient() {
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm px-4 py-2 rounded-xl transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing DRO…" : "Sync DRO"}
+            {syncPhase === "connecting" ? "Connecting…" : syncPhase === "syncing" ? "Syncing…" : "Sync DRO"}
           </button>
         </div>
       </div>
