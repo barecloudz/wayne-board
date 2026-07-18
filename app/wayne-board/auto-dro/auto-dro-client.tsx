@@ -296,15 +296,26 @@ export default function AutoDroClient() {
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
-    const res = await fetch("/api/auto-dro/sync", { method: "POST" });
-    const r   = await res.json();
-    setSyncing(false);
-    if (r.success) {
-      setSyncResult({ ok: true, msg: `${r.routes} routes · ${r.stops} stops loaded for ${r.sortDate}${r.stopsWithCoords ? ` · ${r.stopsWithCoords} with GPS` : ""}` });
-      setUnroutableStops([]); // reset so it reloads on next open
-      await loadStatus();
-    } else {
-      setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
+    try {
+      const res = await fetch("/api/auto-dro/sync", { method: "POST" });
+      let r: any;
+      try {
+        r = await res.json();
+      } catch {
+        setSyncResult({ ok: false, msg: "Sync failed — server returned an unexpected response. Try connecting first." });
+        return;
+      }
+      if (r.success) {
+        setSyncResult({ ok: true, msg: `${r.routes} routes · ${r.stops} stops loaded for ${r.sortDate}${r.stopsWithCoords ? ` · ${r.stopsWithCoords} with GPS` : ""}` });
+        setUnroutableStops([]); // reset so it reloads on next open
+        await loadStatus();
+      } else {
+        setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
+      }
+    } catch (e: any) {
+      setSyncResult({ ok: false, msg: e?.message ?? "Sync failed" });
+    } finally {
+      setSyncing(false);
     }
   }
 

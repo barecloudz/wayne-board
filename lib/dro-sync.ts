@@ -16,6 +16,19 @@ import { getDroHeadersStrict } from "@/lib/dro-client";
 
 const DRO_BASE = "https://dro.routesmart.com";
 
+// Convert EPSG:3857 anchor area rings → WKT POLYGON string (WGS84)
+function rings2wkt(rings: number[][][]): string | null {
+  const ring = rings?.[0];
+  if (!ring || ring.length < 3) return null;
+  const pts = ring.map(([x, y]) => {
+    const lng = (x / 20037508.34) * 180;
+    const lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((y / 20037508.34) * Math.PI)) - Math.PI / 2);
+    return `${lng} ${lat}`;
+  });
+  if (pts[0] !== pts[pts.length - 1]) pts.push(pts[0]);
+  return `POLYGON ((${pts.join(", ")}))`;
+}
+
 export type DroSyncResult = {
   success: boolean;
   sortDate: string;
@@ -351,19 +364,6 @@ export async function syncDro(): Promise<DroSyncResult> {
       INSERT INTO settings (key, value) VALUES ('dro_planning_window_open', ${String(planningWindowOpen)})
       ON CONFLICT (key) DO UPDATE SET value = ${String(planningWindowOpen)}
     `;
-
-    // Convert EPSG:3857 rings → WKT POLYGON (WGS84) for plan API polygon checks
-    function rings2wkt(rings: number[][][]): string | null {
-      const ring = rings?.[0];
-      if (!ring || ring.length < 3) return null;
-      const pts = ring.map(([x, y]) => {
-        const lng = (x / 20037508.34) * 180;
-        const lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((y / 20037508.34) * Math.PI)) - Math.PI / 2);
-        return `${lng} ${lat}`;
-      });
-      if (pts[0] !== pts[pts.length - 1]) pts.push(pts[0]);
-      return `POLYGON ((${pts.join(", ")}))`;
-    }
 
     // Insert anchor areas
     for (const a of anchorAreas) {
