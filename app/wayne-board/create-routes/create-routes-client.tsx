@@ -91,7 +91,8 @@ type AnchorAreaData = {
 type RouteData = {
   today: string;
   driverCount: number;
-  scheduledDrivers: { driverId: string; name: string }[];
+  scheduledDrivers: { driverId: string; name: string; workArea?: string | null }[];
+  coveredWorkAreas: string[];
   totalStops: number;
   totalPackages: number;
   droRoutes: { workAreaName: string; workAreaNumber: string; stops: number; packages: number }[];
@@ -165,8 +166,13 @@ export default function CreateRoutesClient() {
       const res  = await fetch("/api/create-routes");
       const json = await res.json() as RouteData;
       setData(json);
-      // Default: all work areas active
-      setActiveWorkAreas(new Set(json.droRoutes.map(r => r.workAreaName)));
+      // Default active routes from schedule: only routes that have a driver working today.
+      // Falls back to all routes if no driver↔route assignments exist yet.
+      const covered = json.coveredWorkAreas ?? [];
+      const defaultActive = covered.length > 0
+        ? new Set(covered)
+        : new Set(json.droRoutes.map(r => r.workAreaName));
+      setActiveWorkAreas(defaultActive);
     } finally {
       setLoading(false);
     }
@@ -431,12 +437,31 @@ export default function CreateRoutesClient() {
             </div>
           )}
 
+          {/* Schedule-based pre-selection notice */}
+          {data.coveredWorkAreas.length > 0 && data.coveredWorkAreas.length < data.droRouteCount && (
+            <div className="flex items-start gap-3 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 mb-3">
+              <Users className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
+              <p className="text-[12px] text-violet-800">
+                <span className="font-bold">{data.coveredWorkAreas.length} routes pre-selected</span> based on today&apos;s schedule.{" "}
+                {data.droRouteCount - data.coveredWorkAreas.length} route{data.droRouteCount - data.coveredWorkAreas.length !== 1 ? "s" : ""} have no assigned driver and are marked cut.
+              </p>
+            </div>
+          )}
+          {data.coveredWorkAreas.length === 0 && data.droRouteCount > 0 && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[12px] text-amber-800">
+                <span className="font-bold">No driver↔route assignments found.</span> Assign work areas to drivers in the Scheduling page to enable auto-detection.
+              </p>
+            </div>
+          )}
+
           {/* Work Area Checkbox List */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h2 className="text-[15px] font-extrabold text-slate-900">Which trucks are running today?</h2>
-                <p className="text-[12px] text-slate-500 mt-0.5">Uncheck any work area that is NOT running. Those stops will be spread to active routes.</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">Checked = running today. Unchecked stops get spread to active routes.</p>
               </div>
               <div className="flex gap-2 shrink-0">
                 <button
@@ -460,7 +485,10 @@ export default function CreateRoutesClient() {
               )}
               {data.droRoutes.map(r => {
                 const isActive = activeWorkAreas.has(r.workAreaName);
-                const perDriver = isActive && activeCount > 0 ? Math.round(r.stops) : null;
+                // Find which scheduled driver covers this route
+                const assignedDriver = data.scheduledDrivers.find(
+                  d => d.workArea?.trim() === r.workAreaName.trim()
+                );
                 return (
                   <label
                     key={r.workAreaName}
@@ -487,7 +515,13 @@ export default function CreateRoutesClient() {
                         {r.workAreaName}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        Work area #{r.workAreaNumber}
+                        #{r.workAreaNumber}
+                        {assignedDriver && (
+                          <span className="ml-2 text-emerald-600 font-semibold">· {assignedDriver.name}</span>
+                        )}
+                        {!assignedDriver && isActive && (
+                          <span className="ml-2 text-amber-500 font-semibold">· no driver assigned</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

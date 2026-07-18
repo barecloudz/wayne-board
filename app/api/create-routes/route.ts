@@ -24,7 +24,7 @@ export async function GET() {
 
   // Normally scheduled non-trainee drivers for today's DOW
   const scheduled = await db
-    .select({ driverId: drivers.driverId, name: drivers.name })
+    .select({ driverId: drivers.driverId, name: drivers.name, workArea: drivers.workArea })
     .from(drivers)
     .innerJoin(driverSchedules, eq(drivers.driverId, driverSchedules.driverId))
     .where(and(
@@ -36,7 +36,7 @@ export async function GET() {
 
   // Schedule overrides (one-off extra day) — also non-trainee
   const overrides = await db
-    .select({ driverId: drivers.driverId, name: drivers.name })
+    .select({ driverId: drivers.driverId, name: drivers.name, workArea: drivers.workArea })
     .from(drivers)
     .innerJoin(scheduleOverrides, and(
       eq(drivers.driverId, scheduleOverrides.driverId),
@@ -117,10 +117,16 @@ export async function GET() {
     hexCode:           droAnchorAreas.hexCode,
   }).from(droAnchorAreas).orderBy(asc(droAnchorAreas.name));
 
+  // Work areas that have at least one scheduled driver today
+  const coveredWorkAreas = new Set(
+    allDrivers.map(d => d.workArea?.trim()).filter(Boolean) as string[]
+  );
+
   return NextResponse.json({
     today,
     driverCount,
     scheduledDrivers: allDrivers,
+    coveredWorkAreas: [...coveredWorkAreas],
     totalStops,
     totalPackages: routes.reduce((s, r) => s + r.packages, 0),
     droRoutes: routes,
