@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  Users, Package, Route, ChevronRight, Minus, Plus,
+  Users, Package, Route, ChevronRight,
   RefreshCw, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin,
   Hash, ListChecks, Send, PartyPopper,
 } from "lucide-react";
@@ -80,6 +80,9 @@ type RouteData = {
   droRouteCount: number;
   maxCut: number;
   minRoutes: number;
+  predictedStops: number | null;
+  suggestedDrivers: number | null;
+  historicalSampleSize: number;
 };
 
 type PlannedStop = {
@@ -124,22 +127,24 @@ type PlanResult = {
 type Step = "review" | "planning" | "plan" | "confirm" | "pushing" | "done";
 
 export default function CreateRoutesClient() {
-  const [data, setData]         = useState<RouteData | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [cut, setCut]           = useState(0);
-  const [step, setStep]         = useState<Step>("review");
-  const [plan, setPlan]         = useState<PlanResult | null>(null);
+  const [data, setData]           = useState<RouteData | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [activeWorkAreas, setActiveWorkAreas] = useState<Set<string>>(new Set());
+  const [step, setStep]           = useState<Step>("review");
+  const [plan, setPlan]           = useState<PlanResult | null>(null);
   const [planError, setPlanError] = useState("");
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded]   = useState<number | null>(null);
   const [pushError, setPushError] = useState("");
   const [pushResult, setPushResult] = useState<{ jobId?: string; transferCount?: number } | null>(null);
 
   async function load() {
     setLoading(true);
     try {
-      const res = await fetch("/api/create-routes");
-      setData(await res.json());
-      setCut(0);
+      const res  = await fetch("/api/create-routes");
+      const json = await res.json() as RouteData;
+      setData(json);
+      // Default: all work areas active
+      setActiveWorkAreas(new Set(json.droRoutes.map(r => r.workAreaName)));
     } finally {
       setLoading(false);
     }
@@ -155,8 +160,8 @@ export default function CreateRoutesClient() {
     } catch { return data.today; }
   })();
 
-  const finalDrivers  = data ? data.driverCount - cut : 0;
-  const stopsPerRoute = data && finalDrivers > 0 ? Math.ceil(data.totalStops / finalDrivers) : 0;
+  const activeCount   = activeWorkAreas.size;
+  const stopsPerRoute = data && activeCount > 0 ? Math.ceil(data.totalStops / activeCount) : 0;
   const stopsOk       = stopsPerRoute <= 120;
 
   async function handleBuildPlan() {
@@ -168,7 +173,7 @@ export default function CreateRoutesClient() {
       const res = await fetch("/api/create-routes/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ driverCount: finalDrivers }),
+        body: JSON.stringify({ activeWorkAreaNames: [...activeWorkAreas] }),
       });
       const json = await res.json();
       if (!res.ok || json.error) {
@@ -240,7 +245,7 @@ export default function CreateRoutesClient() {
           <p className="text-sm text-slate-500 mt-0.5">{dateLabel}</p>
         </div>
         <button
-          onClick={() => { setStep("review"); setPlan(null); load(); }}
+          onClick={() => { setStep("review"); setPlan(null); setPlanError(""); load(); }}
           className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
         >
           <RefreshCw className="w-4 h-4" /> Refresh
@@ -270,113 +275,194 @@ export default function CreateRoutesClient() {
         );
       })()}
 
-      {/* ── Step: Review / Select Cut ── */}
+      {/* ── Step: Review / Select Work Areas ── */}
       {(step === "review" || step === "planning") && (
         <>
-          {/* Stat Cards */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
-              <Package className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-              <p className="text-[28px] font-extrabold text-slate-900 leading-none">{data.totalStops}</p>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mt-1">Stops Today</p>
+          {/* Stop Count Cards — Predicted vs Live */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {/* Predicted */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Predicted Stops</p>
+              <p className="text-[40px] font-extrabold text-violet-600 leading-none">
+                {data.predictedStops != null ? `~${data.predictedStops}` : "—"}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {data.historicalSampleSize > 0
+                  ? `avg of last ${data.historicalSampleSize} ${dateLabel.split(",")[0]}s`
+                  : "no history yet"}
+              </p>
+              {data.suggestedDrivers && (
+                <div className="mt-2 inline-flex items-center gap-1.5 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1">
+                  <Users className="w-3 h-3 text-violet-500" />
+                  <span className="text-[12px] font-bold text-violet-700">
+                    Suggest {data.suggestedDrivers} drivers
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
-              <Users className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-              <p className="text-[28px] font-extrabold text-slate-900 leading-none">{data.driverCount}</p>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mt-1">Drivers Scheduled</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
-              <Route className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-              <p className="text-[28px] font-extrabold text-slate-900 leading-none">{data.droRouteCount}</p>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mt-1">Current DRO Routes</p>
+
+            {/* Live synced */}
+            <div className={`rounded-2xl border p-5 shadow-sm ${
+              data.totalStops > 0 ? "bg-white border-slate-200" : "bg-slate-50 border-slate-200"
+            }`}>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Live Synced Stops</p>
+              <p className={`text-[40px] font-extrabold leading-none ${
+                data.totalStops > 0 ? "text-slate-900" : "text-slate-300"
+              }`}>
+                {data.totalStops > 0 ? data.totalStops : "—"}
+              </p>
+              <p className="text-[11px] text-amber-600 font-semibold mt-1">
+                {data.totalStops > 0 ? "Grows until midnight" : "Sync DRO to load stops"}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                {data.totalPackages > 0 ? `${data.totalPackages} packages` : ""}
+              </p>
             </div>
           </div>
 
+          {/* Stops-per-driver preview bar */}
+          {data.totalStops > 0 && activeCount > 0 && (
+            <div className={`rounded-xl p-3 mb-3 flex items-center gap-3 ${
+              stopsOk ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"
+            }`}>
+              <p className={`text-[26px] font-extrabold leading-none shrink-0 ${stopsOk ? "text-emerald-700" : "text-red-600"}`}>
+                ~{stopsPerRoute}
+              </p>
+              <div>
+                <p className={`text-[13px] font-bold ${stopsOk ? "text-emerald-700" : "text-red-600"}`}>
+                  stops per driver
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {data.totalStops} stops ÷ {activeCount} active routes
+                  {!stopsOk && " — over 120 stop limit!"}
+                </p>
+              </div>
+            </div>
+          )}
+
           {data.totalStops === 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 mb-3">
               <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-amber-800">No stops loaded from DRO yet</p>
+                <p className="text-sm font-semibold text-amber-800">No stops synced from DRO yet</p>
                 <p className="text-sm text-amber-700 mt-0.5">Run an Auto DRO sync first to pull today&apos;s stop data.</p>
               </div>
             </div>
           )}
 
           {planError && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 mb-3">
               <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <p className="text-sm text-red-700">{planError}</p>
             </div>
           )}
 
-          {/* Cut Selector */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-            <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest mb-4">
-              How many drivers do you want to cut?
-            </h2>
-
-            <div className="flex items-center justify-center gap-6 mb-5">
-              <button
-                onClick={() => setCut(c => Math.max(0, c - 1))}
-                disabled={cut === 0 || step === "planning"}
-                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-              >
-                <Minus className="w-4 h-4 text-slate-700" />
-              </button>
-
-              <div className="text-center min-w-[120px]">
-                <p className="text-[52px] font-extrabold text-slate-900 leading-none">{cut}</p>
-                <p className="text-[12px] text-slate-400 mt-1">
-                  {cut === 0 ? "no cuts" : cut === 1 ? "driver cut" : "drivers cut"}
-                </p>
+          {/* Work Area Checkbox List */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-[15px] font-extrabold text-slate-900">Which trucks are running today?</h2>
+                <p className="text-[12px] text-slate-500 mt-0.5">Uncheck any work area that is NOT running. Those stops will be spread to active routes.</p>
               </div>
-
-              <button
-                onClick={() => setCut(c => Math.min(data.maxCut, c + 1))}
-                disabled={cut >= data.maxCut || step === "planning"}
-                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-              >
-                <Plus className="w-4 h-4 text-slate-700" />
-              </button>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => setActiveWorkAreas(new Set(data.droRoutes.map(r => r.workAreaName)))}
+                  className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+                >
+                  All On
+                </button>
+                <button
+                  onClick={() => setActiveWorkAreas(new Set())}
+                  className="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                >
+                  All Off
+                </button>
+              </div>
             </div>
 
-            {/* Stops per driver preview */}
-            <div className={`rounded-xl p-4 text-center transition-colors ${
-              stopsOk ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"
-            }`}>
-              <p className={`text-[28px] font-extrabold leading-none ${stopsOk ? "text-emerald-700" : "text-red-600"}`}>
-                ~{stopsPerRoute}
-              </p>
-              <p className={`text-[12px] font-semibold mt-1 ${stopsOk ? "text-emerald-600" : "text-red-500"}`}>
-                stops per driver
-              </p>
-              <p className="text-[11px] text-slate-400 mt-1">
-                {data.totalStops} stops ÷ {finalDrivers} drivers
-                {!stopsOk && " — over 120 stop limit"}
-              </p>
+            <div className="divide-y divide-slate-50">
+              {data.droRoutes.length === 0 && (
+                <p className="px-5 py-6 text-[13px] text-slate-400 text-center">No routes loaded — sync DRO first</p>
+              )}
+              {data.droRoutes.map(r => {
+                const isActive = activeWorkAreas.has(r.workAreaName);
+                const perDriver = isActive && activeCount > 0 ? Math.round(r.stops) : null;
+                return (
+                  <label
+                    key={r.workAreaName}
+                    className={`flex items-center gap-4 px-5 py-3.5 cursor-pointer select-none transition-colors ${
+                      isActive ? "hover:bg-slate-50" : "bg-slate-50/60 opacity-60"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      disabled={step === "planning"}
+                      onChange={() => {
+                        setActiveWorkAreas(prev => {
+                          const next = new Set(prev);
+                          if (next.has(r.workAreaName)) next.delete(r.workAreaName);
+                          else next.add(r.workAreaName);
+                          return next;
+                        });
+                      }}
+                      className="w-5 h-5 rounded accent-emerald-600 cursor-pointer shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[14px] font-bold truncate ${isActive ? "text-slate-900" : "text-slate-400"}`}>
+                        {r.workAreaName}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Work area #{r.workAreaNumber}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-[15px] font-extrabold ${isActive ? "text-slate-900" : "text-slate-300"}`}>
+                        {r.stops}
+                      </p>
+                      <p className="text-[10px] text-slate-400">stops</p>
+                    </div>
+                    {!isActive && (
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 shrink-0">
+                        CUT
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
             </div>
 
-            {data.maxCut > 0 && (
-              <p className="text-[11px] text-slate-400 text-center mt-3">
-                Max cut: {data.maxCut} {data.maxCut === 1 ? "driver" : "drivers"} (keeps each route ≤ 120 stops)
-              </p>
-            )}
-            {data.maxCut === 0 && data.totalStops > 0 && (
-              <p className="text-[11px] text-amber-500 text-center mt-3">
-                Can&apos;t cut anyone — routes are already at capacity
-              </p>
+            {/* Summary footer */}
+            {data.droRoutes.length > 0 && (
+              <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                <span className="text-[12px] text-slate-500">
+                  <span className="font-bold text-slate-800">{activeCount}</span> of {data.droRoutes.length} routes active
+                  {activeCount < data.droRoutes.length && (
+                    <span className="text-red-500 font-semibold"> · {data.droRoutes.length - activeCount} cut</span>
+                  )}
+                </span>
+                {data.suggestedDrivers && activeCount !== data.suggestedDrivers && (
+                  <span className={`text-[11px] font-semibold ${
+                    activeCount < data.suggestedDrivers ? "text-amber-600" : "text-emerald-600"
+                  }`}>
+                    {activeCount < data.suggestedDrivers
+                      ? `⚠ Suggested: ${data.suggestedDrivers} drivers`
+                      : `✓ Above suggested ${data.suggestedDrivers}`}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
           {/* Build Plan Button */}
           <button
             onClick={handleBuildPlan}
-            disabled={data.totalStops === 0 || step === "planning"}
-            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[14px] py-3.5 rounded-xl transition-colors"
+            disabled={data.totalStops === 0 || activeCount === 0 || step === "planning"}
+            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[15px] py-4 rounded-xl transition-colors"
           >
             {step === "planning"
               ? <><RefreshCw className="w-4 h-4 animate-spin" /> Building route plan...</>
-              : <>{cut === 0 ? "Build Plan — All" : `Build Plan — Cut ${cut} ·`} {finalDrivers} routes <ChevronRight className="w-4 h-4" /></>
+              : <>Build Plan — {activeCount} routes <ChevronRight className="w-4 h-4" /></>
             }
           </button>
         </>
@@ -607,7 +693,7 @@ export default function CreateRoutesClient() {
             <p className="text-[11px] text-slate-400 mb-6">Solve job ID: {pushResult.jobId}</p>
           )}
           <button
-            onClick={() => { setStep("review"); setPlan(null); setCut(0); setPushResult(null); load(); }}
+            onClick={() => { setStep("review"); setPlan(null); setPushResult(null); load(); }}
             className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
           >
             Start Over

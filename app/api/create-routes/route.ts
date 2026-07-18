@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   drivers, driverSchedules, timeOffEntries, scheduleOverrides,
-  droStops, droRoutes,
+  droStops, droRoutes, droDailyTotals,
 } from "@/lib/schema";
-import { eq, and, lte, gte, sql, not, inArray } from "drizzle-orm";
+import { eq, and, lte, gte, sql, not, inArray, desc } from "drizzle-orm";
 
 type DowKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 
@@ -68,6 +68,22 @@ export async function GET() {
   const minRoutes = totalStops > 0 ? Math.ceil(totalStops / 120) : driverCount;
   const maxCut    = Math.max(0, driverCount - minRoutes);
 
+  // Historical prediction: average total_stops for the same day-of-week over last 6 occurrences
+  // Pull last 60 days of history then filter by matching DOW
+  const DOW_JS = new Date().getDay(); // 0=Sun..6=Sat
+  const histRows = await db.select({ date: droDailyTotals.date, totalStops: droDailyTotals.totalStops })
+    .from(droDailyTotals)
+    .orderBy(desc(droDailyTotals.date))
+    .limit(60);
+  const sameDow = histRows.filter(r => {
+    const [y, m, d] = r.date.split("-").map(Number);
+    return new Date(y, m - 1, d).getDay() === DOW_JS;
+  }).slice(0, 6);
+  const predictedStops = sameDow.length > 0
+    ? Math.round(sameDow.reduce((s, r) => s + r.totalStops, 0) / sameDow.length)
+    : null;
+  const suggestedDrivers = predictedStops ? Math.ceil(predictedStops / 120) : null;
+
   return NextResponse.json({
     today,
     driverCount,
@@ -78,5 +94,8 @@ export async function GET() {
     droRouteCount: routes.length,
     maxCut,
     minRoutes,
+    predictedStops,
+    suggestedDrivers,
+    historicalSampleSize: sameDow.length,
   });
 }

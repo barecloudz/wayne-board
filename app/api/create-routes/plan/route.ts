@@ -239,7 +239,10 @@ type RouteGroup = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { driverCount } = await req.json() as { driverCount: number };
+    const body = await req.json() as { driverCount?: number; activeWorkAreaNames?: string[] };
+    // Support both old (driverCount) and new (activeWorkAreaNames) call shapes
+    const activeWorkAreaNames: string[] | null = body.activeWorkAreaNames ?? null;
+    const driverCount: number = body.driverCount ?? (activeWorkAreaNames?.length ?? 0);
 
     // Depot from settings, default to FedEx Ground Fletcher NC station
     const depotLatRow = await db.select().from(settings).where(eq(settings.key, "depot_lat")).then(r => r[0]);
@@ -344,7 +347,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Step 3: Build RouteGroup with cube totals and capacity ───────────────
-    let routeGroups: RouteGroup[] = [...groups.entries()].map(([name, stps]) => {
+    let routeGroups: RouteGroup[] = [...groups.entries()].map(([name, stps]) => {  // eslint-disable-line prefer-const
       const c    = centroid(stps.map(s => ({ lat: s.lat, lng: s.lng })));
       const cube = stps.reduce((sum, s) => sum + (s.totalCube ?? 0), 0);
       const cap  = capacityMap[name] ?? defaultCapacity;
@@ -360,6 +363,33 @@ export async function POST(req: NextRequest) {
     });
 
     const currentCount = routeGroups.length;
+
+    // ── Step 3b: If specific work areas were chosen, redistribute inactive routes ──
+    // Stops from inactive routes go to the nearest active route by centroid distance.
+    if (activeWorkAreaNames && activeWorkAreaNames.length > 0) {
+      const activeSet = new Set(activeWorkAreaNames.map(n => n.trim().toLowerCase()));
+      const activeGroups   = routeGroups.filter(rg => activeSet.has(rg.name.trim().toLowerCase()));
+      const inactiveGroups = routeGroups.filter(rg => !activeSet.has(rg.name.trim().toLowerCase()));
+
+      for (const inactive of inactiveGroups) {
+        for (const s of inactive.stops) {
+          if (activeGroups.length === 0) break;
+          // Find nearest active route centroid
+          let bestGroup = activeGroups[0];
+          let bestDist  = Infinity;
+          for (const ag of activeGroups) {
+            const d = dist(s.lat, s.lng, ag.centLat, ag.centLng);
+            if (d < bestDist) { bestDist = d; bestGroup = ag; }
+          }
+          bestGroup.stops.push(s);
+          bestGroup.totalCube += s.totalCube ?? 0;
+          const c = centroid(bestGroup.stops.map(st => ({ lat: st.lat, lng: st.lng })));
+          bestGroup.centLat = c.lat; bestGroup.centLng = c.lng;
+        }
+      }
+
+      routeGroups = activeGroups;
+    }
 
     // ── Step 4: Merge to reach driverCount — cube-cap + stop-cap aware ───────
     let mergeAttempts = 0;
