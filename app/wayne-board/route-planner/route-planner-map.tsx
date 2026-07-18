@@ -69,6 +69,8 @@ type Props = {
     newLabel: string,
     newWorkAreaNumber: string
   ) => void;
+  highlightedAreas?: Set<string>;
+  proposalMap?: Map<string, { from: string; to: string }>;
 };
 
 // ── Parsed polygon shape ───────────────────────────────────────────────────────
@@ -123,7 +125,7 @@ function parseAreaPolygons(areas: MapArea[]): ParsedPoly[] {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function RoutePlannerMap({ areas, routes, onReassign }: Props) {
+export default function RoutePlannerMap({ areas, routes, onReassign, highlightedAreas, proposalMap }: Props) {
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
   const [moveToSlot, setMoveToSlot] = useState<string>("");
 
@@ -165,23 +167,42 @@ export default function RoutePlannerMap({ areas, routes, onReassign }: Props) {
         {polygons.map((poly, i) => {
           const color = slotColor(poly.route_slot);
           const isSelected = selectedAreaId === poly.areaId;
+          const isHighlighted = highlightedAreas?.has(poly.name) ?? false;
+          const proposal = proposalMap?.get(poly.name);
           return (
             <Polygon
               key={`${poly.areaId}-${i}`}
               positions={poly.ring}
-              pathOptions={{
-                color: isSelected ? "#ffffff" : color,
-                fillColor: color,
-                fillOpacity: isSelected ? 0.55 : 0.28,
-                weight: isSelected ? 2.5 : 1.5,
-                opacity: 0.9,
-              }}
+              pathOptions={
+                isHighlighted
+                  ? {
+                      color: "#f59e0b",
+                      fillColor: color,
+                      fillOpacity: 0.35,
+                      weight: 3,
+                      opacity: 1,
+                      dashArray: "8,4",
+                    }
+                  : {
+                      color: isSelected ? "#ffffff" : color,
+                      fillColor: color,
+                      fillOpacity: isSelected ? 0.55 : 0.28,
+                      weight: isSelected ? 2.5 : 1.5,
+                      opacity: 0.9,
+                    }
+              }
               eventHandlers={{ click: () => handlePolygonClick(poly.areaId) }}
             >
               <Tooltip sticky>
                 <span className="font-semibold text-xs">{poly.name}</span>
                 <br />
-                <span className="text-[10px] text-slate-500">{poly.route_label}</span>
+                {isHighlighted && proposal ? (
+                  <span className="text-[10px] text-amber-600 font-semibold">
+                    Proposed: move to {proposal.to}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-500">{poly.route_label}</span>
+                )}
               </Tooltip>
             </Polygon>
           );

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
-import { ChevronDown, ChevronUp, Loader2, Save, Zap, X, CheckCircle, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Save, Zap, X, CheckCircle, AlertCircle, Scale, Check } from "lucide-react";
 import type { MapArea, RouteSlot } from "./route-planner-map";
 
 // ── Dynamic import for Leaflet map (no SSR) ────────────────────────────────────
@@ -63,6 +63,25 @@ type RouteGroup = {
 
 type Toast = { id: number; message: string; type: "success" | "error" | "info" };
 
+type BalanceProposal = {
+  area: string;
+  from: string;
+  to: string;
+  improvement: number;
+  distMiles: string;
+  heavyBefore: number;
+  heavyAfter: number;
+  lightBefore: number;
+  lightAfter: number;
+};
+
+type BalanceResult = {
+  routesBefore: { label: string; avgStops: number | null; days: number; areas: number }[];
+  proposals: BalanceProposal[];
+  stddevBefore: number;
+  stddevAfter: number;
+};
+
 // ── Toast helpers ─────────────────────────────────────────────────────────────
 let toastCounter = 0;
 
@@ -103,11 +122,21 @@ export default function RoutePlannerClient({
   } | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // ── Balance state ──────────────────────────────────────────────────────────
+  const [balanceResult, setBalanceResult] = useState<BalanceResult | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [balancePanelOpen, setBalancePanelOpen] = useState(true);
+  const [acceptedProposals, setAcceptedProposals] = useState<Set<number>>(new Set());
+  const [rejectedProposals, setRejectedProposals] = useState<Set<number>>(new Set());
+
   // ── Fetch template areas ─────────────────────────────────────────────────────
   useEffect(() => {
     if (selectedTemplateId == null) return;
     setLoading(true);
     setChanges(new Map());
+    setBalanceResult(null);
+    setAcceptedProposals(new Set());
+    setRejectedProposals(new Set());
 
     fetch(`/api/route-templates/${selectedTemplateId}/areas`)
       .then((r) => r.json())
@@ -146,6 +175,23 @@ export default function RoutePlannerClient({
     label: r.label,
     work_area_number: r.work_area_number,
   }));
+
+  // Highlighted areas: non-rejected proposals → area names
+  const highlightedAreas = balanceResult
+    ? new Set(
+        balanceResult.proposals
+          .filter((_, i) => !rejectedProposals.has(i))
+          .map((p) => p.area)
+      )
+    : undefined;
+
+  const proposalMap: Map<string, { from: string; to: string }> | undefined = balanceResult
+    ? new Map(
+        balanceResult.proposals
+          .filter((_, i) => !rejectedProposals.has(i))
+          .map((p) => [p.area, { from: p.from, to: p.to }])
+      )
+    : undefined;
 
   // ── Handle reassign from map ──────────────────────────────────────────────────
   const handleReassign = useCallback(
@@ -231,6 +277,51 @@ export default function RoutePlannerClient({
     }
   }
 
+  // ── Suggest Balance ───────────────────────────────────────────────────────────
+  async function handleBalance() {
+    if (!selectedTemplateId) return;
+    setBalanceLoading(true);
+    setBalanceResult(null);
+    setAcceptedProposals(new Set());
+    setRejectedProposals(new Set());
+    try {
+      const res = await fetch(`/api/route-templates/${selectedTemplateId}/balance`);
+      if (!res.ok) throw new Error("Balance request failed");
+      const data: BalanceResult = await res.json();
+      setBalanceResult(data);
+      setBalancePanelOpen(true);
+      if (data.proposals.length === 0) {
+        addToast("Routes are already balanced — no swaps needed", "info");
+      } else {
+        addToast(`${data.proposals.length} swap${data.proposals.length !== 1 ? "s" : ""} suggested`, "success");
+      }
+    } catch {
+      addToast("Balance failed — check console", "error");
+    } finally {
+      setBalanceLoading(false);
+    }
+  }
+
+  // ── Apply accepted balance proposals ─────────────────────────────────────────
+  async function handleApplyAccepted() {
+    if (!balanceResult || acceptedProposals.size === 0) return;
+
+    const accepted = balanceResult.proposals.filter((_, i) => acceptedProposals.has(i));
+
+    for (const proposal of accepted) {
+      // Find area id by name and current assignment
+      const allAreas = routes.flatMap((r) => r.areas);
+      const matchingArea = allAreas.find((a) => a.anchor_area_name === proposal.area);
+      const targetRoute = routes.find((r) => r.label === proposal.to);
+      if (!matchingArea || !targetRoute) continue;
+      handleReassign(matchingArea.id, targetRoute.slot, targetRoute.label, targetRoute.work_area_number);
+    }
+
+    // Clear the accepted ones from proposals view
+    setAcceptedProposals(new Set());
+    addToast(`${accepted.length} proposal${accepted.length !== 1 ? "s" : ""} applied — save to persist`, "success");
+  }
+
   // ── Push to DRO ───────────────────────────────────────────────────────────────
   async function handleDroConfirm() {
     if (!selectedTemplateId) return;
@@ -307,6 +398,121 @@ export default function RoutePlannerClient({
             </select>
           )}
         </div>
+
+        {/* Balance proposals panel */}
+        {balanceResult && balanceResult.proposals.length > 0 && (
+          <div className="border-b border-slate-100">
+            <button
+              onClick={() => setBalancePanelOpen((v) => !v)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-amber-50 transition-colors text-left"
+            >
+              <Scale className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="flex-1 text-[11px] font-bold text-slate-700 truncate">
+                {balanceResult.proposals.filter((_, i) => !rejectedProposals.has(i)).length} suggested swap
+                {balanceResult.proposals.filter((_, i) => !rejectedProposals.has(i)).length !== 1 ? "s" : ""}
+                {" · StdDev "}
+                {balanceResult.stddevBefore.toFixed(1)}
+                {" → "}
+                {balanceResult.stddevAfter.toFixed(1)}
+              </span>
+              {balancePanelOpen ? (
+                <ChevronUp className="w-3 h-3 text-slate-400 shrink-0" />
+              ) : (
+                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
+              )}
+            </button>
+
+            {balancePanelOpen && (
+              <div className="px-3 pb-3 bg-amber-50/40">
+                <div className="flex flex-col gap-1.5 pt-1">
+                  {balanceResult.proposals.map((p, i) => {
+                    const isAccepted = acceptedProposals.has(i);
+                    const isRejected = rejectedProposals.has(i);
+                    if (isRejected) return null;
+                    const fromRoute = routes.find((r) => r.label === p.from);
+                    const toRoute = routes.find((r) => r.label === p.to);
+                    const fromColor = fromRoute ? slotColor(fromRoute.slot) : "#94a3b8";
+                    const toColor = toRoute ? slotColor(toRoute.slot) : "#94a3b8";
+                    return (
+                      <div
+                        key={i}
+                        className={`rounded-lg border px-2.5 py-2 text-[11px] transition-colors
+                          ${isAccepted
+                            ? "bg-emerald-50 border-emerald-200"
+                            : "bg-white border-amber-100"}`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <p className="font-bold text-slate-800 truncate text-[11px] leading-tight">
+                            {p.area}
+                          </p>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={() =>
+                                setAcceptedProposals((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(i)) next.delete(i);
+                                  else next.add(i);
+                                  return next;
+                                })
+                              }
+                              title={isAccepted ? "Undo accept" : "Accept"}
+                              className={`w-5 h-5 rounded flex items-center justify-center transition-colors
+                                ${isAccepted
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-white border border-slate-200 text-slate-400 hover:border-emerald-400 hover:text-emerald-500"}`}
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setRejectedProposals((prev) => {
+                                  const next = new Set(prev);
+                                  next.add(i);
+                                  return next;
+                                })
+                              }
+                              title="Reject"
+                              className="w-5 h-5 rounded flex items-center justify-center bg-white border border-slate-200
+                                text-slate-400 hover:border-red-300 hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: fromColor }}
+                          />
+                          <span className="truncate">{p.from}</span>
+                          <span className="text-slate-300 shrink-0">→</span>
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: toColor }}
+                          />
+                          <span className="truncate">{p.to}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                          <span>{p.distMiles}mi</span>
+                          <span className="text-emerald-600 font-semibold">−{p.improvement} stops</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {acceptedProposals.size > 0 && (
+                  <button
+                    onClick={handleApplyAccepted}
+                    className="mt-2 w-full py-2 rounded-lg text-[11px] font-bold tracking-wide
+                      bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+                  >
+                    Apply {acceptedProposals.size} Accepted
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Route list */}
         <div className="flex-1 overflow-y-auto px-3 py-3">
@@ -410,21 +616,40 @@ export default function RoutePlannerClient({
             )}
           </button>
 
-          <button
-            onClick={() => { setPushResult(null); setShowDroModal(true); }}
-            disabled={!selectedTemplate || pushing}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] font-bold
-              tracking-wide transition-all border border-slate-200
-              bg-white text-slate-700 hover:bg-slate-50
-              disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {pushing ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Zap className="w-3.5 h-3.5" />
-            )}
-            {pushing ? "Pushing…" : "Push to DRO"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setPushResult(null); setShowDroModal(true); }}
+              disabled={!selectedTemplate || pushing}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[12px] font-bold
+                tracking-wide transition-all border border-slate-200
+                bg-white text-slate-700 hover:bg-slate-50
+                disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {pushing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Zap className="w-3.5 h-3.5" />
+              )}
+              {pushing ? "Pushing…" : "Push to DRO"}
+            </button>
+
+            <button
+              onClick={handleBalance}
+              disabled={!selectedTemplate || balanceLoading}
+              title="Suggest Balance"
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-[12px] font-bold
+                tracking-wide transition-all border border-slate-200
+                bg-white text-slate-700 hover:bg-slate-50
+                disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {balanceLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Scale className="w-3.5 h-3.5" />
+              )}
+              Balance
+            </button>
+          </div>
 
           {/* Push result summary */}
           {pushResult && !pushing && (
@@ -465,6 +690,8 @@ export default function RoutePlannerClient({
             areas={flatAreas}
             routes={routeSlots}
             onReassign={handleReassign}
+            highlightedAreas={highlightedAreas}
+            proposalMap={proposalMap}
           />
         )}
       </div>
