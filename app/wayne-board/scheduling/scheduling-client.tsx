@@ -86,6 +86,11 @@ type WorkAreaRow = {
   active: boolean;
 };
 
+type DroRouteRow = {
+  workAreaName: string;
+  workAreaNumber: string;
+};
+
 type DailyAssignmentRow = {
   id: number;
   driverId: string;
@@ -96,7 +101,7 @@ type DailyAssignmentRow = {
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments,
+  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments, droRoutes,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
@@ -106,6 +111,7 @@ export default function SchedulingClient({
   vehicles: VehicleRow[];
   workAreas: WorkAreaRow[];
   dailyAssignments: DailyAssignmentRow[];
+  droRoutes: DroRouteRow[];
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added">("schedules");
   const [isPending, startTransition] = useTransition();
@@ -448,12 +454,18 @@ export default function SchedulingClient({
                               placeholder="Full name"
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
                             />
-                            <input
+                            <select
                               value={driverDrafts[row.driverId]?.workArea ?? ""}
                               onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], workArea: e.target.value } }))}
-                              placeholder="Work area (e.g. Zone A, Dock 3)"
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
-                            />
+                            >
+                              <option value="">— No DRO route assigned —</option>
+                              {droRoutes.map((r) => (
+                                <option key={r.workAreaName} value={r.workAreaName}>
+                                  {r.workAreaNumber ? `${r.workAreaNumber} — ` : ""}{r.workAreaName}
+                                </option>
+                              ))}
+                            </select>
                             <select
                               value={driverDrafts[row.driverId]?.defaultWorkAreaId?.toString() ?? ""}
                               onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], defaultWorkAreaId: e.target.value ? parseInt(e.target.value) : null } }))}
@@ -974,24 +986,34 @@ export default function SchedulingClient({
                         const isLastDay = d.lastDay === dateStr;
                         const isTrainee = d.isTrainee;
                         const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
+                        const droRoute = d.workArea
+                          ? droRoutes.find(r => r.workAreaName === d.workArea)
+                          : null;
                         return (
-                          <div key={d.driverId} className="flex items-center gap-1 w-full">
-                            <button
-                              onClick={() => openCoverageModal(d, dateStr)}
-                              className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 ${
-                                isTrainee
-                                  ? "text-blue-700 bg-blue-50 border border-blue-100"
-                                  : isLastDay
-                                  ? "text-red-700 bg-red-50 border border-red-100"
-                                  : "text-slate-700 bg-emerald-50 border border-emerald-100"
-                              }`}>
-                              {d.name}
-                            </button>
-                            {wa && (
-                              <>
-                                <span className="text-[10px] font-semibold text-slate-500 shrink-0 max-w-[36px] truncate">{wa.name}</span>
-                                <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />
-                              </>
+                          <div key={d.driverId} className="flex flex-col gap-0.5 w-full">
+                            <div className="flex items-center gap-1 w-full">
+                              <button
+                                onClick={() => openCoverageModal(d, dateStr)}
+                                className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 ${
+                                  isTrainee
+                                    ? "text-blue-700 bg-blue-50 border border-blue-100"
+                                    : isLastDay
+                                    ? "text-red-700 bg-red-50 border border-red-100"
+                                    : "text-slate-700 bg-emerald-50 border border-emerald-100"
+                                }`}>
+                                {d.name}
+                              </button>
+                              {wa && !droRoute && (
+                                <>
+                                  <span className="text-[10px] font-semibold text-slate-500 shrink-0 max-w-[36px] truncate">{wa.name}</span>
+                                  <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />
+                                </>
+                              )}
+                            </div>
+                            {droRoute && (
+                              <span className="text-[10px] font-bold text-slate-500 px-1.5 py-0.5 rounded bg-slate-100 font-mono truncate">
+                                {droRoute.workAreaNumber} {droRoute.workAreaName.replace(/^742\s*/i, "")}
+                              </span>
                             )}
                           </div>
                         );
@@ -1199,7 +1221,16 @@ export default function SchedulingClient({
                   <div>
                     <p className="text-[18px] font-extrabold text-slate-900">{driver.name}</p>
                     <p className="text-[12px] font-mono text-slate-400 mt-0.5">{driver.driverId}</p>
-                    {driver.workArea && <p className="text-[12px] text-slate-500 mt-0.5">{driver.workArea}</p>}
+                    {driver.workArea && (() => {
+                    const r = droRoutes.find(dr => dr.workAreaName === driver.workArea);
+                    return (
+                      <p className="text-[12px] text-slate-500 mt-0.5">
+                        {r ? <span className="font-mono font-bold text-slate-700">{r.workAreaNumber}</span> : null}
+                        {r ? <span className="text-slate-400"> — </span> : null}
+                        {driver.workArea}
+                      </p>
+                    );
+                  })()}
                   </div>
                   <button onClick={() => setCoverageModal(null)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
                     <X className="w-4 h-4" />
