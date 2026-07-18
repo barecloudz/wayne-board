@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   drivers, driverSchedules, timeOffEntries, scheduleOverrides,
-  droStops, droRoutes, droDailyTotals,
+  droStops, droRoutes, droDailyTotals, droAnchorAreas,
 } from "@/lib/schema";
-import { eq, and, lte, gte, sql, not, inArray, desc } from "drizzle-orm";
+import { eq, and, lte, gte, sql, not, inArray, desc, asc } from "drizzle-orm";
 
 type DowKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 
@@ -108,6 +108,15 @@ export async function GET() {
     : null;
   const suggestedDrivers = predictedStops ? Math.ceil(predictedStops / 120) : null;
 
+  // Anchor areas for the territory map
+  const anchorAreas = await db.select({
+    anchorAreaId:      droAnchorAreas.anchorAreaId,
+    name:              droAnchorAreas.name,
+    shapeJson:         droAnchorAreas.shapeJson,
+    wktPoly:           droAnchorAreas.wktPoly,
+    hexCode:           droAnchorAreas.hexCode,
+  }).from(droAnchorAreas).orderBy(asc(droAnchorAreas.name));
+
   return NextResponse.json({
     today,
     driverCount,
@@ -121,5 +130,6 @@ export async function GET() {
     predictedStops,
     suggestedDrivers,
     historicalSampleSize: sameDow.length,
+    anchorAreas,
   });
 }

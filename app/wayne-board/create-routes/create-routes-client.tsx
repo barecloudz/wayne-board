@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Users, Package, Route, ChevronRight,
   RefreshCw, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, MapPin,
-  Hash, ListChecks, Send, PartyPopper,
+  Hash, ListChecks, Send, PartyPopper, Map, List, Loader2,
 } from "lucide-react";
+
+const CreateRoutesMap = dynamic(() => import("./create-routes-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[420px] bg-slate-50 rounded-2xl border border-slate-200">
+      <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
+    </div>
+  ),
+});
 
 // ── Wizard Step Bar ─────────────────────────────────────────────────────────
 const WIZARD_STEPS = [
@@ -70,6 +80,14 @@ const STEP_HELP: Record<string, { icon: React.ElementType; headline: string; bod
   },
 };
 
+type AnchorAreaData = {
+  anchorAreaId: number;
+  name: string;
+  shapeJson: string;
+  wktPoly?: string | null;
+  hexCode?: string | null;
+};
+
 type RouteData = {
   today: string;
   driverCount: number;
@@ -83,6 +101,7 @@ type RouteData = {
   predictedStops: number | null;
   suggestedDrivers: number | null;
   historicalSampleSize: number;
+  anchorAreas: AnchorAreaData[];
 };
 
 type PlannedStop = {
@@ -136,6 +155,7 @@ export default function CreateRoutesClient() {
   const [plan, setPlan]           = useState<PlanResult | null>(null);
   const [planError, setPlanError] = useState("");
   const [expanded, setExpanded]   = useState<number | null>(null);
+  const [planView, setPlanView]   = useState<"list" | "map">("map");
   const [pushError, setPushError] = useState("");
   const [pushResult, setPushResult] = useState<{ jobId?: string; transferCount?: number } | null>(null);
 
@@ -556,7 +576,26 @@ export default function CreateRoutesClient() {
                 </div>
               </>
             )}
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex gap-2 flex-wrap justify-end">
+              {/* Map / List toggle */}
+              <div className="flex gap-1 bg-white/10 rounded-xl p-1">
+                <button
+                  onClick={() => setPlanView("map")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+                    planView === "map" ? "bg-white text-slate-900" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <Map className="w-3.5 h-3.5" /> Map
+                </button>
+                <button
+                  onClick={() => setPlanView("list")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+                    planView === "list" ? "bg-white text-slate-900" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" /> List
+                </button>
+              </div>
               <button
                 onClick={() => setStep("review")}
                 className="px-4 py-2 rounded-xl border border-white/20 text-white/70 hover:text-white text-sm font-semibold transition-colors"
@@ -580,77 +619,81 @@ export default function CreateRoutesClient() {
             </div>
           )}
 
-          {/* Route Cards */}
-          <div className="space-y-2">
-            {plan.routes.map((r) => {
-              const isOpen = expanded === r.routeIndex;
-              const loadPct = r.cubePct;
-              const loadColor =
-                loadPct >= 90 ? "bg-red-400" :
-                loadPct >= 70 ? "bg-amber-400" : "bg-emerald-400";
+          {/* Map view */}
+          {planView === "map" && data && (
+            <div className="mb-4">
+              <CreateRoutesMap
+                plan={plan}
+                anchorAreas={data.anchorAreas}
+                activeWorkAreas={activeWorkAreas}
+              />
+              <p className="text-[11px] text-slate-400 mt-2 text-center">
+                Each colored dot is a planned stop. Shaded polygons are anchor area territories. Verify stops land in the right zones before applying.
+              </p>
+            </div>
+          )}
 
-              return (
-                <div key={r.routeIndex} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                  {/* Route header */}
-                  <button
-                    onClick={() => setExpanded(isOpen ? null : r.routeIndex)}
-                    className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-slate-50 transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shrink-0">
-                      <span className="text-[12px] font-extrabold text-white">{r.routeIndex}</span>
-                    </div>
+          {/* Route Cards (list view) */}
+          {planView === "list" && (
+            <div className="space-y-2">
+              {plan.routes.map((r) => {
+                const isOpen = expanded === r.routeIndex;
+                const loadPct = r.cubePct;
+                const loadColor =
+                  loadPct >= 90 ? "bg-red-400" :
+                  loadPct >= 70 ? "bg-amber-400" : "bg-emerald-400";
 
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold text-slate-800 truncate">{r.name}</p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
-                          <div className={`h-full rounded-full ${loadColor}`} style={{ width: `${Math.min(100, loadPct)}%` }} />
-                        </div>
-                        <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs · {r.cubePct}% full · ~{r.estMiles}mi</span>
-                        {r.bulkStops > 0 && (
-                          <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">
-                            {r.bulkStops} bulk
-                          </span>
-                        )}
+                return (
+                  <div key={r.routeIndex} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : r.routeIndex)}
+                      className="w-full px-4 py-3.5 flex items-center gap-4 hover:bg-slate-50 transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center shrink-0">
+                        <span className="text-[12px] font-extrabold text-white">{r.routeIndex}</span>
                       </div>
-                    </div>
-
-                    {isOpen
-                      ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
-                      : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-                    }
-                  </button>
-
-                  {/* Stop list */}
-                  {isOpen && (
-                    <div className="border-t border-slate-100 divide-y divide-slate-50 max-h-80 overflow-y-auto">
-                      {r.stops.map((s) => (
-                        <div key={s.waypointId} className="px-4 py-2 flex items-start gap-3">
-                          <span className="text-[11px] font-bold text-slate-300 w-6 shrink-0 pt-0.5 text-right">
-                            {s.seq}
-                          </span>
-                          <MapPin className="w-3.5 h-3.5 text-slate-300 shrink-0 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            {s.firmName && (
-                              <p className="text-[11px] font-semibold text-slate-500 truncate">{s.firmName}</p>
-                            )}
-                            <p className="text-[13px] font-semibold text-slate-800 truncate">{s.address}</p>
-                            <p className="text-[11px] text-slate-400">{s.city}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-bold text-slate-800 truncate">{r.name}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
+                            <div className={`h-full rounded-full ${loadColor}`} style={{ width: `${Math.min(100, loadPct)}%` }} />
                           </div>
-                          <div className="shrink-0 text-right">
-                            <span className={`text-[11px] font-bold ${s.isBulk ? "text-amber-500" : "text-slate-400"}`}>
-                              {s.packages} pkg{s.packages !== 1 ? "s" : ""}
-                              {s.isBulk ? " •bulk" : ""}
+                          <span className="text-[11px] text-slate-400">{r.stopCount} stops · {r.packages} pkgs · {r.cubePct}% full · ~{r.estMiles}mi</span>
+                          {r.bulkStops > 0 && (
+                            <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">
+                              {r.bulkStops} bulk
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {isOpen
+                        ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                        : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                      }
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-slate-100 divide-y divide-slate-50 max-h-80 overflow-y-auto">
+                        {r.stops.map((s) => (
+                          <div key={s.waypointId} className="px-4 py-2 flex items-start gap-3">
+                            <span className="text-[11px] font-bold text-slate-300 w-6 shrink-0 pt-0.5 text-right">{s.seq}</span>
+                            <MapPin className="w-3.5 h-3.5 text-slate-300 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              {s.firmName && <p className="text-[11px] font-semibold text-slate-500 truncate">{s.firmName}</p>}
+                              <p className="text-[13px] font-semibold text-slate-800 truncate">{s.address}</p>
+                              <p className="text-[11px] text-slate-400">{s.city}</p>
+                            </div>
+                            <span className={`text-[11px] font-bold shrink-0 ${s.isBulk ? "text-amber-500" : "text-slate-400"}`}>
+                              {s.packages} pkg{s.packages !== 1 ? "s" : ""}{s.isBulk ? " •bulk" : ""}
                             </span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Bottom confirm */}
           <div className="mt-4 flex gap-3">
