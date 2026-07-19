@@ -75,7 +75,7 @@ export default function AutoDswClient() {
     setSyncing(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/.netlify/functions/cron-sync-dsw");
+      const res = await fetch("/.netlify/functions/dsw-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
         setSyncResult({ ok: true, msg: "Sync started — data will appear in a few minutes. Refresh to check." });
       } else {

@@ -283,12 +283,11 @@ export default function AutoDroClient() {
     setConnecting(true);
     setConnectResult(null);
     try {
-      const res = await fetch("/api/auto-dro/connect", { method: "POST" });
-      const r   = await res.json();
-      if (r.success) {
-        setConnectResult({ ok: true, msg: "DRO session established — you can now Sync." });
+      const res = await fetch("/.netlify/functions/dro-login-background", { method: "POST" });
+      if (res.status === 202 || res.ok) {
+        setConnectResult({ ok: true, msg: "Login started — takes 2-3 minutes. Once complete, click Sync." });
       } else {
-        setConnectResult({ ok: false, msg: r.error ?? "Connection failed" });
+        setConnectResult({ ok: false, msg: `Unexpected response (${res.status})` });
       }
     } catch (e: any) {
       setConnectResult({ ok: false, msg: e?.message ?? "Connection failed" });

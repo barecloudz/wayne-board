@@ -190,21 +190,10 @@ export default function CreateRoutesClient() {
       let res  = await fetch("/api/auto-dro/sync", { method: "POST" });
       let json: any = await res.json().catch(() => null);
 
-      // If session expired, auto-connect first then retry — no manual nav required
+      // If session expired, direct user to reconnect from Auto DRO
       if (json?.error?.includes("session expired") || json?.error?.includes("SESSION_EXPIRED")) {
-        setSyncPhase("connecting");
-        setSyncMsg({ ok: false, text: "Reconnecting to DRO…" });
-        const connRes  = await fetch("/api/auto-dro/connect", { method: "POST" });
-        const connJson = await connRes.json().catch(() => ({}));
-        if (!connRes.ok || connJson.error) {
-          setSyncMsg({ ok: false, text: `Auto-connect failed: ${connJson.error ?? "unknown error"}` });
-          return;
-        }
-        // Retry sync with fresh session
-        setSyncPhase("syncing");
-        setSyncMsg(null);
-        res  = await fetch("/api/auto-dro/sync", { method: "POST" });
-        json = await res.json().catch(() => null);
+        setSyncMsg({ ok: false, text: "DRO session expired — go to Auto DRO → Connect to DRO, wait 2-3 min, then come back and sync." });
+        return;
       }
 
       if (!json) {
