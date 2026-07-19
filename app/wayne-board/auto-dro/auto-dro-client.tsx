@@ -300,20 +300,11 @@ export default function AutoDroClient() {
     setSyncing(true);
     setSyncResult(null);
     try {
-      const res = await fetch("/api/auto-dro/sync", { method: "POST" });
-      let r: any;
-      try {
-        r = await res.json();
-      } catch {
-        setSyncResult({ ok: false, msg: "Sync failed — server returned an unexpected response. Try connecting first." });
-        return;
-      }
-      if (r.success) {
-        setSyncResult({ ok: true, msg: `${r.routes} routes · ${r.stops} stops loaded for ${r.sortDate}${r.stopsWithCoords ? ` · ${r.stopsWithCoords} with GPS` : ""}` });
-        setUnroutableStops([]); // reset so it reloads on next open
-        await loadStatus();
+      const res = await fetch("/.netlify/functions/dro-sync-background", { method: "POST" });
+      if (res.status === 202 || res.ok) {
+        setSyncResult({ ok: true, msg: "Sync started — logs in fresh and pulls DRO data. Check back in 3-4 minutes." });
       } else {
-        setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
+        setSyncResult({ ok: false, msg: `Unexpected response (${res.status})` });
       }
     } catch (e: any) {
       setSyncResult({ ok: false, msg: e?.message ?? "Sync failed" });

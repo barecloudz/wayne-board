@@ -107,51 +107,19 @@ async function loginAndGetCookies(): Promise<string> {
   }
 }
 
-// ── Session cache ──────────────────────────────────────────────────────────────
+// ── Session — always fresh login (DRO cookies are browser-instance-specific) ──
 
 export async function getDroHeaders(): Promise<Record<string, string>> {
-  const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
-
-  const rows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
-  const cache = Object.fromEntries(rows.map((r: any) => [r.key, r.value]));
-
-  const cookies: string = cache["dro_session_cookies"] ?? "";
-  const expiresAt: string = cache["dro_session_expires_at"] ?? "";
-
-  const isValid = cookies && expiresAt && new Date(expiresAt) > new Date();
-
-  const cookieHeader = isValid ? cookies : await loginAndGetCookies();
-
+  const cookieHeader = await loginAndGetCookies();
   return {
     Cookie: cookieHeader,
     "Content-Type": "application/json",
   };
 }
 
-/**
- * Strict version — only returns cached headers, never runs Puppeteer.
- * Throws SESSION_EXPIRED if no valid session is cached.
- * Use this in sync/data endpoints so they never time out on login.
- */
+/** @deprecated — use getDroHeaders(). Always does fresh login now. */
 export async function getDroHeadersStrict(): Promise<Record<string, string>> {
-  const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
-
-  const rows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
-  const cache = Object.fromEntries(rows.map((r: any) => [r.key, r.value]));
-
-  const cookies: string = cache["dro_session_cookies"] ?? "";
-  const expiresAt: string = cache["dro_session_expires_at"] ?? "";
-
-  const isValid = cookies && expiresAt && new Date(expiresAt) > new Date();
-
-  if (!isValid) {
-    throw new Error("SESSION_EXPIRED");
-  }
-
-  return {
-    Cookie: cookies,
-    "Content-Type": "application/json",
-  };
+  return getDroHeaders();
 }
 
 // ── Low-level fetch wrapper ────────────────────────────────────────────────────
