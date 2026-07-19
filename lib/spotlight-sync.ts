@@ -256,11 +256,27 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       if (id && name) fdxToName[id] = name;
     }
 
-    // ── 6. Load our drivers for name matching ─────────────────────────────────
-    const dbDrivers = await sql`SELECT driver_id, name FROM drivers WHERE active = true`;
+    // ── 6. Load our drivers — match by fedex_id (primary) or name (fallback) ──
+    const dbDrivers = await sql`SELECT driver_id, name, fedex_id FROM drivers WHERE active = true`;
+
+    // Primary: fedex_id → driver_id
+    const fedexToDriverId: Record<string, string> = {};
+    for (const d of dbDrivers) {
+      if (d.fedex_id) fedexToDriverId[String(d.fedex_id)] = d.driver_id;
+    }
+    // Fallback: normalized name → driver_id
     const nameToDriverId: Record<string, string> = {};
     for (const d of dbDrivers) {
       nameToDriverId[normName(d.name)] = d.driver_id;
+    }
+
+    function resolveDriver(fdxId: string): string | null {
+      // 1. Direct FedEx ID match
+      if (fedexToDriverId[fdxId]) return fedexToDriverId[fdxId];
+      // 2. Name match via Resource Names lookup
+      const name = fdxToName[fdxId];
+      if (name) return nameToDriverId[normName(name)] ?? null;
+      return null;
     }
 
     // ── 7. Aggregate per driver+week, store scores + reviews ─────────────────
@@ -294,10 +310,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     const weeksSeen = new Set<string>();
 
     for (const [, bucket] of buckets) {
-      const driverName = fdxToName[bucket.fdxId];
-      if (!driverName) continue;
-
-      const ourId = nameToDriverId[normName(driverName)];
+      const ourId = resolveDriver(bucket.fdxId);
       if (!ourId) continue; // driver not in our system
 
       weeksSeen.add(bucket.week);
@@ -324,9 +337,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       const rawWeek = col(row, "week_ending");
       if (!fdxId || !rawWeek) continue;
 
-      const driverName = fdxToName[fdxId];
-      if (!driverName) continue;
-      const ourId = nameToDriverId[normName(driverName)];
+      const ourId = resolveDriver(fdxId);
       if (!ourId) continue;
 
       const star    = parseInt(col(row, "star"), 10);
