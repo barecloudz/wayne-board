@@ -40,7 +40,8 @@ function parseDriverName(raw: string): { display: string; normalized: string } {
 function parseIls(s: string): number | null {
   if (!s) return null;
   const n = parseFloat(s.replace("%", ""));
-  return isNaN(n) ? null : n;
+  if (isNaN(n) || n < 0 || n > 100) return null;
+  return n;
 }
 
 function parseInt2(s: string): number | null {

@@ -145,7 +145,7 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
       const sph   = parseFloat(detail.stops_per_hour) || null;
       const miles = parseFloat(detail.miles_total)    || null;
       const trav  = parseFloat(detail.miles_traveled) || null;
-      const dt    = detail.drive_time ?? null;
+      const dt    = detail.drive_time != null ? Math.round(detail.drive_time) : null;
 
       await sql`
         INSERT INTO gc_route_days

@@ -89,8 +89,8 @@ async function loginAndGetCookies(): Promise<string> {
 
     await browser.close();
 
-    // Cache cookies in settings table (expires in 23 hours)
-    const expiresAt = new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString();
+    // Cache cookies in settings table (expires in 6 hours)
+    const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
     await sql`
       INSERT INTO settings (key, value) VALUES ('dro_session_cookies', ${cookieHeader})
       ON CONFLICT (key) DO UPDATE SET value = ${cookieHeader}

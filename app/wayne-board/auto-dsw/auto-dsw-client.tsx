@@ -72,9 +72,21 @@ export default function AutoDswClient() {
   useEffect(() => { loadStatus(); }, []);
 
   async function handleSync() {
-    // DSW requires full browser automation (2-3 min) — runs automatically at 6 AM ET via cron.
-    // Manual sync can't run on Netlify due to 26-second function timeout.
-    setSyncResult({ ok: false, msg: "Manual sync isn't available on Netlify — DSW data syncs automatically every morning at 6 AM ET." });
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/.netlify/functions/cron-sync-dsw");
+      if (res.status === 202 || res.ok) {
+        setSyncResult({ ok: true, msg: "Sync started — data will appear in a few minutes. Refresh to check." });
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setSyncResult({ ok: false, msg: body?.error ?? `Unexpected response (${res.status})` });
+      }
+    } catch (err: any) {
+      setSyncResult({ ok: false, msg: err?.message ?? "Network error" });
+    } finally {
+      setSyncing(false);
+    }
   }
 
   async function saveSchedule() {
