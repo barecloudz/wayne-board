@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
+    "html2canvas": "^1.4.1",
     "jose": "^6.2.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.14.0",

@@ -29,9 +29,10 @@ const automationItems = [
   { icon: Map,           label: "Route Planner",  href: "/wayne-board/route-planner",  exact: true },
   { icon: Scissors,      label: "Create Routes",  href: "/wayne-board/create-routes",  exact: true },
   { icon: PenLine,       label: "Anchor Editor",  href: "/wayne-board/anchor-editor",  exact: true },
-  { icon: Route,         label: "Auto DRO",       href: "/wayne-board/auto-dro",       exact: true },
-  { icon: TrendingUp,    label: "Auto GC",        href: "/wayne-board/auto-gc",        exact: true },
-  { icon: ClipboardList, label: "Auto DSW",       href: "/wayne-board/auto-dsw",       exact: true },
+  { icon: Route,         label: "Auto DRO",        href: "/wayne-board/auto-dro",        exact: true },
+  { icon: TrendingUp,    label: "Auto GC",         href: "/wayne-board/auto-gc",         exact: true },
+  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",        exact: true },
+  { icon: Zap,           label: "Auto Spotlight",  href: "/wayne-board/auto-spotlight",  exact: true },
 ];
 
 const complianceItems = [

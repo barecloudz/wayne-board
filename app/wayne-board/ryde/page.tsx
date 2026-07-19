@@ -3,8 +3,9 @@
 import { useState, useEffect, useTransition } from "react";
 import AppShell from "@/components/app-shell";
 import {
-  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil,
+  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil, Share2,
 } from "lucide-react";
+import RydeShareModal from "@/components/ryde-share-modal";
 import {
   getRydeDrivers, getRydeReviews,
   addRydeReview, deleteRydeReview, updateRydeReview,
@@ -47,7 +48,8 @@ export default function RydePage() {
   const [goalMessage, setGoalMessageState] = useState("");
   const [editingMessage, setEditingMessage] = useState(false);
   const [messageInput, setMessageInput] = useState("");
-  const [showReview, setShowReview] = useState(false);
+  const [showReview,    setShowReview]    = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Review form state
@@ -185,6 +187,14 @@ export default function RydePage() {
             <p className="text-[13px] text-slate-400 mt-1.5">Driver performance reviews and Ryde metrics.</p>
           </div>
           <div className="flex gap-2 mt-1">
+            <button
+              onClick={() => setShowShareCard(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
+                border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              Share Card
+            </button>
             <button
               onClick={() => { setShowReview(true); }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
@@ -459,6 +469,15 @@ export default function RydePage() {
             label="Add Review"
           />
         </Modal>
+      )}
+
+      {/* Share Card modal */}
+      {showShareCard && (
+        <RydeShareModal
+          drivers={drivers}
+          reviews={reviews}
+          onClose={() => setShowShareCard(false)}
+        />
       )}
 
       {/* Edit Review modal */}

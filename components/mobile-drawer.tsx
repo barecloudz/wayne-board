@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
-  ClipboardCheck, UserCog, ChevronRight, Star, Wrench, CalendarDays, Trophy, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList, Scissors,
+  ClipboardCheck, UserCog, ChevronRight, Star, Wrench, CalendarDays, Trophy, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList, Scissors, Zap,
 } from "lucide-react";
 
 const reportItems = [
@@ -30,10 +30,11 @@ const adminItems = [
   { icon: Star,         label: "Ryde Scores",     href: "/wayne-board/ryde",         exact: true },
   { icon: Trophy,       label: "Milestones",      href: "/wayne-board/milestones",   exact: true },
   { icon: Scissors,     label: "Create Routes",    href: "/wayne-board/create-routes", exact: true },
-  { icon: Route,        label: "Auto DRO",         href: "/wayne-board/auto-dro",     exact: true },
-  { icon: TrendingUp,   label: "Auto GC",          href: "/wayne-board/auto-gc",      exact: true },
-  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",     exact: true },
-  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",     exact: true },
+  { icon: Route,        label: "Auto DRO",         href: "/wayne-board/auto-dro",        exact: true },
+  { icon: TrendingUp,   label: "Auto GC",          href: "/wayne-board/auto-gc",         exact: true },
+  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",        exact: true },
+  { icon: Zap,          label: "Auto Spotlight",   href: "/wayne-board/auto-spotlight",  exact: true },
+  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",        exact: true },
 ];
 
 export default function MobileDrawer() {
