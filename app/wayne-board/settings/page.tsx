@@ -1,17 +1,19 @@
 import AppShell from "@/components/app-shell";
 import PortalSettings from "../portal-settings";
 import WorkAreaManager from "../work-area-manager";
+import GcSyncSettings from "../gc-sync-settings";
 import { getSetting } from "@/lib/actions/settings";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [showRydeSetting, showMilestonesSetting, clockInSetting, workAreasList] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, workAreasList, gcSyncInterval] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getSetting("clock_in_enabled", "false"),
     getWorkAreas(),
+    getSetting("gc_sync_interval", "daily"),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -29,6 +31,7 @@ export default async function SettingsPage() {
         <div className="flex flex-col gap-6">
           <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} />
           <WorkAreaManager initial={workAreasList as any} />
+          <GcSyncSettings initialInterval={gcSyncInterval} />
         </div>
       </main>
     </AppShell>

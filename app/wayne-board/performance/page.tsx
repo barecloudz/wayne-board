@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AppShell from "@/components/app-shell";
 import {
   TrendingUp, TrendingDown, Minus, Star, Trophy,
-  ChevronUp, ChevronDown, Loader2, RefreshCw,
+  ChevronUp, ChevronDown, Loader2, RefreshCw, ChevronDown as ChevronDownIcon,
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  Legend, ResponsiveContainer,
+} from "recharts";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type Driver = {
   rank:           number;
@@ -30,7 +36,30 @@ type Driver = {
 
 type SortKey = "rank" | "avg_sph_30d" | "ryde_score" | "days_worked_30d" | "trend_delta";
 
-function TrendIcon({ trend, delta }: { trend: string | null; delta: number | null }) {
+type SphDriverData = {
+  driverId: string;
+  name: string;
+  data: { date: string; sph: number; routeName: string }[];
+};
+
+type SphHistory = {
+  dates: string[];
+  drivers: SphDriverData[];
+};
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const COLORS = [
+  "#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6",
+  "#8b5cf6","#ec4899","#14b8a6","#f97316","#84cc16",
+  "#06b6d4","#a855f7",
+];
+
+const DAY_OPTIONS = [7, 14, 30];
+
+// ── Helper components ─────────────────────────────────────────────────────────
+
+function TrendIcon({ trend }: { trend: string | null; delta?: number | null }) {
   if (trend === "improving") return <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />;
   if (trend === "declining") return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
   return <Minus className="w-3.5 h-3.5 text-slate-400" />;
@@ -53,6 +82,227 @@ function SphBar({ value, max }: { value: number | null; max: number }) {
     </div>
   );
 }
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// ── SPH Chart ─────────────────────────────────────────────────────────────────
+
+function SphChart() {
+  const [days, setDays] = useState(30);
+  const [history, setHistory] = useState<SphHistory | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedDriverIds, setSelectedDriverIds] = useState<Set<string> | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  async function fetchHistory(d: number) {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/drivers/sph-history?days=${d}`);
+      const data: SphHistory = await res.json();
+      setHistory(data);
+      // Default: all drivers selected
+      if (selectedDriverIds === null && data.drivers.length > 0) {
+        setSelectedDriverIds(new Set(data.drivers.map((d) => d.driverId)));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { fetchHistory(days); }, [days]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  function toggleDriver(id: string) {
+    setSelectedDriverIds((prev) => {
+      const next = new Set(prev ?? []);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (!history) return;
+    const all = history.drivers.map((d) => d.driverId);
+    setSelectedDriverIds((prev) => {
+      if (prev && prev.size === all.length) return new Set();
+      return new Set(all);
+    });
+  }
+
+  // Build chart data: array of { date, [driverId]: sph, ... }
+  const visibleDriverIds = selectedDriverIds ?? new Set<string>();
+  const visibleDrivers = history?.drivers.filter((d) => visibleDriverIds.has(d.driverId)) ?? [];
+
+  const chartData = (history?.dates ?? []).map((date) => {
+    const entry: Record<string, any> = { date };
+    for (const driver of visibleDrivers) {
+      const point = driver.data.find((p) => p.date === date);
+      if (point) entry[driver.driverId] = point.sph;
+    }
+    return entry;
+  });
+
+  const hasData = chartData.some((row) => {
+    const { date, ...rest } = row;
+    return Object.values(rest).some((v) => v != null);
+  });
+
+  const allSelected = history && selectedDriverIds && selectedDriverIds.size === history.drivers.length;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 className="text-[15px] font-bold text-slate-900">SPH Over Time</h2>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Day range buttons */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+            {DAY_OPTIONS.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDays(d)}
+                className={`px-2.5 py-1 rounded-md text-[12px] font-semibold transition-colors
+                  ${days === d ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                {d}d
+              </button>
+            ))}
+          </div>
+
+          {/* Driver filter dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen((v) => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              Drivers ({visibleDriverIds.size}/{history?.drivers.length ?? 0})
+              <ChevronDownIcon className="w-3.5 h-3.5" />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-1 z-20 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] py-1.5 max-h-64 overflow-y-auto">
+                <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer text-[12px] font-semibold text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={!!allSelected}
+                    onChange={toggleAll}
+                    className="rounded"
+                  />
+                  All drivers
+                </label>
+                <div className="border-t border-slate-100 my-1" />
+                {(history?.drivers ?? []).map((driver, i) => (
+                  <label
+                    key={driver.driverId}
+                    className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer text-[12px] text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleDriverIds.has(driver.driverId)}
+                      onChange={() => toggleDriver(driver.driverId)}
+                      className="rounded"
+                    />
+                    <span
+                      className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                    />
+                    {driver.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Refresh */}
+          <button
+            onClick={() => fetchHistory(days)}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="space-y-2 w-full">
+            <div className="h-3 bg-slate-100 rounded animate-pulse w-full" />
+            <div className="h-3 bg-slate-100 rounded animate-pulse w-5/6" />
+            <div className="h-3 bg-slate-100 rounded animate-pulse w-4/6" />
+            <div className="h-48 bg-slate-50 rounded-xl animate-pulse w-full mt-4" />
+          </div>
+        </div>
+      ) : !hasData ? (
+        <div className="flex items-center justify-center h-64 text-slate-400 text-[13px]">
+          No SPH data for the selected period
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis
+              dataKey="date"
+              tickFormatter={formatDate}
+              tick={{ fontSize: 11, fill: "#94a3b8" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: "#94a3b8" }}
+              tickLine={false}
+              axisLine={false}
+              label={{ value: "Stops/hr", angle: -90, position: "insideLeft", offset: 10, style: { fontSize: 11, fill: "#94a3b8" } }}
+            />
+            <Tooltip
+              contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #e2e8f0", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}
+              labelFormatter={(label) => formatDate(String(label))}
+              formatter={(value: any, name: any) => {
+                const driver = visibleDrivers.find((d) => d.driverId === name);
+                return [Number(value).toFixed(1), driver?.name ?? name];
+              }}
+            />
+            <Legend
+              wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+              formatter={(value) => {
+                const driver = visibleDrivers.find((d) => d.driverId === value);
+                return driver?.name ?? value;
+              }}
+            />
+            {visibleDrivers.map((driver, i) => (
+              <Line
+                key={driver.driverId}
+                type="monotone"
+                dataKey={driver.driverId}
+                stroke={COLORS[i % COLORS.length]}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4 }}
+                connectNulls={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function PerformancePage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -127,6 +377,9 @@ export default function PerformancePage() {
             Refresh
           </button>
         </div>
+
+        {/* ── SPH History Chart ── */}
+        <SphChart />
 
         {/* ── Top 3 cards ── */}
         {!loading && sorted.slice(0, 3).filter(d => d.avg_sph_30d).length > 0 && (

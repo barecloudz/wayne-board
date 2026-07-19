@@ -54,6 +54,7 @@ async function run() {
     WHERE driver_id IS NOT NULL
       AND stops_per_hour IS NOT NULL
       AND stops_per_hour > 0
+      AND EXTRACT(DOW FROM date) != 0
     ORDER BY driver_id, date
   `;
 
