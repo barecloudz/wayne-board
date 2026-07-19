@@ -3,7 +3,7 @@
   "short_name": "742 App",
   "description": "Gate codes, Ryde scores, milestones, and route info for 742 Logistics drivers.",
   "start_url": "/driver",
-  "scope": "/driver",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
@@ -16,7 +16,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/742-logo.png",
+      "src": "/banner.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
