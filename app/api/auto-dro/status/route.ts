@@ -6,7 +6,7 @@ import { desc, eq, isNotNull, sql } from "drizzle-orm";
 export async function GET() {
   const [
     routes, totals, anchorAreas, stopCoords, totalStopsResult,
-    lastSynced, autoEnabled, autoTime,
+    lastSynced, lastSyncResultRaw, autoEnabled, autoTime,
     routePlans, planningWindowSetting, stopOverridesCount, unroutableCount,
   ] = await Promise.all([
     db.select().from(droRoutes).orderBy(droRoutes.workAreaName),
@@ -28,6 +28,7 @@ export async function GET() {
     }).from(droStops).where(isNotNull(droStops.lat)),
     db.select({ count: sql<number>`count(*)::int` }).from(droStops),
     db.select().from(settings).where(eq(settings.key, "dro_last_synced_at")).then(r => r[0]?.value ?? ""),
+    db.select().from(settings).where(eq(settings.key, "dro_last_sync_result")).then(r => r[0]?.value ?? ""),
     db.select().from(settings).where(eq(settings.key, "dro_auto_sync_enabled")).then(r => r[0]?.value ?? "false"),
     db.select().from(settings).where(eq(settings.key, "dro_auto_sync_time")).then(r => r[0]?.value ?? "23:55"),
     db.select().from(droRoutePlans).orderBy(droRoutePlans.planId),
@@ -39,6 +40,9 @@ export async function GET() {
   const totalStops    = totalStopsResult[0]?.count ?? 0;
   const totalPackages = routes.reduce((s, r) => s + r.packages, 0);
   const planningWindowOpen = planningWindowSetting === "true";
+
+  let lastSyncResult: any = null;
+  try { if (lastSyncResultRaw) lastSyncResult = JSON.parse(lastSyncResultRaw as string); } catch {}
 
   return NextResponse.json({
     routes,
@@ -54,5 +58,6 @@ export async function GET() {
     planningWindowOpen,
     stopOverridesCount,
     unroutableCount,
+    lastSyncResult,
   });
 }

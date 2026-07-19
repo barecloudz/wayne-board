@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Award } from "lucide-react";
 
 type DswRow = {
@@ -27,6 +27,7 @@ type Status = {
   lastSynced: string;
   autoEnabled: boolean;
   autoTime: string;
+  lastSyncResult: { success: boolean; error?: string; rows?: number; date?: string; completedAt?: string } | null;
 };
 
 function ilsBg(pct: number | null) {
@@ -57,6 +58,8 @@ export default function AutoDswClient() {
   const [autoTime,    setAutoTime]    = useState("07:00");
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
+  const [pollUntil,   setPollUntil]   = useState<number | null>(null);
+  const triggeredAt = useRef<number>(0);
 
   async function loadStatus() {
     const res = await fetch("/api/auto-dsw/status");
@@ -65,26 +68,56 @@ export default function AutoDswClient() {
       setData(d);
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
+      // If we're polling and a result arrived after we triggered, stop polling and show it
+      if (triggeredAt.current && d.lastSyncResult?.completedAt) {
+        const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
+        if (resultTime > triggeredAt.current) {
+          setPollUntil(null);
+          setSyncing(false);
+          if (d.lastSyncResult.success) {
+            setSyncResult({ ok: true, msg: `Sync complete — ${d.lastSyncResult.rows} rows for ${d.lastSyncResult.date}` });
+          } else {
+            setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
+          }
+        }
+      }
     }
     setLoading(false);
   }
 
   useEffect(() => { loadStatus(); }, []);
 
+  useEffect(() => {
+    if (!pollUntil) return;
+    const interval = setInterval(async () => {
+      if (Date.now() > pollUntil) {
+        clearInterval(interval);
+        setPollUntil(null);
+        setSyncing(false);
+        setSyncResult({ ok: false, msg: "Sync timed out — check Netlify function logs." });
+        return;
+      }
+      await loadStatus();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [pollUntil]);
+
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
+    triggeredAt.current = Date.now();
     try {
       const res = await fetch("/.netlify/functions/dsw-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
-        setSyncResult({ ok: true, msg: "Sync started — data will appear in a few minutes. Refresh to check." });
+        setPollUntil(Date.now() + 6 * 60 * 1000); // poll for up to 6 min
+        setSyncResult({ ok: true, msg: "Syncing… checking for result every 10 seconds." });
       } else {
         const body = await res.json().catch(() => ({}));
         setSyncResult({ ok: false, msg: body?.error ?? `Unexpected response (${res.status})` });
+        setSyncing(false);
       }
     } catch (err: any) {
       setSyncResult({ ok: false, msg: err?.message ?? "Network error" });
-    } finally {
       setSyncing(false);
     }
   }

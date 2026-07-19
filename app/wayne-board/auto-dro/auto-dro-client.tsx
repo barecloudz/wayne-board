@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   RefreshCw, CheckCircle, XCircle, Eye, EyeOff,
   Clock, KeyRound, Map, BarChart3, Loader2,
@@ -117,6 +117,7 @@ type Status = {
   planningWindowOpen: boolean;
   stopOverridesCount: number;
   unroutableCount:   number;
+  lastSyncResult:    { success: boolean; error?: string; routes?: number; stops?: number; sortDate?: string; completedAt?: string } | null;
 };
 
 // ── Tab config ─────────────────────────────────────────────────────────────────
@@ -214,6 +215,8 @@ export default function AutoDroClient() {
   // Sync
   const [syncing,       setSyncing]       = useState(false);
   const [syncResult,    setSyncResult]    = useState<{ ok: boolean; msg: string } | null>(null);
+  const [pollUntil,     setPollUntil]     = useState<number | null>(null);
+  const triggeredAt = useRef<number>(0);
 
   // Diagnose
   const [diagnosing,    setDiagnosing]    = useState(false);
@@ -237,6 +240,18 @@ export default function AutoDroClient() {
       setData(d);
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
+      if (triggeredAt.current && d.lastSyncResult?.completedAt) {
+        const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
+        if (resultTime > triggeredAt.current) {
+          setPollUntil(null);
+          setSyncing(false);
+          if (d.lastSyncResult.success) {
+            setSyncResult({ ok: true, msg: `Sync complete — ${d.lastSyncResult.routes} routes · ${d.lastSyncResult.stops} stops for ${d.lastSyncResult.sortDate}` });
+          } else {
+            setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
+          }
+        }
+      }
     }
     setLoading(false);
   }
@@ -253,6 +268,21 @@ export default function AutoDroClient() {
     loadStatus();
     loadCreds();
   }, []);
+
+  useEffect(() => {
+    if (!pollUntil) return;
+    const interval = setInterval(async () => {
+      if (Date.now() > pollUntil) {
+        clearInterval(interval);
+        setPollUntil(null);
+        setSyncing(false);
+        setSyncResult({ ok: false, msg: "Sync timed out — check Netlify function logs." });
+        return;
+      }
+      await loadStatus();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [pollUntil]);
 
   async function toggleUnroutable() {
     if (!unroutableOpen && unroutableStops.length === 0) {
@@ -299,16 +329,18 @@ export default function AutoDroClient() {
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
+    triggeredAt.current = Date.now();
     try {
       const res = await fetch("/.netlify/functions/dro-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
-        setSyncResult({ ok: true, msg: "Sync started — logs in fresh and pulls DRO data. Check back in 3-4 minutes." });
+        setPollUntil(Date.now() + 8 * 60 * 1000); // poll for up to 8 min
+        setSyncResult({ ok: true, msg: "Syncing… logging in fresh and pulling DRO data. Checking every 10 seconds." });
       } else {
         setSyncResult({ ok: false, msg: `Unexpected response (${res.status})` });
+        setSyncing(false);
       }
     } catch (e: any) {
       setSyncResult({ ok: false, msg: e?.message ?? "Sync failed" });
-    } finally {
       setSyncing(false);
     }
   }
