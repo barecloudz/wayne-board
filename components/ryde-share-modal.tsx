@@ -154,15 +154,10 @@ export default function RydeShareModal({ drivers, reviews, onClose }: RydeShareM
     if (!cardRef.current) return;
     setSharing(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(cardRef.current, {
-        scale:           2,
-        backgroundColor: null,
-        useCORS:         true,
-        logging:         false,
-      });
-
-      const blob = await new Promise<Blob>((res) => canvas.toBlob((b) => res(b!), "image/png"));
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2, skipFonts: false });
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
       const filename = `${driverName.replace(/\s+/g, "-")}-ryde-${period}.png`;
 
       if (!download && typeof navigator !== "undefined" && navigator.share) {
