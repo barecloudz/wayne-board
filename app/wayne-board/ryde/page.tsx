@@ -48,8 +48,9 @@ export default function RydePage() {
   const [goalMessage, setGoalMessageState] = useState("");
   const [editingMessage, setEditingMessage] = useState(false);
   const [messageInput, setMessageInput] = useState("");
-  const [showReview,    setShowReview]    = useState(false);
-  const [showShareCard, setShowShareCard] = useState(false);
+  const [showReview,      setShowReview]      = useState(false);
+  const [showShareCard,   setShowShareCard]   = useState(false);
+  const [shareDriverId,   setShareDriverId]   = useState<string | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
 
   // Review form state
@@ -381,7 +382,7 @@ export default function RydePage() {
                       background: "linear-gradient(155deg, #0b0f1a 0%, #111827 55%, #0b0f1a 100%)",
                       border: `1px solid ${ringColor}30`,
                     }}
-                    onClick={() => setShowShareCard(true)}
+                    onClick={() => { setShareDriverId(driver.driverId); setShowShareCard(true); }}
                     title="Click to share this scorecard"
                   >
                     {/* Header */}
@@ -578,7 +579,8 @@ export default function RydePage() {
         <RydeShareModal
           drivers={drivers}
           reviews={reviews}
-          onClose={() => setShowShareCard(false)}
+          initialDriverId={shareDriverId}
+          onClose={() => { setShowShareCard(false); setShareDriverId(undefined); }}
         />
       )}
 
