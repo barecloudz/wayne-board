@@ -353,6 +353,108 @@ export default function RydePage() {
           ))}
         </div>
 
+        {/* Per-driver score cards */}
+        {drivers.length > 0 && (
+          <div className="mb-6">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Driver Scorecards</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {drivers.map((driver) => {
+                const driverReviews = reviews.filter(r => r.driverId === driver.driverId);
+                const total = driverReviews.length;
+                const pos = driverReviews.filter(r => r.type === "positive").length;
+                const positivePct = total > 0 ? Math.round((pos / total) * 100) : 0;
+                const avgStars = total > 0
+                  ? driverReviews.reduce((s, r) => s + (r.stars ?? 0), 0) / total
+                  : 0;
+                const ringColor = positivePct >= 80 ? "#4ade80" : positivePct >= 60 ? "#fb923c" : total === 0 ? "#334155" : "#f87171";
+                const statusLabel = total === 0 ? "NO DATA" : positivePct >= 80 ? "EXCELLENT" : positivePct >= 60 ? "GOOD" : "NEEDS WORK";
+                const initials = driver.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                const recent = [...driverReviews].sort((a, b) => {
+                  return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                }).slice(0, 1)[0];
+
+                return (
+                  <div
+                    key={driver.driverId}
+                    className="rounded-2xl p-5 cursor-pointer group transition-all"
+                    style={{
+                      background: "linear-gradient(155deg, #0b0f1a 0%, #111827 55%, #0b0f1a 100%)",
+                      border: `1px solid ${ringColor}30`,
+                    }}
+                    onClick={() => setShowShareCard(true)}
+                    title="Click to share this scorecard"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-black text-slate-100 flex-shrink-0"
+                          style={{ background: `linear-gradient(135deg, ${ringColor}60, #6366f160)`, border: `2px solid ${ringColor}50` }}
+                        >
+                          {initials}
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-bold text-slate-100 leading-tight">{driver.name}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{total} review{total !== 1 ? "s" : ""}</p>
+                        </div>
+                      </div>
+                      <span
+                        className="text-[9px] font-black tracking-widest px-2.5 py-1 rounded-full"
+                        style={{ color: ringColor, background: `${ringColor}18`, border: `1px solid ${ringColor}40` }}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {[
+                        { label: "Positive", val: `${positivePct}%`, color: ringColor },
+                        { label: "Avg Stars", val: total > 0 ? `${avgStars.toFixed(1)}★` : "—", color: "#facc15" },
+                        { label: "Negative", val: `${total - pos}`, color: "#f87171" },
+                      ].map(({ label, val, color }) => (
+                        <div key={label} className="rounded-xl px-3 py-2" style={{ background: "#0f172a", border: "1px solid #1e293b" }}>
+                          <p className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#475569" }}>{label}</p>
+                          <p className="text-[14px] font-black mt-0.5" style={{ color }}>{val}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Most recent review snippet */}
+                    {recent && (
+                      <div className="rounded-xl px-3 py-2.5" style={{ background: "#0f172a", border: "1px solid #1e293b" }}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={`w-2.5 h-2.5 ${s <= (recent.stars ?? 0) ? "text-amber-400 fill-amber-400" : "text-slate-700 fill-slate-700"}`} />
+                          ))}
+                          <span className="text-[8px] font-bold ml-1" style={{ color: recent.type === "positive" ? "#4ade80" : "#f87171" }}>
+                            {recent.type.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 italic leading-snug">
+                          &ldquo;{recent.content.length > 70 ? recent.content.slice(0, 67) + "…" : recent.content}&rdquo;
+                        </p>
+                      </div>
+                    )}
+
+                    {total === 0 && (
+                      <div className="rounded-xl px-3 py-3 text-center" style={{ background: "#0f172a", border: "1px solid #1e293b" }}>
+                        <p className="text-[11px] text-slate-600">No reviews yet</p>
+                      </div>
+                    )}
+
+                    {/* Share hint */}
+                    <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Share2 className="w-3 h-3 text-slate-600" />
+                      <span className="text-[10px] text-slate-600">Click to share scorecard</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Reviews list */}
         <div className="flex flex-col gap-3">
           {reviews.length === 0 && (

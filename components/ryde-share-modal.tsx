@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import { X, Share2, Download, Loader2, ChevronDown } from "lucide-react";
-import RydeShareCard, { type NegCategory } from "./ryde-share-card";
+import RydeShareCard, { type NegCategory, type ReviewSnippet } from "./ryde-share-card";
 
 type Review = {
   id: number; driverId: string; type: string; stars: number | null;
@@ -130,6 +130,21 @@ export default function RydeShareModal({ drivers, reviews, onClose }: RydeShareM
       pct: negTotal > 0 ? Math.round((count / negTotal) * 100) : 0,
     }))
     .sort((a, b) => b.count - a.count);
+
+  // Most recent reviews for the card (sorted by createdAt desc)
+  const recentReviews: ReviewSnippet[] = [...filtered]
+    .sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    })
+    .slice(0, 3)
+    .map(r => ({
+      type: r.type as "positive" | "negative",
+      stars: r.stars ?? 0,
+      content: r.content,
+      initials: (r as any).customerInitials ?? null,
+    }));
 
   const driverName   = drivers.find(d => d.driverId === selectedDriver)?.name ?? selectedDriver;
   const periodLabel  = formatPeriodLabel(period, filtered);
@@ -279,6 +294,7 @@ export default function RydeShareModal({ drivers, reviews, onClose }: RydeShareM
                   totalRatings={totalRatings}
                   avgStars={avgStars}
                   negBreakdown={negBreakdown}
+                  recentReviews={recentReviews}
                 />
               </div>
             </div>
