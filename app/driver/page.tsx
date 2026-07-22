@@ -65,7 +65,6 @@ export default async function DriverDashboard() {
     getMyMaintenanceRequests(session.driverId),
     db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
     db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60).catch(() => []),
-    // Last 14 days of ALL drivers' DSW data (team streak calculation)
     (() => {
       const d14 = new Date(); d14.setDate(d14.getDate() - 14);
       const since = d14.toISOString().slice(0, 10);
@@ -79,13 +78,11 @@ export default async function DriverDashboard() {
   const showRyde       = showRydeSetting === "true";
   const showMilestones = showMilestonesSetting === "true";
 
-  // DSW scorecard — latest date's rows only
   const latestDswDate = latestDswRows[0]?.date ?? null;
   const dswRows = latestDswDate
     ? latestDswRows.filter(r => r.date === latestDswDate && !!r.driverNameRaw)
     : [];
 
-  // Resolve today's effective work area (daily override → default)
   let todayWorkArea: { id: number; name: string; shape: string; color: string } | null = null;
   const [dailyWaAssignment] = await db
     .select({ workAreaId: dailyWorkAreaAssignments.workAreaId })
@@ -112,7 +109,6 @@ export default async function DriverDashboard() {
   const activeMilestones = milestones.filter((m) => m.active);
   const claimedIds = new Set(claims.map((c) => c.milestoneId));
 
-  // Auto-claim any milestones the driver has earned but not yet recorded
   const newlyEarned = activeMilestones.filter(
     (m) => streakDays >= m.daysRequired && !claimedIds.has(m.id),
   );
@@ -126,25 +122,38 @@ export default async function DriverDashboard() {
   return (
     <div
       className="min-h-screen w-full flex flex-col"
-      style={{ background: "linear-gradient(160deg, #4D148C 0%, #7B2FC0 50%, #FF6200 100%)" }}
+      style={{ background: "linear-gradient(160deg, #060011 0%, #0e001f 55%, #150600 100%)" }}
     >
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-5 py-4 md:px-10">
+      {/* Sticky frosted nav */}
+      <nav
+        className="sticky top-0 z-40 flex items-center justify-between px-5 py-3.5 md:px-10"
+        style={{
+          background: "rgba(6, 0, 17, 0.72)",
+          backdropFilter: "blur(28px)",
+          WebkitBackdropFilter: "blur(28px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded-xl p-0.5 shadow-[0_2px_10px_rgba(0,0,0,0.2)]">
-            <Image src="/74slogo.svg" alt="742 Logistics" width={38} height={38} className="object-contain" />
+          <div className="bg-white rounded-xl p-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+            <Image src="/74slogo.svg" alt="742 Logistics" width={36} height={36} className="object-contain" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[14px] font-extrabold text-white tracking-tight">742 Logistics</span>
-            <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.55)" }}>Driver Portal</span>
+            <span className="text-[14px] font-bold text-white tracking-tight">742 Logistics</span>
+            <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>Driver Portal</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-white/60 hidden sm:block">{session.name}</span>
+          <span className="text-[12px] font-medium hidden sm:block" style={{ color: "rgba(255,255,255,0.45)" }}>{session.name}</span>
           {session.isAdmin && (
             <a
               href="/wayne-board"
-              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg border border-white/20 text-white/70 hover:bg-white/10 transition-colors block"
+              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.6)",
+              }}
             >
               Wayne Board
             </a>
@@ -154,14 +163,14 @@ export default async function DriverDashboard() {
       </nav>
 
       {/* Content */}
-      <div className="flex-1 px-5 pb-10 md:px-10 max-w-2xl mx-auto w-full">
-        <div className="mb-6">
-          <p className="text-[13px] text-white/60 mb-0.5">Welcome back,</p>
-          <h1 className="text-[28px] font-extrabold text-white tracking-tight leading-none">{session.name}</h1>
+      <div className="flex-1 px-5 pt-6 md:px-10 max-w-2xl mx-auto w-full">
+        <div className="mb-7">
+          <p className="text-[12px] font-medium mb-0.5" style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.02em" }}>Welcome back,</p>
+          <h1 className="text-[32px] font-bold text-white tracking-tight leading-none">{session.name}</h1>
           {todayWorkArea && (
-            <div className="flex items-center gap-2 mt-2">
-              <WorkAreaShape shape={todayWorkArea.shape} color={todayWorkArea.color} size={14} />
-              <span className="text-[13px] font-semibold text-white/80">{todayWorkArea.name}</span>
+            <div className="flex items-center gap-2 mt-2.5">
+              <WorkAreaShape shape={todayWorkArea.shape} color={todayWorkArea.color} size={12} />
+              <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>{todayWorkArea.name}</span>
             </div>
           )}
         </div>
