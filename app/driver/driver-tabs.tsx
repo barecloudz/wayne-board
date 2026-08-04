@@ -46,7 +46,7 @@ const glassBright = {
 } as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -70,6 +70,7 @@ export default function DriverTabs({
   driverName: string;
   dswRows: DswRow[];
   myDswHistory: DswRow[];
+  showDsw: boolean;
 }) {
   const defaultTab = showRyde ? "score" : "schedule";
   const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
@@ -126,7 +127,7 @@ export default function DriverTabs({
 
   // More sheet — secondary tabs
   const moreTabs = ([
-    { key: "service",     label: "Service",     Icon: Activity,      show: true },
+    { key: "service",     label: "Service",     Icon: Activity,      show: showDsw },
     { key: "maintenance", label: "Maintenance", Icon: Wrench,        show: true },
     { key: "reviews",     label: `Reviews (${reviews.length})`, Icon: MessageSquare, show: showRyde },
     { key: "milestones",  label: "Milestones",  Icon: Award,         show: showMilestones },

@@ -6,15 +6,34 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
-  ClipboardCheck, UserCog, ChevronRight, Star, Wrench, CalendarDays, Trophy, WrenchIcon, Settings, Gauge, Route, TrendingUp, ClipboardList, Scissors, Zap,
+  ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
+  CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
+  Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
+  ChevronDown, ChevronUp, PenLine,
 } from "lucide-react";
 
-const reportItems = [
-  { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true },
-  { icon: Truck, label: "Fleet", href: "/reports/fleet", exact: true },
-  { icon: DollarSign, label: "Payroll", href: "/reports/payroll", exact: true },
-  { icon: Users, label: "Drivers", href: "/reports/drivers", exact: true },
-  { icon: Map, label: "Routes", href: "/reports/routes", exact: true },
+const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true };
+
+const adminItems = [
+  { icon: UserCog,       label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
+  { icon: CalendarDays,  label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
+  { icon: Gauge,         label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
+  { icon: WrenchIcon,    label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
+  { icon: TrendingUp,    label: "Performance",      href: "/wayne-board/performance",  exact: true },
+  { icon: Star,          label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
+  { icon: Trophy,        label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
+  { icon: GraduationCap, label: "Trainee Days",     href: "/wayne-board/trainees",     exact: true },
+  { icon: Settings,      label: "Settings",         href: "/wayne-board/settings",     exact: true },
+];
+
+const automationItems = [
+  { icon: Map,           label: "Route Planner", href: "/wayne-board/route-planner", exact: true },
+  { icon: Scissors,      label: "Create Routes", href: "/wayne-board/create-routes", exact: true },
+  { icon: PenLine,       label: "Anchor Editor", href: "/wayne-board/anchor-editor", exact: true },
+  { icon: Route,         label: "Auto DRO",      href: "/wayne-board/auto-dro",      exact: true },
+  { icon: TrendingUp,    label: "Auto GC",       href: "/wayne-board/auto-gc",       exact: true },
+  { icon: ClipboardList, label: "Auto DSW",      href: "/wayne-board/auto-dsw",      exact: true },
+  { icon: Zap,           label: "Auto Spotlight",href: "/wayne-board/auto-spotlight",exact: true },
 ];
 
 const complianceItems = [
@@ -22,24 +41,18 @@ const complianceItems = [
   { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
 ];
 
-const adminItems = [
-  { icon: UserCog,      label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
-  { icon: CalendarDays, label: "Scheduling",      href: "/wayne-board/scheduling",   exact: true },
-  { icon: Gauge,        label: "Fleet Status",    href: "/wayne-board/fleet-status", exact: true },
-  { icon: WrenchIcon,   label: "Maintenance",     href: "/wayne-board/maintenance",  exact: true },
-  { icon: Star,         label: "Ryde Scores",     href: "/wayne-board/ryde",         exact: true },
-  { icon: Trophy,       label: "Milestones",      href: "/wayne-board/milestones",   exact: true },
-  { icon: Scissors,     label: "Create Routes",    href: "/wayne-board/create-routes", exact: true },
-  { icon: Route,        label: "Auto DRO",         href: "/wayne-board/auto-dro",        exact: true },
-  { icon: TrendingUp,   label: "Auto GC",          href: "/wayne-board/auto-gc",         exact: true },
-  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",        exact: true },
-  { icon: Zap,          label: "Auto Spotlight",   href: "/wayne-board/auto-spotlight",  exact: true },
-  { icon: Settings,     label: "Settings",         href: "/wayne-board/settings",        exact: true },
+const reportItems = [
+  { icon: Truck,      label: "Fleet",   href: "/reports/fleet",   exact: true },
+  { icon: DollarSign, label: "Payroll", href: "/reports/payroll", exact: true },
+  { icon: Users,      label: "Drivers", href: "/reports/drivers", exact: true },
+  { icon: Map,        label: "Routes",  href: "/reports/routes",  exact: true },
 ];
 
 export default function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const automationActive = automationItems.some(i => pathname === i.href);
+  const [autoOpen, setAutoOpen] = useState(automationActive);
 
   function isActive(href: string, exact: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -107,7 +120,7 @@ export default function MobileDrawer() {
             <Image src="/wayne-logo.png" alt="Wayne" width={40} height={25} className="object-contain" />
             <div className="flex flex-col leading-none">
               <span className="text-[13px] font-bold text-slate-900">Wayne Board</span>
-              <span className="text-[11px] text-slate-400 mt-0.5">Management</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">Operations Suite</span>
             </div>
           </div>
           <button
@@ -120,46 +133,53 @@ export default function MobileDrawer() {
         </div>
 
         {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-5">
-          {/* Reports */}
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1.5">
-              Reports
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {reportItems.map((item) => <NavLink key={item.href} {...item} />)}
+        <nav className="flex-1 overflow-y-auto p-3 flex flex-col gap-0.5">
+          <NavLink {...overviewItem} />
+
+          <div className="my-3 border-t border-slate-100" />
+
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1">Admin</p>
+          {adminItems.map((item) => <NavLink key={item.href} {...item} />)}
+
+          <div className="my-3 border-t border-slate-100" />
+
+          {/* Automation — collapsible */}
+          <button
+            onClick={() => setAutoOpen(v => !v)}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all w-full text-left ${
+              automationActive ? "text-slate-900 bg-slate-50" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            }`}
+          >
+            <Zap className={`w-4 h-4 shrink-0 ${automationActive ? "text-slate-700" : "text-slate-400"}`} />
+            <span className="flex-1">Automation</span>
+            {automationActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+            {autoOpen
+              ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
+              : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+            }
+          </button>
+          {autoOpen && (
+            <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
+              {automationItems.map((item) => <NavLink key={item.href} {...item} />)}
             </div>
-          </div>
+          )}
 
-          <div className="border-t border-slate-100" />
+          <div className="my-3 border-t border-slate-100" />
 
-          {/* Compliance */}
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1.5">
-              Compliance
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {complianceItems.map((item) => <NavLink key={item.href} {...item} />)}
-            </div>
-          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1">Compliance</p>
+          {complianceItems.map((item) => <NavLink key={item.href} {...item} />)}
 
-          <div className="border-t border-slate-100" />
+          <div className="my-3 border-t border-slate-100" />
 
-          {/* Admin */}
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1.5">
-              Admin
-            </p>
-            <div className="flex flex-col gap-0.5">
-              {adminItems.map((item) => <NavLink key={item.href} {...item} />)}
-            </div>
-          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1">Reports</p>
+          {reportItems.map((item) => <NavLink key={item.href} {...item} />)}
         </nav>
 
         {/* Driver Portal link */}
         <div className="px-3 pb-2">
           <Link
             href="/driver"
+            onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 w-full"
           >
             <Truck className="w-4 h-4 text-slate-400 shrink-0" />

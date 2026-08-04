@@ -8,10 +8,12 @@ export default function PortalSettings({
   showRyde,
   showMilestones,
   clockInEnabled,
+  showDsw,
 }: {
   showRyde: boolean;
   showMilestones: boolean;
   clockInEnabled: boolean;
+  showDsw: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -43,6 +45,13 @@ export default function PortalSettings({
           description="Milestones tab, Bonuses tab, and the streak progress bar"
           enabled={showMilestones}
           onToggle={() => toggle("show_milestones", showMilestones)}
+          disabled={isPending}
+        />
+        <ToggleRow
+          label="Service Data (DSW)"
+          description="ILS%, service rate, and team scorecard — hide when auto-sync data is stale"
+          enabled={showDsw}
+          onToggle={() => toggle("show_dsw", showDsw)}
           disabled={isPending}
         />
         <ToggleRow

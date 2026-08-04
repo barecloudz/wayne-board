@@ -93,6 +93,14 @@ export async function terminateDriver(
   }).where(eq(drivers.id, id));
 }
 
+// Wipe RYDE scores + reviews for a driver (used when terminating with purge option)
+export async function purgeDriverRydeData(id: number) {
+  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.id, id)).limit(1);
+  if (!driver) return;
+  await db.delete(rydeScores).where(eq(rydeScores.driverId, driver.driverId));
+  await db.delete(rydeReviews).where(eq(rydeReviews.driverId, driver.driverId));
+}
+
 export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {
   const [driver] = await db.select().from(drivers).where(eq(drivers.driverId, driverId)).limit(1);
   if (!driver) return { error: "Driver not found." };

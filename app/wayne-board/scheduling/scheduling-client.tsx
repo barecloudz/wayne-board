@@ -380,16 +380,19 @@ export default function SchedulingClient({
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
             Scheduling
           </h1>
+          <p className="text-[14px] text-slate-400 mt-2 max-w-xl">
+            Manage driver schedules, time off, and day-to-day coverage at a glance.
+          </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex flex-wrap gap-1 mb-2 bg-slate-100 rounded-xl p-1 w-fit">
         {([
-          { key: "schedules", label: "Weekly Schedules",  icon: Clock },
+          { key: "schedules", label: "Weekly Schedule",   icon: Clock },
           { key: "timeoff",   label: "Time Off",          icon: Calendar },
-          { key: "coverage",  label: "Coverage (14 Days)", icon: AlertTriangle },
-          { key: "added",     label: "Added Days",        icon: CalendarPlus },
+          { key: "coverage",  label: "Who's Working",     icon: AlertTriangle },
+          { key: "added",     label: "Extra Days",        icon: CalendarPlus },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -404,12 +407,34 @@ export default function SchedulingClient({
         ))}
       </div>
 
+      {/* Tab descriptions */}
+      {tab === "schedules" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          Set which days of the week each driver works. Click a day to toggle it on or off — then hit <strong className="text-slate-600">Save</strong>.
+        </p>
+      )}
+      {tab === "timeoff" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          Record when a driver won&apos;t be in — vacation, personal days, appointments. Time off overrides their normal schedule.
+        </p>
+      )}
+      {tab === "coverage" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          Shows every driver scheduled to work each day for the next 2 weeks, after subtracting time off. Click any driver to cut their day or reassign their truck.
+        </p>
+      )}
+      {tab === "added" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          One-time extra days — when a driver comes in on a day they&apos;re not normally scheduled. Add these from the Weekly Schedule tab using the <strong className="text-slate-600">+ Extra Day</strong> button.
+        </p>
+      )}
+
       {/* ── SCHEDULES TAB ────────────────────────────────────────────────── */}
       {tab === "schedules" && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <p className="text-[13px] text-slate-500">
-              Toggle which days each driver is scheduled. Changes save per-driver.
+              Tap the day buttons to toggle a driver&apos;s regular schedule, then click <strong className="text-slate-700">Save</strong>.
             </p>
             <button
               onClick={() => setShowInactive((p) => !p)}
@@ -428,11 +453,11 @@ export default function SchedulingClient({
                 <tr className="border-b border-slate-100 bg-slate-50/60">
                   <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Driver</th>
                   {DAYS.map((d) => (
-                    <th key={d.key} className="px-2 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center w-12">
+                    <th key={d.key} title={d.label} className="px-2 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center w-12">
                       {d.short}
                     </th>
                   ))}
-                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right w-52">Actions</th>
+                  <th className="px-4 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-right w-72">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -647,23 +672,22 @@ export default function SchedulingClient({
                               setOverrideNote("");
                             }}
                             disabled={isPending}
-                            title="Add one-time working day"
-                            className={`p-1.5 rounded transition-colors disabled:opacity-40 ${
+                            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-40 border ${
                               pickerOpen
-                                ? "bg-blue-100 text-blue-600"
-                                : "hover:bg-blue-50 text-slate-300 hover:text-blue-500"
+                                ? "bg-blue-100 text-blue-600 border-blue-200"
+                                : "border-slate-200 text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
                             }`}
                           >
-                            <CalendarPlus className="w-3.5 h-3.5" />
+                            <CalendarPlus className="w-3 h-3" />
+                            Extra Day
                           </button>
                           <button
                             onClick={() => handleSetTrainee(row.driverId, !row.isTrainee)}
                             disabled={isPending}
-                            title={row.isTrainee ? "Remove trainee status" : "Mark as trainee (won't count as a route)"}
-                            className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-40 border ${
+                            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-40 border ${
                               row.isTrainee
                                 ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-                                : "text-slate-300 border-slate-200 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200"
+                                : "border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
                             }`}
                           >
                             Trainee
@@ -671,14 +695,16 @@ export default function SchedulingClient({
                           <button
                             onClick={() => handleSetActive(row.driverId, !row.active)}
                             disabled={isPending}
-                            title={row.active ? "Hide from schedule" : "Restore to schedule"}
-                            className={`p-1.5 rounded transition-colors disabled:opacity-40 ${
+                            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-40 border ${
                               row.active
-                                ? "hover:bg-red-50 text-slate-300 hover:text-red-400"
-                                : "bg-amber-50 text-amber-500 hover:bg-amber-100"
+                                ? "border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                                : "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
                             }`}
                           >
-                            {row.active ? <X className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                            {row.active
+                              ? <><X className="w-3 h-3" /> Deactivate</>
+                              : <><Check className="w-3 h-3" /> Restore</>
+                            }
                           </button>
                         </div>
                       </td>
@@ -1244,7 +1270,8 @@ export default function SchedulingClient({
               <div className="px-6 py-5 flex flex-col gap-5">
                 {/* Cut from day */}
                 <div className="flex flex-col gap-2">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cut from this day</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Not working this day?</p>
+                  <p className="text-[12px] text-slate-500">This will mark them as off for the day and remove them from coverage.</p>
                   <button
                     onClick={handleCutDay}
                     disabled={isPending}

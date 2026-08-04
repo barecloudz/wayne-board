@@ -47,7 +47,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory] = await Promise.all([
     db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -60,6 +60,7 @@ export default async function DriverDashboard() {
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
+    getSetting("show_dsw", "true"),
     getGateCodes(session.driverId),
     getGateAreas(),
     getMyMaintenanceRequests(session.driverId),
@@ -77,6 +78,7 @@ export default async function DriverDashboard() {
 
   const showRyde       = showRydeSetting === "true";
   const showMilestones = showMilestonesSetting === "true";
+  const showDsw        = showDswSetting === "true";
 
   const latestDswDate = latestDswRows[0]?.date ?? null;
   const dswRows = latestDswDate
@@ -190,6 +192,7 @@ export default async function DriverDashboard() {
           upcomingTimeOff={upcomingTimeOff as any}
           showRyde={showRyde}
           showMilestones={showMilestones}
+          showDsw={showDsw}
           gateCodes={gateCodes}
           gateAreas={gateAreas}
           maintenanceRequests={myRequests as any}

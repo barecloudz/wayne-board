@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import AppShell from "@/components/app-shell";
 import {
-  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil, Share2,
+  Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil, Share2, X,
 } from "lucide-react";
 import RydeShareModal from "@/components/ryde-share-modal";
 import {
@@ -51,6 +51,7 @@ export default function RydePage() {
   const [showReview,      setShowReview]      = useState(false);
   const [showShareCard,   setShowShareCard]   = useState(false);
   const [shareDriverId,   setShareDriverId]   = useState<string | undefined>(undefined);
+  const [reviewTarget,    setReviewTarget]    = useState<{ driver: Driver; reviews: Review[] } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Review form state
@@ -382,8 +383,8 @@ export default function RydePage() {
                       background: "linear-gradient(155deg, #0b0f1a 0%, #111827 55%, #0b0f1a 100%)",
                       border: `1px solid ${ringColor}30`,
                     }}
-                    onClick={() => { setShareDriverId(driver.driverId); setShowShareCard(true); }}
-                    title="Click to share this scorecard"
+                    onClick={() => setReviewTarget({ driver, reviews: driverReviews })}
+                    title="Click to see reviews"
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
@@ -444,10 +445,18 @@ export default function RydePage() {
                       </div>
                     )}
 
-                    {/* Share hint */}
-                    <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Share2 className="w-3 h-3 text-slate-600" />
-                      <span className="text-[10px] text-slate-600">Click to share scorecard</span>
+                    {/* Action row */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">View all reviews →</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShareDriverId(driver.driverId); setShowShareCard(true); }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all opacity-0 group-hover:opacity-100"
+                        style={{ background: "#1e293b", color: "#94a3b8", border: "1px solid #334155" }}
+                        title="Share scorecard"
+                      >
+                        <Share2 className="w-3 h-3" />
+                        Share
+                      </button>
                     </div>
                   </div>
                 );
@@ -572,6 +581,16 @@ export default function RydePage() {
             label="Add Review"
           />
         </Modal>
+      )}
+
+      {/* Driver reviews drill-down modal */}
+      {reviewTarget && (
+        <DriverReviewsModal
+          driver={reviewTarget.driver}
+          reviews={reviewTarget.reviews}
+          onClose={() => setReviewTarget(null)}
+          onShare={() => { setReviewTarget(null); setShareDriverId(reviewTarget.driver.driverId); setShowShareCard(true); }}
+        />
       )}
 
       {/* Share Card modal */}
@@ -826,6 +845,126 @@ function ModalFooter({ onCancel, onConfirm, disabled, isPending, label }: {
         {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
         {label}
       </button>
+    </div>
+  );
+}
+
+function DriverReviewsModal({ driver, reviews, onClose, onShare }: {
+  driver: Driver; reviews: Review[]; onClose: () => void; onShare: () => void;
+}) {
+  const [filter, setFilter] = useState<"all" | "positive" | "negative">("all");
+  const pos = reviews.filter(r => r.type === "positive").length;
+  const total = reviews.length;
+  const positivePct = total > 0 ? Math.round((pos / total) * 100) : 0;
+  const avgStars = total > 0 ? reviews.reduce((s, r) => s + (r.stars ?? 0), 0) / total : 0;
+  const filtered = filter === "all" ? reviews : reviews.filter(r => r.type === filter);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0">
+          <div>
+            <h2 className="text-[16px] font-extrabold text-slate-900">{driver.name}</h2>
+            <div className="flex items-center gap-3 mt-1 flex-wrap">
+              <span className="text-[12px] text-slate-400">{total} review{total !== 1 ? "s" : ""}</span>
+              {total > 0 && (
+                <>
+                  <span className="text-[12px] font-semibold text-emerald-600">{positivePct}% positive</span>
+                  <span className="text-[12px] text-amber-600">{avgStars.toFixed(1)} ★ avg</span>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={onShare}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold
+                border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share Card
+            </button>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Filter pills */}
+        {total > 0 && (
+          <div className="px-6 py-3 border-b border-slate-100 flex gap-2 shrink-0">
+            {([
+              { key: "all",      label: "All",      count: total },
+              { key: "positive", label: "Positive", count: pos },
+              { key: "negative", label: "Negative", count: total - pos },
+            ] as const).map(({ key, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                  filter === key
+                    ? key === "positive" ? "bg-emerald-600 text-white border-emerald-600"
+                    : key === "negative" ? "bg-red-500 text-white border-red-500"
+                    : "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                }`}
+              >
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Reviews table */}
+        <div className="flex-1 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-[13px] text-slate-400">No {filter !== "all" ? filter : ""} reviews for {driver.name}.</p>
+            </div>
+          ) : (
+            <table className="w-full text-[13px]">
+              <thead className="sticky top-0 bg-slate-50/95 border-b border-slate-100">
+                <tr>
+                  <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Week</th>
+                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Stars</th>
+                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Type</th>
+                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(r => (
+                  <tr key={r.id} className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/60 transition-colors">
+                    <td className="px-6 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap align-top pt-4">{r.week ?? "—"}</td>
+                    <td className="px-3 py-3 whitespace-nowrap align-top pt-4">
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(i => (
+                          <Star key={i} className={`w-3 h-3 ${i <= (r.stars ?? 0) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap align-top pt-4">
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                        r.type === "positive" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+                      }`}>
+                        {r.type === "positive" ? "Positive" : "Negative"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-slate-700 align-top">
+                      <p className="leading-relaxed">{r.content}</p>
+                      {r.customerInitials && (
+                        <span className="text-[10px] font-semibold text-blue-500 mt-1 inline-block">{r.customerInitials}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }

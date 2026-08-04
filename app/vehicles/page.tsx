@@ -168,9 +168,12 @@ export default async function VehiclesPage() {
                           </div>
                           <p className="text-[12px] text-slate-400 mt-0.5">
                             {vehicle.year} {vehicle.make} {vehicle.model}
-                            {vehicle.vin &&
-                              ` · VIN: ${vehicle.vin.slice(0, 8)}...${vehicle.vin.slice(-4)}`}
                           </p>
+                          {vehicle.vin && (
+                            <p className="text-[11px] font-mono text-slate-400 mt-0.5 select-all">
+                              VIN: {vehicle.vin}
+                            </p>
+                          )}
                           <p className="text-[11px] text-slate-300 mt-0.5">
                             Inspected {insp.inspectionDate} by {insp.inspectorName}
                           </p>
@@ -238,6 +241,11 @@ export default async function VehiclesPage() {
                     <p className="text-[11px] text-slate-400 truncate">
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </p>
+                    {vehicle.vin && (
+                      <p className="text-[10px] font-mono text-slate-300 mt-0.5 truncate select-all">
+                        {vehicle.vin}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <VehicleToggle vehicleId={vehicle.id} active={true} />
@@ -281,6 +289,11 @@ export default async function VehiclesPage() {
                     <p className="text-[11px] text-slate-400 truncate">
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </p>
+                    {vehicle.vin && (
+                      <p className="text-[10px] font-mono text-slate-300 mt-0.5 truncate select-all">
+                        {vehicle.vin}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <VehicleToggle vehicleId={vehicle.id} active={true} />
@@ -324,6 +337,11 @@ export default async function VehiclesPage() {
                     <p className="text-[11px] text-slate-400 truncate">
                       {vehicle.year} {vehicle.make} {vehicle.model}
                     </p>
+                    {vehicle.vin && (
+                      <p className="text-[10px] font-mono text-slate-300 mt-0.5 truncate select-all">
+                        {vehicle.vin}
+                      </p>
+                    )}
                   </div>
                   <VehicleToggle vehicleId={vehicle.id} active={false} />
                 </div>

@@ -106,6 +106,8 @@ export const rydeReviews = pgTable("ryde_reviews", {
   improvement: text("improvement"),           // improvement tip for negatives
   atFault:          boolean("at_fault").notNull().default(false), // driver at fault — breaks milestone streak
   customerInitials: text("customer_initials"),                    // e.g. "J.D." — no address stored
+  source:           text("source"),                               // "spotlight" = scraped; null = admin-entered
+  trackId:          text("track_id"),                             // FedEx tracking number — unique dedup key for Spotlight rows
   createdAt:        timestamp("created_at").defaultNow(),
 });
 

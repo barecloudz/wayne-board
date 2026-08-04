@@ -7,7 +7,7 @@ import {
   XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck, Clock,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver,
+  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData,
 } from "@/lib/actions/drivers";
 import { getVehicles } from "@/lib/actions/vehicles";
 import { suggestDriverId } from "@/lib/driver-utils";
@@ -60,6 +60,7 @@ export default function DriversPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
   const [terminationType, setTerminationType] = useState<"notice" | "fired" | "mistake" | null>(null);
   const [terminationNote, setTerminationNote] = useState("");
+  const [purgeRydeData, setPurgeRydeData] = useState(true);
   const [resetPassword, setResetPassword] = useState("Fedex1234#");
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -175,6 +176,7 @@ export default function DriversPage() {
     setDeleteTarget(driver);
     setTerminationType(null);
     setTerminationNote("");
+    setPurgeRydeData(true);
     setMenuOpen(null);
     setMenuPos(null);
   }
@@ -186,10 +188,12 @@ export default function DriversPage() {
         await deleteDriver(deleteTarget.id);
       } else {
         await terminateDriver(deleteTarget.id, terminationType, terminationNote);
+        if (purgeRydeData) await purgeDriverRydeData(deleteTarget.id);
       }
       setDeleteTarget(null);
       setTerminationType(null);
       setTerminationNote("");
+      setPurgeRydeData(true);
       await refresh();
     });
   }
@@ -605,6 +609,19 @@ export default function DriversPage() {
                   />
                 </div>
               )}
+              {(terminationType === "fired" || terminationType === "notice") && (
+                <label className="flex items-center gap-3 cursor-pointer select-none mt-1 px-1">
+                  <input
+                    type="checkbox"
+                    checked={purgeRydeData}
+                    onChange={(e) => setPurgeRydeData(e.target.checked)}
+                    className="w-4 h-4 accent-red-500 cursor-pointer"
+                  />
+                  <span className="text-[12px] text-slate-600 font-medium">
+                    Delete RYDE scores &amp; reviews for this driver
+                  </span>
+                </label>
+              )}
               {terminationType === "mistake" && (
                 <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-[12px] text-red-700">
                   This will permanently delete the account and all associated data. This cannot be undone.
@@ -614,7 +631,7 @@ export default function DriversPage() {
 
             <div className="px-6 pb-6 flex gap-2">
               <button
-                onClick={() => { setDeleteTarget(null); setTerminationType(null); setTerminationNote(""); }}
+                onClick={() => { setDeleteTarget(null); setTerminationType(null); setTerminationNote(""); setPurgeRydeData(true); }}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
                   text-slate-500 hover:bg-slate-50 transition-colors"
               >
