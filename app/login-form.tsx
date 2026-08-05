@@ -24,11 +24,15 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
         body: JSON.stringify({ driverId: driverId.trim(), password }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Login failed."); return; }
+      if (!res.ok) {
+        setError(data.error ?? "Login failed.");
+        setLoading(false);
+        return;
+      }
+      // Keep spinner running until the new page loads
       router.push("/driver");
     } catch {
       setError("Something went wrong. Try again.");
-    } finally {
       setLoading(false);
     }
   }
@@ -71,7 +75,7 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
           style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}
         >
           {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          Sign In
+          {loading ? "Signing in…" : "Sign In"}
         </button>
       </form>
     );
@@ -122,7 +126,7 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
         style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}
       >
         {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-        Sign In
+        {loading ? "Signing in…" : "Sign In"}
         {!loading && <ChevronRight className="w-5 h-5" />}
       </button>
     </form>
