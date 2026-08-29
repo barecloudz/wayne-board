@@ -26,6 +26,7 @@ const SKIP_HEADERS = new Set([
   "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest",
   "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
   "upgrade-insecure-requests",
+  "withcredentials",  // XHR property mistakenly serialized as header name
 ]);
 
 async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
