@@ -4,12 +4,20 @@ import { db } from "@/lib/db";
 import { drivers, driverSchedules, timeOffEntries, scheduleOverrides } from "@/lib/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 // ── Schedules ─────────────────────────────────────────────────────────────────
 
 export async function getAllSchedules() {
+  const orgId = await requireOrg();
   const rows = await db
     .select({
       id:                drivers.id,
@@ -26,35 +34,41 @@ export async function getAllSchedules() {
     })
     .from(drivers)
     .leftJoin(driverSchedules, eq(drivers.driverId, driverSchedules.driverId))
+    .where(eq(drivers.organizationId, orgId))
     .orderBy(drivers.name);
   return rows;
 }
 
 export async function setDriverNoticeDate(driverId: string, noticeDate: string | null) {
-  await db.update(drivers).set({ noticeDate }).where(eq(drivers.driverId, driverId));
-  revalidatePath("/wayne-board/scheduling");
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ noticeDate }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function setDriverLastDay(driverId: string, lastDay: string | null) {
-  await db.update(drivers).set({ lastDay }).where(eq(drivers.driverId, driverId));
-  revalidatePath("/wayne-board/scheduling");
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ lastDay }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function updateDriverInfo(driverId: string, name: string, workArea: string | null) {
+  const orgId = await requireOrg();
   await db.update(drivers)
     .set({ name: name.trim(), workArea: workArea?.trim() || null })
-    .where(eq(drivers.driverId, driverId));
-  revalidatePath("/wayne-board/scheduling");
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function setDriverActive(driverId: string, active: boolean) {
-  await db.update(drivers).set({ active }).where(eq(drivers.driverId, driverId));
-  revalidatePath("/wayne-board/scheduling");
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ active }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function setDriverTrainee(driverId: string, isTrainee: boolean) {
-  await db.update(drivers).set({ isTrainee }).where(eq(drivers.driverId, driverId));
-  revalidatePath("/wayne-board/scheduling");
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ isTrainee }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function upsertSchedule(
@@ -69,7 +83,7 @@ export async function upsertSchedule(
       target: driverSchedules.driverId,
       set: { ...days, notes: notes ?? null, updatedAt: new Date() },
     });
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function getDriverSchedule(driverId: string) {
@@ -84,6 +98,7 @@ export async function getDriverSchedule(driverId: string) {
 // ── Time Off ──────────────────────────────────────────────────────────────────
 
 export async function getAllTimeOff() {
+  const orgId = await requireOrg();
   return db
     .select({
       id:        timeOffEntries.id,
@@ -96,7 +111,8 @@ export async function getAllTimeOff() {
       name:      drivers.name,
     })
     .from(timeOffEntries)
-    .leftJoin(drivers, eq(timeOffEntries.driverId, drivers.driverId))
+    .leftJoin(drivers, and(eq(timeOffEntries.driverId, drivers.driverId), eq(drivers.organizationId, orgId)))
+    .where(eq(drivers.organizationId, orgId))
     .orderBy(timeOffEntries.startDate);
 }
 
@@ -116,7 +132,7 @@ export async function addTimeOff(
   note?: string,
 ) {
   await db.insert(timeOffEntries).values({ driverId, startDate, endDate, reason, note: note ?? null });
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function updateTimeOff(
@@ -129,12 +145,12 @@ export async function updateTimeOff(
   await db.update(timeOffEntries)
     .set({ startDate, endDate, reason, note: note ?? null })
     .where(eq(timeOffEntries.id, id));
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function deleteTimeOff(id: number) {
   await db.delete(timeOffEntries).where(eq(timeOffEntries.id, id));
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 // ── Coverage helpers ──────────────────────────────────────────────────────────
@@ -144,12 +160,12 @@ export async function addScheduleOverride(driverId: string, date: string, note?:
   await db.insert(scheduleOverrides)
     .values({ driverId, date, note: note ?? null })
     .onConflictDoNothing();
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function removeScheduleOverride(id: number) {
   await db.delete(scheduleOverrides).where(eq(scheduleOverrides.id, id));
-  revalidatePath("/wayne-board/scheduling");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function getOverridesInRange(startDate: string, endDate: string) {
@@ -170,6 +186,7 @@ export async function getAllOverrides() {
 
 // Returns time-off entries that overlap with the given date range
 export async function getTimeOffInRange(startDate: string, endDate: string) {
+  const orgId = await requireOrg();
   return db
     .select({
       driverId:  timeOffEntries.driverId,
@@ -179,9 +196,10 @@ export async function getTimeOffInRange(startDate: string, endDate: string) {
       name:      drivers.name,
     })
     .from(timeOffEntries)
-    .leftJoin(drivers, eq(timeOffEntries.driverId, drivers.driverId))
+    .leftJoin(drivers, and(eq(timeOffEntries.driverId, drivers.driverId), eq(drivers.organizationId, orgId)))
     .where(
       and(
+        eq(drivers.organizationId, orgId),
         lte(timeOffEntries.startDate, endDate),
         gte(timeOffEntries.endDate, startDate),
       )

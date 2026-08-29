@@ -149,7 +149,7 @@ export default async function DriverDashboard() {
           <span className="text-[12px] font-medium hidden sm:block" style={{ color: "rgba(255,255,255,0.45)" }}>{session.name}</span>
           {session.isAdmin && (
             <a
-              href="/wayne-board"
+              href="/dashboard"
               className="text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors"
               style={{
                 background: "rgba(255,255,255,0.07)",

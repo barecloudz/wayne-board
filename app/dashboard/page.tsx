@@ -74,7 +74,7 @@ export default async function Home() {
 
         {/* Scheduling — hero button */}
         <Link
-          href="/wayne-board/scheduling"
+          href="/dashboard/scheduling"
           className="group flex items-center gap-6 bg-slate-900 hover:bg-slate-800 transition-colors
             rounded-2xl px-7 py-6 mb-4 shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
         >
@@ -91,13 +91,13 @@ export default async function Home() {
         {/* Quick Navigation */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
           {[
-            { icon: UserCog,      label: "Drivers",      href: "/wayne-board/drivers",      iconBg: "bg-violet-50",  iconColor: "text-violet-600" },
-            { icon: Star,         label: "Ryde Scores",  href: "/wayne-board/ryde",         iconBg: "bg-amber-50",   iconColor: "text-amber-600"  },
-            { icon: Gauge,        label: "Fleet Status", href: "/wayne-board/fleet-status", iconBg: "bg-slate-100",  iconColor: "text-slate-600"  },
-            { icon: WrenchIcon,   label: "Maintenance",  href: "/wayne-board/maintenance",  iconBg: "bg-orange-50",  iconColor: "text-orange-600" },
-            { icon: Trophy,       label: "Milestones",   href: "/wayne-board/milestones",   iconBg: "bg-emerald-50", iconColor: "text-emerald-600"},
-            { icon: ClipboardList,label: "Auto DSW",     href: "/wayne-board/auto-dsw",     iconBg: "bg-indigo-50",  iconColor: "text-indigo-600" },
-            { icon: Map,          label: "Route Planner",href: "/wayne-board/route-planner",iconBg: "bg-teal-50",    iconColor: "text-teal-600"   },
+            { icon: UserCog,      label: "Drivers",      href: "/dashboard/drivers",      iconBg: "bg-violet-50",  iconColor: "text-violet-600" },
+            { icon: Star,         label: "Ryde Scores",  href: "/dashboard/ryde",         iconBg: "bg-amber-50",   iconColor: "text-amber-600"  },
+            { icon: Gauge,        label: "Fleet Status", href: "/dashboard/fleet-status", iconBg: "bg-slate-100",  iconColor: "text-slate-600"  },
+            { icon: WrenchIcon,   label: "Maintenance",  href: "/dashboard/maintenance",  iconBg: "bg-orange-50",  iconColor: "text-orange-600" },
+            { icon: Trophy,       label: "Milestones",   href: "/dashboard/milestones",   iconBg: "bg-emerald-50", iconColor: "text-emerald-600"},
+            { icon: ClipboardList,label: "Auto DSW",     href: "/dashboard/auto-dsw",     iconBg: "bg-indigo-50",  iconColor: "text-indigo-600" },
+            { icon: Map,          label: "Route Planner",href: "/dashboard/route-planner",iconBg: "bg-teal-50",    iconColor: "text-teal-600"   },
           ].map(({ icon: Icon, label, href, iconBg, iconColor }) => (
             <Link
               key={href}

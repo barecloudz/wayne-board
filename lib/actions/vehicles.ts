@@ -2,8 +2,15 @@
 
 import { db } from "@/lib/db";
 import { vehicles, inspections, inspectionResults } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export async function createVehicle(data: {
   unitNumber: string;
@@ -15,8 +22,10 @@ export async function createVehicle(data: {
   type?: string;
   ownership?: string;
 }): Promise<{ id: number } | { error: string }> {
+  const orgId = await requireOrg();
   try {
     const [vehicle] = await db.insert(vehicles).values({
+      organizationId: orgId,
       unitNumber: data.unitNumber,
       make:       data.make,
       model:      data.model,
@@ -38,6 +47,15 @@ export async function createVehicle(data: {
 }
 
 export async function deleteVehicle(vehicleId: number) {
+  const orgId = await requireOrg();
+  // Verify vehicle belongs to org before deleting
+  const [vehicle] = await db
+    .select({ id: vehicles.id })
+    .from(vehicles)
+    .where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)))
+    .limit(1);
+  if (!vehicle) return;
+
   // Delete inspection results → inspections → vehicle
   const vehicleInspections = await db
     .select({ id: inspections.id })
@@ -48,15 +66,17 @@ export async function deleteVehicle(vehicleId: number) {
     await db.delete(inspectionResults).where(eq(inspectionResults.inspectionId, insp.id));
   }
   await db.delete(inspections).where(eq(inspections.vehicleId, vehicleId));
-  await db.delete(vehicles).where(eq(vehicles.id, vehicleId));
+  await db.delete(vehicles).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
 }
 
 export async function getVehicles() {
-  return db.select().from(vehicles).orderBy(vehicles.unitNumber);
+  const orgId = await requireOrg();
+  return db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber);
 }
 
 export async function updateVehicleVin(vehicleId: number, vin: string) {
-  await db.update(vehicles).set({ vin }).where(eq(vehicles.id, vehicleId));
+  const orgId = await requireOrg();
+  await db.update(vehicles).set({ vin }).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
 }
 
 export async function updateVehicleVinWithNhtsa(
@@ -64,11 +84,12 @@ export async function updateVehicleVinWithNhtsa(
   vin: string,
   nhtsa: { make?: string; model?: string; year?: number }
 ) {
+  const orgId = await requireOrg();
   const updates: Partial<{ vin: string; make: string; model: string; year: number }> = { vin };
   if (nhtsa.make) updates.make = nhtsa.make;
   if (nhtsa.model) updates.model = nhtsa.model;
   if (nhtsa.year && nhtsa.year > 1990) updates.year = nhtsa.year;
-  await db.update(vehicles).set(updates).where(eq(vehicles.id, vehicleId));
+  await db.update(vehicles).set(updates).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
 }
 
 export async function updateVehicle(
@@ -84,12 +105,14 @@ export async function updateVehicle(
     active: boolean;
   }
 ) {
-  await db.update(vehicles).set(data).where(eq(vehicles.id, vehicleId));
+  const orgId = await requireOrg();
+  await db.update(vehicles).set(data).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
 }
 
 export async function setVehicleActive(vehicleId: number, active: boolean) {
-  await db.update(vehicles).set({ active }).where(eq(vehicles.id, vehicleId));
-  revalidatePath("/wayne-board/fleet-status");
+  const orgId = await requireOrg();
+  await db.update(vehicles).set({ active }).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  revalidatePath("/dashboard/fleet-status");
   revalidatePath("/vehicles");
   revalidatePath("/fleet");
 }
@@ -103,6 +126,7 @@ export async function updateVehicleCompliance(
     registrationExpiry: string | null;
   }
 ) {
-  await db.update(vehicles).set(data).where(eq(vehicles.id, vehicleId));
-  revalidatePath("/wayne-board/fleet-status");
+  const orgId = await requireOrg();
+  await db.update(vehicles).set(data).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  revalidatePath("/dashboard/fleet-status");
 }

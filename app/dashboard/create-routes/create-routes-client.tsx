@@ -349,7 +349,7 @@ export default function CreateRoutesClient() {
         const helpKey = step === "planning" ? "review" : step;
         const help = STEP_HELP[helpKey];
         if (!help) return null;
-        const Icon = help.icon;
+        const Icon = help.icon as React.ComponentType<{ className?: string }>;
         return (
           <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 mb-6">
             <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">

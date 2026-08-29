@@ -3,6 +3,13 @@
 import { db } from "@/lib/db";
 import { inspections, inspectionResults } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export type ItemResult = {
   componentId: number;
@@ -25,6 +32,7 @@ export async function saveInspection(data: {
   notifiedAOBCName?: string;
   agreedRepairDate?: string;
 }) {
+  const orgId = await requireOrg();
   const hasDefects = data.results.some((r) => r.status === "Repair Needed");
   const status = data.outOfService
     ? "Out of Service"
@@ -35,6 +43,7 @@ export async function saveInspection(data: {
   const [inspection] = await db
     .insert(inspections)
     .values({
+      organizationId:   orgId,
       vehicleId:        data.vehicleId,
       inspectorName:    data.inspectorName,
       inspectorId:      data.inspectorId,

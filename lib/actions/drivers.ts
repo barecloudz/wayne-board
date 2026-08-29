@@ -2,8 +2,15 @@
 
 import { db } from "@/lib/db";
 import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 function suggestDriverId(name: string): string {
   return name
@@ -15,11 +22,16 @@ function suggestDriverId(name: string): string {
 
 
 export async function isDriverIdTaken(driverId: string) {
-  const rows = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.driverId, driverId));
+  const orgId = await requireOrg();
+  const rows = await db
+    .select({ driverId: drivers.driverId })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
   return rows.length > 0;
 }
 
 export async function getDrivers() {
+  const orgId = await requireOrg();
   return db.select({
     id:                drivers.id,
     driverId:          drivers.driverId,
@@ -33,7 +45,7 @@ export async function getDrivers() {
     terminationType:   drivers.terminationType,
     terminationNote:   drivers.terminationNote,
     terminatedAt:      drivers.terminatedAt,
-  }).from(drivers).orderBy(drivers.id);
+  }).from(drivers).where(eq(drivers.organizationId, orgId)).orderBy(drivers.id);
 }
 
 export async function createDriver(
@@ -42,41 +54,51 @@ export async function createDriver(
   customDriverId?: string,
   customTempPassword?: string,
 ) {
+  const orgId = await requireOrg();
   const driverId     = customDriverId     ?? suggestDriverId(name);
   const tempPassword = customTempPassword ?? "Fedex1234#";
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-  await db.insert(drivers).values({ driverId, name, passwordHash, role });
+  await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role });
 
   return { driverId, tempPassword };
 }
 
 export async function setDriverActive(id: number, active: boolean) {
-  await db.update(drivers).set({ active }).where(eq(drivers.id, id));
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ active }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 export async function setDriverAdmin(id: number, isAdmin: boolean) {
-  await db.update(drivers).set({ isAdmin }).where(eq(drivers.id, id));
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ isAdmin }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 export async function assignDriverVehicle(id: number, vehicleId: number | null) {
-  await db.update(drivers).set({ assignedVehicleId: vehicleId }).where(eq(drivers.id, id));
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ assignedVehicleId: vehicleId }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 export async function resetDriverPassword(id: number, newPassword: string) {
+  const orgId = await requireOrg();
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  await db.update(drivers).set({ passwordHash }).where(eq(drivers.id, id));
+  await db.update(drivers).set({ passwordHash }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
   return { tempPassword: newPassword };
 }
 
 export async function deleteDriver(id: number) {
-  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.id, id)).limit(1);
+  const orgId = await requireOrg();
+  const [driver] = await db
+    .select({ driverId: drivers.driverId })
+    .from(drivers)
+    .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)))
+    .limit(1);
   if (!driver) return;
   // Delete FK-constrained rows that don't have ON DELETE CASCADE
-  await db.delete(rydeScores).where(eq(rydeScores.driverId, driver.driverId));
-  await db.delete(rydeReviews).where(eq(rydeReviews.driverId, driver.driverId));
+  await db.delete(rydeScores).where(and(eq(rydeScores.organizationId, orgId), eq(rydeScores.driverId, driver.driverId)));
+  await db.delete(rydeReviews).where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, driver.driverId)));
   await db.delete(driverMilestoneClaims).where(eq(driverMilestoneClaims.driverId, driver.driverId));
-  await db.delete(drivers).where(eq(drivers.id, id));
+  await db.delete(drivers).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 // Soft-delete with termination reason — record is kept for records
@@ -85,29 +107,39 @@ export async function terminateDriver(
   type: "notice" | "fired",
   note: string,
 ) {
+  const orgId = await requireOrg();
   await db.update(drivers).set({
     active:          false,
     terminationType: type,
     terminationNote: note,
     terminatedAt:    new Date(),
-  }).where(eq(drivers.id, id));
+  }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 // Wipe RYDE scores + reviews for a driver (used when terminating with purge option)
 export async function purgeDriverRydeData(id: number) {
-  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers).where(eq(drivers.id, id)).limit(1);
+  const orgId = await requireOrg();
+  const [driver] = await db
+    .select({ driverId: drivers.driverId })
+    .from(drivers)
+    .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)))
+    .limit(1);
   if (!driver) return;
-  await db.delete(rydeScores).where(eq(rydeScores.driverId, driver.driverId));
-  await db.delete(rydeReviews).where(eq(rydeReviews.driverId, driver.driverId));
+  await db.delete(rydeScores).where(and(eq(rydeScores.organizationId, orgId), eq(rydeScores.driverId, driver.driverId)));
+  await db.delete(rydeReviews).where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, driver.driverId)));
 }
 
 export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {
-  const [driver] = await db.select().from(drivers).where(eq(drivers.driverId, driverId)).limit(1);
+  const orgId = await requireOrg();
+  const [driver] = await db
+    .select()
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)))
+    .limit(1);
   if (!driver) return { error: "Driver not found." };
   const match = await bcrypt.compare(currentPassword, driver.passwordHash);
   if (!match) return { error: "Current password is incorrect." };
   const passwordHash = await bcrypt.hash(newPassword, 10);
-  await db.update(drivers).set({ passwordHash }).where(eq(drivers.driverId, driverId));
+  await db.update(drivers).set({ passwordHash }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
   return { ok: true };
 }
-

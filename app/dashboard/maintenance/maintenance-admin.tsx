@@ -114,7 +114,7 @@ export default function MaintenanceAdmin({ initial }: { initial: Request[] }) {
           <div className="divide-y divide-slate-100">
             {visible.map((r) => {
               const cfg = STATUS_CONFIG[r.status] ?? STATUS_CONFIG.pending;
-              const Icon = cfg.icon;
+              const Icon = cfg.icon as React.ComponentType<{ className?: string }>;
               const isEditing = editId === r.id;
               return (
                 <div key={r.id} className={`px-6 py-5 ${r.status === "pending" ? "bg-amber-50/30" : ""}`}>

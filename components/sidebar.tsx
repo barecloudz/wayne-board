@@ -11,28 +11,28 @@ import {
   Zap, ChevronDown, ChevronUp, PenLine,
 } from "lucide-react";
 
-const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/wayne-board", exact: true };
+const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
 const adminItems = [
-  { icon: UserCog,       label: "Driver Accounts", href: "/wayne-board/drivers",      exact: true },
-  { icon: CalendarDays,  label: "Scheduling",       href: "/wayne-board/scheduling",   exact: true },
-  { icon: Gauge,         label: "Fleet Status",     href: "/wayne-board/fleet-status", exact: true },
-  { icon: WrenchIcon,    label: "Maintenance",      href: "/wayne-board/maintenance",  exact: true },
-  { icon: TrendingUp,    label: "Performance",      href: "/wayne-board/performance",  exact: true },
-  { icon: Star,          label: "Ryde Scores",      href: "/wayne-board/ryde",         exact: true },
-  { icon: Trophy,        label: "Milestones",       href: "/wayne-board/milestones",   exact: true },
-  { icon: GraduationCap, label: "Trainee Days",     href: "/wayne-board/trainees",     exact: true },
-  { icon: Settings,      label: "Settings",         href: "/wayne-board/settings",     exact: true },
+  { icon: UserCog,       label: "Driver Accounts", href: "/dashboard/drivers",      exact: true },
+  { icon: CalendarDays,  label: "Scheduling",       href: "/dashboard/scheduling",   exact: true },
+  { icon: Gauge,         label: "Fleet Status",     href: "/dashboard/fleet-status", exact: true },
+  { icon: WrenchIcon,    label: "Maintenance",      href: "/dashboard/maintenance",  exact: true },
+  { icon: TrendingUp,    label: "Performance",      href: "/dashboard/performance",  exact: true },
+  { icon: Star,          label: "Ryde Scores",      href: "/dashboard/ryde",         exact: true },
+  { icon: Trophy,        label: "Milestones",       href: "/dashboard/milestones",   exact: true },
+  { icon: GraduationCap, label: "Trainee Days",     href: "/dashboard/trainees",     exact: true },
+  { icon: Settings,      label: "Settings",         href: "/dashboard/settings",     exact: true },
 ];
 
 const automationItems = [
-  { icon: Map,           label: "Route Planner",  href: "/wayne-board/route-planner",  exact: true },
-  { icon: Scissors,      label: "Create Routes",  href: "/wayne-board/create-routes",  exact: true },
-  { icon: PenLine,       label: "Anchor Editor",  href: "/wayne-board/anchor-editor",  exact: true },
-  { icon: Route,         label: "Auto DRO",        href: "/wayne-board/auto-dro",        exact: true },
-  { icon: TrendingUp,    label: "Auto GC",         href: "/wayne-board/auto-gc",         exact: true },
-  { icon: ClipboardList, label: "Auto DSW",        href: "/wayne-board/auto-dsw",        exact: true },
-  { icon: Zap,           label: "Auto Spotlight",  href: "/wayne-board/auto-spotlight",  exact: true },
+  { icon: Map,           label: "Route Planner",  href: "/dashboard/route-planner",  exact: true },
+  { icon: Scissors,      label: "Create Routes",  href: "/dashboard/create-routes",  exact: true },
+  { icon: PenLine,       label: "Anchor Editor",  href: "/dashboard/anchor-editor",  exact: true },
+  { icon: Route,         label: "Auto DRO",        href: "/dashboard/auto-dro",        exact: true },
+  { icon: TrendingUp,    label: "Auto GC",         href: "/dashboard/auto-gc",         exact: true },
+  { icon: ClipboardList, label: "Auto DSW",        href: "/dashboard/auto-dsw",        exact: true },
+  { icon: Zap,           label: "Auto Spotlight",  href: "/dashboard/auto-spotlight",  exact: true },
 ];
 
 const complianceItems = [
@@ -52,7 +52,7 @@ export default function Sidebar() {
   const automationActive = automationItems.some(i => pathname === i.href);
   const [autoOpen, setAutoOpen] = useState(automationActive);
 
-  function NavLink({ icon: Icon, label, href, exact }: { icon: React.ElementType; label: string; href: string; exact: boolean }) {
+  function NavLink({ icon: Icon, label, href, exact }: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; exact: boolean }) {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
       <Link
@@ -73,10 +73,10 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
-        <Image src="/wayne-logo.png" alt="Wayne" width={52} height={32} className="object-contain" priority />
+        <Image src="/logo-icon.png" alt="MyGroundOps" width={52} height={32} className="object-contain" priority />
         <div className="flex flex-col leading-none">
-          <span className="text-[13px] font-bold text-slate-900 tracking-tight">Wayne Board</span>
-          <span className="text-[11px] text-slate-400 mt-0.5">Operations Suite</span>
+          <span className="text-[13px] font-bold text-slate-900 tracking-tight">MyGroundOps</span>
+          <span className="text-[11px] text-slate-400 mt-0.5">Admin Dashboard</span>
         </div>
       </div>
 
