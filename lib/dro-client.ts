@@ -83,7 +83,21 @@ async function loginAndGetCookies(): Promise<string> {
     if (stationEls.length > 0) await stationEls[0].click();
     await new Promise(r => setTimeout(r, 6000)); // extra time for service area to set cookies
 
-    // Verify the session works from within the browser BEFORE closing it
+    // Extract session cookies from ALL pages/domains in the browser context
+    const allCookies = await browser.defaultBrowserContext().cookies();
+    console.log("[dro-client] All cookies:", allCookies.map((c: any) => `${c.domain}:${c.name}`).join(", "));
+
+    // Filter to only dro.routesmart.com cookies (including subdomains)
+    const droCookies = allCookies.filter((c: any) =>
+      c.domain.includes("routesmart.com") || c.domain.includes("dro.routesmart")
+    );
+    console.log("[dro-client] DRO cookies:", droCookies.map((c: any) => `${c.domain}:${c.name}`).join(", "));
+
+    const cookieHeader = droCookies.length > 0
+      ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
+      : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; "); // fallback: all cookies
+
+    // Verify the session works from within the browser before caching
     const testResult = await page.evaluate(async (saId: string) => {
       try {
         const res = await (globalThis as any).fetch(
@@ -96,16 +110,12 @@ async function loginAndGetCookies(): Promise<string> {
       }
     }, SA_ID);
     console.log("[dro-client] In-browser API test:", JSON.stringify(testResult));
-    if (!testResult.ok) {
-      throw new Error(`DRO login succeeded but API test failed (status ${testResult.status}) — session not valid`);
-    }
-
-    // Extract session cookies from the main page
-    const cookies = await page.cookies();
-    console.log("[dro-client] Extracted cookies:", cookies.map((c: any) => c.name).join(", "));
-    const cookieHeader = cookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
 
     await browser.close();
+
+    if (!testResult.ok) {
+      throw new Error(`DRO login succeeded but API test failed (status ${testResult.status}) — cookies: ${droCookies.map((c: any) => c.name).join(",") || "none from routesmart.com"}`);
+    }
 
     // Cache cookies in settings table (expires in 6 hours)
     const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
