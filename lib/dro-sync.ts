@@ -68,7 +68,11 @@ export async function syncDro(): Promise<DroSyncResult> {
     // Get active route plan ID
     const planRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/active-route-plan`, { headers });
     if (planRes.status === 401 || planRes.status === 403) {
-      // Session is invalid server-side — clear cached cookies so next getDroHeaders() re-logins
+      const body = await planRes.text().catch(() => "(unreadable)");
+      console.error(`[dro-sync] active-route-plan returned ${planRes.status}. Body: ${body.slice(0, 500)}`);
+      const detail = JSON.stringify({ status: planRes.status, body: body.slice(0, 500), at: new Date().toISOString() });
+      await sql`INSERT INTO settings (key, value) VALUES ('dro_last_401_detail', ${detail})
+                ON CONFLICT (key) DO UPDATE SET value = ${detail}`;
       await sql`DELETE FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
       throw new Error("SESSION_EXPIRED");
     }
