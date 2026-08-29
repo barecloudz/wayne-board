@@ -133,6 +133,11 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
 
     // Ensure Content-Type is set for JSON API calls
     capturedHeaders["content-type"] = "application/json";
+    console.log("[dro-client] Captured header keys:", Object.keys(capturedHeaders).join(", "));
+    // Store header keys (not values) for diagnostics
+    const keyLog = JSON.stringify(Object.keys(capturedHeaders));
+    await sql`INSERT INTO settings (key, value) VALUES ('dro_captured_header_keys', ${keyLog})
+              ON CONFLICT (key) DO UPDATE SET value = ${keyLog}`;
 
     // Cache headers in DB (expires in 6 hours)
     const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
