@@ -73,55 +73,55 @@ async function loginAndGetCookies(): Promise<string> {
     if (pwSubmit) await pwSubmit.click();
     else await popup.keyboard.press("Enter");
 
+    // Intercept DRO API requests to capture the exact Cookie header the browser uses
+    let capturedCookieHeader = "";
+    await page.setRequestInterception(true);
+    page.on("request", (req: any) => {
+      const url: string = req.url();
+      if (url.includes("dro.routesmart.com/api/api/") && !capturedCookieHeader) {
+        const hdrs = req.headers();
+        if (hdrs["cookie"]) {
+          capturedCookieHeader = hdrs["cookie"];
+          console.log("[dro-client] Captured cookie header from live request to:", url.slice(0, 80));
+        }
+      }
+      req.continue();
+    });
+
     // Wait for redirect back to DRO
     await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
     await new Promise(r => setTimeout(r, 3000));
 
-    // Select the single service area
+    // Select the single service area — this triggers DRO API calls we'll intercept
     await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
     const stationEls = await page.$$('[class*="station" i]');
     if (stationEls.length > 0) await stationEls[0].click();
 
-    // Wait for the DRO app to finish setting up the service area session
-    // Poll until the active-route-plan API returns 200 (up to 30s)
-    let sessionOk = false;
-    let lastStatus = 0;
-    let pageUrlAfterStation = "";
-    for (let i = 0; i < 6; i++) {
+    // Wait for the DRO app to make authenticated API calls after station select (up to 20s)
+    for (let i = 0; i < 4 && !capturedCookieHeader; i++) {
       await new Promise(r => setTimeout(r, 5000));
-      const check = await page.evaluate(async (saId: string) => {
-        const url = window.location.href;
-        try {
-          const res = await (globalThis as any).fetch(
-            `https://dro.routesmart.com/api/api/service-areas/${saId}/active-route-plan`,
-            { credentials: "include" }
-          );
-          return { status: res.status, ok: res.ok, url };
-        } catch (e: any) {
-          return { status: 0, ok: false, err: e?.message, url };
-        }
-      }, SA_ID);
-      console.log(`[dro-client] Station poll ${i+1}: url=${check.url} status=${check.status}`);
-      pageUrlAfterStation = check.url;
-      lastStatus = check.status;
-      if (check.ok) { sessionOk = true; break; }
+      console.log(`[dro-client] Waiting for intercepted cookie (${(i+1)*5}s)...`);
     }
 
-    // Extract session cookies from ALL pages/domains in the browser context
-    const allCookies = await browser.defaultBrowserContext().cookies();
-    const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
-    console.log("[dro-client] DRO cookies:", droCookies.map((c: any) => `${c.name}`).join(", "));
+    // Fall back to extracting cookies from the page if interception didn't catch anything
+    if (!capturedCookieHeader) {
+      console.log("[dro-client] No request intercepted — falling back to page.cookies()");
+      const allCookies = await browser.defaultBrowserContext().cookies();
+      const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
+      capturedCookieHeader = droCookies.length > 0
+        ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
+        : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
+      console.log("[dro-client] Fallback cookies:", capturedCookieHeader.slice(0, 80));
+    }
 
-    const cookieHeader = droCookies.length > 0
-      ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
-      : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
-
+    const cookieHeader = capturedCookieHeader;
     await browser.close();
 
-    if (!sessionOk) {
-      throw new Error(`DRO session not established after 30s — last status ${lastStatus}, page=${pageUrlAfterStation}, cookies=${droCookies.map((c: any) => c.name).join(",") || "none"}`);
+    if (!cookieHeader) {
+      throw new Error("DRO login completed but no cookies could be extracted");
     }
 
+    // Also add browser-like headers to all subsequent DRO requests
     // Cache cookies in settings table (expires in 6 hours)
     const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
     await sql`
@@ -147,6 +147,10 @@ export async function getDroHeaders(): Promise<Record<string, string>> {
   return {
     Cookie: cookieHeader,
     "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Origin": DRO_BASE,
+    "Referer": `${DRO_BASE}/`,
+    "Accept": "application/json, text/plain, */*",
   };
 }
 
