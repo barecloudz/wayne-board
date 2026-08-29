@@ -81,10 +81,28 @@ async function loginAndGetCookies(): Promise<string> {
     await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
     const stationEls = await page.$$('[class*="station" i]');
     if (stationEls.length > 0) await stationEls[0].click();
-    await new Promise(r => setTimeout(r, 4000));
+    await new Promise(r => setTimeout(r, 6000)); // extra time for service area to set cookies
+
+    // Verify the session works from within the browser BEFORE closing it
+    const testResult = await page.evaluate(async (saId: string) => {
+      try {
+        const res = await (globalThis as any).fetch(
+          `https://dro.routesmart.com/api/api/service-areas/${saId}/active-route-plan`,
+          { credentials: "include" }
+        );
+        return { status: res.status, ok: res.ok };
+      } catch (e: any) {
+        return { status: 0, ok: false, err: e?.message };
+      }
+    }, SA_ID);
+    console.log("[dro-client] In-browser API test:", JSON.stringify(testResult));
+    if (!testResult.ok) {
+      throw new Error(`DRO login succeeded but API test failed (status ${testResult.status}) — session not valid`);
+    }
 
     // Extract session cookies from the main page
     const cookies = await page.cookies();
+    console.log("[dro-client] Extracted cookies:", cookies.map((c: any) => c.name).join(", "));
     const cookieHeader = cookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
 
     await browser.close();
