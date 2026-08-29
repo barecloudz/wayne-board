@@ -122,19 +122,65 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
       console.log(`[dro-client] Waiting for intercepted API request (${(i+1)*5}s)...`);
     }
 
-    // If interception never fired, log what page we're on and bail
+    // Read localStorage/sessionStorage — DRO's React app may store JWT there
+    // that gets added via an HTTP interceptor (not visible in plain fetch/cookies)
+    const storageData = await page.evaluate(() => {
+      const out: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)!;
+        out["local:" + k] = localStorage.getItem(k) ?? "";
+      }
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i)!;
+        out["session:" + k] = sessionStorage.getItem(k) ?? "";
+      }
+      return out;
+    }).catch(() => ({} as Record<string, string>));
+
+    const storageKeys = Object.keys(storageData);
+    console.log("[dro-client] Storage keys:", storageKeys.join(", "));
+    await sql`INSERT INTO settings (key, value) VALUES ('dro_storage_keys', ${JSON.stringify(storageKeys)})
+              ON CONFLICT (key) DO UPDATE SET value = ${JSON.stringify(storageKeys)}`;
+
+    // Find auth token in storage
+    let authToken = "";
+    for (const [k, v] of Object.entries(storageData)) {
+      const lk = k.toLowerCase();
+      if ((lk.includes("token") || lk.includes("auth") || lk.includes("jwt") || lk.includes("okta")) && v && v.length > 20) {
+        authToken = v;
+        console.log("[dro-client] Found potential auth token in storage key:", k);
+        break;
+      }
+    }
+
+    // If interception never fired, build headers from cookies
     if (!capturedHeaders) {
-      const url = page.url();
-      console.error("[dro-client] No DRO API requests intercepted. Page URL:", url);
-      throw new Error(`DRO login completed but no API requests were intercepted. Page: ${url}`);
+      console.log("[dro-client] No request intercepted — building headers from cookies");
+      const allCookies = await browser.defaultBrowserContext().cookies();
+      const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
+      const cookieStr = droCookies.length > 0
+        ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
+        : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
+      capturedHeaders = {
+        cookie: cookieStr,
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        origin: DRO_BASE,
+        referer: `${DRO_BASE}/`,
+        accept: "application/json, text/plain, */*",
+      };
+    }
+
+    // Inject Authorization if found in storage and not already captured
+    if (authToken && !capturedHeaders["authorization"]) {
+      capturedHeaders["authorization"] = authToken.startsWith("Bearer ") ? authToken : `Bearer ${authToken}`;
+      console.log("[dro-client] Injected Authorization from storage");
     }
 
     await browser.close();
 
     // Ensure Content-Type is set for JSON API calls
     capturedHeaders["content-type"] = "application/json";
-    console.log("[dro-client] Captured header keys:", Object.keys(capturedHeaders).join(", "));
-    // Store header keys (not values) for diagnostics
+    console.log("[dro-client] Final header keys:", Object.keys(capturedHeaders).join(", "));
     const keyLog = JSON.stringify(Object.keys(capturedHeaders));
     await sql`INSERT INTO settings (key, value) VALUES ('dro_captured_header_keys', ${keyLog})
               ON CONFLICT (key) DO UPDATE SET value = ${keyLog}`;
