@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
-import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays } from "@/lib/schema";
+import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays, organizations } from "@/lib/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
@@ -47,15 +47,15 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory] = await Promise.all([
-    db.select().from(rydeReviews).where(eq(rydeReviews.driverId, session.driverId)).orderBy(desc(rydeReviews.createdAt)),
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow]] = await Promise.all([
+    db.select().from(rydeReviews).where(and(eq(rydeReviews.driverId, session.driverId), eq(rydeReviews.organizationId, session.organizationId))).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
     getDriverClaims(session.driverId),
     getLeaderboard(),
     getCompanyRating(),
     getRydeGoalMessage(),
-    db.select({ assignedVehicleId: drivers.assignedVehicleId, defaultWorkAreaId: drivers.defaultWorkAreaId }).from(drivers).where(eq(drivers.driverId, session.driverId)).limit(1),
+    db.select({ assignedVehicleId: drivers.assignedVehicleId, defaultWorkAreaId: drivers.defaultWorkAreaId }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
@@ -64,7 +64,7 @@ export default async function DriverDashboard() {
     getGateCodes(session.driverId),
     getGateAreas(),
     getMyMaintenanceRequests(session.driverId),
-    db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(eq(vehicles.active, true)).orderBy(vehicles.unitNumber),
+    db.select({ id: vehicles.id, unitNumber: vehicles.unitNumber, model: vehicles.model }).from(vehicles).where(and(eq(vehicles.active, true), eq(vehicles.organizationId, session.organizationId))).orderBy(vehicles.unitNumber),
     db.select().from(dswRouteDays).orderBy(desc(dswRouteDays.date)).limit(60).catch(() => []),
     (() => {
       const d14 = new Date(); d14.setDate(d14.getDate() - 14);
@@ -74,6 +74,7 @@ export default async function DriverDashboard() {
         .orderBy(desc(dswRouteDays.date))
         .catch(() => []);
     })(),
+    db.select({ name: organizations.name, logoUrl: organizations.logoUrl }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -96,7 +97,7 @@ export default async function DriverDashboard() {
     const [wa] = await db
       .select({ id: workAreas.id, name: workAreas.name, shape: workAreas.shape, color: workAreas.color })
       .from(workAreas)
-      .where(eq(workAreas.id, effectiveWaId))
+      .where(and(eq(workAreas.id, effectiveWaId), eq(workAreas.organizationId, session.organizationId)))
       .limit(1);
     todayWorkArea = wa ?? null;
   }
@@ -138,10 +139,14 @@ export default async function DriverDashboard() {
       >
         <div className="flex items-center gap-3">
           <div className="bg-white rounded-xl p-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
-            <Image src="/74slogo.svg" alt="742 Logistics" width={36} height={36} className="object-contain" />
+            {orgRow?.logoUrl ? (
+              <img src={orgRow.logoUrl} alt={orgRow.name} style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8 }} />
+            ) : (
+              <Image src="/logo-icon.png" alt="MyGroundOps" width={36} height={36} className="object-contain rounded-lg" />
+            )}
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[14px] font-bold text-white tracking-tight">742 Logistics</span>
+            <span className="text-[14px] font-bold text-white tracking-tight">{orgRow?.name ?? "MyGroundOps"}</span>
             <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>Driver Portal</span>
           </div>
         </div>
@@ -157,7 +162,7 @@ export default async function DriverDashboard() {
                 color: "rgba(255,255,255,0.6)",
               }}
             >
-              Wayne Board
+              Dashboard
             </a>
           )}
           <LogoutButton />

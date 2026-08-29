@@ -22,7 +22,7 @@ export default function HomePage() {
             Sign In
           </Link>
           <Link
-            href="#pricing"
+            href="/signup"
             className="text-[13px] font-semibold px-4 py-2 rounded-xl transition-all hover:opacity-90 active:scale-[0.98]"
             style={{ background: "#16A34A", color: "#fff" }}
           >
@@ -205,6 +205,7 @@ export default function HomePage() {
               features: ["Up to 10 vehicles", "MMR Generator", "Driver Portal", "Basic reporting"],
               highlight: false,
               cta: "Get Started",
+              href: "/signup",
             },
             {
               name: "Pro",
@@ -214,6 +215,7 @@ export default function HomePage() {
               features: ["Unlimited vehicles", "3D Fleet Inspector", "Route Operations", "Driver Leaderboards", "Compliance Tools", "Priority support"],
               highlight: true,
               cta: "Get Started",
+              href: "/signup",
             },
             {
               name: "Enterprise",
@@ -223,6 +225,7 @@ export default function HomePage() {
               features: ["Multiple stations", "Custom integrations", "Dedicated support", "Custom reporting", "SLA guarantee"],
               highlight: false,
               cta: "Contact Us",
+              href: null,
             },
           ].map((plan) => (
             <div
@@ -259,16 +262,26 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <button
-                className="mt-2 w-full py-3 rounded-xl text-[14px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
-                style={
-                  plan.highlight
-                    ? { background: "#16A34A", color: "#fff" }
-                    : { background: "rgba(255,255,255,0.06)", color: "rgba(248,250,252,0.75)", border: "1px solid rgba(255,255,255,0.08)" }
-                }
-              >
-                {plan.cta}
-              </button>
+              {plan.href ? (
+                <Link
+                  href={plan.href}
+                  className="mt-2 block w-full py-3 rounded-xl text-[14px] font-bold text-center transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={
+                    plan.highlight
+                      ? { background: "#16A34A", color: "#fff" }
+                      : { background: "rgba(255,255,255,0.06)", color: "rgba(248,250,252,0.75)", border: "1px solid rgba(255,255,255,0.08)" }
+                  }
+                >
+                  {plan.cta}
+                </Link>
+              ) : (
+                <button
+                  className="mt-2 w-full py-3 rounded-xl text-[14px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "rgba(248,250,252,0.75)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  {plan.cta}
+                </button>
+              )}
             </div>
           ))}
         </div>
