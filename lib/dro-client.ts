@@ -140,9 +140,30 @@ async function loginAndGetCookies(): Promise<string> {
   }
 }
 
-// ── Session — always fresh login (DRO cookies are browser-instance-specific) ──
+// ── Session — use cached cookies if valid, otherwise run Puppeteer login ──────
 
 export async function getDroHeaders(): Promise<Record<string, string>> {
+  const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
+
+  // Check for a cached valid session before running expensive Puppeteer login
+  const cacheRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
+  const cache = Object.fromEntries(cacheRows.map((r: any) => [r.key, r.value]));
+  const cachedCookies = cache["dro_session_cookies"] ?? "";
+  const expiresAt = cache["dro_session_expires_at"] ?? "";
+
+  if (cachedCookies && expiresAt && new Date(expiresAt) > new Date()) {
+    console.log("[dro-client] Using cached session (expires:", expiresAt, ")");
+    return {
+      Cookie: cachedCookies,
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "Origin": DRO_BASE,
+      "Referer": `${DRO_BASE}/`,
+      "Accept": "application/json, text/plain, */*",
+    };
+  }
+
+  console.log("[dro-client] No valid cached session — running Puppeteer login");
   const cookieHeader = await loginAndGetCookies();
   return {
     Cookie: cookieHeader,
