@@ -1,7 +1,12 @@
 /**
  * DRO API client with session caching.
- * Handles Puppeteer login and caches session cookies in the settings table.
+ * Handles Puppeteer login and caches session headers in the settings table.
  * All other modules should use this instead of embedding login logic.
+ *
+ * Auth approach: intercept a real DRO API request from within Puppeteer to
+ * capture the FULL set of request headers (Cookie + Authorization + any other
+ * headers the React app adds from localStorage/memory). Store these headers in
+ * the DB and reuse them for subsequent Node.js fetch() calls.
  */
 
 import puppeteer from "puppeteer-core";
@@ -15,9 +20,15 @@ export const DRO_BASE = "https://dro.routesmart.com";
 export const SA_ID = process.env.DRO_SERVICE_AREA_ID || "3060743";
 export const STATION_ID = process.env.DRO_STATION_ID || "259";
 
-// ── Session login (copied exactly from dro-sync.ts lines 52-110) ──────────────
+// Headers we DON'T want to forward (browser-only, cause issues in Node.js)
+const SKIP_HEADERS = new Set([
+  "host", "content-length", "connection", "accept-encoding",
+  "sec-fetch-site", "sec-fetch-mode", "sec-fetch-dest",
+  "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
+  "upgrade-insecure-requests",
+]);
 
-async function loginAndGetCookies(): Promise<string> {
+async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
   const credsRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_username','dro_password')`;
@@ -41,6 +52,30 @@ async function loginAndGetCookies(): Promise<string> {
 
     const page = await browser.newPage();
     page.on("dialog", async (d) => { try { await d.dismiss(); } catch {} });
+
+    // Set up interception BEFORE navigation to catch ALL requests
+    await page.setRequestInterception(true);
+    let capturedHeaders: Record<string, string> | null = null;
+
+    page.on("request", (req: any) => {
+      const url: string = req.url();
+      // Capture headers from the first authenticated DRO API call (not static assets)
+      if (
+        url.includes("dro.routesmart.com/api/api/") &&
+        !capturedHeaders
+      ) {
+        const hdrs: Record<string, string> = req.headers();
+        // Only keep forwarding-safe headers
+        const safe: Record<string, string> = {};
+        for (const [k, v] of Object.entries(hdrs)) {
+          if (!SKIP_HEADERS.has(k.toLowerCase())) safe[k] = v;
+        }
+        capturedHeaders = safe;
+        console.log("[dro-client] Intercepted headers from:", url.slice(0, 80));
+        console.log("[dro-client] Header keys:", Object.keys(safe).join(", "));
+      }
+      req.continue();
+    });
 
     await page.goto(DRO_BASE, { waitUntil: "networkidle2" });
 
@@ -68,114 +103,83 @@ async function loginAndGetCookies(): Promise<string> {
     // Fill password
     await popup.waitForSelector('input[type="password"]', { timeout: 10000 });
     await popup.type('input[type="password"]', password);
-    // Okta password page uses input[type="submit"] with value "Verify"
     const pwSubmit = await popup.$('input[type="submit"], button[type="submit"], input[value="Verify"]');
     if (pwSubmit) await pwSubmit.click();
     else await popup.keyboard.press("Enter");
 
-    // Intercept DRO API requests to capture the exact Cookie header the browser uses
-    let capturedCookieHeader = "";
-    await page.setRequestInterception(true);
-    page.on("request", (req: any) => {
-      const url: string = req.url();
-      if (url.includes("dro.routesmart.com/api/api/") && !capturedCookieHeader) {
-        const hdrs = req.headers();
-        if (hdrs["cookie"]) {
-          capturedCookieHeader = hdrs["cookie"];
-          console.log("[dro-client] Captured cookie header from live request to:", url.slice(0, 80));
-        }
-      }
-      req.continue();
-    });
-
-    // Wait for redirect back to DRO
+    // Wait for redirect back to DRO — this triggers API calls we'll intercept
     await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
     await new Promise(r => setTimeout(r, 3000));
 
-    // Select the single service area — this triggers DRO API calls we'll intercept
+    // Select the single service area — triggers more authenticated API calls
     await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
     const stationEls = await page.$$('[class*="station" i]');
     if (stationEls.length > 0) await stationEls[0].click();
 
-    // Wait for the DRO app to make authenticated API calls after station select (up to 20s)
-    for (let i = 0; i < 4 && !capturedCookieHeader; i++) {
+    // Wait for intercepted headers (up to 20s after station click)
+    for (let i = 0; i < 4 && !capturedHeaders; i++) {
       await new Promise(r => setTimeout(r, 5000));
-      console.log(`[dro-client] Waiting for intercepted cookie (${(i+1)*5}s)...`);
+      console.log(`[dro-client] Waiting for intercepted API request (${(i+1)*5}s)...`);
     }
 
-    // Fall back to extracting cookies from the page if interception didn't catch anything
-    if (!capturedCookieHeader) {
-      console.log("[dro-client] No request intercepted — falling back to page.cookies()");
-      const allCookies = await browser.defaultBrowserContext().cookies();
-      const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
-      capturedCookieHeader = droCookies.length > 0
-        ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
-        : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
-      console.log("[dro-client] Fallback cookies:", capturedCookieHeader.slice(0, 80));
+    // If interception never fired, log what page we're on and bail
+    if (!capturedHeaders) {
+      const url = page.url();
+      console.error("[dro-client] No DRO API requests intercepted. Page URL:", url);
+      throw new Error(`DRO login completed but no API requests were intercepted. Page: ${url}`);
     }
 
-    const cookieHeader = capturedCookieHeader;
     await browser.close();
 
-    if (!cookieHeader) {
-      throw new Error("DRO login completed but no cookies could be extracted");
+    // Ensure Content-Type is set for JSON API calls
+    capturedHeaders["content-type"] = "application/json";
+
+    // Cache headers in DB (expires in 6 hours)
+    const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
+    const headersJson = JSON.stringify(capturedHeaders);
+    await sql`INSERT INTO settings (key, value) VALUES ('dro_session_headers', ${headersJson})
+              ON CONFLICT (key) DO UPDATE SET value = ${headersJson}`;
+    await sql`INSERT INTO settings (key, value) VALUES ('dro_session_expires_at', ${expiresAt})
+              ON CONFLICT (key) DO UPDATE SET value = ${expiresAt}`;
+    // Keep dro_session_cookies for backwards compat with diagnose endpoint
+    const cookieHeader = capturedHeaders["cookie"] ?? "";
+    if (cookieHeader) {
+      await sql`INSERT INTO settings (key, value) VALUES ('dro_session_cookies', ${cookieHeader})
+                ON CONFLICT (key) DO UPDATE SET value = ${cookieHeader}`;
     }
 
-    // Also add browser-like headers to all subsequent DRO requests
-    // Cache cookies in settings table (expires in 6 hours)
-    const expiresAt = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
-    await sql`
-      INSERT INTO settings (key, value) VALUES ('dro_session_cookies', ${cookieHeader})
-      ON CONFLICT (key) DO UPDATE SET value = ${cookieHeader}
-    `;
-    await sql`
-      INSERT INTO settings (key, value) VALUES ('dro_session_expires_at', ${expiresAt})
-      ON CONFLICT (key) DO UPDATE SET value = ${expiresAt}
-    `;
-
-    return cookieHeader;
+    return capturedHeaders;
   } catch (err) {
     await browser.close().catch(() => {});
     throw err;
   }
 }
 
-// ── Session — use cached cookies if valid, otherwise run Puppeteer login ──────
+// ── Session — use cached headers if valid, otherwise run Puppeteer login ───────
 
 export async function getDroHeaders(): Promise<Record<string, string>> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
   // Check for a cached valid session before running expensive Puppeteer login
-  const cacheRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
+  const cacheRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_session_headers','dro_session_expires_at')`;
   const cache = Object.fromEntries(cacheRows.map((r: any) => [r.key, r.value]));
-  const cachedCookies = cache["dro_session_cookies"] ?? "";
+  const cachedHeadersJson = cache["dro_session_headers"] ?? "";
   const expiresAt = cache["dro_session_expires_at"] ?? "";
 
-  if (cachedCookies && expiresAt && new Date(expiresAt) > new Date()) {
-    console.log("[dro-client] Using cached session (expires:", expiresAt, ")");
-    return {
-      Cookie: cachedCookies,
-      "Content-Type": "application/json",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-      "Origin": DRO_BASE,
-      "Referer": `${DRO_BASE}/`,
-      "Accept": "application/json, text/plain, */*",
-    };
+  if (cachedHeadersJson && expiresAt && new Date(expiresAt) > new Date()) {
+    console.log("[dro-client] Using cached session headers (expires:", expiresAt, ")");
+    try {
+      return JSON.parse(cachedHeadersJson) as Record<string, string>;
+    } catch {
+      console.warn("[dro-client] Cached headers JSON is corrupt, re-logging in");
+    }
   }
 
   console.log("[dro-client] No valid cached session — running Puppeteer login");
-  const cookieHeader = await loginAndGetCookies();
-  return {
-    Cookie: cookieHeader,
-    "Content-Type": "application/json",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Origin": DRO_BASE,
-    "Referer": `${DRO_BASE}/`,
-    "Accept": "application/json, text/plain, */*",
-  };
+  return loginAndCaptureHeaders();
 }
 
-/** @deprecated — use getDroHeaders(). Always does fresh login now. */
+/** @deprecated — use getDroHeaders(). */
 export async function getDroHeadersStrict(): Promise<Record<string, string>> {
   return getDroHeaders();
 }
@@ -221,7 +225,6 @@ export const dro = {
   },
 
   async saveSchedule(body: unknown) {
-    // First validate, then save
     await droFetch(`/api/api/service-areas/${SA_ID}/ValidateActivePlans`, {
       method: "PUT",
       body: JSON.stringify(body),

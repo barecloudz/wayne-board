@@ -73,7 +73,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       const detail = JSON.stringify({ status: planRes.status, body: body.slice(0, 500), at: new Date().toISOString() });
       await sql`INSERT INTO settings (key, value) VALUES ('dro_last_401_detail', ${detail})
                 ON CONFLICT (key) DO UPDATE SET value = ${detail}`;
-      await sql`DELETE FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
+      await sql`DELETE FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at','dro_session_headers')`;
       throw new Error("SESSION_EXPIRED");
     }
     const planText = await planRes.text();
