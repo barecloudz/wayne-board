@@ -81,40 +81,45 @@ async function loginAndGetCookies(): Promise<string> {
     await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
     const stationEls = await page.$$('[class*="station" i]');
     if (stationEls.length > 0) await stationEls[0].click();
-    await new Promise(r => setTimeout(r, 6000)); // extra time for service area to set cookies
+
+    // Wait for the DRO app to finish setting up the service area session
+    // Poll until the active-route-plan API returns 200 (up to 30s)
+    let sessionOk = false;
+    let lastStatus = 0;
+    let pageUrlAfterStation = "";
+    for (let i = 0; i < 6; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const check = await page.evaluate(async (saId: string) => {
+        const url = window.location.href;
+        try {
+          const res = await (globalThis as any).fetch(
+            `https://dro.routesmart.com/api/api/service-areas/${saId}/active-route-plan`,
+            { credentials: "include" }
+          );
+          return { status: res.status, ok: res.ok, url };
+        } catch (e: any) {
+          return { status: 0, ok: false, err: e?.message, url };
+        }
+      }, SA_ID);
+      console.log(`[dro-client] Station poll ${i+1}: url=${check.url} status=${check.status}`);
+      pageUrlAfterStation = check.url;
+      lastStatus = check.status;
+      if (check.ok) { sessionOk = true; break; }
+    }
 
     // Extract session cookies from ALL pages/domains in the browser context
     const allCookies = await browser.defaultBrowserContext().cookies();
-    console.log("[dro-client] All cookies:", allCookies.map((c: any) => `${c.domain}:${c.name}`).join(", "));
-
-    // Filter to only dro.routesmart.com cookies (including subdomains)
-    const droCookies = allCookies.filter((c: any) =>
-      c.domain.includes("routesmart.com") || c.domain.includes("dro.routesmart")
-    );
-    console.log("[dro-client] DRO cookies:", droCookies.map((c: any) => `${c.domain}:${c.name}`).join(", "));
+    const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
+    console.log("[dro-client] DRO cookies:", droCookies.map((c: any) => `${c.name}`).join(", "));
 
     const cookieHeader = droCookies.length > 0
       ? droCookies.map((c: any) => `${c.name}=${c.value}`).join("; ")
-      : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; "); // fallback: all cookies
-
-    // Verify the session works from within the browser before caching
-    const testResult = await page.evaluate(async (saId: string) => {
-      try {
-        const res = await (globalThis as any).fetch(
-          `https://dro.routesmart.com/api/api/service-areas/${saId}/active-route-plan`,
-          { credentials: "include" }
-        );
-        return { status: res.status, ok: res.ok };
-      } catch (e: any) {
-        return { status: 0, ok: false, err: e?.message };
-      }
-    }, SA_ID);
-    console.log("[dro-client] In-browser API test:", JSON.stringify(testResult));
+      : allCookies.map((c: any) => `${c.name}=${c.value}`).join("; ");
 
     await browser.close();
 
-    if (!testResult.ok) {
-      throw new Error(`DRO login succeeded but API test failed (status ${testResult.status}) — cookies: ${droCookies.map((c: any) => c.name).join(",") || "none from routesmart.com"}`);
+    if (!sessionOk) {
+      throw new Error(`DRO session not established after 30s — last status ${lastStatus}, page=${pageUrlAfterStation}, cookies=${droCookies.map((c: any) => c.name).join(",") || "none"}`);
     }
 
     // Cache cookies in settings table (expires in 6 hours)
