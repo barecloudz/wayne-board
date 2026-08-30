@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Clock, AlertTriangle, CheckCircle2, Trash2, Loader2, ChevronDown, Pencil, X, Check } from "lucide-react";
+import { useState, useTransition, lazy, Suspense } from "react";
+import { Clock, AlertTriangle, CheckCircle2, Trash2, Loader2, ChevronDown, Pencil, X, Check, Truck } from "lucide-react";
 import { updateRequestStatus, deleteRequest } from "@/lib/actions/maintenance";
 import type { RequestStatus } from "@/lib/actions/maintenance";
+
+const TruckViewer = lazy(() => import("@/app/dashboard/fleet/tires/TruckViewer"));
 
 type Request = {
   id: number;
@@ -32,6 +34,7 @@ export default function MaintenanceAdmin({ initial }: { initial: Request[] }) {
   const [editNote, setEditNote] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "in_progress" | "resolved">("all");
   const [showResolved, setShowResolved] = useState(false);
+  const [showViewer, setShowViewer] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function openEdit(r: Request) {
@@ -70,10 +73,36 @@ export default function MaintenanceAdmin({ initial }: { initial: Request[] }) {
   return (
     <main className="flex-1 px-6 py-8 max-w-[1100px] w-full mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Wayne Board · Admin</p>
-        <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Maintenance Requests</h1>
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
+          <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Maintenance</h1>
+        </div>
+        <button
+          onClick={() => setShowViewer((v) => !v)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border transition-all ${
+            showViewer
+              ? "bg-slate-900 text-white border-slate-900"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+          }`}
+        >
+          <Truck className="w-4 h-4" />
+          {showViewer ? "Hide Truck Viewer" : "Truck Inspector"}
+        </button>
       </div>
+
+      {/* Truck viewer */}
+      {showViewer && (
+        <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]" style={{ height: 520 }}>
+          <Suspense fallback={
+            <div className="w-full h-full bg-slate-100 flex items-center justify-center gap-2 text-[13px] text-slate-400">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading 3D viewer…
+            </div>
+          }>
+            <TruckViewer />
+          </Suspense>
+        </div>
+      )}
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3 mb-6">

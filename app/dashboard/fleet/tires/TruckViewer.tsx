@@ -82,7 +82,7 @@ function TireHotspot({
 
 // ── Truck mesh ─────────────────────────────────────────────────────────────────
 function Truck({ debug, onDebugClick }: { debug: boolean; onDebugClick: (p: THREE.Vector3) => void }) {
-  const { scene } = useGLTF("/models/truck.glb");
+  const { scene } = useGLTF("/models/truck-opt.glb");
   return (
     <primitive
       object={scene}
@@ -96,7 +96,7 @@ function Truck({ debug, onDebugClick }: { debug: boolean; onDebugClick: (p: THRE
     />
   );
 }
-useGLTF.preload("/models/truck.glb");
+useGLTF.preload("/models/truck-opt.glb");
 
 // ── Status panel ───────────────────────────────────────────────────────────────
 function StatusPanel({
