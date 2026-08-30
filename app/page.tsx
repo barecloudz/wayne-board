@@ -43,37 +43,36 @@ export default function HomePage() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="flex flex-col items-center text-center px-6 pt-24 pb-20" style={{ background: "#ffffff" }}>
+      <section className="flex flex-col items-center text-center px-6 pt-12 pb-10 md:pt-20 md:pb-14" style={{ background: "#ffffff" }}>
         <div
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-semibold mb-8 border"
+          className="inline-flex flex-wrap items-center justify-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] font-semibold mb-6 border max-w-[300px] sm:max-w-none"
           style={{ borderColor: "#BBF7D0", background: "#F0FDF4", color: "#15803D" }}
         >
-          <Star className="w-3.5 h-3.5" />
-          Built by a FedEx Ground contractor, for FedEx Ground contractors
+          <Star className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>Built by a FedEx Ground contractor, for contractors</span>
         </div>
 
-        <h1 className="text-[48px] md:text-[72px] font-extrabold tracking-tight leading-[1.05] max-w-4xl mb-6" style={{ color: "#0F172A" }}>
+        <h1 className="text-[36px] sm:text-[52px] md:text-[72px] font-extrabold tracking-tight leading-[1.05] max-w-4xl mb-5" style={{ color: "#0F172A" }}>
           Run your operation
           <br />
           <span style={{ color: "#16A34A" }}>like a pro.</span>
         </h1>
 
-        <p className="text-[17px] md:text-[20px] max-w-2xl leading-relaxed mb-10" style={{ color: "#64748B" }}>
-          MyGroundOps is the all-in-one platform built for FedEx Ground ISPs.
-          Fleet management, driver scores, compliance forms, route ops — everything in one place.
+        <p className="text-[15px] md:text-[18px] max-w-xl leading-relaxed mb-8" style={{ color: "#64748B" }}>
+          Fleet management, driver scores, compliance forms, route ops — everything FedEx Ground ISPs need, in one place.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <Link
             href="#pricing"
-            className="flex items-center gap-2 px-7 py-4 rounded-xl text-[15px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-[15px] font-bold transition-all hover:opacity-90 active:scale-[0.98]"
             style={{ background: "#16A34A", color: "#fff" }}
           >
             Get Access <ChevronRight className="w-4 h-4" />
           </Link>
           <Link
             href="#demo"
-            className="flex items-center gap-2 px-7 py-4 rounded-xl text-[15px] font-semibold border transition-all hover:border-slate-400"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-[15px] font-semibold border transition-all hover:border-slate-400"
             style={{ borderColor: "#CBD5E1", color: "#475569" }}
           >
             Watch Demo
@@ -81,50 +80,49 @@ export default function HomePage() {
         </div>
 
         <div
-          className="flex flex-wrap items-center justify-center gap-10 mt-16 pt-10 border-t w-full max-w-2xl"
+          className="grid grid-cols-3 gap-4 sm:gap-10 mt-10 pt-8 border-t w-full max-w-xs sm:max-w-2xl"
           style={{ borderColor: "#F1F5F9" }}
         >
           {[
             { value: "17+", label: "Trucks managed" },
             { value: "100%", label: "MMR compliance" },
-            { value: "1 platform", label: "Everything you need" },
+            { value: "1 platform", label: "All you need" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center gap-1">
-              <span className="text-[28px] font-extrabold" style={{ color: "#16A34A" }}>{s.value}</span>
-              <span className="text-[12px] font-medium" style={{ color: "#94A3B8" }}>{s.label}</span>
+              <span className="text-[22px] sm:text-[28px] font-extrabold" style={{ color: "#16A34A" }}>{s.value}</span>
+              <span className="text-[10px] sm:text-[12px] font-medium" style={{ color: "#94A3B8" }}>{s.label}</span>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── DEMO ─────────────────────────────────────────────────────────── */}
-      <section id="demo" className="px-6 md:px-12 pb-24" style={{ background: "#F8FAFC" }}>
+      <section id="demo" className="px-6 md:px-12 pb-10" style={{ background: "#F8FAFC" }}>
         <div
-          className="max-w-5xl mx-auto rounded-3xl flex items-center justify-center"
+          className="max-w-5xl mx-auto rounded-2xl flex items-center justify-center py-10"
           style={{
             background: "#ffffff",
             border: "1px solid #E2E8F0",
-            minHeight: 380,
           }}
         >
-          <div className="flex flex-col items-center gap-4 py-24">
+          <div className="flex flex-col items-center gap-3">
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{ background: "#F0FDF4" }}
             >
-              <Zap className="w-8 h-8" style={{ color: "#16A34A" }} />
+              <Zap className="w-6 h-6" style={{ color: "#16A34A" }} />
             </div>
-            <p className="text-[22px] font-bold" style={{ color: "#0F172A" }}>Demo coming soon</p>
-            <p className="text-[14px]" style={{ color: "#94A3B8" }}>Full platform walkthrough video</p>
+            <p className="text-[18px] font-bold" style={{ color: "#0F172A" }}>Demo coming soon</p>
+            <p className="text-[13px]" style={{ color: "#94A3B8" }}>Full platform walkthrough video</p>
           </div>
         </div>
       </section>
 
       {/* ── FEATURES ─────────────────────────────────────────────────────── */}
-      <section className="px-6 md:px-12 pb-24 max-w-6xl mx-auto w-full">
-        <div className="text-center mb-14">
+      <section className="px-6 md:px-12 pb-14 max-w-6xl mx-auto w-full">
+        <div className="text-center mb-8">
           <p className="text-[12px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Platform</p>
-          <h2 className="text-[36px] md:text-[48px] font-extrabold tracking-tight" style={{ color: "#0F172A" }}>Everything your station needs</h2>
+          <h2 className="text-[28px] md:text-[42px] font-extrabold tracking-tight" style={{ color: "#0F172A" }}>Everything your station needs</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -197,10 +195,10 @@ export default function HomePage() {
       </section>
 
       {/* ── PRICING ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="px-6 md:px-12 pb-32 max-w-5xl mx-auto w-full">
-        <div className="text-center mb-14">
+      <section id="pricing" className="px-6 md:px-12 pb-20 max-w-5xl mx-auto w-full">
+        <div className="text-center mb-8">
           <p className="text-[12px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Pricing</p>
-          <h2 className="text-[36px] md:text-[48px] font-extrabold tracking-tight mb-3" style={{ color: "#0F172A" }}>Simple, flat pricing</h2>
+          <h2 className="text-[28px] md:text-[42px] font-extrabold tracking-tight mb-3" style={{ color: "#0F172A" }}>Simple, flat pricing</h2>
           <p className="text-[16px]" style={{ color: "#475569" }}>
             One price per station. No per-driver fees. No surprises.
           </p>
