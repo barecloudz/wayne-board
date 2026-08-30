@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
-
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "MyGroundOps operations dashboard.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const session = await getSession();
+  if (!session) return { title: "Dashboard" };
+  const [org] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1);
+  const orgName = org?.name;
+  return {
+    title: orgName ? `${orgName} Dashboard` : "Dashboard",
+    description: "MyGroundOps operations dashboard.",
+  };
+}
 import FleetCard from "@/components/cards/fleet-card";
 import PayrollCard from "@/components/cards/payroll-card";
 import DriversCard from "@/components/cards/drivers-card";

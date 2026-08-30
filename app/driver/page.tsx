@@ -3,10 +3,16 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Driver Portal",
-  description: "View your Ryde scores, delivery stats, and performance data.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const session = await getSession();
+  if (!session) return { title: "Driver Portal" };
+  const [org] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1);
+  const orgName = org?.name;
+  return {
+    title: orgName ? `${orgName} Driver Portal` : "Driver Portal",
+    description: "View your Ryde scores, delivery stats, and performance data.",
+  };
+}
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays, organizations } from "@/lib/schema";

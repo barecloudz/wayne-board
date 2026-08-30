@@ -29,8 +29,8 @@ export default function HomePage() {
           <Image src="/logo-full.png" alt="MyGroundOps" width={180} height={48} className="object-contain" />
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/driver" className="text-[13px] font-semibold transition-colors px-4 py-2" style={{ color: "#475569" }}>
-            Driver Portal
+          <Link href="/sign-in" className="text-[13px] font-semibold transition-colors px-4 py-2" style={{ color: "#475569" }}>
+            Driver Login
           </Link>
           <Link href="/sign-in" className="text-[13px] font-semibold transition-colors px-4 py-2" style={{ color: "#475569" }}>
             Sign In
@@ -311,7 +311,7 @@ export default function HomePage() {
           <span style={{ color: "#0F172A", fontWeight: 600 }}>Nardoni Digital LLC dba MyGroundOps</span>
         </div>
         <div className="flex items-center gap-6">
-          <Link href="/driver" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Driver Portal</Link>
+          <Link href="/sign-in" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Driver Login</Link>
           <Link href="/sign-in" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Sign In</Link>
           <Link href="/terms" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Terms</Link>
           <Link href="/privacy" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Privacy</Link>
