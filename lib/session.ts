@@ -13,6 +13,9 @@ export type SessionPayload = {
   name: string;
   role: string;
   isAdmin: boolean;
+  subscriptionStatus: string;
+  demoMode: boolean;
+  demoExpiresAt: string | null;
 };
 
 export async function createSession(payload: SessionPayload) {

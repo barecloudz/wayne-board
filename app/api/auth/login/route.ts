@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
   }
 
   const [org] = await db
-    .select({ id: organizations.id, subscriptionStatus: organizations.subscriptionStatus })
+    .select({
+      id: organizations.id,
+      subscriptionStatus: organizations.subscriptionStatus,
+      demoMode: organizations.demoMode,
+      demoExpiresAt: organizations.demoExpiresAt,
+    })
     .from(organizations)
     .where(eq(organizations.slug, orgSlug))
     .limit(1);
@@ -55,6 +60,9 @@ export async function POST(req: NextRequest) {
     name: driver.name,
     role: driver.role,
     isAdmin: driver.isAdmin,
+    subscriptionStatus: org.subscriptionStatus,
+    demoMode: org.demoMode,
+    demoExpiresAt: org.demoExpiresAt ? org.demoExpiresAt.toISOString() : null,
   });
 
   return NextResponse.json({ ok: true, role: driver.role, isAdmin: driver.isAdmin });
