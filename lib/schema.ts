@@ -16,6 +16,7 @@ export const organizations = pgTable("organizations", {
   trialEndsAt:          timestamp("trial_ends_at"),
   demoMode:             boolean("demo_mode").notNull().default(false),  // super-admin granted demo access
   demoExpiresAt:        timestamp("demo_expires_at"),                   // null = indefinite demo
+  email:                text("email"),                                   // billing/legal contact email
   superAdminNote:       text("super_admin_note"),                       // internal notes for Blake
   createdAt:            timestamp("created_at").defaultNow(),
 });

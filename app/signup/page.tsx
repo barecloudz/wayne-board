@@ -74,6 +74,7 @@ export default function SignupPage() {
 
   const [companyName, setCompanyName] = useState("");
   const [ownerName, setOwnerName] = useState("");
+  const [email, setEmail] = useState("");
   const [driverId, setDriverId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -89,7 +90,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    if (!companyName.trim() || !ownerName.trim() || !driverId.trim() || !password || !confirmPassword) {
+    if (!companyName.trim() || !ownerName.trim() || !email.trim() || !driverId.trim() || !password || !confirmPassword) {
       setError("All fields are required.");
       return;
     }
@@ -115,6 +116,7 @@ export default function SignupPage() {
           companyName: companyName.trim(),
           slug,
           ownerName: ownerName.trim(),
+          email: email.trim(),
           driverId: driverId.trim(),
           password,
           plan,
@@ -233,6 +235,18 @@ export default function SignupPage() {
               value={ownerName}
               onChange={setOwnerName}
               placeholder="Jane Smith"
+            />
+          </Field>
+
+          {/* Email */}
+          <Field label="Email Address">
+            <TextInput
+              value={email}
+              onChange={setEmail}
+              placeholder="jane@acmelogistics.com"
+              type="email"
+              autoCapitalize="none"
+              autoCorrect="off"
             />
           </Field>
 

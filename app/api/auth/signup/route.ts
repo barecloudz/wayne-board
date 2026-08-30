@@ -7,9 +7,9 @@ import { stripe } from "@/lib/stripe";
 import { getPlatformSetting } from "@/lib/actions/platform-settings";
 
 export async function POST(req: NextRequest) {
-  const { companyName, slug, ownerName, driverId, password, plan } = await req.json();
+  const { companyName, slug, ownerName, driverId, email, password, plan } = await req.json();
 
-  if (!companyName?.trim() || !slug?.trim() || !ownerName?.trim() || !driverId?.trim() || !password) {
+  if (!companyName?.trim() || !slug?.trim() || !ownerName?.trim() || !driverId?.trim() || !email?.trim() || !password) {
     return NextResponse.json({ error: "All fields are required." }, { status: 400 });
   }
   if (password.length < 8) {
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     .values({
       name: companyName.trim(),
       slug: slug.trim(),
+      email: email.trim().toLowerCase(),
       plan: plan === "pro" ? "pro" : "starter",
       subscriptionStatus: "trialing",
     })
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
 
   const customer = await stripe.customers.create({
     name: companyName.trim(),
+    email: email.trim().toLowerCase(),
     metadata: { orgId: String(org.id), slug: slug.trim() },
   });
 
