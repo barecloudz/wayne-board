@@ -1,3 +1,4 @@
+"use client";
 import AppShell from "@/components/app-shell";
 import dynamic from "next/dynamic";
 
