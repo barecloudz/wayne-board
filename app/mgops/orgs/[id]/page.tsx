@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import { requireSuperAdmin } from "@/lib/mgops-auth";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return { title: `Org #${id}` };
+}
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
 import { eq } from "drizzle-orm";

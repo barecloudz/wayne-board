@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Driver Portal",
+  description: "View your Ryde scores, delivery stats, and performance data.",
+};
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays, organizations } from "@/lib/schema";

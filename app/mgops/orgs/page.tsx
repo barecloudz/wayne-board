@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { requireSuperAdmin } from "@/lib/mgops-auth";
+
+export const metadata: Metadata = { title: "Organizations" };
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
 import { desc } from "drizzle-orm";

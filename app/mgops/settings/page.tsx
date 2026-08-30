@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { requireSuperAdmin } from "@/lib/mgops-auth";
+
+export const metadata: Metadata = { title: "Platform Settings" };
 import { db } from "@/lib/db";
 import { platformSettings } from "@/lib/schema";
 import MgopsSettingsClient from "./mgops-settings-client";

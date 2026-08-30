@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "MyGroundOps operations dashboard.",
+};
 import FleetCard from "@/components/cards/fleet-card";
 import PayrollCard from "@/components/cards/payroll-card";
 import DriversCard from "@/components/cards/drivers-card";

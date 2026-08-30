@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AppShell from "@/components/app-shell";
+
+export async function generateMetadata({ params }: { params: Promise<{ vehicleId: string }> }): Promise<Metadata> {
+  const { vehicleId } = await params;
+  return { title: `Inspect Vehicle ${vehicleId}` };
+}
 import { db } from "@/lib/db";
 import { vehicles } from "@/lib/schema";
 import { eq } from "drizzle-orm";

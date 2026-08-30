@@ -1,5 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+
+export const metadata: Metadata = {
+  title: "FedEx Ground ISP Management Platform",
+  description: "Fleet management, driver scores, route operations, and compliance tools built for FedEx Ground independent service providers.",
+  openGraph: {
+    title: "MyGroundOps",
+    description: "Fleet management, driver scores, route operations, and compliance tools built for FedEx Ground independent service providers.",
+    url: "https://mygroundops.com",
+    siteName: "MyGroundOps",
+    images: [{ url: "/logo-full.png" }],
+    type: "website",
+  },
+};
 import {
   Truck, ClipboardList, Map, Users,
   ChevronRight, Check, Star, Shield, Zap

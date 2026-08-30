@@ -1,6 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
+
+export const metadata: Metadata = { title: "Fleet Status" };
 import { db } from "@/lib/db";
 import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
 import { eq } from "drizzle-orm";

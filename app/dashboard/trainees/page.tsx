@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import TraineesClient from "./trainees-client";
+
+export const metadata: Metadata = { title: "Trainees" };
 
 export default function TraineesPage() {
   return (

@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import LoginForm from "@/app/login-form";
+
+export const metadata: Metadata = { title: "Dashboard Login" };
 
 export default function AdminLoginPage() {
   return (

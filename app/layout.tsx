@@ -11,7 +11,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mygroundops.com"),
-  title: "MyGroundOps — FedEx Ground Contractor Platform",
+  title: {
+    default: "MyGroundOps — FedEx Ground Contractor Platform",
+    template: "%s — MyGroundOps",
+  },
   description:
     "Fleet management, driver scores, route ops, and compliance tools built for FedEx Ground ISPs.",
   openGraph: {

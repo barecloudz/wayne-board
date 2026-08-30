@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import PortalSettings from "../portal-settings";
+
+export const metadata: Metadata = { title: "Settings" };
 import WorkAreaManager from "../work-area-manager";
 import GcSyncSettings from "../gc-sync-settings";
 import { getSetting } from "@/lib/actions/settings";

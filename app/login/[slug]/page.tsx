@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  await params;
+  return {
+    title: "Sign In",
+    description: "Sign in to your MyGroundOps station account.",
+  };
+}
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
 import { eq } from "drizzle-orm";

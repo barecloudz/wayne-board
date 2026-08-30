@@ -1,6 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
+
+export const metadata: Metadata = { title: "Scheduling" };
 import { getAllSchedules, getAllTimeOff, getAllUpcomingOverrides, getAllOverrides } from "@/lib/actions/scheduling";
 import { getVehicles } from "@/lib/actions/vehicles";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
