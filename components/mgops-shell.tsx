@@ -68,7 +68,7 @@ function Sidebar() {
 
       <div className="p-3" style={{ borderTop: "1px solid #E2E8F0" }}>
         <Link
-          href="/dashboard"
+          href="/"
           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all hover:bg-[#F8FAFC]"
           style={{ color: "#94A3B8" }}
         >
@@ -145,7 +145,7 @@ function MobileNav() {
 
         <div className="p-3" style={{ borderTop: "1px solid #E2E8F0" }}>
           <Link
-            href="/dashboard"
+            href="/"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium hover:bg-[#F8FAFC]"
             style={{ color: "#94A3B8" }}
