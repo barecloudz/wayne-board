@@ -138,15 +138,23 @@ export default function SignupPage() {
       className="min-h-screen flex flex-col items-center justify-center px-4"
       style={{ background: "#0A0F1E" }}
     >
+      {/* Back link */}
+      <div className="w-full max-w-[440px] mb-4">
+        <a href="/" className="flex items-center gap-1.5 text-[13px] font-medium transition-colors" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Back
+        </a>
+      </div>
+
       {/* Branding */}
       <div className="mb-8 flex flex-col items-center gap-4">
         <Image src="/logo-icon.png" alt="MyGroundOps" width={64} height={64} className="rounded-2xl" />
         <div className="text-center">
           <h1 className="text-[24px] font-extrabold text-white tracking-tight leading-tight">
-            Create your account
+            Start your free trial
           </h1>
           <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Set up your station on MyGroundOps
+            14 days free — no charge until your trial ends
           </p>
         </div>
       </div>
@@ -285,7 +293,7 @@ export default function SignupPage() {
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {loading ? "Redirecting to checkout…" : (
               <>
-                Get Started <ChevronRight className="w-4 h-4" />
+                Start Free Trial <ChevronRight className="w-4 h-4" />
               </>
             )}
           </button>
