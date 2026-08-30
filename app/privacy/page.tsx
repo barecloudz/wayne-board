@@ -199,9 +199,7 @@ export default function PrivacyPage() {
                 payments and manage subscriptions.
               </li>
               <li>
-                <strong>Hosting and Infrastructure Providers.</strong> We use cloud
-                infrastructure providers to host the Service. These providers process data on
-                our behalf and are contractually required to protect it.
+                <strong>Hosting and Infrastructure Providers.</strong> We use Neon (database hosting) and Netlify (application hosting) to operate the Service. These providers process data on our behalf and are contractually required to protect it. We also use Stripe, Inc. for payment processing (described separately above).
               </li>
               <li>
                 <strong>Legal Requirements.</strong> We may disclose information if required
@@ -286,8 +284,7 @@ export default function PrivacyPage() {
                 incomplete information.
               </li>
               <li>
-                <strong>Export.</strong> You may request an export of your Customer Data in a
-                machine-readable format.
+                <strong>Export.</strong> You may request an export of your Customer Data in a machine-readable format. We will fulfill export requests within ten (10) business days of a verified request.
               </li>
               <li>
                 <strong>Deletion.</strong> You may request deletion of your account and

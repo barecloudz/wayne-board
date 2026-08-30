@@ -232,7 +232,7 @@ export default function TermsPage() {
             <p>
               <strong>Data Export.</strong> You may request an export of your Customer Data
               at any time during your active subscription by contacting support. We will
-              provide a machine-readable export within a reasonable timeframe.
+              provide a machine-readable export within ten (10) business days of a verified request.
             </p>
             <p>
               <strong>Post-Cancellation Retention.</strong> Upon termination or cancellation
@@ -300,6 +300,8 @@ export default function TermsPage() {
               WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR
               COMPLETELY SECURE. WE MAKE NO GUARANTEES REGARDING UPTIME, AVAILABILITY, OR
               SUITABILITY OF THE SERVICE FOR ANY PARTICULAR OPERATIONAL REQUIREMENT.
+              WE DO NOT PROVIDE A SERVICE LEVEL AGREEMENT (SLA) OR UPTIME GUARANTEE.
+              SCHEDULED MAINTENANCE AND UNPLANNED OUTAGES MAY OCCUR WITHOUT PRIOR NOTICE.
             </p>
             <p>
               You acknowledge that your use of the Service is at your sole risk. We are not
