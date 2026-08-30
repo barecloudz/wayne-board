@@ -113,7 +113,11 @@ export default function PrivacyPage() {
               <strong>Account Information.</strong> When you register for MyGroundOps, we
               collect information about your company, including: company name, owner name,
               FedEx Driver IDs used to identify account holders, and email address if
-              provided. This information is used to create and manage your account.
+              provided. We also collect a password (stored only as an irreversible
+              cryptographic hash — we never store your plaintext password), your selected
+              subscription plan, and a URL-safe identifier derived from your company name
+              that becomes part of your login address. This information is used to create
+              and manage your account.
             </p>
             <p>
               <strong>Operational Data.</strong> As you use the Service, you and your
@@ -259,6 +263,12 @@ export default function PrivacyPage() {
               </a>
               .
             </p>
+            <p>
+              In the event we discover a confirmed breach of security that affects your
+              Customer Data, we will notify you within thirty (30) days of that discovery by
+              email to the address associated with your account, or by prominent notice within
+              the Service if email notification is not feasible.
+            </p>
           </Section>
 
           <Section title="8. Your Rights">
@@ -313,8 +323,8 @@ export default function PrivacyPage() {
           <Section title="10. Cookies">
             <p>
               MyGroundOps uses session cookies to maintain your authenticated session. These
-              cookies are strictly necessary for the Service to function and are deleted when
-              you close your browser or log out.
+              cookies are strictly necessary for the Service to function. Session cookies
+              expire after 7 days of inactivity or when you log out, whichever comes first.
             </p>
             <p>
               We do not use advertising cookies, tracking pixels, or third-party analytics

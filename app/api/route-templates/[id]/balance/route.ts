@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,8 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
   const { id } = await params;
   const templateId = parseInt(id, 10);
@@ -134,6 +137,7 @@ export async function GET(
     WHERE date >= ${cutoffStr}
       AND stops_per_hour > 0
       AND drive_time > 0
+      AND organization_id = ${session.organizationId}
     GROUP BY route_name
   `;
 

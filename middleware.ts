@@ -35,8 +35,9 @@ export async function middleware(req: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, SECRET);
-    if (!payload.isAdmin) {
-      // Valid driver session but not an admin — send back to driver portal
+    const isManager = payload.role === "management";
+    if (!payload.isAdmin && !isManager) {
+      // Valid driver session but not an admin or manager — send back to driver portal
       return NextResponse.redirect(new URL("/driver", req.url));
     }
   } catch {

@@ -128,6 +128,15 @@ export default function TermsPage() {
               MyGroundOps is an independent product. It is not affiliated with, endorsed by,
               or sponsored by FedEx Corporation or any of its subsidiaries.
             </p>
+            <p>
+              Your use of MyGroundOps does not affect, modify, or supersede any obligations
+              you have under your agreement with FedEx Corporation as an independent service
+              provider. You are solely responsible for ensuring your use of the Service
+              complies with your FedEx ISP agreement and all applicable FedEx operational
+              requirements. FedEx may have the right to audit certain operational data under
+              your ISP agreement; we will comply with any legally binding requests we receive
+              from FedEx relating to your account.
+            </p>
           </Section>
 
           <Section title="3. Accounts and Access">
@@ -429,6 +438,12 @@ export default function TermsPage() {
               <strong>Force Majeure.</strong> Neither party will be liable for delays or
               failures in performance resulting from events beyond their reasonable control,
               including natural disasters, internet outages, or government actions.
+            </p>
+            <p>
+              <strong>Data Breach Notification.</strong> If Nardoni Digital discovers a
+              confirmed breach of security affecting your Customer Data, we will notify you
+              within thirty (30) days of that discovery by email to the address associated
+              with your account.
             </p>
           </Section>
 

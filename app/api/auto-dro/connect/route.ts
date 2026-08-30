@@ -9,8 +9,11 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getDroHeaders } from "@/lib/dro-client";
+import { getSession } from "@/lib/session";
 
 export async function POST() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     // getDroHeaders() will run Puppeteer login if no valid session exists,
     // then cache the cookies in the DB. Subsequent calls skip the browser.

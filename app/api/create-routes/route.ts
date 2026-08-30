@@ -5,6 +5,7 @@ import {
   droStops, droRoutes, droDailyTotals, droAnchorAreas,
 } from "@/lib/schema";
 import { eq, and, lte, gte, sql, not, inArray, desc, asc } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 
 type DowKey = "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 
@@ -13,6 +14,8 @@ function todayDow(): DowKey {
 }
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const today = new Date().toISOString().slice(0, 10);
   const dow = todayDow();
 
@@ -30,6 +33,7 @@ export async function GET() {
     .where(and(
       eq(drivers.active, true),
       eq(drivers.isTrainee, false),
+      eq(drivers.organizationId, session.organizationId),
       eq(driverSchedules[dow], true),
       ...(timeOffIds.length > 0 ? [not(inArray(drivers.driverId, timeOffIds))] : [])
     ));
@@ -42,7 +46,7 @@ export async function GET() {
       eq(drivers.driverId, scheduleOverrides.driverId),
       eq(scheduleOverrides.date, today)
     ))
-    .where(and(eq(drivers.active, true), eq(drivers.isTrainee, false)));
+    .where(and(eq(drivers.active, true), eq(drivers.isTrainee, false), eq(drivers.organizationId, session.organizationId)));
 
   // Merge + deduplicate
   const seen = new Set(scheduled.map(d => d.driverId));
@@ -52,7 +56,7 @@ export async function GET() {
   }
 
   // Stop count from DRO (current sync)
-  const [stopRow] = await db.select({ count: sql<number>`count(*)::int` }).from(droStops);
+  const [stopRow] = await db.select({ count: sql<number>`count(*)::int` }).from(droStops).where(eq(droStops.organizationId, session.organizationId));
   const totalStops = stopRow?.count ?? 0;
 
   // Route info from DRO — prefer dro_routes (from route-summary), fall back to
@@ -63,7 +67,7 @@ export async function GET() {
     workAreaNumber: droRoutes.workAreaNumber,
     stops:          droRoutes.stops,
     packages:       droRoutes.packages,
-  }).from(droRoutes).orderBy(droRoutes.workAreaName);
+  }).from(droRoutes).where(eq(droRoutes.organizationId, session.organizationId)).orderBy(droRoutes.workAreaName);
 
   if (routes.length === 0 && totalStops > 0) {
     // Derive routes from stop records — group by work_area_number
@@ -97,6 +101,7 @@ export async function GET() {
   const DOW_JS = new Date().getDay(); // 0=Sun..6=Sat
   const histRows = await db.select({ date: droDailyTotals.date, totalStops: droDailyTotals.totalStops })
     .from(droDailyTotals)
+    .where(eq(droDailyTotals.organizationId, session.organizationId))
     .orderBy(desc(droDailyTotals.date))
     .limit(60);
   const sameDow = histRows.filter(r => {
@@ -115,7 +120,7 @@ export async function GET() {
     shapeJson:         droAnchorAreas.shapeJson,
     wktPoly:           droAnchorAreas.wktPoly,
     hexCode:           droAnchorAreas.hexCode,
-  }).from(droAnchorAreas).orderBy(asc(droAnchorAreas.name));
+  }).from(droAnchorAreas).where(eq(droAnchorAreas.organizationId, session.organizationId)).orderBy(asc(droAnchorAreas.name));
 
   // Work areas that have at least one scheduled driver today
   const coveredWorkAreas = new Set(

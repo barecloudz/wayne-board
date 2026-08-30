@@ -2,8 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { getSession } from "@/lib/session";
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
@@ -37,11 +40,13 @@ export async function GET() {
         SELECT score, week, deliveries
         FROM ryde_scores
         WHERE driver_id = d.driver_id
+          AND organization_id = ${session.organizationId}
         ORDER BY week DESC
         LIMIT 1
       ) rs ON true
       WHERE d.active = true
         AND d.role = 'driver'
+        AND d.organization_id = ${session.organizationId}
       ORDER BY COALESCE(p.avg_sph_30d, 0) DESC
     `;
 
