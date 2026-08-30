@@ -3,52 +3,43 @@ import { db } from "@/lib/db";
 import { organizations, drivers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { stripe, PLANS, PlanKey } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
-  const { companyName, slug, ownerName, driverId, password } = await req.json();
+  const { companyName, slug, ownerName, driverId, password, plan } = await req.json();
 
-  // Validate all fields present
   if (!companyName?.trim() || !slug?.trim() || !ownerName?.trim() || !driverId?.trim() || !password) {
     return NextResponse.json({ error: "All fields are required." }, { status: 400 });
   }
-
-  // Validate password length
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
-
-  // Validate slug format
   const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
   if (!slugPattern.test(slug)) {
     return NextResponse.json({ error: "Invalid company URL slug." }, { status: 400 });
   }
 
-  // Check slug uniqueness
   const [existing] = await db
     .select({ id: organizations.id })
     .from(organizations)
     .where(eq(organizations.slug, slug))
     .limit(1);
-
   if (existing) {
     return NextResponse.json({ error: "That company URL is already taken." }, { status: 409 });
   }
 
-  // Hash password
   const hash = await bcrypt.hash(password, 12);
 
-  // Create organization
   const [org] = await db
     .insert(organizations)
     .values({
       name: companyName.trim(),
       slug: slug.trim(),
-      plan: "starter",
+      plan: plan === "pro" ? "pro" : "starter",
       subscriptionStatus: "trialing",
     })
     .returning({ id: organizations.id });
 
-  // Create admin driver
   await db.insert(drivers).values({
     organizationId: org.id,
     driverId: driverId.trim(),
@@ -59,5 +50,31 @@ export async function POST(req: NextRequest) {
     active: true,
   });
 
-  return NextResponse.json({ ok: true, slug: slug.trim() });
+  const customer = await stripe.customers.create({
+    name: companyName.trim(),
+    metadata: { orgId: String(org.id), slug: slug.trim() },
+  });
+
+  await db.update(organizations)
+    .set({ stripeCustomerId: customer.id })
+    .where(eq(organizations.id, org.id));
+
+  const planKey: PlanKey = plan === "pro" ? "pro" : "starter";
+  const priceId = PLANS[planKey].priceId;
+
+  const checkoutSession = await stripe.checkout.sessions.create({
+    customer: customer.id,
+    mode: "subscription",
+    payment_method_types: ["card"],
+    line_items: [{ price: priceId, quantity: 1 }],
+    subscription_data: {
+      trial_period_days: 14,
+      metadata: { orgId: String(org.id), slug: slug.trim() },
+    },
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/login/${slug.trim()}?welcome=1`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/signup?canceled=1`,
+    metadata: { orgId: String(org.id), slug: slug.trim() },
+  });
+
+  return NextResponse.json({ ok: true, checkoutUrl: checkoutSession.url });
 }

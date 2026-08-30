@@ -75,6 +75,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [plan, setPlan] = useState<"starter" | "pro">("starter");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -112,6 +113,7 @@ export default function SignupPage() {
           ownerName: ownerName.trim(),
           driverId: driverId.trim(),
           password,
+          plan,
         }),
       });
       const data = await res.json();
@@ -120,7 +122,11 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
-      router.push(`/login/${data.slug}`);
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        router.push(`/login/${slug}`);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -153,6 +159,29 @@ export default function SignupPage() {
         <div className="h-[3px]" style={{ background: "linear-gradient(90deg, #16A34A, #4ADE80)" }} />
 
         <form onSubmit={handleSubmit} className="px-7 py-7 flex flex-col gap-4">
+          {/* Plan selector */}
+          <Field label="Choose Your Plan">
+            <div className="flex gap-3">
+              {(["starter", "pro"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPlan(p)}
+                  className="flex-1 py-3 px-4 rounded-xl text-left transition-all"
+                  style={{
+                    background: plan === p ? "rgba(22,163,74,0.12)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${plan === p ? "#16A34A" : "rgba(255,255,255,0.08)"}`,
+                  }}
+                >
+                  <div className="text-[13px] font-bold text-white capitalize">{p}</div>
+                  <div className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    ${p === "starter" ? "99" : "199"}/mo
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Field>
+
           {/* Company name */}
           <Field label="Company Name">
             <TextInput
@@ -254,7 +283,7 @@ export default function SignupPage() {
             style={{ background: "#16A34A" }}
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {loading ? "Creating account…" : (
+            {loading ? "Redirecting to checkout…" : (
               <>
                 Get Started <ChevronRight className="w-4 h-4" />
               </>
