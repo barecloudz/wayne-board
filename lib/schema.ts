@@ -20,6 +20,12 @@ export const organizations = pgTable("organizations", {
   createdAt:            timestamp("created_at").defaultNow(),
 });
 
+// ── Platform Settings (global, Blake-only) ───────────────────────────────────
+export const platformSettings = pgTable("platform_settings", {
+  key:   text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
 // ── Work Areas ───────────────────────────────────────────────────────────────
 export const workAreas = pgTable("work_areas", {
   id:             serial("id").primaryKey(),

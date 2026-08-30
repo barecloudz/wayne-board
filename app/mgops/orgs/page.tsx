@@ -15,13 +15,18 @@ export default async function MgopsOrgsPage() {
           <h1 className="text-[24px] font-extrabold text-white">Organizations</h1>
           <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{orgs.length} total</p>
         </div>
-        <Link
-          href="/mgops/orgs/new"
-          className="px-4 py-2 rounded-xl text-[13px] font-bold"
-          style={{ background: "#16A34A", color: "#fff" }}
-        >
-          + New Org
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/mgops/settings" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
+            Settings
+          </Link>
+          <Link
+            href="/mgops/orgs/new"
+            className="px-4 py-2 rounded-xl text-[13px] font-bold"
+            style={{ background: "#16A34A", color: "#fff" }}
+          >
+            + New Org
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

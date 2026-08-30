@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { organizations, drivers } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { stripe, PLANS, PlanKey } from "@/lib/stripe";
+import { stripe } from "@/lib/stripe";
+import { getPlatformSetting } from "@/lib/actions/platform-settings";
 
 export async function POST(req: NextRequest) {
   const { companyName, slug, ownerName, driverId, password, plan } = await req.json();
@@ -59,8 +60,11 @@ export async function POST(req: NextRequest) {
     .set({ stripeCustomerId: customer.id })
     .where(eq(organizations.id, org.id));
 
-  const planKey: PlanKey = plan === "pro" ? "pro" : "starter";
-  const priceId = PLANS[planKey].priceId;
+  const priceKey = plan === "pro" ? "stripe_price_pro" : "stripe_price_starter";
+  const priceId = await getPlatformSetting(priceKey);
+  if (!priceId) {
+    return NextResponse.json({ error: "Pricing not configured. Please contact support." }, { status: 503 });
+  }
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customer.id,
