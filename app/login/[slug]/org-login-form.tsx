@@ -4,6 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
+const inputStyle = {
+  background: "#F8FAFC",
+  border: "1px solid #E2E8F0",
+  color: "#0F172A",
+};
+
+const inputBlurBorder = "#E2E8F0";
+const inputFocusBorder = "#16A34A";
+
 export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
   const router = useRouter();
   const [driverId, setDriverId] = useState("");
@@ -38,10 +47,11 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="px-7 py-7 flex flex-col gap-4">
+      {/* Driver ID */}
       <div className="flex flex-col gap-1.5">
         <label
           className="text-[11px] font-semibold uppercase tracking-widest"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "#64748B" }}
         >
           Driver ID
         </label>
@@ -52,17 +62,18 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
           onChange={(e) => setDriverId(e.target.value)}
           autoCapitalize="none"
           autoCorrect="off"
-          className="w-full px-4 py-3 rounded-xl text-[15px] text-white placeholder-white/20 outline-none transition-all"
-          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-          onFocus={(e) => (e.target.style.borderColor = "#16A34A")}
-          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+          className="w-full px-4 py-3 rounded-xl text-[15px] outline-none transition-all placeholder-slate-300"
+          style={inputStyle}
+          onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
+          onBlur={(e) => (e.target.style.borderColor = inputBlurBorder)}
         />
       </div>
 
+      {/* Password */}
       <div className="flex flex-col gap-1.5">
         <label
           className="text-[11px] font-semibold uppercase tracking-widest"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "#64748B" }}
         >
           Password
         </label>
@@ -72,16 +83,16 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 pr-11 rounded-xl text-[15px] text-white placeholder-white/20 outline-none transition-all"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-            onFocus={(e) => (e.target.style.borderColor = "#16A34A")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+            className="w-full px-4 py-3 pr-11 rounded-xl text-[15px] outline-none transition-all placeholder-slate-300"
+            style={inputStyle}
+            onFocus={(e) => (e.target.style.borderColor = inputFocusBorder)}
+            onBlur={(e) => (e.target.style.borderColor = inputBlurBorder)}
           />
           <button
             type="button"
             onClick={() => setShowPassword((p) => !p)}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            style={{ color: "#94A3B8" }}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -89,7 +100,7 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
       </div>
 
       {error && (
-        <p className="text-[12px] text-center" style={{ color: "#f87171" }}>{error}</p>
+        <p className="text-[12px] text-center" style={{ color: "#DC2626" }}>{error}</p>
       )}
 
       <button

@@ -25,30 +25,30 @@ export default function MgopsSettingsClient({ current }: { current: Record<strin
   }
 
   const inputStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    color: "#fff",
+    background: "#F8FAFC",
+    border: "1px solid #E2E8F0",
+    color: "#0F172A",
     borderRadius: 10,
     padding: "10px 14px",
     fontSize: 13,
     width: "100%",
     outline: "none",
   };
-  const labelStyle: React.CSSProperties = { color: "rgba(255,255,255,0.45)", fontSize: 12, marginBottom: 4, display: "block" };
-  const cardStyle: React.CSSProperties = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: 20, marginBottom: 16 };
+  const labelStyle: React.CSSProperties = { color: "#64748B", fontSize: 12, marginBottom: 4, display: "block" };
+  const cardStyle: React.CSSProperties = { background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", borderRadius: 16, padding: 20, marginBottom: 16 };
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
-        <Link href="/mgops/orgs" style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>← Orgs</Link>
-        <span style={{ color: "rgba(255,255,255,0.15)" }}>/</span>
-        <h1 className="text-[20px] font-extrabold text-white">Platform Settings</h1>
+        <Link href="/mgops/orgs" style={{ color: "#94A3B8", fontSize: 13 }} className="font-medium">← Orgs</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <h1 className="text-[20px] font-extrabold" style={{ color: "#0F172A" }}>Platform Settings</h1>
       </div>
 
       <form onSubmit={handleSave}>
         <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Plan Pricing</h2>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginBottom: 16 }}>
+          <h2 style={{ color: "#16A34A", fontSize: 11, fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Plan Pricing</h2>
+          <p style={{ color: "#64748B", fontSize: 12, marginBottom: 16 }}>
             Prices are created dynamically in Stripe on signup. Change these to update what new subscribers are charged.
           </p>
           <div className="grid grid-cols-2 gap-4">
@@ -70,7 +70,7 @@ export default function MgopsSettingsClient({ current }: { current: Record<strin
         >
           {saving ? "Saving…" : "Save Settings"}
         </button>
-        {saved && <p style={{ color: "#4ADE80", fontSize: 13, textAlign: "center", marginTop: 12 }}>✓ Saved</p>}
+        {saved && <p style={{ color: "#16A34A", fontSize: 13, textAlign: "center", marginTop: 12 }}>✓ Saved</p>}
       </form>
     </div>
   );

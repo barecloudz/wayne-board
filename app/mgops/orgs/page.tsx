@@ -12,11 +12,15 @@ export default async function MgopsOrgsPage() {
     <div className="max-w-5xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-[24px] font-extrabold text-white">Organizations</h1>
-          <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{orgs.length} total</p>
+          <h1 className="text-[24px] font-extrabold" style={{ color: "#0F172A" }}>Organizations</h1>
+          <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>{orgs.length} total</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/mgops/settings" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)", padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600 }}>
+          <Link
+            href="/mgops/settings"
+            className="px-4 py-2 rounded-xl text-[13px] font-semibold"
+            style={{ background: "#ffffff", border: "1px solid #E2E8F0", color: "#475569" }}
+          >
             Settings
           </Link>
           <Link
@@ -34,42 +38,52 @@ export default async function MgopsOrgsPage() {
           <div
             key={org.id}
             className="flex items-center justify-between px-5 py-4 rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+            style={{ background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <span className="text-[15px] font-bold text-white">{org.name}</span>
-                <span className="text-[11px] font-mono text-white/30">{org.slug}</span>
+                <span className="text-[15px] font-bold" style={{ color: "#0F172A" }}>{org.name}</span>
+                <span className="text-[11px] font-mono" style={{ color: "#94A3B8" }}>{org.slug}</span>
                 {org.demoMode && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: "rgba(22,163,74,0.2)", color: "#4ADE80" }}>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ background: "#F0FDF4", color: "#16A34A" }}>
                     Demo {org.demoExpiresAt ? `until ${new Date(org.demoExpiresAt).toLocaleDateString()}` : "Indefinite"}
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}>{org.plan}</span>
-                <span className="text-[11px]" style={{ color: org.subscriptionStatus === "active" ? "#4ADE80" : org.subscriptionStatus === "canceled" ? "#f87171" : "rgba(255,255,255,0.4)" }}>
+                <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "#F1F5F9", color: "#475569" }}>{org.plan}</span>
+                <span
+                  className="text-[11px]"
+                  style={{
+                    color:
+                      org.subscriptionStatus === "active"
+                        ? "#16A34A"
+                        : org.subscriptionStatus === "canceled"
+                        ? "#DC2626"
+                        : "#94A3B8",
+                  }}
+                >
                   {org.subscriptionStatus}
                 </span>
-                <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                <span className="text-[11px]" style={{ color: "#CBD5E1" }}>
                   {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : ""}
                 </span>
               </div>
               {org.superAdminNote && (
-                <p className="text-[11px] italic mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{org.superAdminNote}</p>
+                <p className="text-[11px] italic mt-0.5" style={{ color: "#94A3B8" }}>{org.superAdminNote}</p>
               )}
             </div>
             <Link
               href={`/mgops/orgs/${org.id}`}
               className="px-4 py-2 rounded-xl text-[13px] font-semibold"
-              style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: "#ffffff", color: "#475569", border: "1px solid #E2E8F0" }}
             >
               Manage →
             </Link>
           </div>
         ))}
         {orgs.length === 0 && (
-          <p className="text-center py-16 text-[14px]" style={{ color: "rgba(255,255,255,0.3)" }}>No organizations yet.</p>
+          <p className="text-center py-16 text-[14px]" style={{ color: "#94A3B8" }}>No organizations yet.</p>
         )}
       </div>
     </div>

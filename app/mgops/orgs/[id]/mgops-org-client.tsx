@@ -17,6 +17,27 @@ type Org = {
   createdAt: Date | null;
 };
 
+const cardStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 16,
+};
+const inputStyle: React.CSSProperties = {
+  background: "#F8FAFC",
+  border: "1px solid #E2E8F0",
+  color: "#0F172A",
+  borderRadius: 10,
+  padding: "8px 12px",
+  fontSize: 13,
+  width: "100%",
+  outline: "none",
+};
+const btnGreen: React.CSSProperties = { background: "#16A34A", color: "#fff", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" };
+const btnGhost: React.CSSProperties = { background: "#fff", border: "1px solid #E2E8F0", color: "#475569", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer" };
+
 export default function MgopsOrgClient({ org }: { org: Org }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -41,44 +62,27 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
   }
 
   async function handleSaveDemo() {
-    await patch({
-      demoMode,
-      demoExpiresAt: demoMode && !indefinite && demoExpiry ? demoExpiry : null,
-    });
+    await patch({ demoMode, demoExpiresAt: demoMode && !indefinite && demoExpiry ? demoExpiry : null });
   }
-
-  async function handleSaveNote() {
-    await patch({ superAdminNote: note });
-  }
-
-  async function handleStatusChange(newStatus: string) {
-    setStatus(newStatus);
-    await patch({ subscriptionStatus: newStatus });
-  }
-
+  async function handleSaveNote() { await patch({ superAdminNote: note }); }
+  async function handleStatusChange(newStatus: string) { setStatus(newStatus); await patch({ subscriptionStatus: newStatus }); }
   async function handleDelete() {
     await fetch(`/api/mgops/orgs/${org.id}`, { method: "DELETE" });
     router.push("/mgops/orgs");
   }
 
-  const card = "rounded-2xl p-5 mb-4";
-  const cardStyle = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" };
-  const inputStyle = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: 10, padding: "8px 12px", fontSize: 13, width: "100%" };
-  const btnGreen = { background: "#16A34A", color: "#fff", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" };
-  const btnGhost = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer" };
-
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
-        <Link href="/mgops/orgs" className="text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>← Orgs</Link>
-        <span style={{ color: "rgba(255,255,255,0.15)" }}>/</span>
-        <h1 className="text-[20px] font-extrabold text-white">{org.name}</h1>
+        <Link href="/mgops/orgs" className="text-[13px] font-medium" style={{ color: "#94A3B8" }}>← Orgs</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <h1 className="text-[20px] font-extrabold" style={{ color: "#0F172A" }}>{org.name}</h1>
       </div>
 
-      {/* Info */}
-      <div className={card} style={cardStyle}>
-        <h2 className="text-[13px] font-bold mb-3" style={{ color: "#4ADE80" }}>Details</h2>
-        <div className="grid grid-cols-2 gap-2 text-[13px]">
+      {/* Details */}
+      <div style={cardStyle}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Details</h2>
+        <div className="grid grid-cols-2 gap-3 text-[13px]">
           {[
             ["Slug", org.slug],
             ["Plan", org.plan],
@@ -87,90 +91,65 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
             ["Trial ends", org.trialEndsAt ? new Date(org.trialEndsAt).toLocaleDateString() : "—"],
           ].map(([k, v]) => (
             <div key={k} className="flex flex-col gap-0.5">
-              <span style={{ color: "rgba(255,255,255,0.35)" }}>{k}</span>
-              <span className="text-white font-semibold">{v}</span>
+              <span style={{ color: "#94A3B8" }}>{k}</span>
+              <span className="font-semibold" style={{ color: "#0F172A" }}>{v}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Access Control */}
-      <div className={card} style={cardStyle}>
-        <h2 className="text-[13px] font-bold mb-3" style={{ color: "#4ADE80" }}>Access</h2>
+      {/* Access */}
+      <div style={cardStyle}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Access Control</h2>
         <div className="flex gap-2 flex-wrap">
           {["active", "trialing", "past_due", "canceled"].map(s => (
-            <button
-              key={s}
-              onClick={() => handleStatusChange(s)}
-              style={status === s ? btnGreen : btnGhost}
-            >
-              {s}
-            </button>
+            <button key={s} onClick={() => handleStatusChange(s)} style={status === s ? btnGreen : btnGhost}>{s}</button>
           ))}
         </div>
       </div>
 
       {/* Demo Mode */}
-      <div className={card} style={cardStyle}>
-        <h2 className="text-[13px] font-bold mb-3" style={{ color: "#4ADE80" }}>Demo Mode</h2>
+      <div style={cardStyle}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Demo Mode</h2>
         <div className="flex flex-col gap-3">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={demoMode} onChange={e => setDemoMode(e.target.checked)} className="w-4 h-4" />
-            <span className="text-[13px] text-white">Enable demo mode (bypasses paywall)</span>
+            <input type="checkbox" checked={demoMode} onChange={e => setDemoMode(e.target.checked)} className="w-4 h-4 accent-green-600" />
+            <span className="text-[13px]" style={{ color: "#0F172A" }}>Enable demo mode (bypasses paywall)</span>
           </label>
           {demoMode && (
             <>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={indefinite} onChange={e => setIndefinite(e.target.checked)} className="w-4 h-4" />
-                <span className="text-[13px] text-white">Until further notice</span>
+                <input type="checkbox" checked={indefinite} onChange={e => setIndefinite(e.target.checked)} className="w-4 h-4 accent-green-600" />
+                <span className="text-[13px]" style={{ color: "#0F172A" }}>Until further notice</span>
               </label>
               {!indefinite && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-[12px]" style={{ color: "rgba(255,255,255,0.4)" }}>Expires on</label>
-                  <input
-                    type="date"
-                    value={demoExpiry}
-                    onChange={e => setDemoExpiry(e.target.value)}
-                    style={inputStyle}
-                  />
+                  <label className="text-[12px]" style={{ color: "#64748B" }}>Expires on</label>
+                  <input type="date" value={demoExpiry} onChange={e => setDemoExpiry(e.target.value)} style={inputStyle} />
                 </div>
               )}
             </>
           )}
-          <button onClick={handleSaveDemo} style={btnGreen} disabled={saving}>
-            {saving ? "Saving…" : "Save Demo Settings"}
-          </button>
+          <button onClick={handleSaveDemo} style={btnGreen} disabled={saving}>{saving ? "Saving…" : "Save Demo Settings"}</button>
         </div>
       </div>
 
       {/* Note */}
-      <div className={card} style={cardStyle}>
-        <h2 className="text-[13px] font-bold mb-3" style={{ color: "#4ADE80" }}>Internal Note</h2>
-        <textarea
-          value={note}
-          onChange={e => setNote(e.target.value)}
-          rows={3}
-          placeholder="Notes about this contractor..."
-          style={{ ...inputStyle, resize: "vertical" }}
-        />
-        <button onClick={handleSaveNote} style={{ ...btnGreen, marginTop: 10 }} disabled={saving}>
-          Save Note
-        </button>
+      <div style={cardStyle}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Internal Note</h2>
+        <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} placeholder="Notes about this contractor..." style={{ ...inputStyle, resize: "vertical" }} />
+        <button onClick={handleSaveNote} style={{ ...btnGreen, marginTop: 10 }} disabled={saving}>Save Note</button>
       </div>
 
       {/* Danger */}
-      <div className="rounded-2xl p-5" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
-        <h2 className="text-[13px] font-bold mb-3 text-red-400">Danger Zone</h2>
+      <div style={{ background: "#FFF5F5", border: "1px solid #FED7D7", borderRadius: 16, padding: 20 }}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#DC2626" }}>Danger Zone</h2>
         {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} style={{ ...btnGhost, borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}>
-            Delete Organization
-          </button>
+          <button onClick={() => setConfirmDelete(true)} style={{ ...btnGhost, borderColor: "#FECACA", color: "#DC2626" }}>Delete Organization</button>
         ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-[13px] text-red-400">This cannot be undone. All data deleted.</span>
-            <button onClick={handleDelete} style={{ background: "#dc2626", color: "#fff", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-              Confirm Delete
-            </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[13px]" style={{ color: "#DC2626" }}>This cannot be undone.</span>
+            <button onClick={handleDelete} style={{ background: "#DC2626", color: "#fff", padding: "8px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Confirm Delete</button>
             <button onClick={() => setConfirmDelete(false)} style={btnGhost}>Cancel</button>
           </div>
         )}

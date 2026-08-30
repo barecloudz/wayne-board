@@ -33,8 +33,8 @@ function NavLink({
       onClick={onClick}
       className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
       style={{
-        background: active ? "rgba(22,163,74,0.15)" : "transparent",
-        color: active ? "#4ADE80" : "rgba(255,255,255,0.5)",
+        background: active ? "#F0FDF4" : "transparent",
+        color: active ? "#16A34A" : "#475569",
       }}
     >
       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -47,16 +47,16 @@ function Sidebar() {
   return (
     <aside
       className="hidden md:flex flex-col w-[200px] shrink-0 min-h-screen sticky top-0 h-screen"
-      style={{ background: "#070C18", borderRight: "1px solid rgba(255,255,255,0.06)" }}
+      style={{ background: "#ffffff", borderRight: "1px solid #E2E8F0" }}
     >
       <div
         className="flex items-center gap-3 px-5 h-16"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        style={{ borderBottom: "1px solid #E2E8F0" }}
       >
         <Image src="/logo-icon.png" alt="MyGroundOps" width={32} height={32} className="object-contain rounded-lg" />
         <div className="flex flex-col leading-none">
-          <span className="text-[12px] font-bold text-white tracking-tight">MyGroundOps</span>
-          <span className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>Super Admin</span>
+          <span className="text-[12px] font-bold tracking-tight" style={{ color: "#0F172A" }}>MyGroundOps</span>
+          <span className="text-[10px] mt-0.5" style={{ color: "#94A3B8" }}>Super Admin</span>
         </div>
       </div>
 
@@ -66,11 +66,11 @@ function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="p-3" style={{ borderTop: "1px solid #E2E8F0" }}>
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all hover:bg-[#F8FAFC]"
+          style={{ color: "#94A3B8" }}
         >
           <Building2 className="w-4 h-4 flex-shrink-0" />
           Back to App
@@ -87,19 +87,19 @@ function MobileNav() {
     <>
       <header
         className="md:hidden flex items-center px-4 py-3 sticky top-0 z-40"
-        style={{ background: "#070C18", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        style={{ background: "#ffffff", borderBottom: "1px solid #E2E8F0" }}
       >
         <button
           onClick={() => setOpen(true)}
           className="p-2 -ml-1 rounded-lg"
-          style={{ color: "rgba(255,255,255,0.6)" }}
+          style={{ color: "#475569" }}
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
         </button>
         <Link href="/mgops/orgs" className="flex items-center gap-2 mx-auto">
           <Image src="/logo-icon.png" alt="MyGroundOps" width={28} height={28} className="object-contain rounded-lg" />
-          <span className="text-[14px] font-bold text-white">Super Admin</span>
+          <span className="text-[14px] font-bold" style={{ color: "#0F172A" }}>Super Admin</span>
         </Link>
         <div className="w-9" />
       </header>
@@ -107,30 +107,30 @@ function MobileNav() {
       {open && (
         <div
           className="md:hidden fixed inset-0 z-50"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(4px)" }}
           onClick={() => setOpen(false)}
         />
       )}
 
       <aside
         className={`md:hidden fixed top-0 left-0 h-full w-[240px] z-50 flex flex-col transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}
-        style={{ background: "#070C18", borderRight: "1px solid rgba(255,255,255,0.08)", boxShadow: "8px 0 32px rgba(0,0,0,0.4)" }}
+        style={{ background: "#ffffff", borderRight: "1px solid #E2E8F0", boxShadow: "8px 0 32px rgba(0,0,0,0.08)" }}
       >
         <div
           className="flex items-center justify-between px-5 py-4"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ borderBottom: "1px solid #E2E8F0" }}
         >
           <div className="flex items-center gap-2.5">
             <Image src="/logo-icon.png" alt="MyGroundOps" width={32} height={32} className="object-contain rounded-lg" />
             <div className="flex flex-col leading-none">
-              <span className="text-[13px] font-bold text-white">MyGroundOps</span>
-              <span className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>Super Admin</span>
+              <span className="text-[13px] font-bold" style={{ color: "#0F172A" }}>MyGroundOps</span>
+              <span className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Super Admin</span>
             </div>
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="p-1.5 rounded-lg"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            className="p-1.5 rounded-lg hover:bg-[#F8FAFC]"
+            style={{ color: "#94A3B8" }}
             aria-label="Close menu"
           >
             <X className="w-4 h-4" />
@@ -143,12 +143,12 @@ function MobileNav() {
           ))}
         </nav>
 
-        <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="p-3" style={{ borderTop: "1px solid #E2E8F0" }}>
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium hover:bg-[#F8FAFC]"
+            style={{ color: "#94A3B8" }}
           >
             <Building2 className="w-4 h-4 flex-shrink-0" />
             Back to App
@@ -164,13 +164,13 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   // Login page — no nav
   if (pathname === "/mgops") {
     return (
-      <div className="min-h-screen" style={{ background: "#0A0F1E", color: "#F8FAFC" }}>
+      <div className="min-h-screen" style={{ background: "#F8FAFC", color: "#0F172A" }}>
         {children}
       </div>
     );
   }
   return (
-    <div className="flex min-h-screen" style={{ background: "#0A0F1E", color: "#F8FAFC" }}>
+    <div className="flex min-h-screen" style={{ background: "#F8FAFC", color: "#0F172A" }}>
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <MobileNav />

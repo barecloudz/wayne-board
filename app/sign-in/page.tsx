@@ -23,36 +23,55 @@ export default function SignInPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: "#0A0F1E" }}
+      style={{ background: "#F8FAFC" }}
     >
+      {/* Branding */}
       <div className="mb-8 flex flex-col items-center gap-4">
         <Image src="/logo-icon.png" alt="MyGroundOps" width={64} height={64} className="rounded-2xl" />
         <div className="text-center">
-          <h1 className="text-[24px] font-extrabold text-white tracking-tight">Sign In</h1>
-          <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <h1 className="text-[24px] font-extrabold tracking-tight" style={{ color: "#0F172A" }}>
+            Sign In
+          </h1>
+          <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
             Enter your company URL to continue
           </p>
         </div>
       </div>
 
+      {/* Card */}
       <div
         className="w-full max-w-[400px] rounded-2xl overflow-hidden"
-        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{
+          background: "#ffffff",
+          border: "1px solid #E2E8F0",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)",
+        }}
       >
+        {/* Green top accent bar */}
         <div className="h-[3px]" style={{ background: "linear-gradient(90deg, #16A34A, #4ADE80)" }} />
+
         <form onSubmit={handleSubmit} className="px-7 py-7 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label
               className="text-[11px] font-semibold uppercase tracking-widest"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "#64748B" }}
             >
               Company URL
             </label>
             <div
-              className="flex items-center rounded-xl overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+              className="flex items-center rounded-xl overflow-hidden transition-all"
+              style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+              onFocusCapture={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = "#16A34A";
+              }}
+              onBlurCapture={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = "#E2E8F0";
+              }}
             >
-              <span className="pl-4 text-[13px] whitespace-nowrap flex-shrink-0" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <span
+                className="pl-4 text-[13px] whitespace-nowrap flex-shrink-0"
+                style={{ color: "#94A3B8" }}
+              >
                 /login/
               </span>
               <input
@@ -62,7 +81,8 @@ export default function SignInPage() {
                 placeholder="your-company"
                 autoCapitalize="none"
                 autoCorrect="off"
-                className="flex-1 min-w-0 px-2 py-3 text-[15px] text-white placeholder-white/20 outline-none bg-transparent"
+                className="flex-1 min-w-0 px-2 py-3 text-[15px] outline-none bg-transparent placeholder-slate-300"
+                style={{ color: "#0F172A" }}
               />
             </div>
           </div>
@@ -76,18 +96,18 @@ export default function SignInPage() {
             Continue
           </button>
 
-          <p className="text-center text-[12px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <p className="text-center text-[12px]" style={{ color: "#475569" }}>
             Don&apos;t have an account?{" "}
-            <a href="/signup" className="font-semibold" style={{ color: "#4ADE80" }}>
+            <a href="/signup" className="font-semibold transition-colors" style={{ color: "#16A34A" }}>
               Get started
             </a>
           </p>
         </form>
       </div>
 
-      <p className="mt-8 text-[12px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+      <p className="mt-8 text-[12px]" style={{ color: "#94A3B8" }}>
         Powered by{" "}
-        <a href="/" className="hover:text-white/40 transition-colors">
+        <a href="/" className="hover:underline transition-colors" style={{ color: "#94A3B8" }}>
           MyGroundOps
         </a>
       </p>

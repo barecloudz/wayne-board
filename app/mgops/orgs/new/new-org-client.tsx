@@ -7,6 +7,19 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+const inputStyle: React.CSSProperties = {
+  background: "#F8FAFC",
+  border: "1px solid #E2E8F0",
+  color: "#0F172A",
+  borderRadius: 10,
+  padding: "10px 14px",
+  fontSize: 13,
+  width: "100%",
+  outline: "none",
+};
+const labelStyle: React.CSSProperties = { color: "#64748B", fontSize: 12, marginBottom: 4, display: "block" };
+const cardStyle: React.CSSProperties = { background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", borderRadius: 16, padding: 20, marginBottom: 16 };
+
 export default function NewOrgClient() {
   const router = useRouter();
   const [companyName, setCompanyName] = useState("");
@@ -36,53 +49,31 @@ export default function NewOrgClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        companyName,
-        slug,
-        plan,
+        companyName, slug, plan,
         subscriptionStatus: demoMode ? "trialing" : status,
-        ownerName,
-        driverId,
-        password,
-        demoMode,
+        ownerName, driverId, password, demoMode,
         demoExpiresAt: demoMode && !indefinite && demoExpiry ? demoExpiry : null,
         superAdminNote: note || null,
       }),
     });
     const data = await res.json();
     setSaving(false);
-    if (!res.ok) {
-      setError(data.error ?? "Something went wrong");
-      return;
-    }
+    if (!res.ok) { setError(data.error ?? "Something went wrong"); return; }
     router.push(`/mgops/orgs/${data.id}`);
   }
-
-  const inputStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    color: "#fff",
-    borderRadius: 10,
-    padding: "10px 14px",
-    fontSize: 13,
-    width: "100%",
-    outline: "none",
-  };
-  const labelStyle: React.CSSProperties = { color: "rgba(255,255,255,0.45)", fontSize: 12, marginBottom: 4, display: "block" };
-  const cardStyle: React.CSSProperties = { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: 20, marginBottom: 16 };
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
-        <Link href="/mgops/orgs" style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>← Orgs</Link>
-        <span style={{ color: "rgba(255,255,255,0.15)" }}>/</span>
-        <h1 className="text-[20px] font-extrabold text-white">New Organization</h1>
+        <Link href="/mgops/orgs" className="text-[13px] font-medium" style={{ color: "#94A3B8" }}>← Orgs</Link>
+        <span style={{ color: "#CBD5E1" }}>/</span>
+        <h1 className="text-[20px] font-extrabold" style={{ color: "#0F172A" }}>New Organization</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-0">
 
-        {/* Org details */}
         <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Organization</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#16A34A" }}>Organization</h2>
           <div className="flex flex-col gap-4">
             <div>
               <label style={labelStyle}>Company Name</label>
@@ -91,11 +82,7 @@ export default function NewOrgClient() {
             <div>
               <label style={labelStyle}>Login URL Slug</label>
               <input style={inputStyle} value={slug} onChange={e => setSlug(e.target.value)} placeholder="acme-logistics" required />
-              {slug && (
-                <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, marginTop: 4 }}>
-                  mygroundops.com/login/{slug}
-                </p>
-              )}
+              {slug && <p style={{ color: "#94A3B8", fontSize: 11, marginTop: 4 }}>mygroundops.com/login/{slug}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -123,19 +110,18 @@ export default function NewOrgClient() {
           </div>
         </div>
 
-        {/* Demo mode */}
         <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Demo Mode</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Demo Mode</h2>
           <div className="flex flex-col gap-3">
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" checked={demoMode} onChange={e => setDemoMode(e.target.checked)} />
-              <span style={{ color: "#fff", fontSize: 13 }}>Enable demo mode (bypasses paywall)</span>
+              <input type="checkbox" checked={demoMode} onChange={e => setDemoMode(e.target.checked)} className="accent-green-600" />
+              <span style={{ color: "#0F172A", fontSize: 13 }}>Enable demo mode (bypasses paywall)</span>
             </label>
             {demoMode && (
               <>
                 <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                  <input type="checkbox" checked={indefinite} onChange={e => setIndefinite(e.target.checked)} />
-                  <span style={{ color: "#fff", fontSize: 13 }}>Until further notice</span>
+                  <input type="checkbox" checked={indefinite} onChange={e => setIndefinite(e.target.checked)} className="accent-green-600" />
+                  <span style={{ color: "#0F172A", fontSize: 13 }}>Until further notice</span>
                 </label>
                 {!indefinite && (
                   <div>
@@ -148,9 +134,8 @@ export default function NewOrgClient() {
           </div>
         </div>
 
-        {/* Owner account */}
         <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Owner / Admin Account</h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest mb-4" style={{ color: "#16A34A" }}>Owner / Admin Account</h2>
           <div className="flex flex-col gap-4">
             <div>
               <label style={labelStyle}>Full Name</label>
@@ -167,7 +152,7 @@ export default function NewOrgClient() {
           </div>
         </div>
 
-        {error && <p style={{ color: "#f87171", fontSize: 13, marginBottom: 12 }}>{error}</p>}
+        {error && <p style={{ color: "#DC2626", fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
         <button
           type="submit"
