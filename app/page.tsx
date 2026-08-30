@@ -30,9 +30,6 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-3">
           <Link href="/sign-in" className="text-[13px] font-semibold transition-colors px-4 py-2" style={{ color: "#475569" }}>
-            Driver Login
-          </Link>
-          <Link href="/sign-in" className="text-[13px] font-semibold transition-colors px-4 py-2" style={{ color: "#475569" }}>
             Sign In
           </Link>
           <Link
