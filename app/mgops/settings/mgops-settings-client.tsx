@@ -3,8 +3,6 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function MgopsSettingsClient({ current }: { current: Record<string, string> }) {
-  const [priceStarter, setPriceStarter] = useState(current.stripe_price_starter ?? "");
-  const [pricePro, setPricePro] = useState(current.stripe_price_pro ?? "");
   const [amountStarter, setAmountStarter] = useState(current.plan_amount_starter ?? "99");
   const [amountPro, setAmountPro] = useState(current.plan_amount_pro ?? "199");
   const [saving, setSaving] = useState(false);
@@ -18,8 +16,6 @@ export default function MgopsSettingsClient({ current }: { current: Record<strin
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        stripe_price_starter: priceStarter,
-        stripe_price_pro: pricePro,
         plan_amount_starter: amountStarter,
         plan_amount_pro: amountPro,
       }),
@@ -51,35 +47,18 @@ export default function MgopsSettingsClient({ current }: { current: Record<strin
 
       <form onSubmit={handleSave}>
         <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Stripe Price IDs</h2>
+          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Plan Pricing</h2>
           <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginBottom: 16 }}>
-            Get these from your Stripe dashboard → Products → the price row → Price ID
-          </p>
-          <div className="flex flex-col gap-4">
-            <div>
-              <label style={labelStyle}>Starter Plan Price ID</label>
-              <input style={inputStyle} value={priceStarter} onChange={e => setPriceStarter(e.target.value)} placeholder="price_xxx" />
-            </div>
-            <div>
-              <label style={labelStyle}>Pro Plan Price ID</label>
-              <input style={inputStyle} value={pricePro} onChange={e => setPricePro(e.target.value)} placeholder="price_xxx" />
-            </div>
-          </div>
-        </div>
-
-        <div style={cardStyle}>
-          <h2 style={{ color: "#4ADE80", fontSize: 13, fontWeight: 700, marginBottom: 16 }}>Display Prices</h2>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginBottom: 16 }}>
-            Shown on the signup page and landing page.
+            Prices are created dynamically in Stripe on signup. Change these to update what new subscribers are charged.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label style={labelStyle}>Starter ($/mo)</label>
-              <input style={inputStyle} type="number" value={amountStarter} onChange={e => setAmountStarter(e.target.value)} placeholder="99" />
+              <input style={inputStyle} type="number" value={amountStarter} onChange={e => setAmountStarter(e.target.value)} placeholder="99" min="1" />
             </div>
             <div>
               <label style={labelStyle}>Pro ($/mo)</label>
-              <input style={inputStyle} type="number" value={amountPro} onChange={e => setAmountPro(e.target.value)} placeholder="199" />
+              <input style={inputStyle} type="number" value={amountPro} onChange={e => setAmountPro(e.target.value)} placeholder="199" min="1" />
             </div>
           </div>
         </div>

@@ -60,17 +60,23 @@ export async function POST(req: NextRequest) {
     .set({ stripeCustomerId: customer.id })
     .where(eq(organizations.id, org.id));
 
-  const priceKey = plan === "pro" ? "stripe_price_pro" : "stripe_price_starter";
-  const priceId = await getPlatformSetting(priceKey);
-  if (!priceId) {
-    return NextResponse.json({ error: "Pricing not configured. Please contact support." }, { status: 503 });
-  }
+  const amountKey = plan === "pro" ? "plan_amount_pro" : "plan_amount_starter";
+  const planName = plan === "pro" ? "MyGroundOps Pro" : "MyGroundOps Starter";
+  const amountStr = await getPlatformSetting(amountKey);
+  const amount = amountStr ? Math.round(parseFloat(amountStr) * 100) : (plan === "pro" ? 19900 : 9900);
+
+  const stripePrice = await stripe.prices.create({
+    unit_amount: amount,
+    currency: "usd",
+    recurring: { interval: "month" },
+    product_data: { name: planName },
+  });
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer: customer.id,
     mode: "subscription",
     payment_method_types: ["card"],
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: stripePrice.id, quantity: 1 }],
     subscription_data: {
       trial_period_days: 14,
       metadata: { orgId: String(org.id), slug: slug.trim() },
