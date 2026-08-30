@@ -324,9 +324,16 @@ export default function SignupPage() {
             14 days free — cancel anytime
           </div>
 
+          <p className="text-center text-[11px]" style={{ color: "#94A3B8" }}>
+            By signing up you agree to our{" "}
+            <a href="/terms" className="font-semibold underline" style={{ color: "#475569" }}>Terms of Service</a>
+            {" "}and{" "}
+            <a href="/privacy" className="font-semibold underline" style={{ color: "#475569" }}>Privacy Policy</a>.
+          </p>
+
           <p className="text-center text-[12px] pt-1" style={{ color: "#475569" }}>
             Already have an account?{" "}
-            <a href="/" className="font-semibold transition-colors" style={{ color: "#16A34A" }}>
+            <a href="/sign-in" className="font-semibold transition-colors" style={{ color: "#16A34A" }}>
               Sign in
             </a>
           </p>

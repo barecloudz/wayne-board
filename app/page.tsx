@@ -294,12 +294,14 @@ export default function HomePage() {
       >
         <div className="flex items-center gap-3">
           <Image src="/logo-icon.png" alt="MyGroundOps" width={28} height={28} className="object-contain rounded-lg" />
-          <span style={{ color: "#0F172A", fontWeight: 600 }}>by Apparo Group INC</span>
+          <span style={{ color: "#0F172A", fontWeight: 600 }}>Nardoni Digital LLC dba MyGroundOps</span>
         </div>
         <div className="flex items-center gap-6">
           <Link href="/driver" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Driver Portal</Link>
           <Link href="/sign-in" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Sign In</Link>
-          <span style={{ color: "#94A3B8" }}>&copy; {new Date().getFullYear()} Apparo Group INC</span>
+          <Link href="/terms" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Terms</Link>
+          <Link href="/privacy" className="transition-colors hover:text-slate-600" style={{ color: "#94A3B8" }}>Privacy</Link>
+          <span style={{ color: "#94A3B8" }}>&copy; {new Date().getFullYear()} Nardoni Digital LLC</span>
         </div>
       </footer>
 
