@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
+import { getSession } from "@/lib/session";
+import { organizations } from "@/lib/schema";
 export async function generateMetadata(): Promise<Metadata> {
   const session = await getSession();
   if (!session) return { title: "Dashboard" };
