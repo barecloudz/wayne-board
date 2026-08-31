@@ -61,21 +61,23 @@ function TireHotspot({
         </mesh>
       )}
 
-      <Html distanceFactor={8} center style={{ pointerEvents: "none" }}>
-        <div style={{
-          background: "rgba(0,0,0,0.72)",
-          color: "#fff",
-          fontSize: 11,
-          padding: "2px 7px",
-          borderRadius: 4,
-          whiteSpace: "nowrap",
-          marginTop: -30,
-          border: `1px solid ${color}`,
-          fontFamily: "sans-serif",
-        }}>
-          {tire.label}
-        </div>
-      </Html>
+      {!selected && (
+        <Html distanceFactor={8} center style={{ pointerEvents: "none" }}>
+          <div style={{
+            background: "rgba(0,0,0,0.72)",
+            color: "#fff",
+            fontSize: 11,
+            padding: "2px 7px",
+            borderRadius: 4,
+            whiteSpace: "nowrap",
+            marginTop: -30,
+            border: `1px solid ${color}`,
+            fontFamily: "sans-serif",
+          }}>
+            {tire.label}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
