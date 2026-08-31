@@ -5,7 +5,7 @@ const SECRET = new TextEncoder().encode(
   process.env.SESSION_SECRET ?? "changeme-set-SESSION_SECRET-in-env"
 );
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   // For /driver routes — check org access
   if (req.nextUrl.pathname.startsWith("/driver")) {
     const token = req.cookies.get("driver_session")?.value;
