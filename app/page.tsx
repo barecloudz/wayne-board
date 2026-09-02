@@ -120,7 +120,8 @@ export default function HomePage() {
           borderBottom: "1px solid #E5E7EB",
         }}
       >
-        <Image src="/logo-full.png" alt="MyGroundOps" width={160} height={40} className="object-contain" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-full.png" alt="MyGroundOps" width={160} height={40} className="object-contain" />
         <div className="flex items-center gap-2">
           <Link
             href="/sign-in"
@@ -166,17 +167,17 @@ export default function HomePage() {
           with every morning.
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 mb-14">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-14 max-w-xs sm:max-w-none">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-bold transition-all hover:opacity-90 active:scale-[0.97]"
+            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-[15px] font-bold transition-all hover:opacity-90 active:scale-[0.97]"
             style={{ background: "#16A34A", color: "#fff" }}
           >
             Get Access <ChevronRight className="w-4 h-4" />
           </Link>
           <Link
             href="#features"
-            className="text-[15px] font-semibold px-5 py-3.5 rounded-xl border transition-all hover:border-slate-400"
+            className="inline-flex items-center justify-center text-[15px] font-semibold px-5 py-3.5 rounded-xl border transition-all hover:border-slate-400"
             style={{ borderColor: "#D1D5DB", color: "#374151" }}
           >
             See what&apos;s inside
@@ -185,32 +186,26 @@ export default function HomePage() {
 
         {/* ── METRIC STRIP ── Signature element: real FedEx Ground metrics ───── */}
         <div style={{ borderTop: "1px solid #E5E7EB" }}>
-          <div className="overflow-x-auto -mx-6 md:mx-0">
-            <div className="flex min-w-max md:min-w-0 md:grid md:grid-cols-4 px-6 md:px-0">
-              {METRICS.map((m, i) => (
-                <div
-                  key={m.label}
-                  className="flex flex-col gap-1 py-6 px-6 md:px-8"
-                  style={{ borderLeft: i > 0 ? "1px solid #E5E7EB" : "none" }}
-                >
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-widest"
-                    style={{ color: "#9CA3AF" }}
-                  >
-                    {m.label}
-                  </span>
-                  <span
-                    className="text-[28px] font-black leading-none tabular-nums"
-                    style={{ color: "#0A1A0E" }}
-                  >
-                    {m.value}
-                  </span>
-                  <span className="text-[11px]" style={{ color: "#9CA3AF" }}>
-                    {m.sub}
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4">
+            {METRICS.map((m, i) => (
+              <div
+                key={m.label}
+                className="flex flex-col gap-1 py-6 px-5 md:px-8"
+                style={{
+                  borderLeft:   i % 2 === 1 ? "1px solid #E5E7EB" : "none",
+                  borderTop:    i >= 2       ? "1px solid #E5E7EB" : "none",
+                  borderRight:  "none",
+                }}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9CA3AF" }}>
+                  {m.label}
+                </span>
+                <span className="text-[26px] md:text-[28px] font-black leading-none tabular-nums" style={{ color: "#0A1A0E" }}>
+                  {m.value}
+                </span>
+                <span className="text-[11px]" style={{ color: "#9CA3AF" }}>{m.sub}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -235,12 +230,12 @@ export default function HomePage() {
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className="flex flex-col gap-4 p-7"
-              style={{
-                background: "#FAFBF8",
-                borderTop: i >= 2 ? "1px solid #E5E7EB" : i >= 1 ? "1px solid #E5E7EB" : undefined,
-                borderLeft: i % 2 === 1 ? "1px solid #E5E7EB" : undefined,
-              }}
+              className={[
+                "flex flex-col gap-4 p-6 md:p-7",
+                i >= 1           ? "border-t border-[#E5E7EB]" : "",
+                i % 2 === 1      ? "md:border-l border-[#E5E7EB]" : "",
+              ].join(" ")}
+              style={{ background: "#FAFBF8" }}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -419,8 +414,8 @@ export default function HomePage() {
         style={{ background: "#FAFBF8", borderTop: "1px solid #E5E7EB", color: "#9CA3AF" }}
       >
         <div className="flex items-center gap-3">
-          <Image src="/logo-icon.png" alt="MyGroundOps" width={26} height={26} className="object-contain rounded-lg" />
-          <span style={{ color: "#374151", fontWeight: 600 }}>Nardoni Digital LLC dba MyGroundOps</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-full.png" alt="MyGroundOps" width={130} height={34} className="object-contain" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-5">
           <Link href="/sign-in" className="hover:text-slate-600 transition-colors">Driver Login</Link>
