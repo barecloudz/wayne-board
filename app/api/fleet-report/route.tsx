@@ -86,7 +86,7 @@ export async function GET() {
   const criticalVehicles = rows.filter((v) => v.conditions.some((c) => c.severity === "critical"));
 
   const doc = (
-    <Document title="742 Fleet Vehicle Status" author="Apparo Group">
+    <Document title="742 Fleet Vehicle Status" author="MyGroundOps">
       {/* ── PAGE 1: Summary ───────────────────────────────────────────── */}
       <Page size="LETTER" style={styles.page}>
         {/* Header band */}
@@ -99,7 +99,7 @@ export async function GET() {
           <View>
             <Text style={styles.metaText}>Issued  {today}</Text>
             <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>Blake Nardoni</Text></Text>
-            <Text style={styles.metaText}>Apparo Group INC</Text>
+            <Text style={styles.metaText}>MyGroundOps INC</Text>
           </View>
         </View>
         <View style={styles.orangeBar} />

@@ -270,12 +270,12 @@ export default function HomePage() {
             className="font-black leading-tight tracking-tight"
             style={{ fontSize: "clamp(18px, 3vw, 26px)", color: "#0A1A0E", flex: 1 }}
           >
-            &ldquo;Built by a FedEx Ground contractor who manages 17+ routes daily.
+            &ldquo;Built by a FedEx Ground ISP owner who manages 17+ routes daily.
             not a software company guessing at your problems.&rdquo;
           </p>
           <div className="flex-shrink-0 flex flex-col gap-0.5">
             <span className="text-[14px] font-bold" style={{ color: "#15803D" }}>Blake Nardoni</span>
-            <span className="text-[12px]" style={{ color: "#6B7280" }}>FedEx Ground ISP Owner</span>
+            <span className="text-[12px]" style={{ color: "#6B7280" }}>FedEx Ground ISP</span>
           </div>
         </div>
       </section>

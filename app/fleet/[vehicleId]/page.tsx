@@ -71,7 +71,7 @@ export default async function VehicleDetailPage({
           <div className="flex items-end gap-6">
             <div>
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
-                Apparo Group · FedEx Ground Contractor
+                MyGroundOps · Admin
               </p>
               <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
                 {vehicle.unitNumber}

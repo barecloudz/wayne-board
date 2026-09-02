@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-[13px] text-white/30 mt-6">
-          &copy; {new Date().getFullYear()} Apparo Group INC
+          &copy; {new Date().getFullYear()} MyGroundOps INC
         </p>
       </div>
     </div>

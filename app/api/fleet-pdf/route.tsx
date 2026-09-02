@@ -393,7 +393,7 @@ function generateHTML(data: {
   <div class="pg-header">
     <div class="pg-header-inner">
       <div class="pg-header-left">
-        <div class="eyebrow">Apparo Group &middot; Fleet Status Report</div>
+        <div class="eyebrow">MyGroundOps &middot; Fleet Status Report</div>
         <div class="report-title">Fleet Status</div>
         <div class="report-date">Generated ${printDate}</div>
       </div>
@@ -464,7 +464,7 @@ function generateHTML(data: {
   <div class="inactive-section">
     <div class="inactive-pg-header">
       <div class="inactive-pg-left">
-        <div class="eyebrow">Apparo Group &middot; Fleet Status Report</div>
+        <div class="eyebrow">MyGroundOps &middot; Fleet Status Report</div>
         <div class="inactive-title">Inactive Fleet</div>
         <div class="report-date">Generated ${printDate}</div>
       </div>
@@ -486,7 +486,7 @@ function generateHTML(data: {
       <span class="legend-item"><span class="dot dot-red"></span>Overdue / Expired</span>
       <span class="legend-item"><span class="dot dot-amber"></span>Due within 30 days</span>
       <span class="legend-item"><span class="dot dot-green"></span>In good standing</span>
-      <span class="legend-right">Apparo Group &middot; Fleet Status &middot; ${printDate}</span>
+      <span class="legend-right">MyGroundOps &middot; Fleet Status &middot; ${printDate}</span>
     </div>
   </div>` : ""}
 
