@@ -651,7 +651,7 @@ export default function DriverTabs({
                     {[
                       { icon: "💰", label: "Performance Bonus", desc: "Cash added directly to your paycheck for hitting the 90-day mark." },
                       { icon: "📈", label: "Bonus Pay Eligibility", desc: "Stay clean and keep qualifying for ongoing performance bonuses." },
-                      { icon: "🏆", label: "Top Performer Status", desc: "Recognition as one of Apparo Group's most reliable drivers." },
+                      { icon: "🏆", label: "Top Performer Status", desc: "Recognition as one of MyGroundOps's most reliable drivers." },
                     ].map((item) => (
                       <div key={item.label} className="flex gap-3 items-start">
                         <span className="text-xl shrink-0">{item.icon}</span>

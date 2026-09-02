@@ -12,7 +12,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mygroundops.com"),
   title: {
-    default: "MyGroundOps — FedEx Ground Contractor Platform",
+    default: "MyGroundOps — FedEx Ground ISP Platform",
     template: "%s — MyGroundOps",
   },
   description:
