@@ -16,6 +16,7 @@ type Driver = {
   id: number;
   driverId: string;
   name: string;
+  username: string | null;
   role: string;
   isAdmin: boolean;
   assignedVehicleId: number | null;
@@ -348,7 +349,12 @@ export default function DriversPage() {
                       <td className="px-6 py-3 font-mono text-[12px] text-slate-500 font-semibold">
                         {driver.driverId}
                       </td>
-                      <td className="px-3 py-3 font-semibold text-slate-800">{driver.name}</td>
+                      <td className="px-3 py-3">
+                        <p className="font-semibold text-slate-800">{driver.name}</p>
+                        {driver.username && (
+                          <p className="text-[11px] text-slate-400 font-mono mt-0.5">@{driver.username}</p>
+                        )}
+                      </td>
                       <td className="px-3 py-3 hidden sm:table-cell">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
