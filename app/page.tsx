@@ -275,7 +275,7 @@ export default function HomePage() {
           </p>
           <div className="flex-shrink-0 flex flex-col gap-0.5">
             <span className="text-[14px] font-bold" style={{ color: "#15803D" }}>Blake Nardoni</span>
-            <span className="text-[12px]" style={{ color: "#6B7280" }}>Apparo Group INC · Founder</span>
+            <span className="text-[12px]" style={{ color: "#6B7280" }}>FedEx Ground ISP Owner</span>
           </div>
         </div>
       </section>
