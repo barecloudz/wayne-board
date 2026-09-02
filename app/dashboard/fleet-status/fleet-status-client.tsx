@@ -430,7 +430,7 @@ export default function FleetStatusClient({
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Wayne Board · Admin</p>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Fleet Status</h1>
             <p className="text-[13px] text-slate-400 mt-1.5">Active vehicles, assignments, compliance dates, and mechanical issues.</p>
           </div>

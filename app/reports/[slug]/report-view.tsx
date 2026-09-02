@@ -480,7 +480,7 @@ export default function ReportView({ slug, title, period, fleetData, driverData 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-1.5">
-              742 Logistics · FedEx Ground
+              Apparo Group · FedEx Ground
             </p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               {title}

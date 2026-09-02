@@ -358,7 +358,7 @@ export default function ServiceTab({
         ) : (
           <div className="px-5 py-5 text-center">
             <p className="text-[13px] text-slate-400">Your route wasn&apos;t found in today&apos;s data.</p>
-            <p className="text-[11px] text-slate-300 mt-1">Make sure your Wayne Board profile is linked to your FedEx account.</p>
+            <p className="text-[11px] text-slate-300 mt-1">Make sure your MyGroundOps profile is linked to your FedEx account.</p>
           </div>
         )}
       </div>

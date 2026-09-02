@@ -120,7 +120,7 @@ export default function MilestonesPage() {
         <div className="flex items-start justify-between mb-8">
           <div>
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-              Wayne Board · Admin
+              MyGroundOps · Admin
             </p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               Milestones & Rewards

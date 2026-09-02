@@ -6,6 +6,7 @@ import {
   Plus, Trash2, Star, TrendingUp, TrendingDown, ChevronDown, Loader2, Pencil, Share2, X,
 } from "lucide-react";
 import RydeShareModal from "@/components/ryde-share-modal";
+import RydeAnalytics from "./ryde-analytics";
 import {
   getRydeDrivers, getRydeReviews,
   addRydeReview, deleteRydeReview, updateRydeReview,
@@ -181,7 +182,7 @@ export default function RydePage() {
         <div className="flex items-start justify-between mb-8">
           <div>
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-              Wayne Board · Admin
+              MyGroundOps · Admin
             </p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               Ryde Scores
@@ -207,6 +208,9 @@ export default function RydePage() {
             </button>
           </div>
         </div>
+
+        {/* Analytics dashboard */}
+        <RydeAnalytics reviews={reviews} drivers={drivers} />
 
         {/* Team goal message — editable */}
         <div className="mb-3 flex items-start justify-between gap-4 px-1">

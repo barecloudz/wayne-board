@@ -29,7 +29,7 @@ export default async function SettingsPage() {
     <AppShell>
       <main className="flex-1 px-6 py-8 max-w-[800px] w-full mx-auto">
         <div className="mb-8">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Wayne Board · Admin</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Settings</h1>
         </div>
 

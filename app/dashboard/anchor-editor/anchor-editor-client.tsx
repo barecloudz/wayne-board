@@ -209,7 +209,7 @@ export default function AnchorEditorClient() {
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-            Wayne Board · Automation
+            MyGroundOps · Automation
           </p>
           <h1 className="text-[20px] font-extrabold text-slate-900 tracking-tight">Anchor Editor</h1>
           <p className="text-[12px] text-slate-400 mt-0.5">Work Area 0326 — Mills River</p>

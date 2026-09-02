@@ -127,7 +127,7 @@ export default function AutoGcClient() {
     const r   = await res.json();
     setSyncing(false);
     if (r.success) {
-      setSyncResult({ ok: true, msg: `${r.routeDays} routes pulled for ${r.date} · ${r.matched} matched to Wayne Board drivers` });
+      setSyncResult({ ok: true, msg: `${r.routeDays} routes pulled for ${r.date} · ${r.matched} matched to MyGroundOps drivers` });
       await loadStatus();
     } else {
       setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
@@ -169,7 +169,7 @@ export default function AutoGcClient() {
       {/* ── Header ── */}
       <div className="mb-8">
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-          Wayne Board · Admin
+          MyGroundOps · Admin
         </p>
         <div className="flex items-end justify-between">
           <div>
@@ -267,7 +267,7 @@ export default function AutoGcClient() {
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           {r.driverId ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Matched to Wayne Board" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Matched to MyGroundOps" />
                           ) : (
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" title="No match" />
                           )}

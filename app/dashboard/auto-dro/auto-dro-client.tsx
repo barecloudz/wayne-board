@@ -391,7 +391,7 @@ export default function AutoDroClient() {
       {/* ── Header ── */}
       <div className="mb-6">
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-          Wayne Board · Admin
+          MyGroundOps · Admin
         </p>
         <div className="flex items-end justify-between">
           <div>

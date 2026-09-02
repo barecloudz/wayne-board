@@ -12,10 +12,10 @@ export default function AdminLoginPage() {
     >
       <div className="w-full max-w-[440px] flex flex-col items-center">
         <div className="bg-white rounded-3xl p-3 mb-8 shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
-          <Image src="/wayne-logo.png" alt="Wayne Board" width={100} height={62} className="object-contain" />
+          <Image src="/wayne-logo.png" alt="MyGroundOps" width={100} height={62} className="object-contain" />
         </div>
         <h1 className="text-[36px] font-extrabold text-white tracking-tight leading-none mb-2 text-center">
-          Wayne Board
+          MyGroundOps
         </h1>
         <p className="text-[15px] text-white/60 text-center mb-8">
           Management Portal — Admin Access Only
@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-[13px] text-white/30 mt-6">
-          &copy; {new Date().getFullYear()} 742 Logistics LLC
+          &copy; {new Date().getFullYear()} Apparo Group INC
         </p>
       </div>
     </div>
