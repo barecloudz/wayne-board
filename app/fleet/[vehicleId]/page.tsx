@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({ params }: { params: Promise<{ vehicleId: string }> }): Promise<Metadata> {
+  const { vehicleId } = await params;
+  return { title: `Vehicle ${vehicleId}` };
+}
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
 import { vehicles, inspections, inspectionResults } from "@/lib/schema";

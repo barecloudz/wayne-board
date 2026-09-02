@@ -9,6 +9,7 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDroHeaders } from "@/lib/dro-client";
+import { getSession } from "@/lib/session";
 
 const DRO_BASE = "https://dro.routesmart.com";
 const SA_ID = "3060743";
@@ -32,6 +33,8 @@ function rings3857ToLatLng(rings: number[][][]): [number, number][][] {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const wan = req.nextUrl.searchParams.get("wan");
     const headers = await getDroHeaders();
@@ -61,6 +64,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json();
     // body: { name: string, latlngs: [number, number][] }
@@ -99,6 +104,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });

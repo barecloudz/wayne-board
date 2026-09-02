@@ -3,7 +3,8 @@ export const maxDuration = 300;
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { droStops, droAnchorAreas, droRoutes, settings } from "@/lib/schema";
-import { isNotNull, eq } from "drizzle-orm";
+import { isNotNull, eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 
 // DRO uses 85% of vehicle capacity as the load threshold (same as GroundSwell maxThresholdNormalized)
 const LOAD_THRESHOLD = 0.85;
@@ -245,6 +246,8 @@ type RouteGroup = {
 };
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await req.json() as { driverCount?: number; activeWorkAreaNames?: string[] };
     // Support both old (driverCount) and new (activeWorkAreaNames) call shapes
@@ -252,8 +255,8 @@ export async function POST(req: NextRequest) {
     const driverCount: number = body.driverCount ?? (activeWorkAreaNames?.length ?? 0);
 
     // Depot from settings, default to FedEx Ground Fletcher NC station
-    const depotLatRow = await db.select().from(settings).where(eq(settings.key, "depot_lat")).then(r => r[0]);
-    const depotLngRow = await db.select().from(settings).where(eq(settings.key, "depot_lng")).then(r => r[0]);
+    const depotLatRow = await db.select().from(settings).where(and(eq(settings.key, "depot_lat"), eq(settings.organizationId, session.organizationId))).then(r => r[0]);
+    const depotLngRow = await db.select().from(settings).where(and(eq(settings.key, "depot_lng"), eq(settings.organizationId, session.organizationId))).then(r => r[0]);
     const depot = {
       lat: parseFloat(depotLatRow?.value ?? "35.4210"),
       lng: parseFloat(depotLngRow?.value ?? "-82.5022"),
@@ -263,7 +266,7 @@ export async function POST(req: NextRequest) {
     const droRouteRows = await db.select({
       workAreaName:    droRoutes.workAreaName,
       vehicleCapacity: droRoutes.vehicleCapacity,
-    }).from(droRoutes);
+    }).from(droRoutes).where(eq(droRoutes.organizationId, session.organizationId));
 
     const capacityMap: Record<string, number> = {};
     for (const r of droRouteRows) {
@@ -291,7 +294,7 @@ export async function POST(req: NextRequest) {
       isBulkStop:     droStops.isBulkStop,
       actualRoute:    droStops.actualRoute,
       workAreaNumber: droStops.workAreaNumber,
-    }).from(droStops).where(isNotNull(droStops.lat));
+    }).from(droStops).where(and(isNotNull(droStops.lat), eq(droStops.organizationId, session.organizationId)));
 
     const stops = rawStops.filter(s => s.lat != null && s.lng != null) as Stop[];
     if (stops.length === 0) {
@@ -303,7 +306,7 @@ export async function POST(req: NextRequest) {
       name:      droAnchorAreas.name,
       wktPoly:   droAnchorAreas.wktPoly,
       shapeJson: droAnchorAreas.shapeJson,
-    }).from(droAnchorAreas);
+    }).from(droAnchorAreas).where(eq(droAnchorAreas.organizationId, session.organizationId));
 
     const parsedAreas: { name: string; poly: [number, number][]; centLat: number; centLng: number }[] =
       anchorAreaRows.flatMap(a => {

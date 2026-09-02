@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import AppShell from "@/components/app-shell";
+
+export const metadata: Metadata = { title: "Fleet" };
 import { db } from "@/lib/db";
 import { vehicles, inspections } from "@/lib/schema";
 import { desc, eq } from "drizzle-orm";

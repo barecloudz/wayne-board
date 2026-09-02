@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { inspections, inspectionResults, vehicles } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { stampM121 } from "@/lib/m121-stamp";
+import { getSession } from "@/lib/session";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ inspectionId: string }> }
 ) {
+  const session = await getSession();
+  if (!session) return new NextResponse("Unauthorized", { status: 401 });
+
   const { inspectionId } = await params;
   const id = parseInt(inspectionId);
   if (isNaN(id)) return new NextResponse("Invalid inspection ID", { status: 400 });
@@ -15,7 +19,7 @@ export async function GET(
   const [inspection] = await db
     .select()
     .from(inspections)
-    .where(eq(inspections.id, id))
+    .where(and(eq(inspections.id, id), eq(inspections.organizationId, session.organizationId)))
     .limit(1);
 
   if (!inspection) return new NextResponse("Inspection not found", { status: 404 });

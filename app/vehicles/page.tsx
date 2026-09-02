@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
+
+export const metadata: Metadata = { title: "Vehicles" };
 import { vehicles, inspections, inspectionResults } from "@/lib/schema";
 import { desc } from "drizzle-orm";
 import { INSPECTION_COMPONENTS } from "@/lib/inspection-components";

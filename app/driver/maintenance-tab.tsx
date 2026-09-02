@@ -132,7 +132,7 @@ export default function MaintenanceTab({
           <div className="divide-y divide-white/8">
             {open.map((r) => {
               const cfg = STATUS_CONFIG[r.status] ?? STATUS_CONFIG.pending;
-              const Icon = cfg.icon;
+              const Icon = cfg.icon as React.ComponentType<{ className?: string }>;
               return (
                 <div key={r.id} className="px-5 py-4 flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-3">

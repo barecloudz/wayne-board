@@ -10,24 +10,32 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://742logistics.com"),
-  title: "742 Logistics Driver Portal",
+  metadataBase: new URL("https://mygroundops.com"),
+  title: {
+    default: "MyGroundOps — FedEx Ground Contractor Platform",
+    template: "%s — MyGroundOps",
+  },
   description:
-    "Driver portal for 742 Logistics. View Ryde scores, gate codes, milestones, route info, and more.",
+    "Fleet management, driver scores, route ops, and compliance tools built for FedEx Ground ISPs.",
   openGraph: {
-    title: "742 Logistics Driver Portal",
-    description:
-      "Driver portal for 742 Logistics. View Ryde scores, gate codes, milestones, route info, and more.",
-    images: [{ url: "/banner.png", width: 1200, height: 630, alt: "742 Logistics" }],
+    title: "MyGroundOps",
+    description: "Fleet management, driver scores, route ops, and compliance tools built for FedEx Ground ISPs.",
+    images: [{ url: "/logo-full.png", width: 1500, height: 500, alt: "MyGroundOps" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "742 Logistics Driver Portal",
-    description: "Driver portal for 742 Logistics.",
-    images: ["/banner.png"],
+    title: "MyGroundOps",
+    description: "Fleet management, driver scores, route ops, and compliance tools built for FedEx Ground ISPs.",
+    images: ["/logo-full.png"],
   },
-  icons: { icon: "/742-favicon.png", apple: "/banner.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

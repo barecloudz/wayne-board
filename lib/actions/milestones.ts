@@ -3,6 +3,13 @@
 import { db } from "@/lib/db";
 import { milestoneRewards, rydeReviews, drivers, driverMilestoneClaims } from "@/lib/schema";
 import { eq, asc, and } from "drizzle-orm";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export async function getMilestoneRewards() {
   return db
@@ -63,15 +70,17 @@ export async function claimMilestone(driverId: string, milestoneId: number) {
 }
 
 export async function getDriverStreaks() {
+  const orgId = await requireOrg();
+
   const allDrivers = await db
     .select({ id: drivers.id, driverId: drivers.driverId, name: drivers.name, createdAt: drivers.createdAt })
     .from(drivers)
-    .where(eq(drivers.active, true));
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
 
   const atFaultReviews = await db
     .select({ driverId: rydeReviews.driverId, createdAt: rydeReviews.createdAt })
     .from(rydeReviews)
-    .where(eq(rydeReviews.atFault, true));
+    .where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.atFault, true)));
 
   const now = Date.now();
 

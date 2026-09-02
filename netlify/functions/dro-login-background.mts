@@ -9,14 +9,25 @@
 
 import type { BackgroundHandler } from "@netlify/functions";
 import { getDroHeaders } from "../../lib/dro-client";
+import { neon } from "@neondatabase/serverless";
 
 export const handler: BackgroundHandler = async () => {
   console.log("[dro-login-background] Starting DRO Puppeteer login");
+  const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
+
+  async function writeStatus(payload: object) {
+    const val = JSON.stringify({ ...payload, completedAt: new Date().toISOString() });
+    await sql`INSERT INTO settings (key, value) VALUES ('dro_login_result', ${val})
+              ON CONFLICT (key) DO UPDATE SET value = ${val}`;
+  }
 
   try {
     await getDroHeaders();
     console.log("[dro-login-background] DRO session established successfully");
+    await writeStatus({ success: true });
   } catch (err: any) {
-    console.error("[dro-login-background] Login failed:", err?.message ?? String(err));
+    const msg = err?.message ?? String(err);
+    console.error("[dro-login-background] Login failed:", msg);
+    await writeStatus({ success: false, error: msg });
   }
 };

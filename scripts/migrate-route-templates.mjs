@@ -193,7 +193,7 @@ async function run() {
   }
 
   console.log("✅ All 3 templates seeded");
-  console.log("\nNext: build the map UI at /wayne-board/route-planner");
+  console.log("\nNext: build the map UI at /dashboard/route-planner");
   console.log("  — see anchor areas colored by route");
   console.log("  — drag to reassign before pushing to DRO");
 }

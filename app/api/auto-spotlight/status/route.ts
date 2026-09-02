@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { rydeScores, drivers, settings } from "@/lib/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const orgId = session.organizationId;
   const [scores, allDrivers, lastSynced, lastSyncResultRaw, autoEnabled, autoTime] = await Promise.all([
     db.select({
       id:              rydeScores.id,
@@ -16,15 +20,16 @@ export async function GET() {
     })
       .from(rydeScores)
       .innerJoin(drivers, eq(rydeScores.driverId, drivers.driverId))
+      .where(and(eq(rydeScores.organizationId, orgId), eq(drivers.organizationId, orgId)))
       .orderBy(desc(rydeScores.week), desc(rydeScores.score))
       .limit(200),
     db.select({ driverId: drivers.driverId, name: drivers.name })
       .from(drivers)
-      .where(eq(drivers.active, true)),
-    db.select().from(settings).where(eq(settings.key, "spotlight_last_synced_at")).then(r => r[0]?.value ?? ""),
-    db.select().from(settings).where(eq(settings.key, "spotlight_last_sync_result")).then(r => r[0]?.value ?? ""),
-    db.select().from(settings).where(eq(settings.key, "spotlight_auto_sync_enabled")).then(r => r[0]?.value ?? "false"),
-    db.select().from(settings).where(eq(settings.key, "spotlight_auto_sync_time")).then(r => r[0]?.value ?? "09:00"),
+      .where(and(eq(drivers.active, true), eq(drivers.organizationId, orgId))),
+    db.select().from(settings).where(and(eq(settings.key, "spotlight_last_synced_at"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? ""),
+    db.select().from(settings).where(and(eq(settings.key, "spotlight_last_sync_result"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? ""),
+    db.select().from(settings).where(and(eq(settings.key, "spotlight_auto_sync_enabled"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? "false"),
+    db.select().from(settings).where(and(eq(settings.key, "spotlight_auto_sync_time"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? "09:00"),
   ]);
 
   let lastSyncResult: any = null;

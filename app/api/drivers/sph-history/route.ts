@@ -2,8 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { getSession } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
     const { searchParams } = new URL(req.url);
@@ -28,6 +31,8 @@ export async function GET(req: NextRequest) {
         JOIN drivers d ON d.driver_id = grd.driver_id
         WHERE d.active = true
           AND d.role = 'driver'
+          AND d.organization_id = ${session.organizationId}
+          AND grd.organization_id = ${session.organizationId}
           AND grd.driver_id = ANY(${driverIds})
           AND grd.date >= ${cutoffStr}
           AND grd.stops_per_hour IS NOT NULL
@@ -46,6 +51,8 @@ export async function GET(req: NextRequest) {
         JOIN drivers d ON d.driver_id = grd.driver_id
         WHERE d.active = true
           AND d.role = 'driver'
+          AND d.organization_id = ${session.organizationId}
+          AND grd.organization_id = ${session.organizationId}
           AND grd.date >= ${cutoffStr}
           AND grd.stops_per_hour IS NOT NULL
           AND EXTRACT(DOW FROM grd.date) != 0

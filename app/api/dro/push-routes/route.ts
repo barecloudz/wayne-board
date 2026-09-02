@@ -19,12 +19,15 @@ export const maxDuration = 180; // 3 minutes for Netlify
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getDroHeaders } from "@/lib/dro-client";
+import { getSession } from "@/lib/session";
 
 const DRO_BASE   = "https://dro.routesmart.com";
 const SA_ID      = "3060743";
 const STATION_ID = "259";
 
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json().catch(() => ({}));
     const templateId: number | undefined = body.templateId;

@@ -4,6 +4,7 @@
 
 [build.environment]
   NEXT_PUBLIC_DEPLOY_ID = "$DEPLOY_ID"
+  SECRETS_SCAN_OMIT_PATHS = "scripts/"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

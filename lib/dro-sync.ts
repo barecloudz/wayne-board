@@ -68,8 +68,20 @@ export async function syncDro(): Promise<DroSyncResult> {
     // Get active route plan ID
     const planRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/active-route-plan`, { headers });
     if (planRes.status === 401 || planRes.status === 403) {
-      // Session is invalid server-side — clear cached cookies so next getDroHeaders() re-logins
-      await sql`DELETE FROM settings WHERE key IN ('dro_session_cookies','dro_session_expires_at')`;
+      const body = await planRes.text().catch(() => "(unreadable)");
+      console.error(`[dro-sync] active-route-plan returned ${planRes.status}. Body: ${body.slice(0, 500)}`);
+      // Log captured header keys (not values) so we can see what was sent
+      const hdrRows = await sql`SELECT value FROM settings WHERE key = 'dro_session_headers'`;
+      let capturedKeys = "(none)";
+      if (hdrRows[0]?.value) {
+        try { capturedKeys = Object.keys(JSON.parse(hdrRows[0].value)).join(", "); } catch {}
+      }
+      const detail = JSON.stringify({ status: planRes.status, body: body.slice(0, 500), capturedHeaderKeys: capturedKeys, at: new Date().toISOString() });
+      await sql`INSERT INTO settings (key, value) VALUES ('dro_last_401_detail', ${detail})
+                ON CONFLICT (key) DO UPDATE SET value = ${detail}`;
+      // Mark session as expired (set expires to past) rather than deleting — preserves headers for inspection
+      await sql`INSERT INTO settings (key, value) VALUES ('dro_session_expires_at', '2000-01-01T00:00:00.000Z')
+                ON CONFLICT (key) DO UPDATE SET value = '2000-01-01T00:00:00.000Z'`;
       throw new Error("SESSION_EXPIRED");
     }
     const planText = await planRes.text();

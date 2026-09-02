@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { drivers, traineeWorkDays } from "@/lib/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
+import { getSession } from "@/lib/session";
 
 /** Returns YYYY-MM-DD for the Monday of the week containing `date`. */
 function weekMonday(date: string): string {
@@ -23,6 +24,8 @@ function weekDates(monday: string): string[] {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const { searchParams } = new URL(req.url);
     const weekParam = searchParams.get("weekStart");
@@ -36,7 +39,7 @@ export async function GET(req: NextRequest) {
     const allTrainees = await db
       .select({ driverId: drivers.driverId, name: drivers.name })
       .from(drivers)
-      .where(and(eq(drivers.active, true), eq(drivers.isTrainee, true)))
+      .where(and(eq(drivers.active, true), eq(drivers.isTrainee, true), eq(drivers.organizationId, session.organizationId)))
       .orderBy(drivers.name);
 
     // Work days in this week

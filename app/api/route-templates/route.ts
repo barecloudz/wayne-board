@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const sql = neon(process.env.DATABASE_URL_POOLER ?? process.env.DATABASE_URL!);
 

@@ -15,3 +15,9 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Fix option visibility in dark-themed selects */
+option {
+  background-color: #111827;
+  color: #f8fafc;
+}

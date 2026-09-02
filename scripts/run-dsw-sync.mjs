@@ -197,7 +197,7 @@ try {
 
   await sql`INSERT INTO settings (key,value) VALUES ('dsw_last_synced_at', NOW()::text) ON CONFLICT (key) DO UPDATE SET value = NOW()::text`;
   console.log(`\n✅ ${inserted} routes saved · ${matched} matched to Wayne Board drivers`);
-  console.log("Now refresh /wayne-board to see the scorecard.");
+  console.log("Now refresh /dashboard to see the scorecard.");
 
 } finally {
   await browser.close();

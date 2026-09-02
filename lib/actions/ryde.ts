@@ -2,27 +2,39 @@
 
 import { db } from "@/lib/db";
 import { rydeScores, rydeReviews, drivers, settings } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export async function getRydeDrivers() {
+  const orgId = await requireOrg();
   return db
     .select({ id: drivers.id, driverId: drivers.driverId, name: drivers.name })
     .from(drivers)
-    .where(eq(drivers.active, true))
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)))
     .orderBy(drivers.name);
 }
 
 export async function getRydeScores() {
+  const orgId = await requireOrg();
   return db
     .select()
     .from(rydeScores)
+    .where(eq(rydeScores.organizationId, orgId))
     .orderBy(desc(rydeScores.createdAt));
 }
 
 export async function getRydeReviews() {
+  const orgId = await requireOrg();
   return db
     .select()
     .from(rydeReviews)
+    .where(eq(rydeReviews.organizationId, orgId))
     .orderBy(desc(rydeReviews.createdAt));
 }
 
@@ -33,7 +45,8 @@ export async function addRydeScore(data: {
   deliveries: number;
   positiveReviews: number;
 }) {
-  await db.insert(rydeScores).values(data);
+  const orgId = await requireOrg();
+  await db.insert(rydeScores).values({ ...data, organizationId: orgId });
 }
 
 export async function addRydeReview(data: {
@@ -47,19 +60,23 @@ export async function addRydeReview(data: {
   atFault?: boolean;
   customerInitials?: string | null;
 }) {
-  await db.insert(rydeReviews).values({ ...data, atFault: data.atFault ?? false });
+  const orgId = await requireOrg();
+  await db.insert(rydeReviews).values({ ...data, organizationId: orgId, atFault: data.atFault ?? false });
 }
 
 export async function deleteRydeScore(id: number) {
-  await db.delete(rydeScores).where(eq(rydeScores.id, id));
+  const orgId = await requireOrg();
+  await db.delete(rydeScores).where(and(eq(rydeScores.id, id), eq(rydeScores.organizationId, orgId)));
 }
 
 export async function deleteRydeReview(id: number) {
-  await db.delete(rydeReviews).where(eq(rydeReviews.id, id));
+  const orgId = await requireOrg();
+  await db.delete(rydeReviews).where(and(eq(rydeReviews.id, id), eq(rydeReviews.organizationId, orgId)));
 }
 
 // Leaderboard: computed from review star averages (not rydeScores table)
 export async function getLeaderboard() {
+  const orgId = await requireOrg();
   const rows = await db
     .select({
       driverId: rydeReviews.driverId,
@@ -68,7 +85,7 @@ export async function getLeaderboard() {
     })
     .from(rydeReviews)
     .innerJoin(drivers, eq(rydeReviews.driverId, drivers.driverId))
-    .where(eq(drivers.active, true));
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
 
   // Only count reviews that have a star rating
   const ratedRows = rows.filter((r) => r.stars != null);
@@ -92,10 +109,11 @@ export async function getLeaderboard() {
 
 // Manually set company Ryde rating (read from settings table)
 export async function getCompanyRating(): Promise<number | null> {
+  const orgId = await requireOrg();
   const rows = await db
     .select({ value: settings.value })
     .from(settings)
-    .where(eq(settings.key, "company_ryde_rating"))
+    .where(and(eq(settings.organizationId, orgId), eq(settings.key, "company_ryde_rating")))
     .limit(1);
   if (rows.length === 0 || !rows[0].value) return null;
   const n = parseFloat(rows[0].value);
@@ -103,26 +121,29 @@ export async function getCompanyRating(): Promise<number | null> {
 }
 
 export async function setCompanyRating(rating: number) {
+  const orgId = await requireOrg();
   await db
     .insert(settings)
-    .values({ key: "company_ryde_rating", value: String(rating) })
-    .onConflictDoUpdate({ target: settings.key, set: { value: String(rating) } });
+    .values({ organizationId: orgId, key: "company_ryde_rating", value: String(rating) })
+    .onConflictDoUpdate({ target: [settings.organizationId, settings.key], set: { value: String(rating) } });
 }
 
 export async function getRydeGoalMessage(): Promise<string> {
+  const orgId = await requireOrg();
   const rows = await db
     .select({ value: settings.value })
     .from(settings)
-    .where(eq(settings.key, "ryde_goal_message"))
+    .where(and(eq(settings.organizationId, orgId), eq(settings.key, "ryde_goal_message")))
     .limit(1);
   return rows[0]?.value ?? "";
 }
 
 export async function setRydeGoalMessage(message: string) {
+  const orgId = await requireOrg();
   await db
     .insert(settings)
-    .values({ key: "ryde_goal_message", value: message })
-    .onConflictDoUpdate({ target: settings.key, set: { value: message } });
+    .values({ organizationId: orgId, key: "ryde_goal_message", value: message })
+    .onConflictDoUpdate({ target: [settings.organizationId, settings.key], set: { value: message } });
 }
 
 export async function updateRydeReview(id: number, data: {
@@ -135,5 +156,6 @@ export async function updateRydeReview(id: number, data: {
   atFault: boolean;
   customerInitials?: string | null;
 }) {
-  await db.update(rydeReviews).set(data).where(eq(rydeReviews.id, id));
+  const orgId = await requireOrg();
+  await db.update(rydeReviews).set(data).where(and(eq(rydeReviews.id, id), eq(rydeReviews.organizationId, orgId)));
 }

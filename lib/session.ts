@@ -9,9 +9,13 @@ const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 export type SessionPayload = {
   driverId: string;
+  organizationId: number;
   name: string;
   role: string;
   isAdmin: boolean;
+  subscriptionStatus: string;
+  demoMode: boolean;
+  demoExpiresAt: string | null;
 };
 
 export async function createSession(payload: SessionPayload) {

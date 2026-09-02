@@ -473,7 +473,7 @@ export default function ReportView({ slug, title, period, fleetData, driverData 
   return (
     <AppShell>
       <main className="flex-1 px-8 py-8 max-w-[1100px] w-full mx-auto flex flex-col gap-6">
-        <Link href="/wayne-board" className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400 hover:text-slate-700 transition-colors w-fit">
+        <Link href="/dashboard" className="flex items-center gap-1.5 text-[12px] font-medium text-slate-400 hover:text-slate-700 transition-colors w-fit">
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Overview
         </Link>
 

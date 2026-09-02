@@ -2,8 +2,15 @@
 
 import { db } from "@/lib/db";
 import { vehicles, vehicleConditions, drivers } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/session";
+
+async function requireOrg() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  return session.organizationId;
+}
 
 export type Severity   = "critical" | "high" | "medium" | "low";
 export type CondStatus = "open" | "in_progress" | "resolved";
@@ -64,16 +71,24 @@ export async function deleteCondition(id: number, vehicleId: number) {
 
 // Used by Maintenance History — all resolved conditions across all vehicles
 export async function getAllResolvedConditions() {
+  const orgId = await requireOrg();
+  const orgVehicles = await db
+    .select({ id: vehicles.id })
+    .from(vehicles)
+    .where(eq(vehicles.organizationId, orgId));
+  const vehicleIds = orgVehicles.map((v) => v.id);
+  if (vehicleIds.length === 0) return [];
   return db
     .select()
     .from(vehicleConditions)
-    .where(eq(vehicleConditions.status, "resolved"))
+    .where(and(eq(vehicleConditions.status, "resolved"), inArray(vehicleConditions.vehicleId, vehicleIds)))
     .orderBy(desc(vehicleConditions.resolvedAt));
 }
 
 // Used by the Fleet Status Report PDF — returns all vehicles with their open conditions
 export async function getAllVehiclesWithConditions() {
-  const allVehicles = await db.select().from(vehicles).orderBy(vehicles.unitNumber);
+  const orgId = await requireOrg();
+  const allVehicles = await db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber);
   const allConditions = await db
     .select()
     .from(vehicleConditions)
@@ -83,7 +98,8 @@ export async function getAllVehiclesWithConditions() {
   // Attach assigned driver name
   const allDrivers = await db
     .select({ assignedVehicleId: drivers.assignedVehicleId, name: drivers.name })
-    .from(drivers);
+    .from(drivers)
+    .where(eq(drivers.organizationId, orgId));
   const driverByVehicle = new Map(
     allDrivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d.name])
   );
