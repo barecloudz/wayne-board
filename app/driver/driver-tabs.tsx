@@ -30,19 +30,17 @@ const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 const RATING_GOAL = 4.0;
 
-// Glass card style shared across tabs
+// Card styles
 const glass = {
-  background: "rgba(255,255,255,0.05)",
-  backdropFilter: "blur(32px)",
-  WebkitBackdropFilter: "blur(32px)",
-  border: "1px solid rgba(255,255,255,0.08)",
+  background: "#ffffff",
+  border: "1px solid #F1F5F9",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04)",
 } as const;
 
 const glassBright = {
-  background: "rgba(255,255,255,0.09)",
-  backdropFilter: "blur(32px)",
-  WebkitBackdropFilter: "blur(32px)",
-  border: "1px solid rgba(255,255,255,0.13)",
+  background: "#ffffff",
+  border: "1px solid #E8EDF5",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04)",
 } as const;
 
 export default function DriverTabs({
@@ -152,25 +150,25 @@ export default function DriverTabs({
           <div className="mb-5 rounded-3xl px-5 pt-4 pb-5" style={glassBright}>
             <div className="flex items-center gap-2">
               <span className="text-xl">🔥</span>
-              <span className="text-[14px] font-bold text-white">
+              <span className="text-[14px] font-bold" style={{ color: "#0F172A" }}>
                 {streakDays === 0 ? "No streak yet" : `${streakDays} day streak`}
               </span>
               {nextMilestone && streakDays > 0 && (
-                <span className="ml-auto text-[11px] font-medium shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <span className="ml-auto text-[11px] font-medium shrink-0" style={{ color: "#94A3B8" }}>
                   {nextMilestone.daysRequired - streakDays}d to {nextMilestone.icon}
                 </span>
               )}
             </div>
             {streakDays === 0 && (
-              <p className="text-[11px] mt-0.5 pl-8" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <p className="text-[11px] mt-0.5 pl-8" style={{ color: "#94A3B8" }}>
                 Start with a clean week to begin earning milestones
               </p>
             )}
             <div className="relative mt-10 mx-2">
-              <div className="h-[2px] rounded-full" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <div className="h-[3px] rounded-full" style={{ background: "#F1F5F9" }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, background: "linear-gradient(90deg, rgba(255,255,255,0.7), #FF6200)" }}
+                  style={{ width: `${pct}%`, background: "linear-gradient(90deg, #FF6200, #ff8c42)" }}
                 />
               </div>
               {milestones.map((m) => {
@@ -186,20 +184,20 @@ export default function DriverTabs({
                       className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all duration-300"
                       style={earned ? {
                         background: "linear-gradient(135deg, #FF6200, #ff8c42)",
-                        border: "2px solid rgba(255,255,255,0.4)",
-                        boxShadow: "0 0 0 3px rgba(255,98,0,0.25), 0 2px 8px rgba(255,98,0,0.4)",
+                        border: "2px solid #fff",
+                        boxShadow: "0 0 0 3px rgba(255,98,0,0.2), 0 2px 8px rgba(255,98,0,0.3)",
                         color: "white",
                       } : {
-                        background: "rgba(255,255,255,0.06)",
-                        border: "2px solid rgba(255,255,255,0.15)",
-                        color: "rgba(255,255,255,0.3)",
+                        background: "#F8FAFC",
+                        border: "2px solid #E2E8F0",
+                        color: "#CBD5E1",
                       }}
                     >
                       {earned ? "✓" : m.type === "bonus" ? <Lock className="w-3 h-3" /> : ""}
                     </div>
                     <div className="mt-2 flex flex-col items-center gap-0.5">
                       <span className="text-sm leading-none">{m.icon}</span>
-                      <span className="text-[9px] font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>{m.daysRequired}d</span>
+                      <span className="text-[9px] font-semibold" style={{ color: "#CBD5E1" }}>{m.daysRequired}d</span>
                     </div>
                   </div>
                 );
@@ -216,121 +214,33 @@ export default function DriverTabs({
         {/* ── Score tab ─────────────────────────────────── */}
         {tab === "score" && (
           <>
-            {!atGoal && goalMessage && (
-              <p className="text-center text-[13px] font-medium px-2" style={{ color: "rgba(255,255,255,0.55)" }}>
-                {goalMessage}
-              </p>
-            )}
-
-            {/* Company rating card */}
-            <div className={`rounded-3xl px-5 py-5 ${atGoal ? "bg-emerald-500" : ""}`} style={!atGoal ? glassBright : {}}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: "0.12em" }}>Company Ryde Rating</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map((i) => (
-                        <Star key={i} className={`w-4 h-4 ${
-                          companyRating != null && i <= Math.round(companyRating)
-                            ? "text-amber-400 fill-amber-400"
-                            : "text-white/20 fill-white/20"
-                        }`} />
-                      ))}
-                    </div>
-                    <span className="text-[22px] font-bold text-white leading-none">
-                      {companyRating != null ? companyRating.toFixed(1) : "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>Goal: {RATING_GOAL.toFixed(1)} ★</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {atGoal ? "🥞 Free breakfast!" : `${companyRating != null ? (RATING_GOAL - companyRating).toFixed(1) : RATING_GOAL.toFixed(1)} to go`}
-                  </p>
-                </div>
-              </div>
-              <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${goalPct}%`,
-                    background: atGoal ? "rgba(255,255,255,0.9)" : "linear-gradient(90deg, #f59e0b, #fb923c)",
-                  }}
-                />
-              </div>
-              {atGoal && (
-                <p className="text-[12px] font-bold text-white mt-3 text-center">
-                  🎉 We did it — free breakfast for the team!
-                </p>
-              )}
-            </div>
-
-            {/* Vehicle card */}
-            {assignedVehicle ? (
-              <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.35)] overflow-hidden">
-                <div className="px-5 py-3.5 flex items-center gap-3"
-                  style={{ background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" }}>
-                  <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                    <Truck className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">My Vehicle</p>
-                    <p className="text-[15px] font-bold text-white leading-tight">{assignedVehicle.unitNumber}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] font-semibold text-slate-300">{assignedVehicle.year}</p>
-                    <p className="text-[11px] text-slate-400">{assignedVehicle.make}</p>
-                  </div>
-                </div>
-                <div className="px-5 py-3.5 grid grid-cols-3 divide-x divide-slate-100">
-                  {[
-                    { label: "Make",    value: assignedVehicle.make },
-                    { label: "Model",   value: assignedVehicle.model },
-                    { label: "Mileage", value: assignedVehicle.mileage.toLocaleString() + " mi" },
-                  ].map((s) => (
-                    <div key={s.label} className="px-3 first:pl-0 last:pr-0 text-center">
-                      <p className="text-[12px] font-bold text-slate-800 truncate">{s.value}</p>
-                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mt-0.5">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-3xl px-5 py-4 flex items-center gap-3" style={glass}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.07)" }}>
-                  <Truck className="w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>My Vehicle</p>
-                  <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.25)" }}>Coming soon</p>
-                </div>
-              </div>
-            )}
-
-            {/* My Ryde Score — hero card */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-[0_12px_60px_rgba(0,0,0,0.45)]">
-              <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center"
-                style={{ background: "linear-gradient(160deg, #4D148C 0%, #6b23b0 100%)" }}>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "rgba(255,255,255,0.55)" }}>My Ryde Score</p>
+            {/* My Ryde Score — hero card (leads now) */}
+            <div className="rounded-3xl overflow-hidden" style={glassBright}>
+              {/* Orange top bar */}
+              <div className="h-1" style={{ background: "linear-gradient(90deg, #FF6200, #ff8c42)" }} />
+              <div className="px-6 pt-6 pb-5 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#94A3B8" }}>My Ryde Score</p>
                 {avgScore !== null ? (
                   <>
-                    <div className="flex gap-1 mb-3">
+                    <div className="flex gap-1 mb-4">
                       {[1,2,3,4,5].map((i) => (
-                        <Star key={i} className={`w-6 h-6 ${i <= Math.round(avgScore) ? "text-amber-400 fill-amber-400" : "text-white/15 fill-white/15"}`} />
+                        <Star key={i} className={`w-7 h-7 ${i <= Math.round(avgScore) ? "text-amber-400 fill-amber-400" : "fill-slate-100 text-slate-100"}`} />
                       ))}
                     </div>
-                    <p className={`text-[80px] font-bold leading-none tracking-tight ${scoreColor}`}>
+                    <p className="font-bold leading-none tracking-tight" style={{
+                      fontSize: 88,
+                      color: avgScore >= 4.5 ? "#16a34a" : avgScore >= 3 ? "#d97706" : "#dc2626",
+                    }}>
                       {avgScore.toFixed(1)}
                     </p>
-                    <p className="text-[12px] mt-3" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <p className="text-[13px] mt-3 font-medium" style={{ color: "#94A3B8" }}>
                       Based on {ratedReviews.length} review{ratedReviews.length !== 1 ? "s" : ""}
                     </p>
                   </>
                 ) : (
-                  <p className="text-[16px] py-6" style={{ color: "rgba(255,255,255,0.4)" }}>No reviews recorded yet</p>
+                  <p className="text-[15px] py-8 font-medium" style={{ color: "#94A3B8" }}>No reviews recorded yet</p>
                 )}
               </div>
-              <div className="h-[2px]" style={{ background: "#FF6200" }} />
 
               <div className="grid grid-cols-3 divide-x divide-slate-100">
                 {[
@@ -368,13 +278,53 @@ export default function DriverTabs({
                 </div>
               )}
             </div>
+
+            {/* Company rating secondary card */}
+            {companyRating !== null && (
+              <div className="rounded-3xl px-6 py-5" style={glass}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-3" style={{ color: "#94A3B8" }}>Station Rating</p>
+                <div className="flex items-end gap-3 mb-3">
+                  <p className="text-[40px] font-bold leading-none" style={{ color: atGoal ? "#16a34a" : "#d97706" }}>
+                    {companyRating.toFixed(2)}
+                  </p>
+                  <p className="text-[13px] font-medium pb-1.5" style={{ color: "#64748B" }}>/ {RATING_GOAL} goal</p>
+                </div>
+                <div className="h-1.5 rounded-full" style={{ background: "#F1F5F9" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${goalPct}%`,
+                      background: atGoal ? "linear-gradient(90deg,#16a34a,#4ade80)" : "linear-gradient(90deg,#FF6200,#ff8c42)",
+                    }}
+                  />
+                </div>
+                {goalMessage && (
+                  <p className="text-[12px] mt-3 font-medium" style={{ color: "#64748B" }}>{goalMessage}</p>
+                )}
+              </div>
+            )}
+
+            {/* Assigned vehicle card */}
+            {assignedVehicle && (
+              <div className="rounded-3xl px-6 py-5 flex items-center gap-4" style={glass}>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ background: "#F1F5F9" }}>
+                  <Truck className="w-6 h-6" style={{ color: "#64748B" }} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-0.5" style={{ color: "#94A3B8" }}>Assigned Vehicle</p>
+                  <p className="text-[16px] font-bold" style={{ color: "#0F172A" }}>Unit {assignedVehicle.unitNumber}</p>
+                  <p className="text-[12px]" style={{ color: "#64748B" }}>{assignedVehicle.year} {assignedVehicle.make} {assignedVehicle.model}</p>
+                </div>
+              </div>
+            )}
           </>
         )}
 
         {/* ── Schedule tab ──────────────────────────────── */}
         {tab === "schedule" && (
           <>
-            <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarDays className="w-4 h-4 text-slate-400" />
                 <h2 className="text-[15px] font-bold text-slate-900">My Weekly Schedule</h2>
@@ -480,10 +430,10 @@ export default function DriverTabs({
                     reviewFilter === key
                       ? key === "positive" ? "bg-emerald-500 text-white"
                       : key === "negative" ? "bg-red-500 text-white"
-                      : "bg-white text-slate-900"
-                      : "text-white/60"
+                      : "bg-slate-900 text-white"
+                      : "text-slate-500"
                   }`}
-                  style={reviewFilter !== key ? { background: "rgba(255,255,255,0.08)" } : {}}
+                  style={reviewFilter !== key ? { background: "#F1F5F9" } : {}}
                 >
                   {label} ({count})
                 </button>
@@ -492,11 +442,11 @@ export default function DriverTabs({
 
             {filteredReviews.length === 0 ? (
               <div className="rounded-3xl px-6 py-10 text-center" style={glass}>
-                <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>No {reviewFilter !== "all" ? reviewFilter : ""} reviews yet.</p>
+                <p className="text-[13px]" style={{ color: "#94A3B8" }}>No {reviewFilter !== "all" ? reviewFilter : ""} reviews yet.</p>
               </div>
             ) : (
               filteredReviews.map((r) => (
-                <div key={r.id} className="bg-white rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.25)] px-5 py-4 flex gap-3">
+                <div key={r.id} className="bg-white rounded-3xl shadow-[0_1px_8px_rgba(0,0,0,0.06)] px-5 py-4 flex gap-3">
                   <div className={`mt-0.5 shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${
                     r.type === "positive" ? "bg-emerald-100" : "bg-red-100"
                   }`}>
@@ -537,7 +487,7 @@ export default function DriverTabs({
         {/* ── Milestones tab ────────────────────────────── */}
         {tab === "milestones" && (
           <>
-            <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.3)] px-5 py-4 flex items-center gap-4">
+            <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] px-5 py-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl"
                 style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
                 🔥
@@ -552,8 +502,8 @@ export default function DriverTabs({
 
             <div className="rounded-3xl px-4 py-3 flex gap-3 items-start" style={glass}>
               <span className="text-base shrink-0">⚠️</span>
-              <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                One <span className="font-semibold text-white">at-fault review</span> resets your streak to day 1. Rewards already earned are yours to keep — but you won&apos;t earn them twice.
+              <p className="text-[12px] leading-relaxed" style={{ color: "#64748B" }}>
+                One <span className="font-semibold" style={{ color: "#0F172A" }}>at-fault review</span> resets your streak to day 1. Rewards already earned are yours to keep — but you won&apos;t earn them twice.
               </p>
             </div>
 
@@ -564,7 +514,7 @@ export default function DriverTabs({
 
               if (claimed) {
                 return (
-                  <div key={m.id} className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.2)] px-5 py-4 flex items-center gap-4 opacity-70">
+                  <div key={m.id} className="bg-white rounded-3xl shadow-[0_1px_8px_rgba(0,0,0,0.05)] px-5 py-4 flex items-center gap-4 opacity-70">
                     <div className="w-11 h-11 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0 text-xl">{m.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -603,17 +553,17 @@ export default function DriverTabs({
               return (
                 <div key={m.id} className="rounded-3xl px-5 py-4 flex items-center gap-4" style={glass}>
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-xl grayscale opacity-40"
-                    style={{ background: "rgba(255,255,255,0.07)" }}>{m.icon}</div>
+                    style={{ background: "#F1F5F9" }}>{m.icon}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>{m.name}</p>
-                    {m.description && <p className="text-[12px] mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{m.description}</p>}
+                    <p className="text-[14px] font-semibold" style={{ color: "#CBD5E1" }}>{m.name}</p>
+                    {m.description && <p className="text-[12px] mt-0.5" style={{ color: "#E2E8F0" }}>{m.description}</p>}
                     {m.type === "bonus" && m.bonusAmount && (
-                      <p className="text-[12px] font-semibold mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>${m.bonusAmount} bonus</p>
+                      <p className="text-[12px] font-semibold mt-0.5" style={{ color: "#CBD5E1" }}>${m.bonusAmount} bonus</p>
                     )}
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-[18px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>{daysLeft}</p>
-                    <p className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.2)" }}>days left</p>
+                    <p className="text-[18px] font-bold" style={{ color: "#94A3B8" }}>{daysLeft}</p>
+                    <p className="text-[10px] font-semibold" style={{ color: "#CBD5E1" }}>days left</p>
                   </div>
                 </div>
               );
@@ -632,20 +582,20 @@ export default function DriverTabs({
               <>
                 <div className="rounded-3xl px-6 py-10 flex flex-col items-center text-center" style={glassBright}>
                   <div className="text-5xl mb-4">🔒</div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>Locked</p>
-                  <h2 className="text-[22px] font-bold text-white mb-2">Bonus Structure</h2>
-                  <p className="text-[14px] leading-relaxed max-w-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                    Hit a <span className="font-bold text-white">90-day clean streak</span> to unlock your performance bonus program — no at-fault reviews, no safety incidents.
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#94A3B8" }}>Locked</p>
+                  <h2 className="text-[22px] font-bold mb-2" style={{ color: "#0F172A" }}>Bonus Structure</h2>
+                  <p className="text-[14px] leading-relaxed max-w-xs" style={{ color: "#64748B" }}>
+                    Hit a <span className="font-bold" style={{ color: "#0F172A" }}>90-day clean streak</span> to unlock your performance bonus program — no at-fault reviews, no safety incidents.
                   </p>
                   {daysLeft > 0 && (
-                    <div className="mt-6 px-5 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      <p className="text-[28px] font-bold text-white leading-none">{daysLeft}</p>
-                      <p className="text-[11px] font-semibold mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>days remaining</p>
+                    <div className="mt-6 px-5 py-3 rounded-2xl" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                      <p className="text-[28px] font-bold leading-none" style={{ color: "#0F172A" }}>{daysLeft}</p>
+                      <p className="text-[11px] font-semibold mt-0.5" style={{ color: "#94A3B8" }}>days remaining</p>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-white rounded-3xl px-5 py-5 shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
+                <div className="bg-white rounded-3xl px-5 py-5 shadow-[0_1px_8px_rgba(0,0,0,0.06)]">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-4">What you&apos;ll unlock</p>
                   <div className="flex flex-col gap-4">
                     {[
@@ -701,19 +651,19 @@ export default function DriverTabs({
             {myRank > 0 && (
               <div className="rounded-3xl px-5 py-4 flex items-center gap-4" style={glassBright}>
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl font-bold text-white"
-                  style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}>
+                  style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
                   #{myRank}
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Your Rank</p>
-                  <p className="text-[18px] font-bold text-white leading-none">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-0.5" style={{ color: "#94A3B8" }}>Your Rank</p>
+                  <p className="text-[18px] font-bold leading-none" style={{ color: "#0F172A" }}>
                     {myRank === 1 ? "🏆 Top of the fleet" : myRank <= 3 ? "🔥 Top 3 — keep it up" : `${myRank} of ${leaderboard.length}`}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <h2 className="text-[15px] font-bold text-slate-900">Top Performers</h2>
                 <p className="text-[11px] text-slate-400">Avg Ryde Score · All time</p>
@@ -732,7 +682,7 @@ export default function DriverTabs({
 
                     return (
                       <div key={entry.driverId}
-                        className={`px-6 py-4 flex items-center gap-4 ${isMe ? "bg-purple-50" : ""}`}>
+                        className={`px-6 py-4 flex items-center gap-4 ${isMe ? "bg-orange-50" : ""}`}>
                         <div className="w-8 text-center shrink-0">
                           {medal
                             ? <span className="text-xl">{medal}</span>
@@ -741,11 +691,11 @@ export default function DriverTabs({
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold ${
                           isMe ? "text-white" : "text-slate-600 bg-slate-100"
                         }`}
-                          style={isMe ? { background: "linear-gradient(135deg, #4D148C, #7B2FC0)" } : {}}>
+                          style={isMe ? { background: "linear-gradient(135deg, #FF6200, #ff8c42)" } : {}}>
                           {entry.initials}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-[14px] font-semibold ${isMe ? "text-purple-800" : "text-slate-800"}`}>
+                          <p className={`text-[14px] font-semibold ${isMe ? "text-orange-700" : "text-slate-800"}`}>
                             {entry.initials}{isMe ? " (You)" : ""}
                           </p>
                           <p className="text-[11px] text-slate-400">{entry.weeks} review{entry.weeks !== 1 ? "s" : ""} rated</p>
@@ -764,13 +714,13 @@ export default function DriverTabs({
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-center" style={{ color: "rgba(255,255,255,0.25)" }}>Driver names are shown as initials only.</p>
+            <p className="text-[11px] text-center" style={{ color: "#CBD5E1" }}>Driver names are shown as initials only.</p>
           </>
         )}
 
         {/* ── Account tab ───────────────────────────────── */}
         {tab === "account" && (
-          <div className="bg-white rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+          <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100">
               <h2 className="text-[15px] font-bold text-slate-900">Change Password</h2>
               <p className="text-[12px] text-slate-400 mt-0.5">Update your login password below.</p>
@@ -784,7 +734,7 @@ export default function DriverTabs({
                     value={currentPw}
                     onChange={(e) => setCurrentPw(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none pr-10 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none pr-10 focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
                   />
                   <button type="button" onClick={() => setShowCurrent((p) => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -800,7 +750,7 @@ export default function DriverTabs({
                     value={newPw}
                     onChange={(e) => setNewPw(e.target.value)}
                     placeholder="Min. 8 characters"
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none pr-10 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
+                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none pr-10 focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
                   />
                   <button type="button" onClick={() => setShowNew((p) => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -815,7 +765,7 @@ export default function DriverTabs({
                   value={confirmPw}
                   onChange={(e) => setConfirmPw(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
                 />
               </div>
 
@@ -826,7 +776,7 @@ export default function DriverTabs({
                 type="submit"
                 disabled={pwLoading || !currentPw || !newPw || !confirmPw}
                 className="w-full py-3 rounded-2xl text-[14px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)" }}
+                style={{ background: "#FF6200" }}
               >
                 {pwLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 Update Password
@@ -840,10 +790,10 @@ export default function DriverTabs({
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
         style={{
-          background: "rgba(6, 0, 17, 0.82)",
-          backdropFilter: "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(255,255,255,0.97)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderTop: "1px solid #E2E8F0",
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
@@ -857,11 +807,11 @@ export default function DriverTabs({
             >
               <Icon
                 className="w-[22px] h-[22px] transition-all"
-                style={{ color: active ? "#FF6200" : "rgba(255,255,255,0.38)", strokeWidth: active ? 2.2 : 1.7 }}
+                style={{ color: active ? "#FF6200" : "#94A3B8", strokeWidth: active ? 2.2 : 1.7 }}
               />
               <span
                 className="text-[10px] font-semibold transition-colors"
-                style={{ color: active ? "#FF6200" : "rgba(255,255,255,0.38)" }}
+                style={{ color: active ? "#FF6200" : "#94A3B8" }}
               >
                 {label}
               </span>
@@ -876,11 +826,11 @@ export default function DriverTabs({
         >
           <MoreHorizontal
             className="w-[22px] h-[22px] transition-all"
-            style={{ color: (showMore || tabInMore) ? "#FF6200" : "rgba(255,255,255,0.38)", strokeWidth: (showMore || tabInMore) ? 2.2 : 1.7 }}
+            style={{ color: (showMore || tabInMore) ? "#FF6200" : "#94A3B8", strokeWidth: (showMore || tabInMore) ? 2.2 : 1.7 }}
           />
           <span
             className="text-[10px] font-semibold transition-colors"
-            style={{ color: (showMore || tabInMore) ? "#FF6200" : "rgba(255,255,255,0.38)" }}
+            style={{ color: (showMore || tabInMore) ? "#FF6200" : "#94A3B8" }}
           >
             More
           </span>
@@ -900,22 +850,21 @@ export default function DriverTabs({
           <div
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe"
             style={{
-              background: "rgba(14, 0, 31, 0.96)",
-              backdropFilter: "blur(40px)",
-              WebkitBackdropFilter: "blur(40px)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "#ffffff",
+              border: "1px solid #E2E8F0",
               borderBottom: "none",
+              boxShadow: "0 -4px 32px rgba(0,0,0,0.08)",
               paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)",
             }}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.2)" }} />
+              <div className="w-10 h-1 rounded-full" style={{ background: "#E2E8F0" }} />
             </div>
             <div className="px-5 pt-1 pb-4 flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-white">More</span>
-              <button onClick={() => setShowMore(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <X className="w-4 h-4 text-white" />
+              <span className="text-[13px] font-semibold" style={{ color: "#0F172A" }}>More</span>
+              <button onClick={() => setShowMore(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "#F1F5F9" }}>
+                <X className="w-4 h-4" style={{ color: "#64748B" }} />
               </button>
             </div>
             <div className="px-4 grid grid-cols-2 gap-2 pb-4">
@@ -927,20 +876,20 @@ export default function DriverTabs({
                     onClick={() => goTab(key)}
                     className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-[0.97]"
                     style={active ? {
-                      background: "rgba(255,98,0,0.15)",
-                      border: "1px solid rgba(255,98,0,0.3)",
+                      background: "rgba(255,98,0,0.08)",
+                      border: "1px solid rgba(255,98,0,0.2)",
                     } : {
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.07)",
+                      background: "#F8FAFC",
+                      border: "1px solid #F1F5F9",
                     }}
                   >
                     <Icon
                       className="w-5 h-5 shrink-0"
-                      style={{ color: active ? "#FF6200" : "rgba(255,255,255,0.5)" }}
+                      style={{ color: active ? "#FF6200" : "#94A3B8" }}
                     />
                     <span
                       className="text-[13px] font-semibold"
-                      style={{ color: active ? "#FF6200" : "rgba(255,255,255,0.7)" }}
+                      style={{ color: active ? "#FF6200" : "#475569" }}
                     >
                       {label}
                     </span>

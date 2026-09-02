@@ -137,42 +137,38 @@ export default async function DriverDashboard() {
   return (
     <div
       className="min-h-screen w-full flex flex-col"
-      style={{ background: "linear-gradient(160deg, #060011 0%, #0e001f 55%, #150600 100%)" }}
+      style={{ background: "#F8FAFC" }}
     >
-      {/* Sticky frosted nav */}
+      {/* Sticky nav */}
       <nav
-        className="sticky top-0 z-40 flex items-center justify-between px-5 py-3.5 md:px-10"
+        className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 md:px-10"
         style={{
-          background: "rgba(6, 0, 17, 0.72)",
-          backdropFilter: "blur(28px)",
-          WebkitBackdropFilter: "blur(28px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid #E2E8F0",
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded-xl p-0.5 shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+          <div className="rounded-xl p-0.5" style={{ background: "#F1F5F9" }}>
             {orgRow?.logoUrl ? (
-              <img src={orgRow.logoUrl} alt={orgRow.name} style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 8 }} />
+              <img src={orgRow.logoUrl} alt={orgRow.name} style={{ width: 34, height: 34, objectFit: "contain", borderRadius: 8 }} />
             ) : (
-              <Image src="/logo-icon.png" alt="MyGroundOps" width={36} height={36} className="object-contain rounded-lg" />
+              <Image src="/logo-icon.png" alt="MyGroundOps" width={34} height={34} className="object-contain rounded-lg" />
             )}
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-[14px] font-bold text-white tracking-tight">{orgRow?.name ?? "MyGroundOps"}</span>
-            <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>Driver Portal</span>
+            <span className="text-[14px] font-bold tracking-tight" style={{ color: "#0F172A" }}>{orgRow?.name ?? "MyGroundOps"}</span>
+            <span className="text-[11px] font-medium" style={{ color: "#94A3B8" }}>Driver Portal</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium hidden sm:block" style={{ color: "rgba(255,255,255,0.45)" }}>{session.name}</span>
+          <span className="text-[12px] font-medium hidden sm:block" style={{ color: "#94A3B8" }}>{session.name}</span>
           {session.isAdmin && (
             <a
               href="/dashboard"
               className="text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "rgba(255,255,255,0.6)",
-              }}
+              style={{ background: "#F1F5F9", border: "1px solid #E2E8F0", color: "#475569" }}
             >
               Dashboard
             </a>
@@ -184,12 +180,12 @@ export default async function DriverDashboard() {
       {/* Content */}
       <div className="flex-1 px-5 pt-6 md:px-10 max-w-2xl mx-auto w-full">
         <div className="mb-7">
-          <p className="text-[12px] font-medium mb-0.5" style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.02em" }}>Welcome back,</p>
-          <h1 className="text-[32px] font-bold text-white tracking-tight leading-none">{session.name}</h1>
+          <p className="text-[12px] font-medium mb-0.5" style={{ color: "#94A3B8", letterSpacing: "0.02em" }}>Welcome back,</p>
+          <h1 className="text-[32px] font-bold tracking-tight leading-none" style={{ color: "#0F172A" }}>{session.name}</h1>
           {todayWorkArea && (
             <div className="flex items-center gap-2 mt-2.5">
               <WorkAreaShape shape={todayWorkArea.shape} color={todayWorkArea.color} size={12} />
-              <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>{todayWorkArea.name}</span>
+              <span className="text-[12px] font-semibold" style={{ color: "#64748B" }}>{todayWorkArea.name}</span>
             </div>
           )}
         </div>

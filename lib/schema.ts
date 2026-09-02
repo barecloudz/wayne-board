@@ -42,7 +42,8 @@ export const workAreas = pgTable("work_areas", {
 export const drivers = pgTable("drivers", {
   id:                serial("id").primaryKey(),
   organizationId:    integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-  driverId:          text("driver_id").notNull(),  // unique per org — enforced by orgDriverUnique index
+  driverId:          text("driver_id").notNull(),  // FedEx ID — used for DSW/review matching, NOT login
+  username:          text("username"),              // login credential — unique globally
   name:              text("name").notNull(),
   passwordHash:      text("password_hash").notNull(),
   role:              text("role").notNull().default("driver"),  // "driver"|"management"|"owner"

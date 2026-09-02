@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { drivers, organizations } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
-  const { driverId, password, orgSlug } = await req.json();
+  const { username, password, orgSlug } = await req.json();
 
-  if (!driverId || !password) {
+  if (!username || !password) {
     return NextResponse.json({ error: "Missing credentials." }, { status: 400 });
   }
 
@@ -29,22 +29,26 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (!org || org.subscriptionStatus === "canceled") {
-    return NextResponse.json({ error: "Invalid Driver ID or password." }, { status: 401 });
+    return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
+  // Look up by username first; fall back to driverId for drivers without a username yet
   const [driver] = await db
     .select()
     .from(drivers)
-    .where(and(eq(drivers.organizationId, org.id), eq(drivers.driverId, driverId.trim())))
+    .where(and(
+      eq(drivers.organizationId, org.id),
+      or(eq(drivers.username, username.trim()), eq(drivers.driverId, username.trim())),
+    ))
     .limit(1);
 
   if (!driver || !driver.active) {
-    return NextResponse.json({ error: "Invalid Driver ID or password." }, { status: 401 });
+    return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
   const match = await bcrypt.compare(password, driver.passwordHash);
   if (!match) {
-    return NextResponse.json({ error: "Invalid Driver ID or password." }, { status: 401 });
+    return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
   if (!driver.firstLoginAt) {

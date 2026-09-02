@@ -30,19 +30,12 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
 
   if (org.subscriptionStatus === "canceled") {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "#F8FAFC" }}
-      >
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F8FAFC" }}>
         <div className="text-center px-6">
           <p className="text-[15px]" style={{ color: "#475569" }}>
             This station&apos;s subscription is no longer active.
           </p>
-          <a
-            href="/"
-            className="text-[13px] mt-4 inline-block font-medium transition-colors"
-            style={{ color: "#16A34A" }}
-          >
+          <a href="/" className="text-[13px] mt-4 inline-block font-medium" style={{ color: "#FF6200" }}>
             ← MyGroundOps
           </a>
         </div>
@@ -51,25 +44,21 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: "#F8FAFC" }}
-    >
-      {/* Branding */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-5" style={{ background: "#F8FAFC" }}>
+      {/* Logo + org name */}
       <div className="mb-8 flex flex-col items-center gap-4">
-        {org.logoUrl ? (
-          <img src={org.logoUrl} alt={org.name} className="h-16 w-auto object-contain" />
-        ) : (
-          <Image src="/logo-icon.png" alt="MyGroundOps" width={64} height={64} className="rounded-2xl" />
-        )}
+        <div className="rounded-2xl p-1" style={{ background: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+          {org.logoUrl ? (
+            <img src={org.logoUrl} alt={org.name} style={{ width: 60, height: 60, objectFit: "contain", borderRadius: 10 }} />
+          ) : (
+            <Image src="/logo-icon.png" alt="MyGroundOps" width={60} height={60} className="rounded-xl object-contain" />
+          )}
+        </div>
         <div className="text-center">
-          <h1
-            className="text-[24px] font-extrabold tracking-tight leading-tight"
-            style={{ color: "#0F172A" }}
-          >
+          <h1 className="text-[24px] font-extrabold tracking-tight leading-tight" style={{ color: "#0F172A" }}>
             {org.name}
           </h1>
-          <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
+          <p className="text-[13px] mt-1 font-medium" style={{ color: "#94A3B8" }}>
             Driver Portal
           </p>
         </div>
@@ -77,21 +66,21 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
 
       {/* Login card */}
       <div
-        className="w-full max-w-[400px] rounded-2xl overflow-hidden"
+        className="w-full max-w-[400px] rounded-2xl px-7 py-7"
         style={{
           background: "#ffffff",
           border: "1px solid #E2E8F0",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.06)",
         }}
       >
-        {/* Green top accent bar */}
-        <div className="h-[3px]" style={{ background: "linear-gradient(90deg, #16A34A, #4ADE80)" }} />
+        {/* Orange accent bar */}
+        <div className="h-[3px] -mx-7 -mt-7 mb-6 rounded-t-2xl" style={{ background: "linear-gradient(90deg, #FF6200, #ff8c42)" }} />
         <OrgLoginForm orgSlug={slug} />
       </div>
 
       <p className="mt-8 text-[12px]" style={{ color: "#94A3B8" }}>
         Powered by{" "}
-        <a href="/" className="hover:underline transition-colors" style={{ color: "#94A3B8" }}>
+        <a href="/" className="hover:underline" style={{ color: "#94A3B8" }}>
           MyGroundOps
         </a>
       </p>
