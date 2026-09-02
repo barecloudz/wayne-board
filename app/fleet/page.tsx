@@ -51,7 +51,7 @@ export default async function FleetPage() {
         <div className="flex items-start justify-between mb-8">
           <div>
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-              742 Logistics · FedEx Ground Contractor
+              Apparo Group · FedEx Ground Contractor
             </p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               Fleet Inspections
@@ -179,7 +179,7 @@ export default async function FleetPage() {
         </div>
 
         <p className="mt-8 text-center text-[11px] text-slate-400">
-          M-121 · U.S. Quarterly Vehicle Inspection Checklist · 742 Logistics
+          M-121 · U.S. Quarterly Vehicle Inspection Checklist · Apparo Group
         </p>
       </main>
     </AppShell>

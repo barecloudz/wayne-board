@@ -86,7 +86,7 @@ export async function GET() {
   const criticalVehicles = rows.filter((v) => v.conditions.some((c) => c.severity === "critical"));
 
   const doc = (
-    <Document title="742 Fleet Vehicle Status" author="742 Logistics">
+    <Document title="742 Fleet Vehicle Status" author="Apparo Group">
       {/* ── PAGE 1: Summary ───────────────────────────────────────────── */}
       <Page size="LETTER" style={styles.page}>
         {/* Header band */}
@@ -99,7 +99,7 @@ export async function GET() {
           <View>
             <Text style={styles.metaText}>Issued  {today}</Text>
             <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>Blake Nardoni</Text></Text>
-            <Text style={styles.metaText}>742 Logistics Inc.</Text>
+            <Text style={styles.metaText}>Apparo Group INC</Text>
           </View>
         </View>
         <View style={styles.orangeBar} />
@@ -200,7 +200,7 @@ export async function GET() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>742 LOGISTICS INC. · INTERNAL DOCUMENT · CONFIDENTIAL</Text>
+          <Text style={styles.footerText}>APPARO GROUP INC · INTERNAL DOCUMENT · CONFIDENTIAL</Text>
           <Text style={styles.footerText}>Generated {today}</Text>
         </View>
       </Page>
@@ -292,7 +292,7 @@ export async function GET() {
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>742 LOGISTICS INC. · INTERNAL DOCUMENT · CONFIDENTIAL</Text>
+              <Text style={styles.footerText}>APPARO GROUP INC · INTERNAL DOCUMENT · CONFIDENTIAL</Text>
               <Text style={styles.footerText}>Unit {v.unitNumber}</Text>
             </View>
           </Page>

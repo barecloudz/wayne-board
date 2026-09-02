@@ -7,16 +7,16 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "MyGroundOps — FedEx Ground ISP Management",
+  title: "MyGroundOps: FedEx Ground ISP Management",
   description:
-    "Driver scores, MMR compliance, fleet inspection, and route ops — one dashboard for FedEx Ground independent service providers.",
+    "Driver scores, MMR compliance, fleet inspection, and route ops, one dashboard for FedEx Ground independent service providers.",
   openGraph: {
     title: "MyGroundOps",
     description:
-      "Driver scores, MMR compliance, fleet inspection, and route ops — one dashboard for FedEx Ground ISPs.",
+      "Driver scores, MMR compliance, fleet inspection, and route ops, one dashboard for FedEx Ground ISPs.",
     url: "https://mygroundops.com",
     siteName: "MyGroundOps",
-    images: [{ url: "/og-image.png", width: 2048, height: 1152, alt: "MyGroundOps — Your operation, under control." }],
+    images: [{ url: "/og-image.png", width: 2048, height: 1152, alt: "MyGroundOps: Your operation, under control." }],
     type: "website",
   },
 };
@@ -25,7 +25,7 @@ const FEATURES = [
   {
     icon: Truck,
     title: "Fleet Inspection",
-    desc: "Interactive 3D truck viewer with clickable tire and fluid hotspots. Every inspection is timestamped and stored per vehicle — audits are never a scramble.",
+    desc: "Interactive 3D truck viewer with clickable tire and fluid hotspots. Every inspection is timestamped and stored per vehicle. Audits are never a scramble.",
   },
   {
     icon: ClipboardList,
@@ -50,7 +50,7 @@ const FEATURES = [
   {
     icon: Shield,
     title: "Compliance Tools",
-    desc: "MMR tracking, inspection records, and document management in one place. Always ready for a compliance review — no scrambling the night before.",
+    desc: "MMR tracking, inspection records, and document management in one place. Always ready for a compliance review. No scrambling the night before.",
   },
 ];
 
@@ -162,7 +162,7 @@ export default function HomePage() {
           className="text-[16px] md:text-[18px] leading-relaxed mb-8 max-w-lg"
           style={{ color: "#475569" }}
         >
-          Driver scores, MMR compliance, fleet inspection, and route ops —
+          Driver scores, MMR compliance, fleet inspection, and route ops.
           one dashboard built by an ISP owner who knows exactly what you deal
           with every morning.
         </p>
@@ -270,7 +270,7 @@ export default function HomePage() {
             className="font-black leading-tight tracking-tight"
             style={{ fontSize: "clamp(18px, 3vw, 26px)", color: "#0A1A0E", flex: 1 }}
           >
-            &ldquo;Built by a FedEx Ground contractor who manages 17+ routes daily —
+            &ldquo;Built by a FedEx Ground contractor who manages 17+ routes daily.
             not a software company guessing at your problems.&rdquo;
           </p>
           <div className="flex-shrink-0 flex flex-col gap-0.5">

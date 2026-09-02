@@ -55,7 +55,7 @@ export default async function Home() {
         {/* Page header */}
         <div className="mb-8">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-            742 Logistics · FedEx Ground Contractor
+            Apparo Group · FedEx Ground Contractor
           </p>
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
             Operations Overview

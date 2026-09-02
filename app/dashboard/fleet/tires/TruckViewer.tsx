@@ -178,7 +178,7 @@ export default function TruckViewer() {
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-10 px-6 py-3 bg-white/90 backdrop-blur border-b border-slate-200 flex items-center gap-4">
         <div>
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Wayne Board · Fleet</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">MyGroundOps · Fleet</p>
           <h1 className="text-[18px] font-extrabold text-slate-900 leading-none">Tire Inspector</h1>
         </div>
         <div className="ml-auto flex items-center gap-4">

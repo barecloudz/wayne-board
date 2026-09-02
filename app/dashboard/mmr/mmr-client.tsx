@@ -112,7 +112,7 @@ export default function MmrClient() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
-          Wayne Board · Fleet
+          MyGroundOps · Fleet
         </p>
         <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none mb-2">
           MMR Generator
