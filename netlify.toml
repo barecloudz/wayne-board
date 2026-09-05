@@ -1,9 +1,8 @@
 [build]
-  command = "npm ci && rm -rf .next/cache && npm run build"
+  command = "npm ci && rm -rf .next/cache && NEXT_PUBLIC_DEPLOY_ID=$DEPLOY_ID npm run build"
   publish = ".next"
 
 [build.environment]
-  NEXT_PUBLIC_DEPLOY_ID = "$DEPLOY_ID"
   SECRETS_SCAN_OMIT_PATHS = "scripts/"
 
 [[plugins]]
