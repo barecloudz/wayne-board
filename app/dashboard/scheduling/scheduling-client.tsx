@@ -3,7 +3,7 @@
 import { useState, useTransition, Fragment, useRef } from "react";
 import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
-  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight,
+  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
@@ -113,7 +113,12 @@ export default function SchedulingClient({
   dailyAssignments: DailyAssignmentRow[];
   droRoutes: DroRouteRow[];
 }) {
-  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added">("schedules");
+  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history">("schedules");
+  const [historyDate, setHistoryDate] = useState(() => {
+    // Default to yesterday
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  });
   const [isPending, startTransition] = useTransition();
 
   // ── Schedule editing ──────────────────────────────────────────────────────
@@ -248,9 +253,16 @@ export default function SchedulingClient({
     if (!coverageModal) return;
     const { driver, dateStr } = coverageModal;
     startTransition(async () => {
-      await addTimeOff(driver.driverId, dateStr, dateStr, "Other", "Cut from day");
-      // Update offSet optimistically by re-fetching isn't possible client-side,
-      // so just close and let revalidation refresh
+      await addTimeOff(driver.driverId, dateStr, dateStr, "Cut");
+      setCoverageModal(null);
+    });
+  }
+
+  function handleCallOut() {
+    if (!coverageModal) return;
+    const { driver, dateStr } = coverageModal;
+    startTransition(async () => {
+      await addTimeOff(driver.driverId, dateStr, dateStr, "Call Out");
       setCoverageModal(null);
     });
   }
@@ -393,6 +405,7 @@ export default function SchedulingClient({
           { key: "timeoff",   label: "Time Off",          icon: Calendar },
           { key: "coverage",  label: "Who's Working",     icon: AlertTriangle },
           { key: "added",     label: "Extra Days",        icon: CalendarPlus },
+          { key: "history",   label: "Attendance History", icon: History },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -426,6 +439,11 @@ export default function SchedulingClient({
       {tab === "added" && (
         <p className="text-[13px] text-slate-400 mb-6">
           One-time extra days — when a driver comes in on a day they&apos;re not normally scheduled. Add these from the Weekly Schedule tab using the <strong className="text-slate-600">+ Extra Day</strong> button.
+        </p>
+      )}
+      {tab === "history" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          Pick any past date to see who was working, who was cut, who called out, and who had time off.
         </p>
       )}
 
@@ -1231,6 +1249,123 @@ export default function SchedulingClient({
       })()}
 
       {/* ── COVERAGE DRIVER MODAL ────────────────────────────────────────── */}
+      {/* ── HISTORY TAB ──────────────────────────────────────────────────── */}
+      {tab === "history" && (() => {
+        // Compute attendance for the selected date
+        const date = parseISO(historyDate);
+        const dayKey = JS_DAY_TO_KEY[date.getDay()];
+
+        // Time-off entries that cover this date
+        const dayEntries = timeOff.filter(
+          (to) => to.startDate <= historyDate && to.endDate >= historyDate
+        );
+        const offDriverIds = new Set(dayEntries.map((to) => to.driverId));
+
+        // Overrides for this date
+        const dayOverrideIds = new Set(
+          allOverrides.filter((o) => o.date === historyDate).map((o) => o.driverId)
+        );
+
+        type HistoryEntry = { driver: ScheduleRow; reason: string; note: string | null };
+        const working: ScheduleRow[] = [];
+        const cuts: HistoryEntry[] = [];
+        const callOuts: HistoryEntry[] = [];
+        const timeOffList: HistoryEntry[] = [];
+
+        for (const driver of schedules.filter((s) => s.active || offDriverIds.has(s.driverId))) {
+          if (isPastLastDay(driver.driverId, date)) continue;
+          const scheduled = dayKey ? driver.schedule?.[dayKey] === true : false;
+          const hasOverride = dayOverrideIds.has(driver.driverId);
+          if (!scheduled && !hasOverride) continue;
+
+          if (!offDriverIds.has(driver.driverId)) {
+            if (driver.active) working.push(driver);
+          } else {
+            const entries = dayEntries.filter((to) => to.driverId === driver.driverId);
+            for (const e of entries) {
+              if (e.reason === "Cut" || e.reason === "Other") cuts.push({ driver, reason: e.reason, note: e.note });
+              else if (e.reason === "Call Out") callOuts.push({ driver, reason: e.reason, note: e.note });
+              else timeOffList.push({ driver, reason: e.reason, note: e.note });
+            }
+          }
+        }
+
+        const Section = ({ title, color, items, emptyText }: {
+          title: string; color: string; items: { name: string; driverId: string; note?: string | null }[]; emptyText: string;
+        }) => (
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${color}`}>{title} <span className="text-slate-400 font-normal">({items.length})</span></p>
+            {items.length === 0
+              ? <p className="text-[12px] text-slate-300 italic">{emptyText}</p>
+              : <div className="flex flex-col gap-1">
+                  {items.map((item) => (
+                    <div key={item.driverId} className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold text-slate-800">{item.name}</span>
+                      {item.note && <span className="text-[11px] text-slate-400 italic">{item.note}</span>}
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        );
+
+        return (
+          <div className="flex flex-col gap-6">
+            {/* Date picker */}
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                value={historyDate}
+                max={today}
+                onChange={(e) => setHistoryDate(e.target.value)}
+                className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white"
+              />
+              <span className="text-[14px] font-semibold text-slate-600">
+                {format(date, "EEEE, MMMM d, yyyy")}
+              </span>
+            </div>
+
+            {/* Attendance grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  title: "Working", color: "text-emerald-600",
+                  bg: "bg-emerald-50 border-emerald-200/60",
+                  items: working.map((d) => ({ name: d.name, driverId: d.driverId })),
+                  emptyText: "No drivers scheduled",
+                },
+                {
+                  title: "Cut", color: "text-red-500",
+                  bg: "bg-red-50 border-red-200/60",
+                  items: cuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                  emptyText: "No cuts",
+                },
+                {
+                  title: "Called Out", color: "text-amber-600",
+                  bg: "bg-amber-50 border-amber-200/60",
+                  items: callOuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                  emptyText: "No call-outs",
+                },
+                {
+                  title: "Time Off", color: "text-blue-600",
+                  bg: "bg-blue-50 border-blue-200/60",
+                  items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" — ") })),
+                  emptyText: "No time off",
+                },
+              ].map(({ title, color, bg, items, emptyText }) => (
+                <div key={title} className={`rounded-2xl border p-5 ${bg}`}>
+                  <Section title={title} color={color} items={items} emptyText={emptyText} />
+                </div>
+              ))}
+            </div>
+
+            {working.length === 0 && cuts.length === 0 && callOuts.length === 0 && timeOffList.length === 0 && (
+              <p className="text-[13px] text-slate-400 text-center py-6">No drivers were scheduled on this day.</p>
+            )}
+          </div>
+        );
+      })()}
+
       {coverageModal && (() => {
         const { driver, dateStr } = coverageModal;
         const assignedVehicle = vehicles.find(v => v.id === driver.assignedVehicleId);
@@ -1268,18 +1403,28 @@ export default function SchedulingClient({
               </div>
 
               <div className="px-6 py-5 flex flex-col gap-5">
-                {/* Cut from day */}
+                {/* Cut / Call Out */}
                 <div className="flex flex-col gap-2">
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Not working this day?</p>
-                  <p className="text-[12px] text-slate-500">This will mark them as off for the day and remove them from coverage.</p>
-                  <button
-                    onClick={handleCutDay}
-                    disabled={isPending}
-                    className="w-full py-3 rounded-xl text-[13px] font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
-                  >
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                    Cut {driver.name.split(" ")[0]} on {format(parseISO(dateStr), "EEE MMM d")}
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleCutDay}
+                      disabled={isPending}
+                      className="py-3 rounded-xl text-[13px] font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                      Cut
+                    </button>
+                    <button
+                      onClick={handleCallOut}
+                      disabled={isPending}
+                      className="py-3 rounded-xl text-[13px] font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                      Call Out
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Cut = management decision · Call Out = driver called in</p>
                 </div>
 
                 {/* Assign vehicle */}
