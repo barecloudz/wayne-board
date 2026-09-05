@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
@@ -90,17 +90,7 @@ function CollapsibleSection({
   );
 }
 
-export default function Sidebar({
-  orgLogo,
-  orgName,
-  userName,
-  userInitials,
-}: {
-  orgLogo: string | null;
-  orgName: string;
-  userName: string;
-  userInitials: string;
-}) {
+export default function Sidebar() {
   const pathname = usePathname();
 
   const adminActive  = adminItems.some(i => pathname === i.href);
@@ -112,6 +102,27 @@ export default function Sidebar({
   const [autoOpen,   setAutoOpen]   = useState(autoActive);
   const [compOpen,   setCompOpen]   = useState(compActive);
   const [reportOpen, setReportOpen] = useState(reportActive);
+
+  const [orgLogo,      setOrgLogo]      = useState<string | null>(null);
+  const [orgName,      setOrgName]      = useState("MyGroundOps");
+  const [userName,     setUserName]     = useState("");
+  const [userInitials, setUserInitials] = useState("?");
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then(r => r.json())
+      .then(d => {
+        if (d.orgLogo)  setOrgLogo(d.orgLogo);
+        if (d.orgName)  setOrgName(d.orgName);
+        if (d.name) {
+          setUserName(d.name);
+          setUserInitials(
+            d.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   function NavLink({ icon: Icon, label, href, exact }: {
     icon: React.ComponentType<{ className?: string }>;
@@ -200,7 +211,7 @@ export default function Sidebar({
           <span className="text-[11px] font-bold text-slate-900">{userInitials}</span>
         </div>
         <div className="flex flex-col leading-none min-w-0">
-          <span className="text-[12px] font-semibold text-slate-800 truncate">{userName}</span>
+          <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "—"}</span>
           <span className="text-[11px] text-slate-400 mt-0.5">Admin</span>
         </div>
         <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
