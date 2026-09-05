@@ -505,7 +505,7 @@ export default function DriversPage() {
                     </button>
                     {roleMenuOpen === driver.id && (
                       <div className="absolute left-full top-0 ml-1 bg-white border border-slate-200 rounded-xl shadow-lg w-36 py-1 z-50">
-                        {(["driver", "bc", ...(myRole === "owner" ? ["co_owner", "developer"] : [])] as const).map((r) => (
+                        {(["driver", "bc", ...(myRole === "owner" ? ["co_owner", "developer"] : [])] as Array<"driver" | "bc" | "co_owner" | "developer">).map((r) => (
                           <button
                             key={r}
                             onClick={() => handleSetRole(driver.id, r)}
