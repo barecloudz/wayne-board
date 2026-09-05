@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
-export default function LogoutButton() {
+export default function LogoutButton({ orgSlug }: { orgSlug: string }) {
   const router = useRouter();
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
+    router.push(orgSlug ? `/login/${orgSlug}` : "/sign-in");
   }
 
   return (

@@ -9,7 +9,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ name: "", orgName: "", orgLogo: null });
 
   const [org] = await db
-    .select({ name: organizations.name, logoUrl: organizations.logoUrl })
+    .select({ name: organizations.name, logoUrl: organizations.logoUrl, slug: organizations.slug })
     .from(organizations)
     .where(eq(organizations.id, session.organizationId))
     .limit(1);
@@ -18,5 +18,6 @@ export async function GET() {
     name: session.name,
     orgName: org?.name ?? "MyGroundOps",
     orgLogo: org?.logoUrl ?? null,
+    orgSlug: org?.slug ?? null,
   });
 }

@@ -92,7 +92,7 @@ export default async function DriverDashboard() {
         .orderBy(desc(dswRouteDays.date))
         .catch(() => []);
     })(),
-    db.select({ name: organizations.name, logoUrl: organizations.logoUrl, accentColor: organizations.accentColor }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
+    db.select({ name: organizations.name, logoUrl: organizations.logoUrl, accentColor: organizations.accentColor, slug: organizations.slug }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -184,7 +184,7 @@ export default async function DriverDashboard() {
               Dashboard
             </a>
           )}
-          <LogoutButton />
+          <LogoutButton orgSlug={orgRow?.slug ?? ""} />
         </div>
       </nav>
 

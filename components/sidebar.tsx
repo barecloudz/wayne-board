@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
-  Zap, ChevronDown, ChevronUp, PenLine,
+  Zap, ChevronDown, ChevronUp, PenLine, LogOut,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
@@ -103,10 +104,14 @@ export default function Sidebar() {
   const [compOpen,   setCompOpen]   = useState(compActive);
   const [reportOpen, setReportOpen] = useState(reportActive);
 
+  const router = useRouter();
   const [orgLogo,      setOrgLogo]      = useState<string | null>(null);
   const [orgName,      setOrgName]      = useState("MyGroundOps");
+  const [orgSlug,      setOrgSlug]      = useState("");
   const [userName,     setUserName]     = useState("");
   const [userInitials, setUserInitials] = useState("?");
+  const [accountOpen,  setAccountOpen]  = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/me")
@@ -114,6 +119,7 @@ export default function Sidebar() {
       .then(d => {
         if (d.orgLogo)  setOrgLogo(d.orgLogo);
         if (d.orgName)  setOrgName(d.orgName);
+        if (d.orgSlug)  setOrgSlug(d.orgSlug);
         if (d.name) {
           setUserName(d.name);
           setUserInitials(
@@ -123,6 +129,21 @@ export default function Sidebar() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push(orgSlug ? `/login/${orgSlug}` : "/sign-in");
+  }
 
   function NavLink({ icon: Icon, label, href, exact }: {
     icon: React.ComponentType<{ className?: string }>;
@@ -205,16 +226,40 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Bottom — logged-in user */}
-      <div className="p-4 border-t border-slate-100 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-          <span className="text-[11px] font-bold text-slate-900">{userInitials}</span>
-        </div>
-        <div className="flex flex-col leading-none min-w-0">
-          <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "—"}</span>
-          <span className="text-[11px] text-slate-400 mt-0.5">Admin</span>
-        </div>
-        <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+      {/* Bottom — logged-in user with account popover */}
+      <div ref={accountRef} className="relative p-3 border-t border-slate-100">
+        {accountOpen && (
+          <div className="absolute bottom-full left-3 right-3 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              onClick={() => setAccountOpen(false)}
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-400" />
+              Settings
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </div>
+        )}
+        <button
+          onClick={() => setAccountOpen(v => !v)}
+          className="flex items-center gap-2.5 w-full rounded-lg px-1 py-1 hover:bg-slate-50 transition-colors"
+        >
+          <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
+            <span className="text-[11px] font-bold text-slate-900">{userInitials}</span>
+          </div>
+          <div className="flex flex-col leading-none min-w-0 text-left">
+            <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "—"}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Admin</span>
+          </div>
+          <ChevronUp className={`ml-auto w-3.5 h-3.5 text-slate-300 transition-transform ${accountOpen ? "" : "rotate-180"}`} />
+        </button>
       </div>
     </aside>
   );

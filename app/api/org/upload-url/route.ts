@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     ContentType: contentType,
   });
 
-  const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 120 });
+  const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 120, unhoistableHeaders: new Set(["x-amz-checksum-crc32", "x-amz-sdk-checksum-algorithm"]) });
   const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
   return NextResponse.json({ uploadUrl, publicUrl });
