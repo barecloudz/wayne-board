@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { r2, R2_BUCKET, R2_PUBLIC_URL } from "@/lib/r2";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -10,22 +9,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { filename, contentType, field } = await req.json();
-  if (!filename || !contentType || !["logo", "og"].includes(field)) {
+  const form = await req.formData();
+  const file = form.get("file") as File | null;
+  const field = form.get("field") as string | null;
+
+  if (!file || !field || !["logo", "og"].includes(field)) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const ext = filename.split(".").pop()?.toLowerCase() ?? "png";
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
   const key = `orgs/${session.organizationId}/${field}.${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
 
-  const command = new PutObjectCommand({
+  await r2.send(new PutObjectCommand({
     Bucket: R2_BUCKET,
     Key: key,
-    ContentType: contentType,
-  });
+    Body: buffer,
+    ContentType: file.type,
+  }));
 
-  const uploadUrl = await getSignedUrl(r2, command, { expiresIn: 120, unhoistableHeaders: new Set(["x-amz-checksum-crc32", "x-amz-sdk-checksum-algorithm"]) });
   const publicUrl = `${R2_PUBLIC_URL}/${key}`;
-
-  return NextResponse.json({ uploadUrl, publicUrl });
+  return NextResponse.json({ publicUrl });
 }

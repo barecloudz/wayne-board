@@ -4,13 +4,11 @@ import { useState, useTransition, useRef } from "react";
 import { Loader2, Upload } from "lucide-react";
 
 async function uploadToR2(file: File, field: "logo" | "og"): Promise<string> {
-  const res = await fetch("/api/org/upload-url", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename: file.name, contentType: file.type, field }),
-  });
-  const { uploadUrl, publicUrl } = await res.json();
-  await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+  const form = new FormData();
+  form.append("file", file);
+  form.append("field", field);
+  const res = await fetch("/api/org/upload-url", { method: "POST", body: form });
+  const { publicUrl } = await res.json();
   return publicUrl;
 }
 
