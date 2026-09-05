@@ -261,7 +261,7 @@ export default function DriversPage() {
 
   return (
     <AppShell>
-      <main className="flex-1 px-6 py-8 max-w-[1100px] w-full mx-auto">
+      <main className="flex-1 px-4 sm:px-6 py-8 max-w-5xl w-full mx-auto">
         {/* Header */}
         <div className="flex items-start justify-between mb-8">
           <div>
@@ -373,15 +373,15 @@ export default function DriversPage() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-2xl">
-              <table className="w-full text-[13px]">
+              <table className="w-full text-[13px] min-w-[560px]">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/60">
-                    <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Driver ID</th>
+                    <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[110px]">Driver ID</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Name</th>
-                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell">Role</th>
-                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell">Created</th>
-                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Vehicle</th>
-                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell w-[140px]">Role</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell w-[90px]">Created</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden lg:table-cell w-[90px]">Vehicle</th>
+                    <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[160px]">Status</th>
                     <th className="px-3 py-3 w-10" />
                   </tr>
                 </thead>
@@ -389,7 +389,7 @@ export default function DriversPage() {
                   {filtered.map((driver) => (
                     <tr key={driver.id}
                       className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-3 font-mono text-[12px] text-slate-500 font-semibold">
+                      <td className="px-6 py-3 font-mono text-[12px] text-slate-500 font-semibold whitespace-nowrap">
                         {driver.driverId}
                       </td>
                       <td className="px-3 py-3">
@@ -401,7 +401,7 @@ export default function DriversPage() {
                       <td className="px-3 py-3 hidden sm:table-cell">
                         <RoleBadge role={driver.role} />
                       </td>
-                      <td className="px-3 py-3 text-slate-400 hidden md:table-cell">
+                      <td className="px-3 py-3 text-slate-400 whitespace-nowrap hidden md:table-cell">
                         {driver.createdAt ? new Date(driver.createdAt).toLocaleDateString() : "—"}
                       </td>
                       <td className="px-3 py-3 hidden lg:table-cell">
@@ -423,7 +423,7 @@ export default function DriversPage() {
                             {driver.active
                               ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                               : <XCircle className="w-3.5 h-3.5 text-red-400" />}
-                            <span className={`text-[12px] font-semibold ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
+                            <span className={`text-[12px] font-semibold whitespace-nowrap ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
                               {driver.active ? "Active" : driver.terminationType ? (
                                 driver.terminationType === "notice" ? "Gave Notice" :
                                 driver.terminationType === "fired" ? "Terminated" : "Removed"
@@ -431,7 +431,7 @@ export default function DriversPage() {
                             </span>
                           </div>
                           {driver.terminationNote && (
-                            <p className="text-[11px] text-slate-400 italic truncate max-w-[180px]" title={driver.terminationNote}>
+                            <p className="text-[11px] text-slate-400 italic truncate max-w-[140px]" title={driver.terminationNote}>
                               {driver.terminationNote}
                             </p>
                           )}
@@ -439,7 +439,7 @@ export default function DriversPage() {
                             {driver.firstLoginAt
                               ? <Check className="w-3 h-3 text-blue-500" />
                               : <Clock className="w-3 h-3 text-slate-300" />}
-                            <span className={`text-[11px] ${driver.firstLoginAt ? "text-blue-600 font-semibold" : "text-slate-300"}`}>
+                            <span className={`text-[11px] whitespace-nowrap ${driver.firstLoginAt ? "text-blue-600 font-semibold" : "text-slate-300"}`}>
                               {driver.firstLoginAt
                                 ? `Logged in ${new Date(driver.firstLoginAt).toLocaleDateString()}`
                                 : "Never logged in"}
