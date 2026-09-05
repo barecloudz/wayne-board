@@ -1,7 +1,75 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { useState, useTransition, useRef } from "react";
+import { Loader2, Upload } from "lucide-react";
+
+async function uploadToR2(file: File, field: "logo" | "og"): Promise<string> {
+  const res = await fetch("/api/org/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: file.name, contentType: file.type, field }),
+  });
+  const { uploadUrl, publicUrl } = await res.json();
+  await fetch(uploadUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+  return publicUrl;
+}
+
+function ImageUploader({
+  label,
+  hint,
+  currentUrl,
+  onUploaded,
+  previewClass,
+}: {
+  label: string;
+  hint: string;
+  currentUrl: string;
+  onUploaded: (url: string) => void;
+  previewClass?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadToR2(file, label === "Logo" ? "logo" : "og");
+      onUploaded(url);
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">{label}</label>
+      <div className="flex items-center gap-3">
+        {currentUrl && (
+          <img
+            src={currentUrl}
+            alt={label}
+            className={previewClass ?? "w-10 h-10 object-contain rounded-lg border border-slate-200"}
+            onError={e => (e.currentTarget.style.display = "none")}
+          />
+        )}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition disabled:opacity-50"
+        >
+          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+          {uploading ? "Uploading…" : currentUrl ? "Replace" : "Upload"}
+        </button>
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
+      <p className="text-[11px] text-slate-400">{hint}</p>
+    </div>
+  );
+}
 
 export default function BrandingSettings({
   initialLogoUrl,
@@ -23,7 +91,7 @@ export default function BrandingSettings({
       await fetch("/api/org/branding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: logoUrl.trim() || null, accentColor, ogImageUrl: ogImageUrl.trim() || null }),
+        body: JSON.stringify({ logoUrl: logoUrl || null, accentColor, ogImageUrl: ogImageUrl || null }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -40,24 +108,14 @@ export default function BrandingSettings({
         Customize your driver portal with your company logo and brand color.
       </p>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">Logo URL</label>
-          <input
-            type="url"
-            value={logoUrl}
-            onChange={e => setLogoUrl(e.target.value)}
-            placeholder="https://your-cdn.com/logo.png"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
-          />
-          {logoUrl && (
-            <div className="mt-1 flex items-center gap-3">
-              <img src={logoUrl} alt="Logo preview" className="w-10 h-10 object-contain rounded-lg border border-slate-200" onError={e => (e.currentTarget.style.display = "none")} />
-              <span className="text-[11px] text-slate-400">Preview</span>
-            </div>
-          )}
-          <p className="text-[11px] text-slate-400">Shown on the driver login page and portal header. Use a publicly accessible image URL.</p>
-        </div>
+      <div className="flex flex-col gap-5">
+        <ImageUploader
+          label="Logo"
+          hint="Shown on the driver login page and portal header."
+          currentUrl={logoUrl}
+          onUploaded={url => { setLogoUrl(url); }}
+          previewClass="w-12 h-12 object-contain rounded-xl border border-slate-200"
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">Brand Color</label>
@@ -80,23 +138,13 @@ export default function BrandingSettings({
           <p className="text-[11px] text-slate-400">Used for buttons, active tabs, and accents in the driver portal.</p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wider">Share Image (OG)</label>
-          <input
-            type="url"
-            value={ogImageUrl}
-            onChange={e => setOgImageUrl(e.target.value)}
-            placeholder="https://your-cdn.com/share-image.png"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
-          />
-          {ogImageUrl && (
-            <div className="mt-1 flex items-center gap-3">
-              <img src={ogImageUrl} alt="OG preview" className="w-20 h-12 object-cover rounded-lg border border-slate-200" onError={e => (e.currentTarget.style.display = "none")} />
-              <span className="text-[11px] text-slate-400">Preview</span>
-            </div>
-          )}
-          <p className="text-[11px] text-slate-400">Shown when someone shares your login link on iMessage, Slack, social media, etc. Recommended: 1200×630 px.</p>
-        </div>
+        <ImageUploader
+          label="Share Image"
+          hint="Shown when sharing your login link on iMessage, Slack, social media, etc. Recommended: 1200×630 px."
+          currentUrl={ogImageUrl}
+          onUploaded={url => { setOgImageUrl(url); }}
+          previewClass="w-24 h-14 object-cover rounded-lg border border-slate-200"
+        />
 
         {saved && (
           <p className="text-[13px] font-semibold text-emerald-600">Branding saved.</p>

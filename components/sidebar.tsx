@@ -26,13 +26,13 @@ const adminItems = [
 ];
 
 const automationItems = [
-  { icon: Map,           label: "Route Planner",  href: "/dashboard/route-planner",  exact: true },
-  { icon: Scissors,      label: "Create Routes",  href: "/dashboard/create-routes",  exact: true },
-  { icon: PenLine,       label: "Anchor Editor",  href: "/dashboard/anchor-editor",  exact: true },
-  { icon: Route,         label: "Auto DRO",        href: "/dashboard/auto-dro",        exact: true },
-  { icon: TrendingUp,    label: "Auto GC",         href: "/dashboard/auto-gc",         exact: true },
-  { icon: ClipboardList, label: "Auto DSW",        href: "/dashboard/auto-dsw",        exact: true },
-  { icon: Zap,           label: "Auto Spotlight",  href: "/dashboard/auto-spotlight",  exact: true },
+  { icon: Map,           label: "Route Planner",   href: "/dashboard/route-planner",  exact: true },
+  { icon: Scissors,      label: "Create Routes",   href: "/dashboard/create-routes",  exact: true },
+  { icon: PenLine,       label: "Anchor Editor",   href: "/dashboard/anchor-editor",  exact: true },
+  { icon: Route,         label: "Auto DRO",        href: "/dashboard/auto-dro",       exact: true },
+  { icon: TrendingUp,    label: "Auto GC",         href: "/dashboard/auto-gc",        exact: true },
+  { icon: ClipboardList, label: "Auto DSW",        href: "/dashboard/auto-dsw",       exact: true },
+  { icon: Zap,           label: "Auto Spotlight",  href: "/dashboard/auto-spotlight", exact: true },
 ];
 
 const complianceItems = [
@@ -47,20 +47,84 @@ const reportItems = [
   { icon: Map,        label: "Routes",  href: "/reports/routes",  exact: true },
 ];
 
-export default function Sidebar() {
-  const pathname = usePathname();
-  const automationActive = automationItems.some(i => pathname === i.href);
-  const [autoOpen, setAutoOpen] = useState(automationActive);
+function CollapsibleSection({
+  label,
+  open,
+  onToggle,
+  active,
+  iconEl,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  active?: boolean;
+  iconEl?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <button
+        onClick={onToggle}
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 w-full text-left ${
+          active ? "text-slate-900 bg-slate-50" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+        }`}
+      >
+        {iconEl ?? (
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{label}</span>
+        )}
+        {iconEl && <span className="flex-1">{label}</span>}
+        {!iconEl && <span className="flex-1" />}
+        {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1" />}
+        {open
+          ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
+          : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+        }
+      </button>
+      {open && (
+        <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
+          {children}
+        </div>
+      )}
+    </>
+  );
+}
 
-  function NavLink({ icon: Icon, label, href, exact }: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; exact: boolean }) {
+export default function Sidebar({
+  orgLogo,
+  orgName,
+  userName,
+  userInitials,
+}: {
+  orgLogo: string | null;
+  orgName: string;
+  userName: string;
+  userInitials: string;
+}) {
+  const pathname = usePathname();
+
+  const adminActive  = adminItems.some(i => pathname === i.href);
+  const autoActive   = automationItems.some(i => pathname === i.href);
+  const compActive   = complianceItems.some(i => pathname.startsWith(i.href));
+  const reportActive = reportItems.some(i => pathname === i.href);
+
+  const [adminOpen,  setAdminOpen]  = useState(adminActive || pathname.startsWith("/dashboard"));
+  const [autoOpen,   setAutoOpen]   = useState(autoActive);
+  const [compOpen,   setCompOpen]   = useState(compActive);
+  const [reportOpen, setReportOpen] = useState(reportActive);
+
+  function NavLink({ icon: Icon, label, href, exact }: {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    href: string;
+    exact: boolean;
+  }) {
     const active = exact ? pathname === href : pathname.startsWith(href);
     return (
       <Link
         href={href}
         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-          active
-            ? "bg-slate-950 text-white"
-            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+          active ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
         }`}
       >
         <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-slate-400"}`} />
@@ -73,9 +137,13 @@ export default function Sidebar() {
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
-        <Image src="/logo-icon.png" alt="MyGroundOps" width={52} height={32} className="object-contain" priority />
-        <div className="flex flex-col leading-none">
-          <span className="text-[13px] font-bold text-slate-900 tracking-tight">MyGroundOps</span>
+        {orgLogo ? (
+          <img src={orgLogo} alt={orgName} className="w-8 h-8 object-contain rounded-lg flex-shrink-0" />
+        ) : (
+          <Image src="/logo-icon.png" alt="MyGroundOps" width={32} height={32} className="object-contain rounded-lg flex-shrink-0" priority />
+        )}
+        <div className="flex flex-col leading-none min-w-0">
+          <span className="text-[13px] font-bold text-slate-900 tracking-tight truncate">{orgName}</span>
           <span className="text-[11px] text-slate-400 mt-0.5">Admin Dashboard</span>
         </div>
       </div>
@@ -86,60 +154,33 @@ export default function Sidebar() {
 
         <div className="my-3 border-t border-slate-100" />
 
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
-          Admin
-        </p>
-        {adminItems.map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
+        <CollapsibleSection label="Admin" open={adminOpen} onToggle={() => setAdminOpen(v => !v)}>
+          {adminItems.map(item => <NavLink key={item.href} {...item} />)}
+        </CollapsibleSection>
 
         <div className="my-3 border-t border-slate-100" />
 
-        {/* Automation dropdown */}
-        <button
-          onClick={() => setAutoOpen(v => !v)}
-          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 w-full text-left ${
-            automationActive
-              ? "text-slate-900 bg-slate-50"
-              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-          }`}
+        <CollapsibleSection
+          label="Automation"
+          open={autoOpen}
+          onToggle={() => setAutoOpen(v => !v)}
+          active={autoActive}
+          iconEl={<Zap className={`w-4 h-4 flex-shrink-0 ${autoActive ? "text-slate-700" : "text-slate-400"}`} />}
         >
-          <Zap className={`w-4 h-4 flex-shrink-0 ${automationActive ? "text-slate-700" : "text-slate-400"}`} />
-          <span className="flex-1">Automation</span>
-          {automationActive && (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1" />
-          )}
-          {autoOpen
-            ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
-            : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
-          }
-        </button>
-
-        {autoOpen && (
-          <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
-            {automationItems.map((item) => (
-              <NavLink key={item.href} {...item} />
-            ))}
-          </div>
-        )}
+          {automationItems.map(item => <NavLink key={item.href} {...item} />)}
+        </CollapsibleSection>
 
         <div className="my-3 border-t border-slate-100" />
 
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
-          Compliance
-        </p>
-        {complianceItems.map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
+        <CollapsibleSection label="Compliance" open={compOpen} onToggle={() => setCompOpen(v => !v)}>
+          {complianceItems.map(item => <NavLink key={item.href} {...item} />)}
+        </CollapsibleSection>
 
         <div className="my-3 border-t border-slate-100" />
 
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">
-          Reports
-        </p>
-        {reportItems.map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
+        <CollapsibleSection label="Reports" open={reportOpen} onToggle={() => setReportOpen(v => !v)}>
+          {reportItems.map(item => <NavLink key={item.href} {...item} />)}
+        </CollapsibleSection>
       </nav>
 
       {/* Driver Portal link */}
@@ -153,16 +194,16 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Bottom */}
+      {/* Bottom — logged-in user */}
       <div className="p-4 border-t border-slate-100 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-          <span className="text-[11px] font-bold text-slate-900">BN</span>
+          <span className="text-[11px] font-bold text-slate-900">{userInitials}</span>
         </div>
         <div className="flex flex-col leading-none min-w-0">
-          <span className="text-[12px] font-semibold text-slate-800 truncate">Blake Nardoni</span>
-          <span className="text-[11px] text-slate-400 mt-0.5">Operations Mgr</span>
+          <span className="text-[12px] font-semibold text-slate-800 truncate">{userName}</span>
+          <span className="text-[11px] text-slate-400 mt-0.5">Admin</span>
         </div>
-        <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" title="Demo" />
+        <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
       </div>
     </aside>
   );

@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
+  try {
   const { username, password, orgSlug } = await req.json();
 
   if (!username || !password) {
@@ -70,4 +71,8 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, role: driver.role, isAdmin: driver.isAdmin });
+  } catch (err) {
+    console.error("[login] unhandled error:", err);
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
+  }
 }
