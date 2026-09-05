@@ -48,8 +48,9 @@ export const drivers = pgTable("drivers", {
   username:          text("username"),              // login credential — unique globally
   name:              text("name").notNull(),
   passwordHash:      text("password_hash").notNull(),
-  role:              text("role").notNull().default("driver"),  // "driver"|"management"|"owner"
+  role:              text("role").notNull().default("driver"),  // "driver"|"bc"|"co_owner"|"developer"|"owner"
   isAdmin:           boolean("is_admin").notNull().default(false),
+  avatarUrl:         text("avatar_url"),
   assignedVehicleId: integer("assigned_vehicle_id"),
   workArea:          text("work_area"),
   defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),

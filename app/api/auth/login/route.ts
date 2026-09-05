@@ -59,18 +59,20 @@ export async function POST(req: NextRequest) {
       .where(and(eq(drivers.organizationId, org.id), eq(drivers.driverId, driver.driverId)));
   }
 
+  const isAdmin = driver.role !== "driver";
+
   await createSession({
     driverId: driver.driverId,
     organizationId: driver.organizationId,
     name: driver.name,
     role: driver.role,
-    isAdmin: driver.isAdmin,
+    isAdmin,
     subscriptionStatus: org.subscriptionStatus,
     demoMode: org.demoMode,
     demoExpiresAt: org.demoExpiresAt ? org.demoExpiresAt.toISOString() : null,
   });
 
-  return NextResponse.json({ ok: true, role: driver.role, isAdmin: driver.isAdmin });
+  return NextResponse.json({ ok: true, role: driver.role, isAdmin });
   } catch (err) {
     console.error("[login] unhandled error:", err);
     return NextResponse.json({ error: "Server error." }, { status: 500 });

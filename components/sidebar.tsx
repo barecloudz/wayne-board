@@ -110,16 +110,24 @@ export default function Sidebar() {
   const [orgSlug,      setOrgSlug]      = useState("");
   const [userName,     setUserName]     = useState("");
   const [userInitials, setUserInitials] = useState("?");
+  const [userRole,     setUserRole]     = useState("bc");
+  const [userAvatar,   setUserAvatar]   = useState<string | null>(null);
   const [accountOpen,  setAccountOpen]  = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+
+  const ROLE_LABELS: Record<string, string> = {
+    owner: "Owner", co_owner: "Co-Owner", developer: "Developer", bc: "Business Contact", driver: "Driver",
+  };
 
   useEffect(() => {
     fetch("/api/me")
       .then(r => r.json())
       .then(d => {
-        if (d.orgLogo)  setOrgLogo(d.orgLogo);
-        if (d.orgName)  setOrgName(d.orgName);
-        if (d.orgSlug)  setOrgSlug(d.orgSlug);
+        if (d.orgLogo)   setOrgLogo(d.orgLogo);
+        if (d.orgName)   setOrgName(d.orgName);
+        if (d.orgSlug)   setOrgSlug(d.orgSlug);
+        if (d.role)      setUserRole(d.role);
+        if (d.avatarUrl) setUserAvatar(d.avatarUrl);
         if (d.name) {
           setUserName(d.name);
           setUserInitials(
@@ -231,6 +239,14 @@ export default function Sidebar() {
         {accountOpen && (
           <div className="absolute bottom-full left-3 right-3 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
             <Link
+              href="/dashboard/account"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              onClick={() => setAccountOpen(false)}
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-400" />
+              My Account
+            </Link>
+            <Link
               href="/dashboard/settings"
               className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
               onClick={() => setAccountOpen(false)}
@@ -251,12 +267,14 @@ export default function Sidebar() {
           onClick={() => setAccountOpen(v => !v)}
           className="flex items-center gap-2.5 w-full rounded-lg px-1 py-1 hover:bg-slate-50 transition-colors"
         >
-          <div className="w-7 h-7 rounded-full bg-amber-400 flex items-center justify-center flex-shrink-0">
-            <span className="text-[11px] font-bold text-slate-900">{userInitials}</span>
+          <div className="w-7 h-7 rounded-full bg-amber-100 border border-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {userAvatar
+              ? <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+              : <span className="text-[11px] font-bold text-amber-700">{userInitials}</span>}
           </div>
           <div className="flex flex-col leading-none min-w-0 text-left">
             <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "—"}</span>
-            <span className="text-[11px] text-slate-400 mt-0.5">Admin</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</span>
           </div>
           <ChevronUp className={`ml-auto w-3.5 h-3.5 text-slate-300 transition-transform ${accountOpen ? "" : "rotate-180"}`} />
         </button>

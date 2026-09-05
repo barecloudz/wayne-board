@@ -13,12 +13,14 @@ export async function POST(req: NextRequest) {
   const file = form.get("file") as File | null;
   const field = form.get("field") as string | null;
 
-  if (!file || !field || !["logo", "og"].includes(field)) {
+  if (!file || !field || !["logo", "og", "avatar"].includes(field)) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
-  const key = `orgs/${session.organizationId}/${field}.${ext}`;
+  const key = field === "avatar"
+    ? `avatars/${session.organizationId}/${session.driverId}.${ext}`
+    : `orgs/${session.organizationId}/${field}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   await r2.send(new PutObjectCommand({

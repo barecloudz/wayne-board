@@ -38,6 +38,7 @@ export async function getDrivers() {
     name:              drivers.name,
     role:              drivers.role,
     isAdmin:           drivers.isAdmin,
+    avatarUrl:         drivers.avatarUrl,
     assignedVehicleId: drivers.assignedVehicleId,
     active:            drivers.active,
     firstLoginAt:      drivers.firstLoginAt,
@@ -49,9 +50,25 @@ export async function getDrivers() {
   }).from(drivers).where(eq(drivers.organizationId, orgId)).orderBy(drivers.id);
 }
 
+export async function getMyProfile() {
+  const session = await getSession();
+  if (!session) return null;
+  const [row] = await db.select({
+    id:        drivers.id,
+    driverId:  drivers.driverId,
+    name:      drivers.name,
+    username:  drivers.username,
+    role:      drivers.role,
+    avatarUrl: drivers.avatarUrl,
+  }).from(drivers)
+    .where(and(eq(drivers.organizationId, session.organizationId), eq(drivers.driverId, session.driverId)))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function createDriver(
   name: string,
-  role: "driver" | "management",
+  role: "driver" | "bc",
   customDriverId?: string,
   customTempPassword?: string,
 ) {
@@ -70,9 +87,44 @@ export async function setDriverActive(id: number, active: boolean) {
   await db.update(drivers).set({ active }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
+/** @deprecated use setDriverRole */
 export async function setDriverAdmin(id: number, isAdmin: boolean) {
   const orgId = await requireOrg();
   await db.update(drivers).set({ isAdmin }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+}
+
+type AssignableRole = "driver" | "bc" | "co_owner" | "developer";
+
+export async function setDriverRole(id: number, newRole: AssignableRole) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  const myRole = session.role;
+
+  // Only owner can assign co_owner or developer
+  if ((newRole === "co_owner" || newRole === "developer") && myRole !== "owner") {
+    throw new Error("Only the owner can assign this role.");
+  }
+  // Only owner or co_owner can assign bc
+  if (newRole === "bc" && myRole !== "owner" && myRole !== "co_owner") {
+    throw new Error("Only owner or co-owner can assign BC role.");
+  }
+
+  const [target] = await db
+    .select({ role: drivers.role })
+    .from(drivers)
+    .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)))
+    .limit(1);
+  if (!target) throw new Error("Account not found.");
+  if (target.role === "owner") throw new Error("The owner account's role cannot be changed.");
+  if ((target.role === "co_owner" || target.role === "developer") && myRole !== "owner") {
+    throw new Error("Only the owner can change this account's role.");
+  }
+
+  const isAdmin = newRole !== "driver";
+  await db.update(drivers)
+    .set({ role: newRole, isAdmin })
+    .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 export async function assignDriverVehicle(id: number, vehicleId: number | null) {
@@ -88,18 +140,35 @@ export async function resetDriverPassword(id: number, newPassword: string) {
 }
 
 export async function deleteDriver(id: number) {
-  const orgId = await requireOrg();
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  const myRole = session.role;
+
   const [driver] = await db
-    .select({ driverId: drivers.driverId })
+    .select({ driverId: drivers.driverId, role: drivers.role })
     .from(drivers)
     .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)))
     .limit(1);
   if (!driver) return;
-  // Delete FK-constrained rows that don't have ON DELETE CASCADE
+
+  if (driver.role === "owner") throw new Error("The owner account cannot be deleted.");
+  if ((driver.role === "co_owner" || driver.role === "developer") && myRole !== "owner") {
+    throw new Error("Only the owner can delete this account.");
+  }
+
   await db.delete(rydeScores).where(and(eq(rydeScores.organizationId, orgId), eq(rydeScores.driverId, driver.driverId)));
   await db.delete(rydeReviews).where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, driver.driverId)));
   await db.delete(driverMilestoneClaims).where(eq(driverMilestoneClaims.driverId, driver.driverId));
   await db.delete(drivers).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+}
+
+export async function updateMyAvatar(avatarUrl: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  await db.update(drivers)
+    .set({ avatarUrl })
+    .where(and(eq(drivers.organizationId, session.organizationId), eq(drivers.driverId, session.driverId)));
 }
 
 // Soft-delete with termination reason — record is kept for records
