@@ -246,6 +246,7 @@ export default async function DriverDashboard() {
           myDswHistory={myDswHistory as any}
           accentColor={orgRow?.accentColor ?? "#FF6200"}
           currentUsername={driverRow?.username ?? null}
+          mustChangePassword={session.mustChangePassword ?? false}
         />
       </div>
     </div>

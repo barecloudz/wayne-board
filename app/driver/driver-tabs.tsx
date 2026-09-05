@@ -8,7 +8,7 @@ import {
   Key, User, MessageSquare, Wrench, Trophy, MoreHorizontal,
   Award, Gift, Activity, X, RefreshCw,
 } from "lucide-react";
-import { changeDriverPassword, changeMyUsername } from "@/lib/actions/drivers";
+import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import MaintenanceTab from "./maintenance-tab";
 import ServiceTab from "./service-tab";
@@ -45,7 +45,7 @@ const glassBright = {
 } as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -72,11 +72,22 @@ export default function DriverTabs({
   showDsw: boolean;
   accentColor?: string;
   currentUsername?: string | null;
+  mustChangePassword?: boolean;
 }) {
   const defaultTab = "schedule";
   const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
   const [showMore, setShowMore] = useState(false);
+
+  // First-login force password change modal
+  const [forceModal, setForceModal]     = useState(mustChangePassword);
+  const [forceCurrent, setForceCurrent] = useState("");
+  const [forcePw, setForcePw]           = useState("");
+  const [forceConfirm, setForceConfirm] = useState("");
+  const [forceShowCur, setForceShowCur] = useState(false);
+  const [forceShowNew, setForceShowNew] = useState(false);
+  const [forceLoading, setForceLoading] = useState(false);
+  const [forceError, setForceError]     = useState("");
 
   // Account / password change state
   const [currentPw, setCurrentPw]   = useState("");
@@ -103,6 +114,20 @@ export default function DriverTabs({
 
   // Maintenance notification dot
   const [maintenanceDot, setMaintenanceDot] = useState(false);
+
+  async function handleForcePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setForceError("");
+    if (!forceCurrent) { setForceError("Enter your temporary password."); return; }
+    if (forcePw.length < 8) { setForceError("New password must be at least 8 characters."); return; }
+    if (forcePw !== forceConfirm) { setForceError("Passwords don't match."); return; }
+    setForceLoading(true);
+    const result = await changeDriverPassword(driverId, forceCurrent, forcePw);
+    setForceLoading(false);
+    if ("error" in result) { setForceError(result.error ?? "Unknown error."); return; }
+    await clearPasswordForceChange();
+    setForceModal(false);
+  }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -214,6 +239,63 @@ export default function DriverTabs({
 
   return (
     <div style={{ "--brand": brand } as React.CSSProperties}>
+      {/* First-login force password change modal */}
+      {forceModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4" style={{ backdropFilter: "blur(6px)" }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-4 h-4 text-orange-500" />
+              </div>
+              <h2 className="text-[18px] font-extrabold text-slate-900 leading-tight">Set your password</h2>
+            </div>
+            <p className="text-[13px] text-slate-500 mb-6 ml-12">This is your first login. Please set a personal password before continuing.</p>
+            <form onSubmit={handleForcePassword} className="flex flex-col gap-3">
+              <div className="relative">
+                <input
+                  type={forceShowCur ? "text" : "password"}
+                  placeholder="Temporary password"
+                  value={forceCurrent}
+                  onChange={(e) => setForceCurrent(e.target.value)}
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                  autoFocus
+                />
+                <button type="button" onClick={() => setForceShowCur(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  {forceShowCur ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type={forceShowNew ? "text" : "password"}
+                  placeholder="New password (min 8 characters)"
+                  value={forcePw}
+                  onChange={(e) => setForcePw(e.target.value)}
+                  className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                />
+                <button type="button" onClick={() => setForceShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  {forceShowNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <input
+                type="password"
+                placeholder="Confirm new password"
+                value={forceConfirm}
+                onChange={(e) => setForceConfirm(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+              />
+              {forceError && <p className="text-[12px] text-red-500 font-medium">{forceError}</p>}
+              <button
+                type="submit"
+                disabled={forceLoading}
+                className="mt-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-[13px] font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              >
+                {forceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Set Password & Continue"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {refreshing && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-lg border border-slate-200">
           <RefreshCw className="w-3.5 h-3.5 text-orange-500 animate-spin" />

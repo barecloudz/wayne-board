@@ -1,54 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 const STORAGE_KEY = "app_version";
+// Baked in at build time via netlify.toml: NEXT_PUBLIC_DEPLOY_ID = "$DEPLOY_ID"
+const CURRENT_VERSION = process.env.NEXT_PUBLIC_DEPLOY_ID ?? "dev";
 
 export default function UpdateBanner() {
   const [show, setShow] = useState(false);
-  const checked = useRef(false);
 
   useEffect(() => {
-    async function check() {
-      try {
-        const res = await fetch("/api/version", { cache: "no-store" });
-        const { version } = await res.json();
-
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored === null) {
-          // First ever visit — store current version, no banner
-          localStorage.setItem(STORAGE_KEY, version);
-        } else if (stored !== version) {
-          // Version changed since last visit — show banner
-          setShow(true);
-        }
-      } catch {
-        // network error — ignore
-      }
+    if (CURRENT_VERSION === "dev") return; // skip in local dev
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) {
+      localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
+    } else if (stored !== CURRENT_VERSION) {
+      setShow(true);
     }
-
-    if (!checked.current) {
-      checked.current = true;
-      check();
-    }
-
-    const id = setInterval(check, 60_000);
-    return () => clearInterval(id);
   }, []);
 
   if (!show) return null;
 
   function handleUpdate() {
+    localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
     if ("caches" in window) {
       void caches.keys()
         .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-        .then(() => {
-          localStorage.removeItem(STORAGE_KEY);
-          location.reload();
-        });
+        .then(() => location.reload());
     } else {
-      localStorage.removeItem(STORAGE_KEY);
       location.reload();
     }
   }

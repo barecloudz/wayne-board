@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { getSession } from "@/lib/session";
+import { getSession, createSession } from "@/lib/session";
 
 async function requireOrg() {
   const session = await getSession();
@@ -233,4 +233,10 @@ export async function changeMyUsername(driverId: string, newUsername: string) {
   if (existing) return { error: "That username is already taken." };
   await db.update(drivers).set({ username: trimmed }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
   return { ok: true };
+}
+
+export async function clearPasswordForceChange() {
+  const session = await getSession();
+  if (!session) return;
+  await createSession({ ...session, mustChangePassword: false });
 }

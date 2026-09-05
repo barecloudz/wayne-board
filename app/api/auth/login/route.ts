@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
-  if (!driver.firstLoginAt) {
+  const isFirstLogin = !driver.firstLoginAt;
+  if (isFirstLogin) {
     await db
       .update(drivers)
       .set({ firstLoginAt: new Date() })
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
     subscriptionStatus: org.subscriptionStatus,
     demoMode: org.demoMode,
     demoExpiresAt: org.demoExpiresAt ? org.demoExpiresAt.toISOString() : null,
+    mustChangePassword: isFirstLogin,
   });
 
   return NextResponse.json({ ok: true, role: driver.role, isAdmin });

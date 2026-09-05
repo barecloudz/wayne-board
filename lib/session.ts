@@ -16,6 +16,7 @@ export type SessionPayload = {
   subscriptionStatus: string;
   demoMode: boolean;
   demoExpiresAt: string | null;
+  mustChangePassword?: boolean;
 };
 
 export async function createSession(payload: SessionPayload) {
@@ -50,4 +51,10 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function clearSession() {
   const jar = await cookies();
   jar.delete(COOKIE);
+}
+
+export async function clearPasswordForceChange() {
+  const session = await getSession();
+  if (!session) return;
+  await createSession({ ...session, mustChangePassword: false });
 }
