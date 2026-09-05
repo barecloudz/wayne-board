@@ -73,7 +73,7 @@ export default function DriverTabs({
   accentColor?: string;
   currentUsername?: string | null;
 }) {
-  const defaultTab = showRyde ? "score" : "schedule";
+  const defaultTab = "schedule";
   const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
   const [reviewFilter, setReviewFilter] = useState<"all" | "positive" | "negative">("all");
   const [showMore, setShowMore] = useState(false);
