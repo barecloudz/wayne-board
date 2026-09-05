@@ -10,11 +10,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { logoUrl, accentColor } = await req.json();
+  const { logoUrl, accentColor, ogImageUrl } = await req.json();
 
   const update: Record<string, unknown> = {};
   if (typeof logoUrl !== "undefined") update.logoUrl = logoUrl || null;
   if (typeof accentColor !== "undefined") update.accentColor = accentColor || null;
+  if (typeof ogImageUrl !== "undefined") update.ogImageUrl = ogImageUrl || null;
 
   await db.update(organizations).set(update).where(eq(organizations.id, session.organizationId));
   return NextResponse.json({ ok: true });

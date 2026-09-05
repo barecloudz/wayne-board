@@ -6,11 +6,17 @@ import { redirect } from "next/navigation";
 export async function generateMetadata(): Promise<Metadata> {
   const session = await getSession();
   if (!session) return { title: "Driver Portal" };
-  const [org] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1);
+  const [org] = await db.select({ name: organizations.name, ogImageUrl: organizations.ogImageUrl }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1);
   const orgName = org?.name;
+  const title = orgName ? `${orgName} Driver Portal` : "Driver Portal";
   return {
-    title: orgName ? `${orgName} Driver Portal` : "Driver Portal",
+    title,
     description: "View your Ryde scores, delivery stats, and performance data.",
+    openGraph: org?.ogImageUrl ? {
+      title,
+      description: "View your Ryde scores, delivery stats, and performance data.",
+      images: [{ url: org.ogImageUrl, width: 1200, height: 630 }],
+    } : undefined,
   };
 }
 import { getSession } from "@/lib/session";

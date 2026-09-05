@@ -3,12 +3,17 @@ import { redirect } from "next/navigation";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const [org] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.slug, slug)).limit(1);
+  const [org] = await db.select({ name: organizations.name, ogImageUrl: organizations.ogImageUrl }).from(organizations).where(eq(organizations.slug, slug)).limit(1);
   const orgName = org?.name ?? "Driver Portal";
   return {
     title: orgName,
     description: `Sign in to ${orgName} on MyGroundOps.`,
     manifest: `/api/manifest/${slug}`,
+    openGraph: org?.ogImageUrl ? {
+      title: orgName,
+      description: `Sign in to ${orgName} on MyGroundOps.`,
+      images: [{ url: org.ogImageUrl, width: 1200, height: 630 }],
+    } : undefined,
   };
 }
 import { db } from "@/lib/db";

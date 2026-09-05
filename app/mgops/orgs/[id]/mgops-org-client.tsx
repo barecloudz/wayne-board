@@ -11,6 +11,7 @@ type Org = {
   subscriptionStatus: string;
   logoUrl: string | null;
   accentColor: string | null;
+  ogImageUrl: string | null;
   demoMode: boolean;
   demoExpiresAt: Date | null;
   superAdminNote: string | null;
@@ -45,6 +46,7 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
   const [note, setNote] = useState(org.superAdminNote ?? "");
   const [accentColor, setAccentColor] = useState(org.accentColor ?? "#FF6200");
   const [logoUrl, setLogoUrl] = useState(org.logoUrl ?? "");
+  const [ogImageUrl, setOgImageUrl] = useState(org.ogImageUrl ?? "");
   const [demoMode, setDemoMode] = useState(org.demoMode);
   const [demoExpiry, setDemoExpiry] = useState(
     org.demoExpiresAt ? new Date(org.demoExpiresAt).toISOString().split("T")[0] : ""
@@ -68,7 +70,7 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
     await patch({ demoMode, demoExpiresAt: demoMode && !indefinite && demoExpiry ? demoExpiry : null });
   }
   async function handleSaveNote() { await patch({ superAdminNote: note }); }
-  async function handleSaveBranding() { await patch({ accentColor, logoUrl: logoUrl || null }); }
+  async function handleSaveBranding() { await patch({ accentColor, logoUrl: logoUrl || null, ogImageUrl: ogImageUrl || null }); }
   async function handleStatusChange(newStatus: string) { setStatus(newStatus); await patch({ subscriptionStatus: newStatus }); }
   async function handleDelete() {
     await fetch(`/api/mgops/orgs/${org.id}`, { method: "DELETE" });
@@ -130,6 +132,11 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
             <label className="text-[12px]" style={{ color: "#64748B" }}>Logo URL</label>
             <input type="text" value={logoUrl} onChange={e => setLogoUrl(e.target.value)}
               style={inputStyle} placeholder="https://..." />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[12px]" style={{ color: "#64748B" }}>OG Share Image URL</label>
+            <input type="text" value={ogImageUrl} onChange={e => setOgImageUrl(e.target.value)}
+              style={inputStyle} placeholder="https://... (1200×630 recommended)" />
           </div>
           <button onClick={handleSaveBranding} style={btnGreen} disabled={saving}>{saving ? "Saving…" : "Save Branding"}</button>
         </div>

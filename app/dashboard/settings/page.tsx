@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const session = await getSession();
   const [orgRow] = session
-    ? await db.select({ logoUrl: organizations.logoUrl, accentColor: organizations.accentColor })
+    ? await db.select({ logoUrl: organizations.logoUrl, accentColor: organizations.accentColor, ogImageUrl: organizations.ogImageUrl })
         .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
     : [null];
 
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} />
+          <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} initialOgImageUrl={orgRow?.ogImageUrl ?? null} />
           <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} showDsw={showDsw} />
           <WorkAreaManager initial={workAreasList as any} />
           <GcSyncSettings initialInterval={gcSyncInterval} />

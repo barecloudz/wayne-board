@@ -22,6 +22,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if ("superAdminNote" in body) update.superAdminNote = body.superAdminNote;
   if ("accentColor" in body) update.accentColor = body.accentColor;
   if ("logoUrl" in body) update.logoUrl = body.logoUrl;
+  if ("ogImageUrl" in body) update.ogImageUrl = body.ogImageUrl;
 
   await db.update(organizations).set(update).where(eq(organizations.id, orgId));
   return NextResponse.json({ ok: true });
