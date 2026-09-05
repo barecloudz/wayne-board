@@ -10,6 +10,7 @@ type Org = {
   plan: string;
   subscriptionStatus: string;
   logoUrl: string | null;
+  accentColor: string | null;
   demoMode: boolean;
   demoExpiresAt: Date | null;
   superAdminNote: string | null;
@@ -42,6 +43,8 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState(org.superAdminNote ?? "");
+  const [accentColor, setAccentColor] = useState(org.accentColor ?? "#FF6200");
+  const [logoUrl, setLogoUrl] = useState(org.logoUrl ?? "");
   const [demoMode, setDemoMode] = useState(org.demoMode);
   const [demoExpiry, setDemoExpiry] = useState(
     org.demoExpiresAt ? new Date(org.demoExpiresAt).toISOString().split("T")[0] : ""
@@ -65,6 +68,7 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
     await patch({ demoMode, demoExpiresAt: demoMode && !indefinite && demoExpiry ? demoExpiry : null });
   }
   async function handleSaveNote() { await patch({ superAdminNote: note }); }
+  async function handleSaveBranding() { await patch({ accentColor, logoUrl: logoUrl || null }); }
   async function handleStatusChange(newStatus: string) { setStatus(newStatus); await patch({ subscriptionStatus: newStatus }); }
   async function handleDelete() {
     await fetch(`/api/mgops/orgs/${org.id}`, { method: "DELETE" });
@@ -105,6 +109,29 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
           {["active", "trialing", "past_due", "canceled"].map(s => (
             <button key={s} onClick={() => handleStatusChange(s)} style={status === s ? btnGreen : btnGhost}>{s}</button>
           ))}
+        </div>
+      </div>
+
+      {/* Branding */}
+      <div style={cardStyle}>
+        <h2 className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: "#16A34A" }}>Branding</h2>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-[12px]" style={{ color: "#64748B" }}>Accent Color</label>
+            <div className="flex items-center gap-3">
+              <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)}
+                className="w-10 h-10 rounded-lg cursor-pointer border border-slate-200" />
+              <input type="text" value={accentColor} onChange={e => setAccentColor(e.target.value)}
+                style={{ ...inputStyle, width: 120 }} placeholder="#FF6200" />
+              <div className="w-8 h-8 rounded-lg border border-slate-200" style={{ background: accentColor }} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[12px]" style={{ color: "#64748B" }}>Logo URL</label>
+            <input type="text" value={logoUrl} onChange={e => setLogoUrl(e.target.value)}
+              style={inputStyle} placeholder="https://..." />
+          </div>
+          <button onClick={handleSaveBranding} style={btnGreen} disabled={saving}>{saving ? "Saving…" : "Save Branding"}</button>
         </div>
       </div>
 

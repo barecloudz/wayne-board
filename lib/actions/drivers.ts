@@ -130,6 +130,11 @@ export async function purgeDriverRydeData(id: number) {
   await db.delete(rydeReviews).where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, driver.driverId)));
 }
 
+export async function updateDriverUsername(id: number, username: string) {
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ username: username || null }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+}
+
 export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {
   const orgId = await requireOrg();
   const [driver] = await db
@@ -142,5 +147,21 @@ export async function changeDriverPassword(driverId: string, currentPassword: st
   if (!match) return { error: "Current password is incorrect." };
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await db.update(drivers).set({ passwordHash }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  return { ok: true };
+}
+
+export async function changeMyUsername(driverId: string, newUsername: string) {
+  const orgId = await requireOrg();
+  const trimmed = newUsername.trim();
+  if (!trimmed) return { error: "Username cannot be empty." };
+  if (trimmed.length < 3) return { error: "Username must be at least 3 characters." };
+  // Check uniqueness
+  const [existing] = await db
+    .select({ id: drivers.id })
+    .from(drivers)
+    .where(eq(drivers.username, trimmed))
+    .limit(1);
+  if (existing) return { error: "That username is already taken." };
+  await db.update(drivers).set({ username: trimmed }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
   return { ok: true };
 }

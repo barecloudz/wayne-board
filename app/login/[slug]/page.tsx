@@ -21,7 +21,7 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
 
   const [org] = await db
-    .select({ id: organizations.id, name: organizations.name, logoUrl: organizations.logoUrl, subscriptionStatus: organizations.subscriptionStatus })
+    .select({ id: organizations.id, name: organizations.name, logoUrl: organizations.logoUrl, accentColor: organizations.accentColor, subscriptionStatus: organizations.subscriptionStatus })
     .from(organizations)
     .where(eq(organizations.slug, slug))
     .limit(1);
@@ -74,7 +74,7 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
         }}
       >
         {/* Orange accent bar */}
-        <div className="h-[3px] -mx-7 -mt-7 mb-6 rounded-t-2xl" style={{ background: "linear-gradient(90deg, #FF6200, #ff8c42)" }} />
+        <div className="h-[3px] -mx-7 -mt-7 mb-6 rounded-t-2xl" style={{ background: org.accentColor ?? "#FF6200" }} />
         <OrgLoginForm orgSlug={slug} />
       </div>
 

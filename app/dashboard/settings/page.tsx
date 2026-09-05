@@ -5,12 +5,23 @@ import PortalSettings from "../portal-settings";
 export const metadata: Metadata = { title: "Settings" };
 import WorkAreaManager from "../work-area-manager";
 import GcSyncSettings from "../gc-sync-settings";
+import BrandingSettings from "../branding-settings";
 import { getSetting } from "@/lib/actions/settings";
 import { getWorkAreas } from "@/lib/actions/work-areas";
+import { getSession } from "@/lib/session";
+import { db } from "@/lib/db";
+import { organizations } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
+  const session = await getSession();
+  const [orgRow] = session
+    ? await db.select({ logoUrl: organizations.logoUrl, accentColor: organizations.accentColor })
+        .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
+    : [null];
+
   const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
@@ -34,6 +45,7 @@ export default async function SettingsPage() {
         </div>
 
         <div className="flex flex-col gap-6">
+          <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} />
           <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} showDsw={showDsw} />
           <WorkAreaManager initial={workAreasList as any} />
           <GcSyncSettings initialInterval={gcSyncInterval} />

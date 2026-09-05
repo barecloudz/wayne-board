@@ -30,7 +30,7 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
         return;
       }
       // Keep spinner running until the new page loads
-      router.push("/driver");
+      router.push(data.isAdmin ? "/dashboard" : "/driver");
     } catch {
       setError("Something went wrong. Try again.");
       setLoading(false);

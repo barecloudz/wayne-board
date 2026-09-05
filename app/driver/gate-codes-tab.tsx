@@ -5,7 +5,7 @@ import { ThumbsDown, Plus, ChevronDown, ChevronUp, Trash2, Loader2, X, MapPin, A
 import { addGateCode, addGateArea, reportNotWorking, deleteGateCode } from "@/lib/actions/gate-codes";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 
-const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-white/20 bg-white/10 text-[13px] text-white placeholder-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10 transition";
+const INPUT = "w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition";
 
 export default function GateCodesTab({
   initial,
@@ -129,7 +129,7 @@ export default function GateCodesTab({
           <button
             onClick={() => { setShowNewArea((p) => !p); setNewAreaName(""); }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold
-              bg-white/10 text-white/70 hover:bg-white/20 transition-colors border border-white/15"
+              bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200"
           >
             <MapPin className="w-4 h-4" />
             Add Location
@@ -138,7 +138,7 @@ export default function GateCodesTab({
         <button
           onClick={() => { setShowAdd((p) => !p); setAddCode(""); setAddRoadName(""); }}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold
-            bg-white/15 text-white hover:bg-white/25 transition-colors border border-white/20"
+            bg-slate-900 text-white hover:bg-slate-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Gate Code
@@ -148,19 +148,19 @@ export default function GateCodesTab({
       {/* Add new location form (admin only) */}
       {showNewArea && isAdmin && (
         <div className="rounded-2xl p-5 flex flex-col gap-3"
-          style={{ background: "rgba(255,200,0,0.08)", border: "1px solid rgba(255,200,0,0.25)" }}>
+          style={{ background: "#fffbeb", border: "1px solid #fde68a" }}>
           <div className="flex items-center justify-between">
-            <p className="text-[14px] font-bold text-white">Add a New Location</p>
-            <button onClick={() => setShowNewArea(false)} className="text-white/40 hover:text-white/70 transition-colors">
+            <p className="text-[14px] font-bold" style={{ color: "#0F172A" }}>Add a New Location</p>
+            <button onClick={() => setShowNewArea(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 bg-amber-500/15 border border-amber-400/30">
-            <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-200">Once a location is added, it <strong>cannot be removed</strong>. Make sure the name is correct before saving.</p>
+          <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 bg-amber-50 border border-amber-200">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-[12px] text-amber-700">Once a location is added, it <strong>cannot be removed</strong>. Make sure the name is correct before saving.</p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Location Name</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>Location Name</label>
             <input
               autoFocus
               type="text"
@@ -174,15 +174,15 @@ export default function GateCodesTab({
           <div className="flex gap-2 mt-1">
             <button
               onClick={() => setShowNewArea(false)}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-white/20 text-white/60 hover:bg-white/10 transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleAddArea}
               disabled={!newAreaName.trim() || allAreas.includes(newAreaName.trim()) || isPending}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-white text-slate-900
-                hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white
+                hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
             >
               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Add Location
@@ -194,27 +194,26 @@ export default function GateCodesTab({
       {/* Add gate code form */}
       {showAdd && (
         <div className="rounded-2xl p-5 flex flex-col gap-3"
-          style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.18)" }}>
+          style={{ background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
           <div className="flex items-center justify-between">
-            <p className="text-[14px] font-bold text-white">Add a Gate Code</p>
-            <button onClick={() => setShowAdd(false)} className="text-white/40 hover:text-white/70 transition-colors">
+            <p className="text-[14px] font-bold" style={{ color: "#0F172A" }}>Add a Gate Code</p>
+            <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Area</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>Area</label>
             <select
               value={addArea}
               onChange={(e) => setAddArea(e.target.value)}
               className={INPUT}
-              style={{ colorScheme: "dark" }}
             >
-              {allAreas.map((a) => <option key={a} value={a} style={{ background: "#4D148C", color: "white" }}>{a}</option>)}
+              {allAreas.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-              Road / Street Name <span className="text-red-300">*</span>
+            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>
+              Road / Street Name <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -223,11 +222,11 @@ export default function GateCodesTab({
               onChange={(e) => setAddRoadName(e.target.value)}
               className={INPUT}
             />
-            <p className="text-[11px] text-white/40">Helps other drivers find the gate</p>
+            <p className="text-[11px]" style={{ color: "#94A3B8" }}>Helps other drivers find the gate</p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-              Gate Code <span className="text-red-300">*</span>
+            <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>
+              Gate Code <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -240,15 +239,15 @@ export default function GateCodesTab({
           <div className="flex gap-2 mt-1">
             <button
               onClick={() => setShowAdd(false)}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-white/20 text-white/60 hover:bg-white/10 transition-colors"
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
               disabled={!addCode.trim() || !addRoadName.trim() || isPending}
-              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-white text-slate-900
-                hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white
+                hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
             >
               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               Save
@@ -265,48 +264,48 @@ export default function GateCodesTab({
 
         return (
           <div key={area} className="rounded-2xl overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}>
+            style={{ background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
             {/* Area header */}
             <button
               className="w-full flex items-center justify-between px-5 py-4 text-left"
               onClick={() => toggleArea(area)}
             >
               <div className="flex items-center gap-3">
-                <span className="text-[14px] font-bold text-white">{area}</span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                <span className="text-[14px] font-bold" style={{ color: "#0F172A" }}>{area}</span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
                   {areaCodes.length} code{areaCodes.length !== 1 ? "s" : ""}
                 </span>
                 {badCount > 0 && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 flex items-center gap-1">
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 flex items-center gap-1">
                     <ThumbsDown className="w-3 h-3" />
                     {badCount}
                   </span>
                 )}
               </div>
-              {isOpen ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
+              {isOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
 
             {/* Code list */}
             {isOpen && (
-              <div className="border-t border-white/10">
+              <div className="border-t border-slate-100">
                 {areaCodes.length === 0 ? (
-                  <p className="px-5 py-4 text-[13px] text-white/30">No codes for this area yet.</p>
+                  <p className="px-5 py-4 text-[13px]" style={{ color: "#94A3B8" }}>No codes for this area yet.</p>
                 ) : (
-                  <div className="divide-y divide-white/8">
+                  <div className="divide-y divide-slate-100">
                     {areaCodes.map((c) => (
                       <div key={c.id} className="px-5 py-4 flex items-center gap-4">
                         {/* Code display */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[22px] font-extrabold text-white tracking-widest font-mono leading-none">
+                          <p className="text-[22px] font-extrabold tracking-widest font-mono leading-none" style={{ color: "#0F172A" }}>
                             {c.code}
                           </p>
                           {c.roadName && (
-                            <p className="text-[12px] font-semibold text-white/70 mt-1 flex items-center gap-1">
+                            <p className="text-[12px] font-semibold mt-1 flex items-center gap-1" style={{ color: "#475569" }}>
                               <MapPin className="w-3 h-3 shrink-0" />
                               {c.roadName}
                             </p>
                           )}
-                          <p className="text-[11px] text-white/40 mt-0.5">
+                          <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>
                             Added by {c.addedByName}
                             {c.createdAt ? ` · ${new Date(c.createdAt).toLocaleDateString()}` : ""}
                           </p>
@@ -314,9 +313,9 @@ export default function GateCodesTab({
 
                         {/* Not-working badge */}
                         {c.reportCount > 0 && (
-                          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/15 border border-red-500/25 shrink-0">
-                            <ThumbsDown className="w-3 h-3 text-red-400" />
-                            <span className="text-[12px] font-bold text-red-300">{c.reportCount}</span>
+                          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 shrink-0">
+                            <ThumbsDown className="w-3 h-3 text-red-500" />
+                            <span className="text-[12px] font-bold text-red-600">{c.reportCount}</span>
                           </div>
                         )}
 
@@ -327,8 +326,8 @@ export default function GateCodesTab({
                           title={c.myReport ? "You already reported this" : "Report as not working"}
                           className={`p-2 rounded-xl transition-colors shrink-0 ${
                             c.myReport
-                              ? "bg-red-500/20 text-red-400 cursor-default"
-                              : "bg-white/10 text-white/50 hover:bg-red-500/20 hover:text-red-400 border border-white/10"
+                              ? "bg-red-50 text-red-400 cursor-default"
+                              : "bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 border border-slate-200"
                           }`}
                         >
                           <ThumbsDown className="w-4 h-4" />
@@ -339,7 +338,7 @@ export default function GateCodesTab({
                           <button
                             onClick={() => handleDelete(c.id)}
                             disabled={isPending}
-                            className="p-2 rounded-xl bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors shrink-0"
+                            className="p-2 rounded-xl bg-slate-50 text-slate-300 hover:bg-red-50 hover:text-red-400 transition-colors shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -357,34 +356,34 @@ export default function GateCodesTab({
       {/* Report modal */}
       {reportTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
-            style={{ background: "linear-gradient(135deg, #4D148C, #7B2FC0)", border: "1px solid rgba(255,255,255,0.15)" }}>
-            <div className="px-6 pt-6 pb-4">
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.2)]"
+            style={{ background: "#ffffff", border: "1px solid #E2E8F0" }}>
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3 mb-1">
-                <div className="w-9 h-9 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
-                  <ThumbsDown className="w-4 h-4 text-red-400" />
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                  <ThumbsDown className="w-4 h-4 text-red-500" />
                 </div>
                 <div>
-                  <p className="text-[15px] font-extrabold text-white">Not Working?</p>
-                  <p className="text-[12px] text-white/50">{reportTarget.location} · Code: {reportTarget.code}</p>
+                  <p className="text-[15px] font-extrabold" style={{ color: "#0F172A" }}>Not Working?</p>
+                  <p className="text-[12px]" style={{ color: "#94A3B8" }}>{reportTarget.location} · Code: {reportTarget.code}</p>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 pb-6 flex flex-col gap-4">
+            <div className="px-6 pb-6 pt-4 flex flex-col gap-4">
               {hasNew === null ? (
                 <>
-                  <p className="text-[13px] text-white/70">Do you have the correct code?</p>
+                  <p className="text-[13px]" style={{ color: "#475569" }}>Do you have the correct code?</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setHasNew(false)}
-                      className="flex-1 py-3 rounded-xl text-[13px] font-bold border border-white/20 text-white/70 hover:bg-white/10 transition-colors"
+                      className="flex-1 py-3 rounded-xl text-[13px] font-bold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
                     >
                       No, just report it
                     </button>
                     <button
                       onClick={() => setHasNew(true)}
-                      className="flex-1 py-3 rounded-xl text-[13px] font-bold bg-white text-slate-900 hover:bg-white/90 transition-colors"
+                      className="flex-1 py-3 rounded-xl text-[13px] font-bold bg-slate-900 text-white hover:bg-slate-700 transition-colors"
                     >
                       Yes, I have it
                     </button>
@@ -394,7 +393,7 @@ export default function GateCodesTab({
                 <>
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Road / Street Name</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>Road / Street Name</label>
                       <input
                         type="text"
                         placeholder="e.g. Lyndsey Dr"
@@ -404,7 +403,7 @@ export default function GateCodesTab({
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-white/50 uppercase tracking-widest">New Gate Code</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>New Gate Code</label>
                       <input
                         autoFocus
                         type="text"
@@ -418,15 +417,15 @@ export default function GateCodesTab({
                   <div className="flex gap-2">
                     <button
                       onClick={() => setReportTarget(null)}
-                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-white/20 text-white/60 hover:bg-white/10 transition-colors"
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleReport}
                       disabled={!newCode.trim() || isPending}
-                      className="flex-1 py-2.5 rounded-xl text-[13px] font-bold bg-white text-slate-900
-                        hover:bg-white/90 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-bold bg-slate-900 text-white
+                        hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
                     >
                       {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                       Submit
@@ -435,11 +434,11 @@ export default function GateCodesTab({
                 </>
               ) : (
                 <>
-                  <p className="text-[13px] text-white/70">Got it — we&apos;ll mark this code as reported.</p>
+                  <p className="text-[13px]" style={{ color: "#475569" }}>Got it — we&apos;ll mark this code as reported.</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setReportTarget(null)}
-                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-white/20 text-white/60 hover:bg-white/10 transition-colors"
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
                     >
                       Cancel
                     </button>

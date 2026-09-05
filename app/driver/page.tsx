@@ -67,7 +67,7 @@ export default async function DriverDashboard() {
     getLeaderboard(),
     getCompanyRating(),
     getRydeGoalMessage(),
-    db.select({ assignedVehicleId: drivers.assignedVehicleId, defaultWorkAreaId: drivers.defaultWorkAreaId }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
+    db.select({ assignedVehicleId: drivers.assignedVehicleId, defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
@@ -86,7 +86,7 @@ export default async function DriverDashboard() {
         .orderBy(desc(dswRouteDays.date))
         .catch(() => []);
     })(),
-    db.select({ name: organizations.name, logoUrl: organizations.logoUrl }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
+    db.select({ name: organizations.name, logoUrl: organizations.logoUrl, accentColor: organizations.accentColor }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -238,6 +238,8 @@ export default async function DriverDashboard() {
           driverName={session.name}
           dswRows={dswRows as any}
           myDswHistory={myDswHistory as any}
+          accentColor={orgRow?.accentColor ?? "#FF6200"}
+          currentUsername={driverRow?.username ?? null}
         />
       </div>
     </div>

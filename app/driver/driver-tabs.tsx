@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Star, ThumbsUp, ThumbsDown, Eye, EyeOff, Loader2, Lock,
   Truck, CalendarDays, CalendarOff,
   Key, User, MessageSquare, Wrench, Trophy, MoreHorizontal,
-  Award, Gift, Activity, X,
+  Award, Gift, Activity, X, RefreshCw,
 } from "lucide-react";
-import { changeDriverPassword } from "@/lib/actions/drivers";
+import { changeDriverPassword, changeMyUsername } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import MaintenanceTab from "./maintenance-tab";
 import ServiceTab from "./service-tab";
@@ -44,7 +45,7 @@ const glassBright = {
 } as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -69,6 +70,8 @@ export default function DriverTabs({
   dswRows: DswRow[];
   myDswHistory: DswRow[];
   showDsw: boolean;
+  accentColor?: string;
+  currentUsername?: string | null;
 }) {
   const defaultTab = showRyde ? "score" : "schedule";
   const [tab, setTab] = useState<"score" | "schedule" | "service" | "gatecodes" | "maintenance" | "reviews" | "milestones" | "bonuses" | "leaderboard" | "account">(defaultTab);
@@ -84,6 +87,22 @@ export default function DriverTabs({
   const [pwLoading, setPwLoading]     = useState(false);
   const [pwError, setPwError]         = useState("");
   const [pwSuccess, setPwSuccess]     = useState(false);
+
+  // Username change state
+  const [newUsername, setNewUsername] = useState(currentUsername ?? "");
+  const [unLoading, setUnLoading]     = useState(false);
+  const [unError, setUnError]         = useState("");
+  const [unSuccess, setUnSuccess]     = useState(false);
+
+  // Pull-to-refresh
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Score count-up animation
+  const [displayScore, setDisplayScore] = useState(0);
+
+  // Maintenance notification dot
+  const [maintenanceDot, setMaintenanceDot] = useState(false);
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -102,6 +121,52 @@ export default function DriverTabs({
   const avgScore = ratedReviews.length
     ? ratedReviews.reduce((s, r) => s + r.stars!, 0) / ratedReviews.length
     : null;
+
+  // Score count-up animation effect
+  useEffect(() => {
+    if (avgScore === null) return;
+    const target = avgScore;
+    const duration = 900;
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayScore(target * eased);
+      if (progress < 1) requestAnimationFrame(tick);
+      else setDisplayScore(target);
+    };
+    requestAnimationFrame(tick);
+  }, [avgScore]);
+
+  // Pull-to-refresh effect
+  useEffect(() => {
+    let startY = 0;
+    const onTouchStart = (e: TouchEvent) => { startY = e.touches[0].clientY; };
+    const onTouchEnd = (e: TouchEvent) => {
+      const dist = e.changedTouches[0].clientY - startY;
+      if (dist > 72 && window.scrollY === 0 && !refreshing) {
+        setRefreshing(true);
+        router.refresh();
+        setTimeout(() => setRefreshing(false), 1500);
+      }
+    };
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [router, refreshing]);
+
+  // Maintenance notification dot effect
+  useEffect(() => {
+    // Count non-pending requests (i.e., management has updated them)
+    const nonPending = maintenanceRequests.filter((r: any) => r.status !== "pending").length;
+    const key = "mgops_maint_seen";
+    const seen = parseInt(localStorage.getItem(key) ?? "0", 10);
+    if (nonPending > seen) setMaintenanceDot(true);
+  }, [maintenanceRequests]);
 
   const scoreColor =
     avgScore === null ? "text-slate-400"
@@ -138,10 +203,24 @@ export default function DriverTabs({
   function goTab(key: typeof tab) {
     setTab(key);
     setShowMore(false);
+    if (key === "maintenance") {
+      const nonPending = maintenanceRequests.filter((r: any) => r.status !== "pending").length;
+      localStorage.setItem("mgops_maint_seen", String(nonPending));
+      setMaintenanceDot(false);
+    }
   }
 
+  const brand = accentColor;
+
   return (
-    <>
+    <div style={{ "--brand": brand } as React.CSSProperties}>
+      {refreshing && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-lg border border-slate-200">
+          <RefreshCw className="w-3.5 h-3.5 text-orange-500 animate-spin" />
+          <span className="text-[12px] font-semibold text-slate-600">Refreshing…</span>
+        </div>
+      )}
+
       {/* Milestone progress bar */}
       {showMilestones && milestones.length > 0 && (() => {
         const maxDays = milestones[milestones.length - 1].daysRequired;
@@ -168,7 +247,7 @@ export default function DriverTabs({
               <div className="h-[3px] rounded-full" style={{ background: "#F1F5F9" }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, background: "linear-gradient(90deg, #FF6200, #ff8c42)" }}
+                  style={{ width: `${pct}%`, background: "linear-gradient(90deg, var(--brand), var(--brand))" }}
                 />
               </div>
               {milestones.map((m) => {
@@ -183,7 +262,7 @@ export default function DriverTabs({
                     <div
                       className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold transition-all duration-300"
                       style={earned ? {
-                        background: "linear-gradient(135deg, #FF6200, #ff8c42)",
+                        background: "linear-gradient(135deg, var(--brand), var(--brand))",
                         border: "2px solid #fff",
                         boxShadow: "0 0 0 3px rgba(255,98,0,0.2), 0 2px 8px rgba(255,98,0,0.3)",
                         color: "white",
@@ -217,7 +296,7 @@ export default function DriverTabs({
             {/* My Ryde Score — hero card (leads now) */}
             <div className="rounded-3xl overflow-hidden" style={glassBright}>
               {/* Orange top bar */}
-              <div className="h-1" style={{ background: "linear-gradient(90deg, #FF6200, #ff8c42)" }} />
+              <div className="h-1" style={{ background: "linear-gradient(90deg, var(--brand), var(--brand))" }} />
               <div className="px-6 pt-6 pb-5 flex flex-col items-center text-center">
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-4" style={{ color: "#94A3B8" }}>My Ryde Score</p>
                 {avgScore !== null ? (
@@ -231,7 +310,7 @@ export default function DriverTabs({
                       fontSize: 88,
                       color: avgScore >= 4.5 ? "#16a34a" : avgScore >= 3 ? "#d97706" : "#dc2626",
                     }}>
-                      {avgScore.toFixed(1)}
+                      {displayScore.toFixed(1)}
                     </p>
                     <p className="text-[13px] mt-3 font-medium" style={{ color: "#94A3B8" }}>
                       Based on {ratedReviews.length} review{ratedReviews.length !== 1 ? "s" : ""}
@@ -294,7 +373,7 @@ export default function DriverTabs({
                     className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${goalPct}%`,
-                      background: atGoal ? "linear-gradient(90deg,#16a34a,#4ade80)" : "linear-gradient(90deg,#FF6200,#ff8c42)",
+                      background: atGoal ? "linear-gradient(90deg,#16a34a,#4ade80)" : "linear-gradient(90deg,var(--brand),var(--brand))",
                     }}
                   />
                 </div>
@@ -324,40 +403,87 @@ export default function DriverTabs({
         {/* ── Schedule tab ──────────────────────────────── */}
         {tab === "schedule" && (
           <>
+            {/* 2-week calendar card */}
             <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarDays className="w-4 h-4 text-slate-400" />
-                <h2 className="text-[15px] font-bold text-slate-900">My Weekly Schedule</h2>
+                <h2 className="text-[15px] font-bold text-slate-900">My Schedule</h2>
               </div>
-              {driverSchedule ? (
-                <div className="px-5 py-5">
-                  <div className="flex gap-1.5 flex-wrap">
-                    {DAY_KEYS.map((key, i) => {
-                      const isWork = driverSchedule[key as keyof DriverSchedule & string] as boolean;
-                      return (
-                        <div key={key}
-                          className={`flex flex-col items-center gap-1 px-3 py-3 rounded-2xl border min-w-[44px] ${
-                            isWork ? "bg-slate-900 border-slate-900" : "bg-slate-50 border-slate-200"
-                          }`}>
-                          <span className={`text-[10px] font-bold uppercase tracking-wider ${isWork ? "text-slate-300" : "text-slate-400"}`}>
-                            {DAY_LABELS[i]}
-                          </span>
-                          <span className={`text-[16px] ${isWork ? "text-white" : "text-slate-300"}`}>
-                            {isWork ? "✓" : "–"}
-                          </span>
+              {(() => {
+                const todayDate = new Date();
+                const todayStr = todayDate.toISOString().slice(0, 10);
+                // Start from Sunday of current week
+                const startOfWeek = new Date(todayDate);
+                startOfWeek.setDate(todayDate.getDate() - todayDate.getDay());
+                const calDays = Array.from({ length: 14 }, (_, i) => {
+                  const d = new Date(startOfWeek);
+                  d.setDate(startOfWeek.getDate() + i);
+                  const dateStr = d.toISOString().slice(0, 10);
+                  const dow = d.getDay();
+                  const dayKey = DAY_KEYS[dow];
+                  const isWork = driverSchedule ? !!(driverSchedule[dayKey as keyof typeof driverSchedule]) : false;
+                  const timeOffEntry = upcomingTimeOff.find(t => t.startDate <= dateStr && t.endDate >= dateStr) ?? null;
+                  return { d, dateStr, dow, dateNum: d.getDate(), isToday: dateStr === todayStr, isWork, timeOffEntry };
+                });
+                const DOW_LABELS = ["S","M","T","W","T","F","S"];
+                return (
+                  <div className="px-5 pt-4 pb-5 flex flex-col gap-5">
+                    {[
+                      { label: "This Week", days: calDays.slice(0, 7) },
+                      { label: "Next Week", days: calDays.slice(7) },
+                    ].map(({ label, days }) => (
+                      <div key={label}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">{label}</p>
+                        <div className="grid grid-cols-7 gap-1">
+                          {days.map((day) => {
+                            const isOff = !!day.timeOffEntry;
+                            const isWork = day.isWork && !isOff;
+                            return (
+                              <div
+                                key={day.dateStr}
+                                className={`flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all ${
+                                  day.isToday ? "ring-2 ring-orange-400 ring-offset-1" : ""
+                                }`}
+                                style={{
+                                  background: isOff ? "#fffbeb" : isWork ? "var(--brand)" : "#F8FAFC",
+                                }}
+                              >
+                                <span
+                                  className="text-[9px] font-bold uppercase"
+                                  style={{ color: isOff ? "#d97706" : isWork ? "rgba(255,255,255,0.75)" : "#CBD5E1" }}
+                                >
+                                  {DOW_LABELS[day.dow]}
+                                </span>
+                                <span
+                                  className="text-[15px] font-extrabold leading-none"
+                                  style={{ color: isOff ? "#b45309" : isWork ? "#ffffff" : "#CBD5E1" }}
+                                >
+                                  {day.dateNum}
+                                </span>
+                                {isOff && (
+                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#d97706" }}>Off</span>
+                                )}
+                                {!isOff && !isWork && (
+                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>—</span>
+                                )}
+                                {isWork && (
+                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.6)" }}>On</span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
+                    {driverSchedule?.notes && (
+                      <p className="text-[12px] text-slate-500 italic pt-1 border-t border-slate-100">{driverSchedule.notes}</p>
+                    )}
+                    {!driverSchedule && (
+                      <p className="text-[13px] text-slate-400 text-center py-4">Your schedule hasn&apos;t been set yet. Contact your manager.</p>
+                    )}
                   </div>
-                  {driverSchedule.notes && (
-                    <p className="text-[12px] text-slate-500 mt-4 italic">{driverSchedule.notes}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="px-5 py-8 text-center">
-                  <p className="text-[13px] text-slate-400">Your schedule hasn&apos;t been set yet. Contact your manager.</p>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <div className="bg-white rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.2)] overflow-hidden">
@@ -390,7 +516,7 @@ export default function DriverTabs({
 
         {/* ── Service tab ───────────────────────────────── */}
         {tab === "service" && (
-          <ServiceTab rows={dswRows} myDriverId={driverId} myHistory={myDswHistory} />
+          <ServiceTab rows={dswRows} myDriverId={driverId} myHistory={myDswHistory} accent={brand} />
         )}
 
         {/* ── Gate Codes tab ────────────────────────────── */}
@@ -411,6 +537,7 @@ export default function DriverTabs({
             driverId={driverId}
             driverName={driverName}
             vehicles={activeVehicles}
+            accent={brand}
           />
         )}
 
@@ -489,7 +616,7 @@ export default function DriverTabs({
           <>
             <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] px-5 py-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl"
-                style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
+                style={{ background: "linear-gradient(135deg, var(--brand), var(--brand))" }}>
                 🔥
               </div>
               <div>
@@ -530,7 +657,7 @@ export default function DriverTabs({
               if (unlocked) {
                 return (
                   <div key={m.id} className="rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(255,98,0,0.3)]">
-                    <div className="px-5 py-5" style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
+                    <div className="px-5 py-5" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand))" }}>
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl">{m.icon}</span>
                         <div>
@@ -619,7 +746,7 @@ export default function DriverTabs({
 
           return (
             <div className="rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(255,98,0,0.25)]">
-              <div className="px-5 py-5" style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
+              <div className="px-5 py-5" style={{ background: "linear-gradient(135deg, var(--brand), var(--brand))" }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.65)" }}>Unlocked ✓</p>
                 <h2 className="text-[22px] font-bold text-white leading-tight">Bonus Structure</h2>
                 <p className="text-[13px] mt-1" style={{ color: "rgba(255,255,255,0.75)" }}>You qualified by maintaining a 90-day clean streak. This is yours.</p>
@@ -651,7 +778,7 @@ export default function DriverTabs({
             {myRank > 0 && (
               <div className="rounded-3xl px-5 py-4 flex items-center gap-4" style={glassBright}>
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl font-bold text-white"
-                  style={{ background: "linear-gradient(135deg, #FF6200, #ff8c42)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--brand), var(--brand))" }}>
                   #{myRank}
                 </div>
                 <div>
@@ -691,7 +818,7 @@ export default function DriverTabs({
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold ${
                           isMe ? "text-white" : "text-slate-600 bg-slate-100"
                         }`}
-                          style={isMe ? { background: "linear-gradient(135deg, #FF6200, #ff8c42)" } : {}}>
+                          style={isMe ? { background: "linear-gradient(135deg, var(--brand), var(--brand))" } : {}}>
                           {entry.initials}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -720,6 +847,43 @@ export default function DriverTabs({
 
         {/* ── Account tab ───────────────────────────────── */}
         {tab === "account" && (
+          <div className="flex flex-col gap-4">
+          {/* Username card */}
+          <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100">
+              <h2 className="text-[15px] font-bold text-slate-900">Username</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">This is what you use to log in.</p>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <input
+                type="text"
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                placeholder="Choose a username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 text-[14px] text-slate-800 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-50 transition"
+              />
+              {unError && <p className="text-[12px] text-red-500 font-medium">{unError}</p>}
+              {unSuccess && <p className="text-[12px] text-emerald-600 font-medium">Username updated. Use it next time you log in.</p>}
+              <button
+                onClick={async () => {
+                  setUnError(""); setUnSuccess(false); setUnLoading(true);
+                  const r = await changeMyUsername(driverId, newUsername);
+                  setUnLoading(false);
+                  if ("error" in r) { setUnError(r.error ?? "Failed."); return; }
+                  setUnSuccess(true);
+                }}
+                disabled={unLoading || newUsername.trim().length < 3 || newUsername.trim() === (currentUsername ?? "")}
+                className="w-full py-3 rounded-2xl text-[14px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
+                style={{ background: "var(--brand)" }}
+              >
+                {unLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Username
+              </button>
+            </div>
+          </div>
+          {/* Password card */}
           <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100">
               <h2 className="text-[15px] font-bold text-slate-900">Change Password</h2>
@@ -776,12 +940,13 @@ export default function DriverTabs({
                 type="submit"
                 disabled={pwLoading || !currentPw || !newPw || !confirmPw}
                 className="w-full py-3 rounded-2xl text-[14px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
-                style={{ background: "#FF6200" }}
+                style={{ background: "var(--brand)" }}
               >
                 {pwLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 Update Password
               </button>
             </form>
+          </div>
           </div>
         )}
       </div>
@@ -803,15 +968,16 @@ export default function DriverTabs({
             <button
               key={key}
               onClick={() => goTab(key)}
-              className="flex-1 flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+              className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all active:scale-95"
             >
+              <div className={`h-[3px] w-6 rounded-full mb-1.5 transition-all ${active ? "bg-orange-500" : "bg-transparent"}`} />
               <Icon
                 className="w-[22px] h-[22px] transition-all"
-                style={{ color: active ? "#FF6200" : "#94A3B8", strokeWidth: active ? 2.2 : 1.7 }}
+                style={{ color: active ? "var(--brand)" : "#94A3B8", strokeWidth: active ? 2.2 : 1.7 }}
               />
               <span
-                className="text-[10px] font-semibold transition-colors"
-                style={{ color: active ? "#FF6200" : "#94A3B8" }}
+                className="text-[10px] font-semibold transition-colors mt-0.5"
+                style={{ color: active ? "var(--brand)" : "#94A3B8" }}
               >
                 {label}
               </span>
@@ -822,15 +988,21 @@ export default function DriverTabs({
         {/* More button */}
         <button
           onClick={() => setShowMore(p => !p)}
-          className="flex-1 flex flex-col items-center gap-1 py-3 transition-all active:scale-95"
+          className="flex-1 flex flex-col items-center gap-0.5 pt-2 pb-3 transition-all active:scale-95 relative"
         >
-          <MoreHorizontal
-            className="w-[22px] h-[22px] transition-all"
-            style={{ color: (showMore || tabInMore) ? "#FF6200" : "#94A3B8", strokeWidth: (showMore || tabInMore) ? 2.2 : 1.7 }}
-          />
+          <div className={`h-[3px] w-6 rounded-full mb-1.5 transition-all ${(showMore || tabInMore) ? "bg-orange-500" : "bg-transparent"}`} />
+          <div className="relative">
+            <MoreHorizontal
+              className="w-[22px] h-[22px] transition-all"
+              style={{ color: (showMore || tabInMore) ? "var(--brand)" : "#94A3B8", strokeWidth: (showMore || tabInMore) ? 2.2 : 1.7 }}
+            />
+            {maintenanceDot && !showMore && !tabInMore && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+            )}
+          </div>
           <span
-            className="text-[10px] font-semibold transition-colors"
-            style={{ color: (showMore || tabInMore) ? "#FF6200" : "#94A3B8" }}
+            className="text-[10px] font-semibold transition-colors mt-0.5"
+            style={{ color: (showMore || tabInMore) ? "var(--brand)" : "#94A3B8" }}
           >
             More
           </span>
@@ -885,11 +1057,11 @@ export default function DriverTabs({
                   >
                     <Icon
                       className="w-5 h-5 shrink-0"
-                      style={{ color: active ? "#FF6200" : "#94A3B8" }}
+                      style={{ color: active ? "var(--brand)" : "#94A3B8" }}
                     />
                     <span
                       className="text-[13px] font-semibold"
-                      style={{ color: active ? "#FF6200" : "#475569" }}
+                      style={{ color: active ? "var(--brand)" : "#475569" }}
                     >
                       {label}
                     </span>
@@ -900,7 +1072,7 @@ export default function DriverTabs({
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
 

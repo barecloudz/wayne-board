@@ -20,6 +20,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if ("demoMode" in body) update.demoMode = body.demoMode;
   if ("demoExpiresAt" in body) update.demoExpiresAt = body.demoExpiresAt ? new Date(body.demoExpiresAt) : null;
   if ("superAdminNote" in body) update.superAdminNote = body.superAdminNote;
+  if ("accentColor" in body) update.accentColor = body.accentColor;
+  if ("logoUrl" in body) update.logoUrl = body.logoUrl;
 
   await db.update(organizations).set(update).where(eq(organizations.id, orgId));
   return NextResponse.json({ ok: true });

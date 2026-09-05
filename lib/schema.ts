@@ -11,6 +11,7 @@ export const organizations = pgTable("organizations", {
   plan:                 text("plan").notNull().default("starter"),        // "starter"|"pro"|"enterprise"
   subscriptionStatus:   text("subscription_status").notNull().default("trialing"), // "trialing"|"active"|"past_due"|"canceled"
   logoUrl:              text("logo_url"),               // Cloudflare Images delivery URL
+  accentColor:          text("accent_color"),            // brand accent color, e.g. "#FF6200"
   stripeCustomerId:     text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   trialEndsAt:          timestamp("trial_ends_at"),

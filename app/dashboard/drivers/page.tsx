@@ -7,7 +7,7 @@ import {
   XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, ShieldOff, Truck, Clock,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData,
+  getDrivers, createDriver, setDriverActive, setDriverAdmin, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
 } from "@/lib/actions/drivers";
 import { getVehicles } from "@/lib/actions/vehicles";
 import { suggestDriverId } from "@/lib/driver-utils";
@@ -64,6 +64,8 @@ export default function DriversPage() {
   const [purgeRydeData, setPurgeRydeData] = useState(true);
   const [resetPassword, setResetPassword] = useState("Fedex1234#");
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [usernameTarget, setUsernameTarget] = useState<{ id: number; name: string; current: string | null } | null>(null);
+  const [newUsername, setNewUsername] = useState("");
   const [isPending, startTransition] = useTransition();
 
   async function refresh() {
@@ -170,6 +172,22 @@ export default function DriversPage() {
       setCreated({ driverId: resetTarget.driverId, password: result.tempPassword });
       setResetTarget(null);
       setShowPassword(false);
+    });
+  }
+
+  function openUsernameModal(driver: Driver) {
+    setUsernameTarget({ id: driver.id, name: driver.name, current: driver.username });
+    setNewUsername(driver.username ?? "");
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  function handleUpdateUsername() {
+    if (!usernameTarget) return;
+    startTransition(async () => {
+      await updateDriverUsername(usernameTarget.id, newUsername.trim());
+      setUsernameTarget(null);
+      await refresh();
     });
   }
 
@@ -483,6 +501,13 @@ export default function DriversPage() {
                   <Eye className="w-3.5 h-3.5 text-slate-400" />Reset Password
                 </button>
                 <button
+                  onClick={() => openUsernameModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />Change Username
+                </button>
+                <button
                   onClick={() => openDeleteModal({ id: driver.id, driverId: driver.driverId, name: driver.name })}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-red-500
                     hover:bg-red-50 transition-colors flex items-center gap-2"
@@ -702,6 +727,51 @@ export default function DriversPage() {
                 disabled={isPending}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
                   hover:bg-slate-700 transition-colors disabled:opacity-40
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change username modal */}
+      {usernameTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Change Username</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Update login username for <span className="font-semibold text-slate-600">{usernameTarget.name}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Username</label>
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder="e.g. marcus.webb"
+                className={INPUT_CLS + " mt-1.5"}
+                autoFocus
+              />
+              <p className="text-[11px] text-slate-400 mt-1.5">Leave blank to remove the username.</p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setUsernameTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUsername}
+                disabled={isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
                   flex items-center justify-center gap-2"
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

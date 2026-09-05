@@ -122,24 +122,22 @@ export default function ServiceTab({
   rows,
   myDriverId,
   myHistory = [],
+  accent = "#FF6200",
 }: {
   rows: DswRow[];
   myDriverId: string;
   myHistory?: DswRow[];
+  accent?: string;
 }) {
   if (rows.length === 0) {
     return (
       <div
         className="rounded-2xl px-6 py-10 flex flex-col items-center text-center"
-        style={{
-          background: "rgba(255,255,255,0.10)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          backdropFilter: "blur(12px)",
-        }}
+        style={{ background: "#ffffff", border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
       >
         <p className="text-[22px] mb-2">📋</p>
-        <p className="text-[15px] font-bold text-white/70">No service data yet</p>
-        <p className="text-[12px] text-white/40 mt-1">
+        <p className="text-[15px] font-bold" style={{ color: "#475569" }}>No service data yet</p>
+        <p className="text-[12px] mt-1" style={{ color: "#94A3B8" }}>
           Data syncs each morning from the FedEx Daily Service Worksheet.
         </p>
       </div>
@@ -191,9 +189,9 @@ export default function ServiceTab({
         <div className="px-5 pt-4 pb-3" style={{
           background: earned
             ? "linear-gradient(135deg, #dc2626, #ef4444)"
-            : "linear-gradient(135deg, #1e293b, #334155)",
+            : `linear-gradient(135deg, ${accent}, ${accent})`,
         }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-1">
             {earned ? "🎉 Team Reward Unlocked!" : "Team Clean ILS Streak"}
           </p>
           <div className="flex items-center justify-between">
@@ -201,7 +199,7 @@ export default function ServiceTab({
               <p className="text-[20px] font-extrabold text-white leading-tight">
                 {earned ? `${CFA_EMOJI} Free Chick-fil-A!` : `${ilsStreak} / ${STREAK_GOAL} days`}
               </p>
-              <p className="text-[11px] text-white/60 mt-0.5">
+              <p className="text-[11px] text-white/75 mt-0.5">
                 {earned
                   ? "The whole team passed service for 2 weeks. Show this to your manager!"
                   : daysLeft === 1
@@ -276,7 +274,7 @@ export default function ServiceTab({
               ? "linear-gradient(135deg, #78350f, #d97706)"
               : myTier === "red"
               ? "linear-gradient(135deg, #7f1d1d, #dc2626)"
-              : "linear-gradient(135deg, #1e293b, #475569)",
+              : "linear-gradient(135deg, #64748b, #94a3b8)",
           }}
         >
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Today — {dateLabel}</p>
