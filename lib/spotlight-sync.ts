@@ -127,11 +127,15 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       throw new Error("OTP send failed: " + JSON.stringify(genResult));
     }
 
-    // ── 3. Poll DB for OTP (Resend inbound webhook writes it) ────────────────
-    console.log("[spotlight] Waiting for OTP in settings.spotlight_otp (max 5 min)...");
+    // ── 3. Poll DB for OTP (user enters it in the app UI) ───────────────────
+    console.log("[spotlight] Waiting for OTP — signalling UI...");
 
-    // Clear any stale OTP
+    // Clear any stale OTP, then signal the UI to prompt the user
     await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at')`;
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'waiting_for_otp')
+      ON CONFLICT (key) DO UPDATE SET value = 'waiting_for_otp'
+    `;
 
     let otp = "";
     const otpDeadline = Date.now() + 5 * 60 * 1000;
@@ -145,10 +149,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     }
 
     if (!otp) {
-      throw new Error(
-        "OTP not received within 5 minutes. " +
-        "Forward the OTP email to spotlight@742logistics.com and try again."
-      );
+      throw new Error("OTP not received within 5 minutes. Enter the code sent to your FedEx email/phone in the Auto Spotlight page.");
     }
 
     // ── 4. Verify OTP + get EmbedToken ────────────────────────────────────────
@@ -365,9 +366,17 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     }
 
     console.log(`[spotlight] Done — ${scoreCount} scores, ${reviewCount} reviews, ${weeksSeen.size} weeks`);
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'idle')
+      ON CONFLICT (key) DO UPDATE SET value = 'idle'
+    `;
     return { success: true, drivers: scoreCount, weeks: weeksSeen.size, reviews: reviewCount };
 
   } catch (err) {
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'idle')
+      ON CONFLICT (key) DO UPDATE SET value = 'idle'
+    `.catch(() => {});
     await browser.close().catch(() => {});
     throw err;
   }

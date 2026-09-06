@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff } from "lucide-react";
 
 type ScoreRow = {
   id: number;
@@ -19,6 +19,7 @@ type Status = {
   lastSyncResult: { success: boolean; error?: string; drivers?: number; weeks?: number; reviews?: number; completedAt?: string } | null;
   autoEnabled: boolean;
   autoTime: string;
+  syncStatus: "idle" | "waiting_for_otp";
 };
 
 function starBg(score: number | null) {
@@ -41,7 +42,17 @@ export default function AutoSpotlightClient() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
+  const [syncStatus,  setSyncStatus]  = useState<"idle" | "waiting_for_otp">("idle");
+  const [otpInput,    setOtpInput]    = useState("");
+  const [otpSaving,   setOtpSaving]   = useState(false);
   const triggeredAt = useRef<number>(0);
+
+  const [credUsername,  setCredUsername]  = useState("");
+  const [credPassword,  setCredPassword]  = useState("");
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [credSaving,    setCredSaving]    = useState(false);
+  const [credSaved,     setCredSaved]     = useState(false);
+  const [credConfigured, setCredConfigured] = useState(false);
 
   // Latest week for display
   const latestWeek = data?.scores[0]?.week ?? null;
@@ -53,6 +64,7 @@ export default function AutoSpotlightClient() {
       setData(d);
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
+      setSyncStatus(d.syncStatus ?? "idle");
       if (triggeredAt.current && d.lastSyncResult?.completedAt) {
         const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
         if (resultTime > triggeredAt.current) {
@@ -72,7 +84,12 @@ export default function AutoSpotlightClient() {
     setLoading(false);
   }
 
-  useEffect(() => { loadStatus(); }, []);
+  useEffect(() => {
+    loadStatus();
+    fetch("/api/settings?key=spotlight_username").then(r => r.json()).then(d => {
+      if (d.value) { setCredUsername(d.value); setCredConfigured(true); }
+    });
+  }, []);
 
   useEffect(() => {
     if (!pollUntil) return;
@@ -85,9 +102,22 @@ export default function AutoSpotlightClient() {
         return;
       }
       await loadStatus();
-    }, 10000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [pollUntil]);
+
+  async function submitOtp() {
+    if (!otpInput.trim()) return;
+    setOtpSaving(true);
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "spotlight_otp", value: otpInput.trim() }),
+    });
+    setOtpInput("");
+    setOtpSaving(false);
+    setSyncResult({ ok: true, msg: "Code submitted — finishing sync…" });
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -107,6 +137,21 @@ export default function AutoSpotlightClient() {
       setSyncResult({ ok: false, msg: err?.message ?? "Network error" });
       setSyncing(false);
     }
+  }
+
+  async function saveCreds() {
+    setCredSaving(true);
+    await Promise.all([
+      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_username", value: credUsername.trim() }) }),
+      credPassword
+        ? fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_password", value: credPassword }) })
+        : Promise.resolve(),
+    ]);
+    setCredSaving(false);
+    setCredSaved(true);
+    setCredConfigured(true);
+    if (credPassword) setCredPassword("");
+    setTimeout(() => setCredSaved(false), 3000);
   }
 
   async function saveSchedule() {
@@ -158,17 +203,43 @@ export default function AutoSpotlightClient() {
       </div>
 
       {syncResult && (
-        <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium mb-6 border ${
+        <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium mb-4 border ${
           syncResult.ok ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
         }`}>
           {syncResult.ok ? <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" /> : <XCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-          <div>
-            {syncResult.msg}
-            {syncing && (
-              <p className="text-[11px] mt-1 opacity-75">
-                OTP email goes to your FedEx-registered address. If not caught automatically, forward it to spotlight@742logistics.com
-              </p>
-            )}
+          <span>{syncResult.msg}</span>
+        </div>
+      )}
+
+      {/* OTP prompt — shown when backend is waiting for the verification code */}
+      {syncStatus === "waiting_for_otp" && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+            <p className="text-[14px] font-bold text-blue-900">Enter your verification code</p>
+          </div>
+          <p className="text-[12px] text-blue-700 mb-4">
+            FedEx sent a one-time code to your registered email or phone. Enter it below to complete sign-in.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={8}
+              value={otpInput}
+              onChange={e => setOtpInput(e.target.value.replace(/\D/g, ""))}
+              onKeyDown={e => e.key === "Enter" && submitOtp()}
+              placeholder="123456"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-blue-200 bg-white text-[16px] font-bold text-slate-900 tracking-widest outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+              autoFocus
+            />
+            <button
+              onClick={submitOtp}
+              disabled={otpSaving || !otpInput.trim()}
+              className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {otpSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
+            </button>
           </div>
         </div>
       )}
@@ -212,8 +283,7 @@ export default function AutoSpotlightClient() {
               <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left max-w-md">
                 <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-700">
-                  An OTP will be emailed to your FedEx-registered address. If it doesn&apos;t arrive automatically,
-                  forward it to <strong>spotlight@742logistics.com</strong>
+                  An OTP will be emailed to your FedEx-registered address. Enter your credentials above, then click Sync Now — you&apos;ll be prompted to enter the code.
                 </p>
               </div>
             </div>
@@ -251,6 +321,64 @@ export default function AutoSpotlightClient() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Credentials */}
+        <div className={`${CARD} max-w-md`}>
+          <div className="flex items-center gap-2 mb-1">
+            <KeyRound className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[15px] font-extrabold text-slate-900">Spotlight Credentials</h2>
+            {credConfigured && (
+              <span className="ml-auto flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                <CheckCircle className="w-3.5 h-3.5" /> Configured
+              </span>
+            )}
+          </div>
+          <p className="text-[12px] text-slate-400 mb-5">
+            Your FedEx Spotlight login. Password is stored securely and never displayed.
+          </p>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">Username / User ID</label>
+              <input
+                type="text"
+                value={credUsername}
+                onChange={e => setCredUsername(e.target.value)}
+                placeholder="e.g. 6367044"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                Password {credConfigured && <span className="text-slate-400 font-normal">(leave blank to keep existing)</span>}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={credPassword}
+                  onChange={e => setCredPassword(e.target.value)}
+                  placeholder={credConfigured ? "••••••••" : "Enter password"}
+                  className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={saveCreds}
+              disabled={credSaving || !credUsername.trim()}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            >
+              {credSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                : credSaved ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
+                : "Save Credentials"}
+            </button>
+          </div>
         </div>
 
         {/* Schedule */}
