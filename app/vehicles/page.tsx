@@ -12,6 +12,7 @@ import RepairEditor from "./repair-editor";
 import Link from "next/link";
 import VehiclesHeader from "./vehicles-header";
 import VehicleToggle from "./vehicle-toggle";
+import VehicleActions from "./vehicle-actions";
 
 export default async function VehiclesPage() {
   const [allVehicles, allInspections, allResults] = await Promise.all([
@@ -183,11 +184,9 @@ export default async function VehiclesPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        <VehicleActions vehicle={{ id: vehicle.id, unitNumber: vehicle.unitNumber, make: vehicle.make, model: vehicle.model, year: vehicle.year, mileage: vehicle.mileage, vin: vehicle.vin ?? "", type: vehicle.type, ownership: vehicle.ownership, active: vehicle.active }} />
                         <VehicleToggle vehicleId={vehicle.id} active={true} />
-                        <Link
-                          href={`/fleet/${vehicle.id}`}
-                          className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                        >
+                        <Link href={`/fleet/${vehicle.id}`} className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
                           View →
                         </Link>
                       </div>
@@ -251,13 +250,9 @@ export default async function VehiclesPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <VehicleActions vehicle={{ id: vehicle.id, unitNumber: vehicle.unitNumber, make: vehicle.make, model: vehicle.model, year: vehicle.year, mileage: vehicle.mileage, vin: vehicle.vin ?? "", type: vehicle.type, ownership: vehicle.ownership, active: vehicle.active }} />
                     <VehicleToggle vehicleId={vehicle.id} active={true} />
-                    <Link
-                      href={`/fleet/${vehicle.id}`}
-                      className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800"
-                    >
-                      →
-                    </Link>
+                    <Link href={`/fleet/${vehicle.id}`} className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800">→</Link>
                   </div>
                 </div>
               ))}
@@ -299,13 +294,9 @@ export default async function VehiclesPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    <VehicleActions vehicle={{ id: vehicle.id, unitNumber: vehicle.unitNumber, make: vehicle.make, model: vehicle.model, year: vehicle.year, mileage: vehicle.mileage, vin: vehicle.vin ?? "", type: vehicle.type, ownership: vehicle.ownership, active: vehicle.active }} />
                     <VehicleToggle vehicleId={vehicle.id} active={true} />
-                    <Link
-                      href={`/fleet/${vehicle.id}/inspect`}
-                      className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800"
-                    >
-                      Inspect →
-                    </Link>
+                    <Link href={`/fleet/${vehicle.id}/inspect`} className="text-[12px] font-semibold text-indigo-600 hover:text-indigo-800">Inspect →</Link>
                   </div>
                 </div>
               ))}
@@ -346,6 +337,7 @@ export default async function VehiclesPage() {
                       </p>
                     )}
                   </div>
+                  <VehicleActions vehicle={{ id: vehicle.id, unitNumber: vehicle.unitNumber, make: vehicle.make, model: vehicle.model, year: vehicle.year, mileage: vehicle.mileage, vin: vehicle.vin ?? "", type: vehicle.type, ownership: vehicle.ownership, active: vehicle.active }} />
                   <VehicleToggle vehicleId={vehicle.id} active={false} />
                 </div>
               ))}

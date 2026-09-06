@@ -69,6 +69,9 @@ export async function deleteVehicle(vehicleId: number) {
   }
   await db.delete(inspections).where(eq(inspections.vehicleId, vehicleId));
   await db.delete(vehicles).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  revalidatePath("/vehicles");
+  revalidatePath("/fleet");
+  revalidatePath("/dashboard/fleet-status");
 }
 
 export async function getVehicles() {
@@ -104,11 +107,15 @@ export async function updateVehicle(
     mileage: number;
     vin: string;
     type: string;
+    ownership: string;
     active: boolean;
   }
 ) {
   const orgId = await requireOrg();
   await db.update(vehicles).set(data).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  revalidatePath("/vehicles");
+  revalidatePath("/fleet");
+  revalidatePath("/dashboard/fleet-status");
 }
 
 export async function setVehicleActive(vehicleId: number, active: boolean) {
