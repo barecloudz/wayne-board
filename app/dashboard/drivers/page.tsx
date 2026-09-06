@@ -21,6 +21,7 @@ type Driver = {
   isAdmin: boolean;
   assignedVehicleId: number | null;
   active: boolean;
+  loginDisabled: boolean;
   firstLoginAt: Date | null;
   createdAt: Date | null;
   terminationType: string | null;
@@ -145,9 +146,9 @@ export default function DriversPage() {
     });
   }
 
-  function handleToggleActive(id: number, active: boolean) {
+  function handleToggleActive(id: number, loginDisabled: boolean) {
     startTransition(async () => {
-      await setDriverActive(id, !active);
+      await setDriverActive(id, !loginDisabled);
       setMenuOpen(null);
       setMenuPos(null);
       await refresh();
@@ -256,8 +257,8 @@ export default function DriversPage() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  const active   = drivers.filter((d) => d.active).length;
-  const inactive = drivers.filter((d) => !d.active).length;
+  const active   = drivers.filter((d) => !d.loginDisabled).length;
+  const inactive = drivers.filter((d) => d.loginDisabled).length;
 
   return (
     <AppShell>
@@ -269,7 +270,7 @@ export default function DriversPage() {
               MyGroundOps · Admin
             </p>
             <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
-              Driver Accounts
+              Accounts
             </h1>
           </div>
           <button
@@ -420,14 +421,14 @@ export default function DriversPage() {
                       <td className="px-3 py-3">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5">
-                            {driver.active
-                              ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                              : <XCircle className="w-3.5 h-3.5 text-red-400" />}
-                            <span className={`text-[12px] font-semibold whitespace-nowrap ${driver.active ? "text-emerald-600" : "text-red-500"}`}>
-                              {driver.active ? "Active" : driver.terminationType ? (
+                            {driver.loginDisabled
+                              ? <XCircle className="w-3.5 h-3.5 text-red-400" />
+                              : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                            <span className={`text-[12px] font-semibold whitespace-nowrap ${driver.loginDisabled ? "text-red-500" : "text-emerald-600"}`}>
+                              {driver.loginDisabled ? "Login Disabled" : driver.terminationType ? (
                                 driver.terminationType === "notice" ? "Gave Notice" :
                                 driver.terminationType === "fired" ? "Terminated" : "Removed"
-                              ) : "Inactive"}
+                              ) : "Login Enabled"}
                             </span>
                           </div>
                           {driver.terminationNote && (
@@ -485,34 +486,35 @@ export default function DriversPage() {
             return (
               <>
                 <button
-                  onClick={() => handleToggleActive(driver.id, driver.active)}
+                  onClick={() => handleToggleActive(driver.id, driver.loginDisabled)}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
-                  {driver.active
-                    ? <><XCircle className="w-3.5 h-3.5 text-red-400" />Deactivate</>
-                    : <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Activate</>}
+                  {driver.loginDisabled
+                    ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Enable Login</>
+                    : <><XCircle className="w-3.5 h-3.5 text-red-400" />Disable Login</>}
                 </button>
                 {driver.role !== "owner" && (myRole === "owner" || (myRole === "co_owner" && driver.role !== "co_owner" && driver.role !== "developer")) && (
-                  <div className="relative">
+                  <div>
                     <button
                       onClick={(e) => { e.stopPropagation(); setRoleMenuOpen(roleMenuOpen === driver.id ? null : driver.id); }}
                       className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
                       Set Role
-                      <ChevronRight className="w-3 h-3 text-slate-300 ml-auto" />
+                      <ChevronRight className={`w-3 h-3 text-slate-300 ml-auto transition-transform ${roleMenuOpen === driver.id ? "rotate-90" : ""}`} />
                     </button>
                     {roleMenuOpen === driver.id && (
-                      <div className="absolute left-full top-0 ml-1 bg-white border border-slate-200 rounded-xl shadow-lg w-36 py-1 z-50">
+                      <div className="border-t border-slate-100 bg-slate-50">
                         {(["driver", "bc", ...(myRole === "owner" ? ["co_owner", "developer"] : [])] as Array<"driver" | "bc" | "co_owner" | "developer">).map((r) => (
                           <button
                             key={r}
-                            onClick={() => handleSetRole(driver.id, r)}
-                            className={`w-full text-left px-3.5 py-2 text-[12px] font-semibold transition-colors hover:bg-slate-50 flex items-center gap-2 ${driver.role === r ? "text-slate-900" : "text-slate-500"}`}
+                            onClick={(e) => { e.stopPropagation(); handleSetRole(driver.id, r); }}
+                            className={`w-full text-left pl-8 pr-4 py-2 text-[12px] font-semibold transition-colors hover:bg-slate-100 flex items-center gap-2 ${driver.role === r ? "text-slate-900" : "text-slate-500"}`}
                           >
-                            {driver.role === r && <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />}
-                            {driver.role !== r && <span className="w-3 flex-shrink-0" />}
+                            {driver.role === r
+                              ? <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                              : <span className="w-3 flex-shrink-0" />}
                             {ROLE_LABELS[r]}
                           </button>
                         ))}

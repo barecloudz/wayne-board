@@ -41,6 +41,7 @@ export async function getDrivers() {
     avatarUrl:         drivers.avatarUrl,
     assignedVehicleId: drivers.assignedVehicleId,
     active:            drivers.active,
+    loginDisabled:     drivers.loginDisabled,
     firstLoginAt:      drivers.firstLoginAt,
     createdAt:         drivers.createdAt,
     terminationType:   drivers.terminationType,
@@ -82,9 +83,9 @@ export async function createDriver(
   return { driverId, tempPassword };
 }
 
-export async function setDriverActive(id: number, active: boolean) {
+export async function setDriverActive(id: number, loginDisabled: boolean) {
   const orgId = await requireOrg();
-  await db.update(drivers).set({ active }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+  await db.update(drivers).set({ loginDisabled }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
 /** @deprecated use setDriverRole */

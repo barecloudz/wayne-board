@@ -19,7 +19,7 @@ export default function DriversCard({ driverCount = 0 }: { driverCount?: number 
             <Users className="w-5 h-5 text-white" strokeWidth={1.8} />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-slate-900 leading-none">Driver Accounts</p>
+            <p className="text-[13px] font-bold text-slate-900 leading-none">Accounts</p>
             <p className="text-[11px] text-slate-400 mt-1">Active driver roster</p>
           </div>
         </div>
@@ -35,7 +35,7 @@ export default function DriversCard({ driverCount = 0 }: { driverCount?: number 
       {driverCount === 0 ? (
         <div className="bg-slate-50 rounded-xl px-4 py-3 text-center">
           <p className="text-[12px] text-slate-400">No driver accounts created yet</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">Add drivers via Driver Accounts</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Add drivers via Accounts</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { workAreas, dailyWorkAreaAssignments, drivers } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 
@@ -14,7 +14,8 @@ async function requireOrg() {
 
 export async function getWorkAreas() {
   const orgId = await requireOrg();
-  return db.select().from(workAreas).where(eq(workAreas.organizationId, orgId)).orderBy(workAreas.name);
+  return db.select().from(workAreas).where(eq(workAreas.organizationId, orgId))
+    .orderBy(sql`CASE WHEN ${workAreas.name} ~ '^[0-9]+$' THEN CAST(${workAreas.name} AS INTEGER) ELSE 99999 END`, workAreas.name);
 }
 
 export async function createWorkArea(name: string, shape: string, color: string) {

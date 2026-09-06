@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
 const adminItems = [
-  { icon: UserCog,       label: "Driver Accounts", href: "/dashboard/drivers",      exact: true },
+  { icon: UserCog,       label: "Accounts", href: "/dashboard/drivers",      exact: true },
   { icon: CalendarDays,  label: "Scheduling",       href: "/dashboard/scheduling",   exact: true },
   { icon: Gauge,         label: "Fleet Status",     href: "/dashboard/fleet-status", exact: true },
   { icon: WrenchIcon,    label: "Maintenance",      href: "/dashboard/maintenance",  exact: true },

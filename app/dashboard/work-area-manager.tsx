@@ -46,7 +46,14 @@ export default function WorkAreaManager({ initial }: { initial: WorkArea[] }) {
     if (!name.trim()) return;
     startTransition(async () => {
       await createWorkArea(name.trim(), shape, color);
-      setAreas((p) => [...p, { id: Date.now(), name: name.trim(), shape, color, active: true }]);
+      setAreas((p) => [...p, { id: Date.now(), name: name.trim(), shape, color, active: true }]
+        .sort((a, b) => {
+          const na = parseInt(a.name), nb = parseInt(b.name);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          if (!isNaN(na)) return -1;
+          if (!isNaN(nb)) return 1;
+          return a.name.localeCompare(b.name);
+        }));
       setName("");
     });
   }

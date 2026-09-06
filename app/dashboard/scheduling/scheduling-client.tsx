@@ -600,6 +600,16 @@ export default function SchedulingClient({
                                   </span>
                                 )}
                                 <span className="font-semibold text-slate-800">{row.name}</span>
+                                {(() => {
+                                  const wa = row.defaultWorkAreaId ? workAreaById.get(row.defaultWorkAreaId) : null;
+                                  if (!wa) return null;
+                                  return (
+                                    <span className="flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-full border"
+                                      style={{ background: wa.color + "18", borderColor: wa.color + "40", color: wa.color }}>
+                                      {wa.name}
+                                    </span>
+                                  );
+                                })()}
                                 {row.isTrainee && (
                                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
                                     trainee

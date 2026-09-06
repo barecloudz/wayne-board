@@ -32,7 +32,27 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
   const [year, setYear]             = useState("");
   const [mileage, setMileage]       = useState("0");
   const [vin, setVin]               = useState("");
+  const [vinLoading, setVinLoading] = useState(false);
+  const [vinDecoded, setVinDecoded] = useState(false);
   const [addError, setAddError]     = useState("");
+
+  async function handleVinChange(raw: string) {
+    const v = raw.toUpperCase();
+    setVin(v);
+    setVinDecoded(false);
+    if (v.length !== 17) return;
+    setVinLoading(true);
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${v}?format=json`);
+      const data = await res.json();
+      const r = data?.Results?.[0];
+      if (r?.Make) setMake(r.Make.charAt(0).toUpperCase() + r.Make.slice(1).toLowerCase());
+      if (r?.Model) setModel(r.Model);
+      if (r?.ModelYear) setYear(r.ModelYear);
+      if (r?.Make) setVinDecoded(true);
+    } catch { /* silent — user can fill manually */ }
+    finally { setVinLoading(false); }
+  }
 
   function openAddVehicle() {
     setUnitNumber(""); setMake(""); setModel(""); setYear("");
@@ -222,9 +242,22 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
             </div>
             <div className="px-6 py-5 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                  VIN
+                  {vinLoading && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+                  {vinDecoded && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                </label>
+                <input type="text" value={vin} onChange={(e) => handleVinChange(e.target.value)}
+                  placeholder="Enter 17-character VIN to auto-fill" maxLength={17}
+                  className={`${INPUT} font-mono tracking-wider`} autoFocus />
+                {vinDecoded && (
+                  <p className="text-[11px] text-emerald-600 font-medium">Make, model &amp; year filled from VIN</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Unit Number / Name</label>
                 <input type="text" value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)}
-                  placeholder="e.g. Truck 13" className={INPUT} autoFocus />
+                  placeholder="e.g. Truck 13" className={INPUT} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
@@ -249,11 +282,6 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
                   <input type="number" value={mileage} onChange={(e) => setMileage(e.target.value)}
                     placeholder="0" min="0" className={INPUT} />
                 </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">VIN (optional)</label>
-                <input type="text" value={vin} onChange={(e) => setVin(e.target.value.toUpperCase())}
-                  placeholder="17-character VIN" maxLength={17} className={`${INPUT} font-mono tracking-wider`} />
               </div>
               {addError && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-[12px] text-red-700">

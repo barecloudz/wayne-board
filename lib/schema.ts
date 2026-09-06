@@ -55,6 +55,7 @@ export const drivers = pgTable("drivers", {
   workArea:          text("work_area"),
   defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),
   active:            boolean("active").notNull().default(true),
+  loginDisabled:     boolean("login_disabled").notNull().default(false),
   isTrainee:         boolean("is_trainee").notNull().default(false),
   noticeDate:        date("notice_date"),
   lastDay:           date("last_day"),

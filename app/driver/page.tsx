@@ -30,7 +30,7 @@ import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes, getGateAreas } from "@/lib/actions/gate-codes";
 import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
 import Image from "next/image";
-import LogoutButton from "./logout-button";
+import ProfileButton from "./profile-button";
 import DriverTabs from "./driver-tabs";
 
 function WorkAreaShape({ shape, color, size = 14 }: { shape: string; color: string; size?: number }) {
@@ -173,19 +173,12 @@ export default async function DriverDashboard() {
             <span className="text-[11px] font-medium" style={{ color: "#94A3B8" }}>Driver Portal</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium hidden sm:block" style={{ color: "#94A3B8" }}>{session.name}</span>
-          {session.isAdmin && (
-            <a
-              href="/dashboard"
-              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors"
-              style={{ background: "#F1F5F9", border: "1px solid #E2E8F0", color: "#475569" }}
-            >
-              Dashboard
-            </a>
-          )}
-          <LogoutButton orgSlug={orgRow?.slug ?? ""} />
-        </div>
+        <ProfileButton
+          name={session.name}
+          orgSlug={orgRow?.slug ?? ""}
+          isAdmin={session.isAdmin}
+          accentColor={orgRow?.accentColor ?? "#FF6200"}
+        />
       </nav>
 
       {/* Content */}

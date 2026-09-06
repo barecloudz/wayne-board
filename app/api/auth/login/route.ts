@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
-  // Look up by username first; fall back to driverId for drivers without a username yet
+  // Match by username if set, fall back to driverId for drivers without one yet
   const [driver] = await db
     .select()
     .from(drivers)
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     ))
     .limit(1);
 
-  if (!driver || !driver.active) {
+  if (!driver || driver.loginDisabled) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 

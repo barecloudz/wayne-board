@@ -193,6 +193,17 @@ export default function DriverTabs({
     if (nonPending > seen) setMaintenanceDot(true);
   }, [maintenanceRequests]);
 
+  // Listen for profile circle "goto-tab" events dispatched from the nav
+  useEffect(() => {
+    function handler(e: Event) {
+      const key = (e as CustomEvent<string>).detail as typeof tab;
+      setTab(key);
+      setShowMore(false);
+    }
+    window.addEventListener("mgops:goto-driver-tab", handler);
+    return () => window.removeEventListener("mgops:goto-driver-tab", handler);
+  }, []);
+
   const scoreColor =
     avgScore === null ? "text-slate-400"
     : avgScore >= 4.5 ? "text-emerald-400"
@@ -205,12 +216,11 @@ export default function DriverTabs({
   const atGoal = companyRating != null && companyRating >= RATING_GOAL;
   const goalPct = companyRating != null ? Math.min(100, (companyRating / RATING_GOAL) * 100) : 0;
 
-  // Bottom dock — primary tabs
+  // Bottom dock — primary tabs (Account moved to top-right profile circle)
   const dockTabs = ([
     { key: "score",    label: "Score",    Icon: Star,        show: showRyde },
     { key: "schedule", label: "Schedule", Icon: CalendarDays, show: true },
     { key: "gatecodes",label: "Codes",    Icon: Key,         show: true },
-    { key: "account",  label: "Account",  Icon: User,        show: true },
   ] as const).filter(t => t.show);
 
   // More sheet — secondary tabs
