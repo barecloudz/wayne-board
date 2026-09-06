@@ -197,23 +197,28 @@ export default function AutoGcClient() {
     setTimeout(() => setSchedSaved(false), 3000);
   }
 
+  const [showUnmatched, setShowUnmatched] = useState(false);
+
   const rows       = data?.rows ?? [];
   const hasData    = rows.length > 0;
   const lastSynced = data?.lastSynced ? new Date(data.lastSynced) : null;
 
   // Group rows by date, show most recent date's data prominently
-  const latestDate  = rows[0]?.date ?? null;
-  const latestRows  = rows.filter(r => r.date === latestDate);
-  const dateLabel   = latestDate
+  const latestDate     = rows[0]?.date ?? null;
+  const latestRows     = rows.filter(r => r.date === latestDate);
+  const matchedRows    = latestRows.filter(r => r.driverId);
+  const unmatchedRows  = latestRows.filter(r => !r.driverId);
+  const visibleRows    = showUnmatched ? unmatchedRows : matchedRows;
+  const dateLabel      = latestDate
     ? new Date(latestDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     : null;
 
-  // Summary stats for latest date
-  const avgSph = latestRows.length
-    ? latestRows.reduce((s, r) => s + (r.stopsPerHour ?? 0), 0) / latestRows.filter(r => r.stopsPerHour).length
+  // Summary stats for latest date (matched only)
+  const avgSph = matchedRows.length
+    ? matchedRows.reduce((s, r) => s + (r.stopsPerHour ?? 0), 0) / matchedRows.filter(r => r.stopsPerHour).length
     : null;
-  const totalMiles = latestRows.reduce((s, r) => s + (r.milesTotal ?? 0), 0);
-  const matched    = latestRows.filter(r => r.driverId).length;
+  const totalMiles = matchedRows.reduce((s, r) => s + (r.milesTotal ?? 0), 0);
+  const matched    = matchedRows.length;
 
   return (
     <main className="flex-1 px-6 py-8 max-w-[1200px] w-full mx-auto">
@@ -283,10 +288,24 @@ export default function AutoGcClient() {
 
         {/* ── Performance table ── */}
         <div className={CARD}>
-          <div className="flex items-center gap-2 mb-5">
-            <Activity className="w-4 h-4 text-slate-400" />
-            <h2 className="text-[14px] font-extrabold text-slate-900">Driver Performance</h2>
-            {dateLabel && <span className="text-[11px] text-slate-400 ml-1">{dateLabel}</span>}
+          <div className="flex items-center justify-between gap-2 mb-5">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-slate-400" />
+              <h2 className="text-[14px] font-extrabold text-slate-900">Driver Performance</h2>
+              {dateLabel && <span className="text-[11px] text-slate-400 ml-1">{dateLabel}</span>}
+            </div>
+            {unmatchedRows.length > 0 && (
+              <button
+                onClick={() => setShowUnmatched(v => !v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                  showUnmatched
+                    ? "bg-amber-50 text-amber-700 border-amber-300"
+                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                }`}
+              >
+                {showUnmatched ? "← Back to Matched" : `Unmatched (${unmatchedRows.length})`}
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -314,7 +333,7 @@ export default function AutoGcClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {latestRows.map((r) => (
+                  {visibleRows.map((r) => (
                     <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
