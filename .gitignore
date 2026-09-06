@@ -42,3 +42,4 @@ next-env.d.ts
 scripts/groundswell-deep.json
 scripts/groundswell-api-calls.json
 .neon
+.claude/
