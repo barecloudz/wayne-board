@@ -96,11 +96,31 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     }
     if (!bearerToken) throw new Error("Spotlight login failed · Bearer token not captured after 30s");
 
-    // ── 2. Send OTP via EMAIL (in browser context, cookies included) ─────────
-    console.log("[spotlight] Sending OTP via email...");
+    // ── 2. Ask user to choose OTP delivery method ─────────────────────────────
+    console.log("[spotlight] Waiting for user to choose OTP delivery method...");
+
+    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method')`;
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'choosing_mfa')
+      ON CONFLICT (key) DO UPDATE SET value = 'choosing_mfa'
+    `;
+
+    let mfaMethod = "";
+    const mfaDeadline = Date.now() + 2 * 60 * 1000;
+    while (!mfaMethod && Date.now() < mfaDeadline) {
+      await new Promise(r => setTimeout(r, 3000));
+      const rows = await sql`SELECT value FROM settings WHERE key = 'spotlight_mfa_method'`;
+      if (rows[0]?.value) mfaMethod = rows[0].value as string;
+    }
+    if (!mfaMethod) mfaMethod = "EMAIL"; // default if user doesn't respond
+
+    console.log("[spotlight] OTP delivery method chosen:", mfaMethod);
+
+    // ── 3. Send OTP via chosen method (in browser context, cookies included) ──
+    console.log("[spotlight] Sending OTP via", mfaMethod, "...");
 
     const genResult: any = await page.evaluate(
-      async (mfaBase: string, bearer: string, userId: string) => {
+      async (mfaBase: string, bearer: string, userId: string, method: string) => {
         const h = { Authorization: bearer, "Content-Type": "application/json" };
 
         await fetch(`${mfaBase}/csrftoken?`, { credentials: "include", headers: h });
@@ -113,13 +133,13 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
           credentials: "include",
           headers: h,
           body: JSON.stringify({
-            userPreference: { userId, userPreferredChoice: "EMAIL" },
+            userPreference: { userId, userPreferredChoice: method },
             regenerateCount: 0,
           }),
         });
         return r.json();
       },
-      MFA_BASE, bearerToken, USER_ID
+      MFA_BASE, bearerToken, USER_ID, mfaMethod
     );
 
     console.log("[spotlight] OTP generate result:", JSON.stringify(genResult));
@@ -127,11 +147,11 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       throw new Error("OTP send failed: " + JSON.stringify(genResult));
     }
 
-    // ── 3. Poll DB for OTP (user enters it in the app UI) ───────────────────
+    // ── 4. Poll DB for OTP (user enters it in the app UI) ───────────────────
     console.log("[spotlight] Waiting for OTP · signalling UI...");
 
-    // Clear any stale OTP, then signal the UI to prompt the user
-    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at')`;
+    // Clear stale keys, signal UI to show OTP input
+    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method')`;
     await sql`
       INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'waiting_for_otp')
       ON CONFLICT (key) DO UPDATE SET value = 'waiting_for_otp'

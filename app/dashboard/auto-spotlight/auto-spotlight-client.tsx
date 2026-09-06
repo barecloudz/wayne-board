@@ -19,7 +19,7 @@ type Status = {
   lastSyncResult: { success: boolean; error?: string; drivers?: number; weeks?: number; reviews?: number; completedAt?: string } | null;
   autoEnabled: boolean;
   autoTime: string;
-  syncStatus: "idle" | "waiting_for_otp";
+  syncStatus: "idle" | "choosing_mfa" | "waiting_for_otp";
 };
 
 function starBg(score: number | null) {
@@ -42,7 +42,7 @@ export default function AutoSpotlightClient() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
-  const [syncStatus,  setSyncStatus]  = useState<"idle" | "waiting_for_otp">("idle");
+  const [syncStatus,  setSyncStatus]  = useState<"idle" | "choosing_mfa" | "waiting_for_otp">("idle");
   const [otpInput,    setOtpInput]    = useState("");
   const [otpSaving,   setOtpSaving]   = useState(false);
   const triggeredAt = useRef<number>(0);
@@ -106,6 +106,15 @@ export default function AutoSpotlightClient() {
     return () => clearInterval(interval);
   }, [pollUntil]);
 
+  async function submitMfaChoice(method: "EMAIL" | "PHONE") {
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "spotlight_mfa_method", value: method }),
+    });
+    setSyncResult({ ok: true, msg: `Sending code to your ${method === "EMAIL" ? "email" : "phone"}…` });
+  }
+
   async function submitOtp() {
     if (!otpInput.trim()) return;
     setOtpSaving(true);
@@ -126,8 +135,8 @@ export default function AutoSpotlightClient() {
     try {
       const res = await fetch("/.netlify/functions/spotlight-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
-        setPollUntil(Date.now() + 10 * 60 * 1000); // poll for up to 10 min (OTP wait)
-        setSyncResult({ ok: true, msg: "Syncing… OTP sent to your FedEx email. Checking every 10s." });
+        setPollUntil(Date.now() + 10 * 60 * 1000);
+        setSyncResult({ ok: true, msg: "Logging in to FedEx Spotlight… you'll be asked how to receive your verification code." });
       } else {
         const body = await res.json().catch(() => ({}));
         setSyncResult({ ok: false, msg: body?.error ?? `Unexpected response (${res.status})` });
@@ -211,6 +220,33 @@ export default function AutoSpotlightClient() {
         </div>
       )}
 
+      {/* MFA method choice · shown after login while waiting for delivery preference */}
+      {syncStatus === "choosing_mfa" && (
+        <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
+            <p className="text-[14px] font-bold text-indigo-900">How should FedEx send your verification code?</p>
+          </div>
+          <p className="text-[12px] text-indigo-700 mb-4">
+            FedEx is ready to send a one-time code. Choose where you want to receive it.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => submitMfaChoice("EMAIL")}
+              className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              Send to Email
+            </button>
+            <button
+              onClick={() => submitMfaChoice("PHONE")}
+              className="flex-1 py-2.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 text-[13px] font-semibold hover:bg-indigo-50 transition-colors"
+            >
+              Send to Phone
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* OTP prompt · shown when backend is waiting for the verification code */}
       {syncStatus === "waiting_for_otp" && (
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5">
@@ -283,7 +319,7 @@ export default function AutoSpotlightClient() {
               <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left max-w-md">
                 <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-700">
-                  An OTP will be emailed to your FedEx-registered address. Enter your credentials above, then click Sync Now · you&apos;ll be prompted to enter the code.
+                  Enter your credentials above, then click Sync Now. You&apos;ll be asked whether to receive the verification code by email or phone, then prompted to enter it here.
                 </p>
               </div>
             </div>
