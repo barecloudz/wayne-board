@@ -146,36 +146,45 @@ export default function AutoGcClient() {
     setBackfillProgress(null);
     setBackfillDone(null);
 
-    const res = await fetch("/api/auto-gc/backfill", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ startDate: backfillDate }),
-    });
-
-    if (!res.ok || !res.body) {
-      setBackfilling(false);
-      return;
+    // Build date list client-side — skip Sundays
+    const dates: string[] = [];
+    const cursor = new Date(backfillDate + "T12:00:00Z");
+    const yesterday = new Date();
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    yesterday.setUTCHours(23, 59, 59, 0);
+    while (cursor <= yesterday) {
+      if (cursor.getUTCDay() !== 0) dates.push(cursor.toISOString().slice(0, 10));
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = "";
+    let totalRoutes = 0;
+    let totalMatched = 0;
+    let errors = 0;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const msg = JSON.parse(line);
-          if (msg.type === "progress") setBackfillProgress({ current: msg.current, total: msg.total, date: msg.date });
-          if (msg.type === "done") { setBackfillDone(msg); setBackfillProgress(null); }
-        } catch {}
+    // Call sync once per day — each request is short, no server timeout issues
+    for (let i = 0; i < dates.length; i++) {
+      const date = dates[i];
+      setBackfillProgress({ current: i + 1, total: dates.length, date });
+      try {
+        const res = await fetch("/api/auto-gc/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date }),
+        });
+        const r = await res.json();
+        if (r.success) {
+          totalRoutes  += r.routeDays ?? 0;
+          totalMatched += r.matched   ?? 0;
+        } else {
+          errors++;
+        }
+      } catch {
+        errors++;
       }
     }
+
+    setBackfillProgress(null);
+    setBackfillDone({ totalRoutes, totalMatched, errors, days: dates.length });
     setBackfilling(false);
     await loadStatus();
   }
