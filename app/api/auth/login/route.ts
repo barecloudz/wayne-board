@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { drivers, organizations } from "@/lib/schema";
 import { eq, and, or } from "drizzle-orm";
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing credentials." }, { status: 400 });
   }
 
-  // Resolve org — orgSlug required for scoped login
+  // Resolve org · orgSlug required for scoped login
   if (!orgSlug) {
     return NextResponse.json({ error: "Invalid login link." }, { status: 400 });
   }

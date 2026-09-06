@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
@@ -19,9 +19,9 @@ const CreateRoutesMap = dynamic(() => import("./create-routes-map"), {
 
 // ── Wizard Step Bar ─────────────────────────────────────────────────────────
 const WIZARD_STEPS = [
-  { id: "review",  short: "Pick Cuts",   label: "Step 1 — Pick your cuts" },
-  { id: "plan",    short: "Review Plan", label: "Step 2 — Review the plan" },
-  { id: "confirm", short: "Confirm",     label: "Step 3 — Confirm & send" },
+  { id: "review",  short: "Pick Cuts",   label: "Step 1 · Pick your cuts" },
+  { id: "plan",    short: "Review Plan", label: "Step 2 · Review the plan" },
+  { id: "confirm", short: "Confirm",     label: "Step 3 · Confirm & send" },
   { id: "done",    short: "Done",        label: "All done!" },
 ] as const;
 
@@ -71,7 +71,7 @@ const STEP_HELP: Record<string, { icon: React.ElementType; headline: string; bod
   confirm: {
     icon: Send,
     headline: "Ready to send this to DRO?",
-    body: "When you click Apply, the system will log into DRO, load these routes, and trigger a solve. This takes 30–60 seconds. The stops will be sequenced automatically — you don't need to do anything else in DRO.",
+    body: "When you click Apply, the system will log into DRO, load these routes, and trigger a solve. This takes 30–60 seconds. The stops will be sequenced automatically · you don't need to do anything else in DRO.",
   },
   done: {
     icon: PartyPopper,
@@ -192,7 +192,7 @@ export default function CreateRoutesClient() {
 
       // If session expired, direct user to reconnect from Auto DRO
       if (json?.error?.includes("session expired") || json?.error?.includes("SESSION_EXPIRED")) {
-        setSyncMsg({ ok: false, text: "DRO session expired — go to Auto DRO → Connect to DRO, wait 2-3 min, then come back and sync." });
+        setSyncMsg({ ok: false, text: "DRO session expired · go to Auto DRO → Connect to DRO, wait 2-3 min, then come back and sync." });
         return;
       }
 
@@ -203,7 +203,7 @@ export default function CreateRoutesClient() {
       if (!res.ok || json.error) {
         setSyncMsg({ ok: false, text: json.error ?? "Sync failed" });
       } else {
-        setSyncMsg({ ok: true, text: `Synced — ${json.stops} stops, ${json.routes} routes` });
+        setSyncMsg({ ok: true, text: `Synced · ${json.stops} stops, ${json.routes} routes` });
         await load();
       }
     } catch (e: any) {
@@ -366,13 +366,13 @@ export default function CreateRoutesClient() {
       {/* ── Step: Review / Select Work Areas ── */}
       {(step === "review" || step === "planning") && (
         <>
-          {/* Stop Count Cards — Predicted vs Live */}
+          {/* Stop Count Cards · Predicted vs Live */}
           <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Predicted */}
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Predicted Stops</p>
               <p className="text-[40px] font-extrabold text-violet-600 leading-none">
-                {data.predictedStops != null ? `~${data.predictedStops}` : "—"}
+                {data.predictedStops != null ? `~${data.predictedStops}` : "-"}
               </p>
               <p className="text-[11px] text-slate-400 mt-1">
                 {data.historicalSampleSize > 0
@@ -397,7 +397,7 @@ export default function CreateRoutesClient() {
               <p className={`text-[40px] font-extrabold leading-none ${
                 data.totalStops > 0 ? "text-slate-900" : "text-slate-300"
               }`}>
-                {data.totalStops > 0 ? data.totalStops : "—"}
+                {data.totalStops > 0 ? data.totalStops : "-"}
               </p>
               <p className="text-[11px] text-amber-600 font-semibold mt-1">
                 {data.totalStops > 0 ? "Grows until midnight" : "Sync DRO to load stops"}
@@ -422,7 +422,7 @@ export default function CreateRoutesClient() {
                 </p>
                 <p className="text-[11px] text-slate-500">
                   {data.totalStops} stops ÷ {activeCount} active routes
-                  {!stopsOk && " — over 120 stop limit!"}
+                  {!stopsOk && " · over 120 stop limit!"}
                 </p>
               </div>
             </div>
@@ -489,7 +489,7 @@ export default function CreateRoutesClient() {
 
             <div className="divide-y divide-slate-50">
               {data.droRoutes.length === 0 && (
-                <p className="px-5 py-6 text-[13px] text-slate-400 text-center">No routes loaded — sync DRO first</p>
+                <p className="px-5 py-6 text-[13px] text-slate-400 text-center">No routes loaded · sync DRO first</p>
               )}
               {data.droRoutes.map(r => {
                 const isActive = activeWorkAreas.has(r.workAreaName);
@@ -578,7 +578,7 @@ export default function CreateRoutesClient() {
           >
             {step === "planning"
               ? <><RefreshCw className="w-4 h-4 animate-spin" /> Building route plan...</>
-              : <>Build Plan — {activeCount} routes <ChevronRight className="w-4 h-4" /></>
+              : <>Build Plan · {activeCount} routes <ChevronRight className="w-4 h-4" /></>
             }
           </button>
         </>
@@ -769,7 +769,7 @@ export default function CreateRoutesClient() {
           </p>
           {plan.merged > 0 && (
             <p className="text-sm font-semibold text-emerald-600 mb-6">
-              {plan.merged} route{plan.merged > 1 ? "s" : ""} merged — saving {plan.merged} driver{plan.merged > 1 ? "s" : ""}
+              {plan.merged} route{plan.merged > 1 ? "s" : ""} merged · saving {plan.merged} driver{plan.merged > 1 ? "s" : ""}
             </p>
           )}
 
@@ -777,7 +777,7 @@ export default function CreateRoutesClient() {
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Route Summary</p>
             {plan.routes.map(r => (
               <div key={r.routeIndex} className="flex justify-between py-1 text-sm">
-                <span className="font-medium text-slate-700">Route {r.routeIndex} — {r.name}</span>
+                <span className="font-medium text-slate-700">Route {r.routeIndex} · {r.name}</span>
                 <span className="text-slate-400">{r.stopCount} stops</span>
               </div>
             ))}

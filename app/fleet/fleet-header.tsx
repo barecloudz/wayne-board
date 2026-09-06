@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -68,7 +68,7 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
         if (resolved) setModel(resolved);
         if (r?.Make) setVinDecoded(true);
       }
-    } catch { /* silent — user can fill manually */ }
+    } catch { /* silent · user can fill manually */ }
     finally { setVinLoading(false); }
   }
 
@@ -173,13 +173,13 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
                     icon: ClipboardCheck,
                     color: "bg-slate-100 text-slate-600",
                     title: "Go through all 20 items",
-                    body: "Each item on the M-121 form is presented one at a time. Mark each as OK, Repair Needed, N/A, or A/D (access denied — only valid for asterisked items).",
+                    body: "Each item on the M-121 form is presented one at a time. Mark each as OK, Repair Needed, N/A, or A/D (access denied · only valid for asterisked items).",
                   },
                   {
                     icon: AlertTriangle,
                     color: "bg-amber-50 text-amber-600",
                     title: "Record any defects",
-                    body: "If an item is marked \"Repair Needed\", you'll add notes. Items 1–15 and 19–20 are safety items — defects here require notification of the AO/BC and an agreed repair date before the vehicle can run.",
+                    body: "If an item is marked \"Repair Needed\", you'll add notes. Items 1–15 and 19–20 are safety items · defects here require notification of the AO/BC and an agreed repair date before the vehicle can run.",
                   },
                   {
                     icon: CheckCircle2,

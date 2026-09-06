@@ -90,7 +90,7 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
           vehicleId, description: form.description, severity: form.severity,
           repairEstimate: estimate, note: form.note || undefined,
         });
-        // Refresh optimistically with a placeholder — revalidatePath will sync
+        // Refresh optimistically with a placeholder · revalidatePath will sync
         setConditions((prev) => [{
           id: Date.now(), vehicleId, description: form.description, severity: form.severity,
           status: "open", routeStatus: "confirm", repairEstimate: estimate,
@@ -140,7 +140,7 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
         <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-5 py-3 flex items-start gap-3">
           <span className="text-red-500 font-bold text-[13px] shrink-0">⚠ Safety Alert</span>
           <p className="text-[12px] text-red-700">
-            This vehicle has critical issues — review before dispatching.
+            This vehicle has critical issues · review before dispatching.
           </p>
         </div>
       )}
@@ -173,10 +173,10 @@ export default function ConditionPanel({ vehicleId, initial }: { vehicleId: numb
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</label>
               <select value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as Severity }))} className={INPUT}>
-                <option value="critical">Critical — do not dispatch</option>
-                <option value="high">High — repair soon</option>
-                <option value="medium">Medium — monitor</option>
-                <option value="low">Low — note for next service</option>
+                <option value="critical">Critical · do not dispatch</option>
+                <option value="high">High · repair soon</option>
+                <option value="medium">Medium · monitor</option>
+                <option value="low">Low · note for next service</option>
               </select>
             </div>
 

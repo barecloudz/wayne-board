@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, CheckCircle, XCircle, Truck, Edit2, X } from "lucide-react";
@@ -196,7 +196,7 @@ export default function DroFleetTab() {
                 {/* Capacity */}
                 <div className="mb-4">
                   <span className="text-[40px] font-extrabold text-slate-900 leading-none">
-                    {vehicle.capacity ?? "—"}
+                    {vehicle.capacity ?? "-"}
                   </span>
                   <span className="text-[13px] text-slate-400 ml-2">stops</span>
                 </div>

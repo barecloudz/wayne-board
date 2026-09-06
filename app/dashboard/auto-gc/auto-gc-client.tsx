@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import {
@@ -31,7 +31,7 @@ type Status = {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtDriveTime(secs: number | null) {
-  if (!secs) return "—";
+  if (!secs) return "-";
   const h = Math.floor(secs / 3600);
   const m = Math.round((secs % 3600) / 60);
   return `${h}h ${m}m`;
@@ -165,7 +165,7 @@ export default function AutoGcClient() {
     setBackfillProgress(null);
     setBackfillDone(null);
 
-    // Build date list client-side — skip Sundays
+    // Build date list client-side · skip Sundays
     const dates: string[] = [];
     const cursor = new Date(backfillDate + "T12:00:00Z");
     const yesterday = new Date();
@@ -180,7 +180,7 @@ export default function AutoGcClient() {
     let totalMatched = 0;
     let errors = 0;
 
-    // Call sync once per day — each request is short, no server timeout issues
+    // Call sync once per day · each request is short, no server timeout issues
     for (let i = 0; i < dates.length; i++) {
       const date = dates[i];
       setBackfillProgress({ current: i + 1, total: dates.length, date });
@@ -293,8 +293,8 @@ export default function AutoGcClient() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: "ROUTES",        val: latestRows.length.toString() },
-              { label: "AVG STOPS/HR",  val: avgSph ? avgSph.toFixed(1) : "—" },
-              { label: "TOTAL MILES",   val: totalMiles > 0 ? totalMiles.toFixed(0) : "—" },
+              { label: "AVG STOPS/HR",  val: avgSph ? avgSph.toFixed(1) : "-" },
+              { label: "TOTAL MILES",   val: totalMiles > 0 ? totalMiles.toFixed(0) : "-" },
               { label: "WB MATCHED",    val: `${matched}/${latestRows.length}` },
             ].map(({ label, val }) => (
               <div key={label} className={`${CARD} p-5 text-center`}>
@@ -361,21 +361,21 @@ export default function AutoGcClient() {
                           ) : (
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                           )}
-                          <span className="text-[13px] font-semibold text-slate-800">{r.driverName || "—"}</span>
+                          <span className="text-[13px] font-semibold text-slate-800">{r.driverName || "-"}</span>
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="text-[12px] font-mono text-slate-500">{r.routeName || "—"}</span>
+                        <span className="text-[12px] font-mono text-slate-500">{r.routeName || "-"}</span>
                       </td>
                       <td className="py-3 pr-4">
                         {r.stopsPerHour ? (
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[13px] font-bold ${sphBg(r.stopsPerHour)}`}>
                             {r.stopsPerHour.toFixed(1)}
                           </span>
-                        ) : <span className="text-[12px] text-slate-300">—</span>}
+                        ) : <span className="text-[12px] text-slate-300">-</span>}
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="text-[13px] text-slate-600">{r.milesTotal ? r.milesTotal.toFixed(1) : "—"}</span>
+                        <span className="text-[13px] text-slate-600">{r.milesTotal ? r.milesTotal.toFixed(1) : "-"}</span>
                       </td>
                       <td className="py-3 pr-4">
                         <span className="text-[13px] text-slate-600">{fmtDriveTime(r.driveTime)}</span>
@@ -404,7 +404,7 @@ export default function AutoGcClient() {
                           </div>
                         ) : (
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${statusBadge(r.status)}`}>
-                            {r.status || "—"}
+                            {r.status || "-"}
                           </span>
                         )}
                       </td>
@@ -485,7 +485,7 @@ export default function AutoGcClient() {
               <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync Schedule</h2>
             </div>
             <p className="text-[12px] text-slate-400 mb-5">
-              Automatically pulls yesterday&apos;s SPH data each morning. No login required — runs server-side.
+              Automatically pulls yesterday&apos;s SPH data each morning. No login required · runs server-side.
             </p>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between py-3 border-b border-slate-100">
@@ -507,7 +507,7 @@ export default function AutoGcClient() {
                 </button>
               </div>
               <div className="px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[12px] text-slate-500">
-                Runs daily at <span className="font-semibold text-slate-700">6:00 AM UTC (2:00 AM Eastern)</span> — skips Sundays automatically.
+                Runs daily at <span className="font-semibold text-slate-700">6:00 AM UTC (2:00 AM Eastern)</span> · skips Sundays automatically.
               </div>
               <button
                 onClick={saveSchedule}
@@ -534,7 +534,7 @@ export default function AutoGcClient() {
             <h2 className="text-[15px] font-extrabold text-slate-900">Backfill Historical Data</h2>
           </div>
           <p className="text-[12px] text-slate-400 mb-5">
-            Pull stops-per-hour history from a past date up to yesterday. Safe to re-run — duplicates are overwritten.
+            Pull stops-per-hour history from a past date up to yesterday. Safe to re-run · duplicates are overwritten.
           </p>
 
           <div className="flex items-end gap-3 mb-4">

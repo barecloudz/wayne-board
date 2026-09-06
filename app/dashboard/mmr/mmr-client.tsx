@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Loader2, FileDown } from "lucide-react";
@@ -177,7 +177,7 @@ export default function MmrClient() {
               type="text"
               value={mileage}
               onChange={(e) => setMileage(e.target.value)}
-              placeholder="e.g. 52,822 — leave blank for N/A"
+              placeholder="e.g. 52,822 · leave blank for N/A"
               className={INPUT}
             />
             <p className="text-[11px] text-slate-400 mt-1">

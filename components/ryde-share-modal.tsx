@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRef, useState, useCallback } from "react";
 import { X, Share2, Download, Loader2, ChevronDown } from "lucide-react";
@@ -167,7 +167,7 @@ export default function RydeShareModal({ drivers, reviews, onClose, initialDrive
         if (canShareFile) {
           await navigator.share({
             files: [file],
-            title: `${driverName} — RYDE Scorecard`,
+            title: `${driverName} · RYDE Scorecard`,
           });
           return;
         }
@@ -279,7 +279,7 @@ export default function RydeShareModal({ drivers, reviews, onClose, initialDrive
           <div className="flex-1 flex flex-col gap-4">
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Preview</p>
 
-            {/* Card — scaled down to fit, but real size for capture */}
+            {/* Card · scaled down to fit, but real size for capture */}
             <div className="flex justify-center overflow-hidden">
               <div style={{ transform: "scale(0.78)", transformOrigin: "top center", marginBottom: -128 }}>
                 <RydeShareCard

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -62,7 +62,7 @@ export default function VehiclesHeader() {
         if (resolved) setModel(resolved);
         if (r?.Make) setVinDecoded(true);
       }
-    } catch { /* silent — user can fill manually */ }
+    } catch { /* silent · user can fill manually */ }
     finally { setVinLoading(false); }
   }
 
@@ -133,7 +133,7 @@ export default function VehiclesHeader() {
             </div>
 
             <div className="px-6 py-5 flex flex-col gap-4">
-              {/* VIN — leads the form, auto-fills below */}
+              {/* VIN · leads the form, auto-fills below */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                   VIN
@@ -239,7 +239,7 @@ export default function VehiclesHeader() {
                 </div>
               </div>
 
-              {/* Location picker — only shown when org has multiple locations */}
+              {/* Location picker · only shown when org has multiple locations */}
               {locations.length > 1 && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Location</label>
@@ -248,7 +248,7 @@ export default function VehiclesHeader() {
                     onChange={(e) => setLocationId(e.target.value ? parseInt(e.target.value) : undefined)}
                     className={INPUT}
                   >
-                    <option value="">— Any / All —</option>
+                    <option value="">- Any / All -</option>
                     {locations.map((loc) => (
                       <option key={loc.id} value={loc.id}>{loc.name}</option>
                     ))}

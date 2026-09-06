@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -105,7 +105,7 @@ export default function NewOrgClient() {
             </div>
             <div>
               <label style={labelStyle}>Internal Note (optional)</label>
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Apparo demo — indefinite access" />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Apparo demo · indefinite access" />
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function NewOrgClient() {
               <input style={inputStyle} value={driverId} onChange={e => setDriverId(e.target.value)} placeholder="1234567" required />
             </div>
             <div>
-              <label style={labelStyle}>Password (visible — copy for them)</label>
+              <label style={labelStyle}>Password (visible · copy for them)</label>
               <input style={inputStyle} type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="min 8 characters" required />
             </div>
           </div>

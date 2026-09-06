@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useTransition } from "react";
 import AppShell from "@/components/app-shell";
@@ -212,7 +212,7 @@ export default function RydePage() {
         {/* Analytics dashboard */}
         <RydeAnalytics reviews={reviews} drivers={drivers} />
 
-        {/* Team goal message — editable */}
+        {/* Team goal message · editable */}
         <div className="mb-3 flex items-start justify-between gap-4 px-1">
           {editingMessage ? (
             <div className="flex-1 flex flex-col gap-2">
@@ -301,7 +301,7 @@ export default function RydePage() {
                     ))}
                   </div>
                   <span className="text-[28px] font-extrabold text-slate-900 leading-none">
-                    {companyRating != null ? companyRating.toFixed(1) : "—"}
+                    {companyRating != null ? companyRating.toFixed(1) : "-"}
                   </span>
                   <button
                     onClick={() => { setRatingInput(companyRating != null ? String(companyRating) : ""); setEditingRating(true); }}
@@ -416,7 +416,7 @@ export default function RydePage() {
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       {[
                         { label: "Positive", val: `${positivePct}%`, color: ringColor },
-                        { label: "Avg Stars", val: total > 0 ? `${avgStars.toFixed(1)}★` : "—", color: "#facc15" },
+                        { label: "Avg Stars", val: total > 0 ? `${avgStars.toFixed(1)}★` : "-", color: "#facc15" },
                         { label: "Negative", val: `${total - pos}`, color: "#f87171" },
                       ].map(({ label, val, color }) => (
                         <div key={label} className="rounded-xl px-3 py-2" style={{ background: "#0f172a", border: "1px solid #1e293b" }}>
@@ -940,7 +940,7 @@ function DriverReviewsModal({ driver, reviews, onClose, onShare }: {
               <tbody>
                 {filtered.map(r => (
                   <tr key={r.id} className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap align-top pt-4">{r.week ?? "—"}</td>
+                    <td className="px-6 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap align-top pt-4">{r.week ?? "-"}</td>
                     <td className="px-3 py-3 whitespace-nowrap align-top pt-4">
                       <div className="flex gap-0.5">
                         {[1,2,3,4,5].map(i => (

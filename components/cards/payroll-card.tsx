@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { DollarSign, ArrowRight } from "lucide-react";
@@ -30,7 +30,7 @@ export default function PayrollCard() {
 
       {/* Big number */}
       <div>
-        <p className="text-[42px] font-extrabold text-slate-400 leading-none tracking-tight">$—</p>
+        <p className="text-[42px] font-extrabold text-slate-400 leading-none tracking-tight">$-</p>
         <p className="text-[12px] text-slate-400 mt-1 font-medium">No payroll records yet</p>
       </div>
 

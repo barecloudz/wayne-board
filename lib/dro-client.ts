@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DRO API client with session caching.
  * Handles Puppeteer login and caches session headers in the settings table.
  * All other modules should use this instead of embedding login logic.
@@ -108,11 +108,11 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
     if (pwSubmit) await pwSubmit.click();
     else await popup.keyboard.press("Enter");
 
-    // Wait for redirect back to DRO — this triggers API calls we'll intercept
+    // Wait for redirect back to DRO · this triggers API calls we'll intercept
     await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
     await new Promise(r => setTimeout(r, 3000));
 
-    // Select the single service area — triggers more authenticated API calls
+    // Select the single service area · triggers more authenticated API calls
     await page.waitForSelector('[class*="station" i]', { timeout: 10000 });
     const stationEls = await page.$$('[class*="station" i]');
     if (stationEls.length > 0) await stationEls[0].click();
@@ -123,7 +123,7 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
       console.log(`[dro-client] Waiting for intercepted API request (${(i+1)*5}s)...`);
     }
 
-    // Read localStorage/sessionStorage — DRO's React app may store JWT there
+    // Read localStorage/sessionStorage · DRO's React app may store JWT there
     // that gets added via an HTTP interceptor (not visible in plain fetch/cookies)
     const storageData = await page.evaluate(() => {
       const out: Record<string, string> = {};
@@ -156,7 +156,7 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
 
     // If interception never fired, build headers from cookies
     if (!capturedHeaders) {
-      console.log("[dro-client] No request intercepted — building headers from cookies");
+      console.log("[dro-client] No request intercepted · building headers from cookies");
       const allCookies = await browser.defaultBrowserContext().cookies();
       const droCookies = allCookies.filter((c: any) => c.domain.includes("routesmart.com"));
       const cookieStr = droCookies.length > 0
@@ -207,7 +207,7 @@ async function loginAndCaptureHeaders(): Promise<Record<string, string>> {
   }
 }
 
-// ── Session — use cached headers if valid, otherwise run Puppeteer login ───────
+// ── Session · use cached headers if valid, otherwise run Puppeteer login ───────
 
 export async function getDroHeaders(): Promise<Record<string, string>> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
@@ -227,11 +227,11 @@ export async function getDroHeaders(): Promise<Record<string, string>> {
     }
   }
 
-  console.log("[dro-client] No valid cached session — running Puppeteer login");
+  console.log("[dro-client] No valid cached session · running Puppeteer login");
   return loginAndCaptureHeaders();
 }
 
-/** @deprecated — use getDroHeaders(). */
+/** @deprecated · use getDroHeaders(). */
 export async function getDroHeadersStrict(): Promise<Record<string, string>> {
   return getDroHeaders();
 }

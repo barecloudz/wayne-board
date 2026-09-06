@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import AppShell from "@/components/app-shell";
@@ -128,7 +128,7 @@ export default async function FleetPage() {
                   hover:shadow-[0_8px_28px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.05)]
                   hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
               >
-                {/* Text content — right-padded when image present */}
+                {/* Text content · right-padded when image present */}
                 <div className={vehicleImg ? "pr-[140px] sm:pr-[152px]" : ""}>
                   <div className="flex items-start justify-between mb-1">
                     <span className="text-[22px] font-extrabold text-slate-900 tracking-tight leading-none">
@@ -156,7 +156,7 @@ export default async function FleetPage() {
                   </div>
                 </div>
 
-                {/* Vehicle image — absolutely positioned, non-interactive */}
+                {/* Vehicle image · absolutely positioned, non-interactive */}
                 {vehicleImg && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[148px] sm:w-[160px] pointer-events-none select-none">
                     <Image

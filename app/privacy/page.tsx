@@ -1,9 +1,9 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — MyGroundOps",
+  title: "Privacy Policy · MyGroundOps",
   description: "Privacy Policy for MyGroundOps, a product of Nardoni Digital LLC.",
 };
 
@@ -114,7 +114,7 @@ export default function PrivacyPage() {
               collect information about your company, including: company name, owner name,
               FedEx Driver IDs used to identify account holders, and email address if
               provided. We also collect a password (stored only as an irreversible
-              cryptographic hash — we never store your plaintext password), your selected
+              cryptographic hash · we never store your plaintext password), your selected
               subscription plan, and a URL-safe identifier derived from your company name
               that becomes part of your login address. This information is used to create
               and manage your account.
@@ -163,7 +163,7 @@ export default function PrivacyPage() {
               <li>Monitor and enforce compliance with our Terms of Service;</li>
               <li>Detect, investigate, and prevent security incidents or misuse;</li>
               <li>
-                Generate aggregate, anonymized analytics about how the Service is used — this
+                Generate aggregate, anonymized analytics about how the Service is used · this
                 data does not identify individual users or companies;
               </li>
               <li>Comply with applicable legal obligations.</li>
@@ -303,8 +303,8 @@ export default function PrivacyPage() {
 
           <Section title="9. Driver Data">
             <p>
-              Driver personal information — including names, FedEx Driver IDs, performance
-              data, and other records — is entered into the Service by the contractor (ISP
+              Driver personal information · including names, FedEx Driver IDs, performance
+              data, and other records · is entered into the Service by the contractor (ISP
               owner) who employs or engages those drivers. In this context, the contractor is
               the data controller with respect to driver personal data, and Nardoni Digital
               acts as a data processor, processing that data only on behalf of and under the

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Document, Page, Text, View, StyleSheet, Line, Svg,
 } from "@react-pdf/renderer";
 import { INSPECTION_COMPONENTS } from "./inspection-components";
@@ -465,7 +465,7 @@ export function M121Document({
 
   return (
     <Document
-      title={`M-121 Inspection — ${vehicle.unitNumber} — ${inspection.inspectionDate}`}
+      title={`M-121 Inspection · ${vehicle.unitNumber} · ${inspection.inspectionDate}`}
       author="742 Logistics"
       subject="U.S. Quarterly Vehicle Inspection Checklist"
     >

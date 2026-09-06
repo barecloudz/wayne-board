@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Canvas, ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, useGLTF, Environment, Html } from "@react-three/drei";
@@ -238,7 +238,7 @@ export default function TruckViewer() {
               : "bg-white/90 text-slate-600 border border-slate-200 hover:border-slate-300"
           }`}
         >
-          {debug ? "Debug ON — click truck to log coords" : "Calibrate Tire Positions"}
+          {debug ? "Debug ON · click truck to log coords" : "Calibrate Tire Positions"}
         </button>
         {debug && debugPoint && (
           <div className="bg-black/80 text-green-400 font-mono text-[11px] px-3 py-2 rounded-lg leading-relaxed">

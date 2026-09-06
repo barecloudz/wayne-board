@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import TraineesClient from "./trainees-client";
 
@@ -16,7 +16,7 @@ export default function TraineesPage() {
             Trainee Days
           </h1>
           <p className="text-sm text-slate-500 mt-2">
-            Days recorded when routes are pushed — trainees scheduled and not on time off.
+            Days recorded when routes are pushed · trainees scheduled and not on time off.
           </p>
         </div>
         <TraineesClient />

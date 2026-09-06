@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
@@ -29,7 +29,7 @@ export default function PwaUpdatePrompt() {
       if (reg) checkForWaiting(reg);
     });
 
-    // Also check on visibility change — catches cases where tab was backgrounded
+    // Also check on visibility change · catches cases where tab was backgrounded
     const onVisible = () => {
       navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {

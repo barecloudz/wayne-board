@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, Fragment, useRef } from "react";
 import {
@@ -21,7 +21,7 @@ const DAYS: { key: DayKey; label: string; short: string }[] = [
   { key: "sun", label: "Sunday",    short: "Su" },
 ];
 
-// Day index: 0=Sun,1=Mon...6=Sat  — JS getDay()
+// Day index: 0=Sun,1=Mon...6=Sat  · JS getDay()
 const JS_DAY_TO_KEY: Record<number, DayKey> = {
   1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat", 0: "sun",
 };
@@ -376,7 +376,7 @@ export default function SchedulingClient({
 
   const activeDrivers = schedules.filter((s) => s.active);
 
-  // Build override lookup: "driverId|YYYY-MM-DD" — use allOverrides for past week viewing
+  // Build override lookup: "driverId|YYYY-MM-DD" · use allOverrides for past week viewing
   const overrideSet = new Set<string>(allOverrides.map((o) => `${o.driverId}|${o.date}`));
 
   const upcomingTimeOff = timeOff.filter((t) => t.endDate >= today).slice(0, 20);
@@ -423,12 +423,12 @@ export default function SchedulingClient({
       {/* Tab descriptions */}
       {tab === "schedules" && (
         <p className="text-[13px] text-slate-400 mb-6">
-          Set which days of the week each driver works. Click a day to toggle it on or off — then hit <strong className="text-slate-600">Save</strong>.
+          Set which days of the week each driver works. Click a day to toggle it on or off · then hit <strong className="text-slate-600">Save</strong>.
         </p>
       )}
       {tab === "timeoff" && (
         <p className="text-[13px] text-slate-400 mb-6">
-          Record when a driver won&apos;t be in — vacation, personal days, appointments. Time off overrides their normal schedule.
+          Record when a driver won&apos;t be in · vacation, personal days, appointments. Time off overrides their normal schedule.
         </p>
       )}
       {tab === "coverage" && (
@@ -438,7 +438,7 @@ export default function SchedulingClient({
       )}
       {tab === "added" && (
         <p className="text-[13px] text-slate-400 mb-6">
-          One-time extra days — when a driver comes in on a day they&apos;re not normally scheduled. Add these from the Weekly Schedule tab using the <strong className="text-slate-600">+ Extra Day</strong> button.
+          One-time extra days · when a driver comes in on a day they&apos;re not normally scheduled. Add these from the Weekly Schedule tab using the <strong className="text-slate-600">+ Extra Day</strong> button.
         </p>
       )}
       {tab === "history" && (
@@ -502,10 +502,10 @@ export default function SchedulingClient({
                               onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], workArea: e.target.value } }))}
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
                             >
-                              <option value="">— No DRO route assigned —</option>
+                              <option value="">- No DRO route assigned -</option>
                               {droRoutes.map((r) => (
                                 <option key={r.workAreaName} value={r.workAreaName}>
-                                  {r.workAreaNumber ? `${r.workAreaNumber} — ` : ""}{r.workAreaName}
+                                  {r.workAreaNumber ? `${r.workAreaNumber} · ` : ""}{r.workAreaName}
                                 </option>
                               ))}
                             </select>
@@ -514,7 +514,7 @@ export default function SchedulingClient({
                               onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], defaultWorkAreaId: e.target.value ? parseInt(e.target.value) : null } }))}
                               className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-200"
                             >
-                              <option value="">— No default work area —</option>
+                              <option value="">- No default work area -</option>
                               {workAreas.filter((wa) => wa.active).map((wa) => (
                                 <option key={wa.id} value={wa.id.toString()}>{wa.name}</option>
                               ))}
@@ -571,7 +571,7 @@ export default function SchedulingClient({
                                 onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], isTrainee: e.target.checked } }))}
                                 className="w-4 h-4 rounded accent-blue-600"
                               />
-                              <span className="text-[12px] font-semibold text-blue-700">In training — doesn&apos;t count as a route</span>
+                              <span className="text-[12px] font-semibold text-blue-700">In training · doesn&apos;t count as a route</span>
                             </label>
                             <div className="flex gap-1.5">
                               <button
@@ -816,7 +816,7 @@ export default function SchedulingClient({
                     className={INPUT}
                     disabled={!!editEntry}
                   >
-                    <option value="">— Select driver —</option>
+                    <option value="">- Select driver -</option>
                     {schedules.filter((s) => s.active).map((s) => (
                       <option key={s.driverId} value={s.driverId}>{s.name} ({s.driverId})</option>
                     ))}
@@ -833,7 +833,7 @@ export default function SchedulingClient({
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reason</label>
                   <select value={toReason} onChange={(e) => setToReason(e.target.value)} className={INPUT}>
-                    <option value="">— Select —</option>
+                    <option value="">- Select -</option>
                     <option>Vacation</option>
                     <option>Personal</option>
                     <option>Medical</option>
@@ -1148,7 +1148,7 @@ export default function SchedulingClient({
         return (
           <div className="flex flex-col gap-4">
             <p className="text-[13px] text-slate-500">
-              Days a driver was <span className="font-semibold text-violet-700">manually added</span> to work outside their regular weekly schedule — including trainee days. Most recent first.
+              Days a driver was <span className="font-semibold text-violet-700">manually added</span> to work outside their regular weekly schedule · including trainee days. Most recent first.
             </p>
 
             {sortedDates.length === 0 && (
@@ -1359,7 +1359,7 @@ export default function SchedulingClient({
                 {
                   title: "Time Off", color: "text-blue-600",
                   bg: "bg-blue-50 border-blue-200/60",
-                  items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" — ") })),
+                  items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" · ") })),
                   emptyText: "No time off",
                 },
               ].map(({ title, color, bg, items, emptyText }) => (
@@ -1397,7 +1397,7 @@ export default function SchedulingClient({
                     return (
                       <p className="text-[12px] text-slate-500 mt-0.5">
                         {r ? <span className="font-mono font-bold text-slate-700">{r.workAreaNumber}</span> : null}
-                        {r ? <span className="text-slate-400"> — </span> : null}
+                        {r ? <span className="text-slate-400"> · </span> : null}
                         {driver.workArea}
                       </p>
                     );
@@ -1452,10 +1452,10 @@ export default function SchedulingClient({
                     onChange={(e) => setModalVehicleId(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
                   >
-                    <option value="">— No vehicle —</option>
+                    <option value="">- No vehicle -</option>
                     {vehicles.filter(v => v.active).map(v => (
                       <option key={v.id} value={v.id.toString()}>
-                        {v.unitNumber} — {v.year} {v.make} {v.model}
+                        {v.unitNumber} · {v.year} {v.make} {v.model}
                       </option>
                     ))}
                   </select>
@@ -1472,7 +1472,7 @@ export default function SchedulingClient({
                 {/* Work area for this day */}
                 <div className="flex flex-col gap-2">
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    Work Area — {formatDate(dateStr)}
+                    Work Area · {formatDate(dateStr)}
                   </p>
                   {driver.defaultWorkAreaId && (() => {
                     const defaultWa = workAreaById.get(driver.defaultWorkAreaId);
@@ -1488,7 +1488,7 @@ export default function SchedulingClient({
                       onChange={(e) => setModalWorkAreaId(e.target.value)}
                       className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
                     >
-                      <option value="">— Use repeatable default —</option>
+                      <option value="">- Use repeatable default -</option>
                       {workAreas.filter((wa) => wa.active).map((wa) => (
                         <option key={wa.id} value={wa.id.toString()}>{wa.name}</option>
                       ))}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
@@ -16,7 +16,7 @@ const DroMap = dynamic(() => import("./dro-map"), { ssr: false, loading: () => (
   </div>
 ) });
 
-// Tab components — all client-side API calls, no SSR needed
+// Tab components · all client-side API calls, no SSR needed
 const DroScheduleTab  = dynamic(() => import("./dro-schedule-tab"),  { ssr: false, loading: () => <TabLoader /> });
 const DroPlansTab     = dynamic(() => import("./dro-plans-tab"),     { ssr: false, loading: () => <TabLoader /> });
 const DroVehiclesTab  = dynamic(() => import("./dro-vehicles-tab"),  { ssr: false, loading: () => <TabLoader /> });
@@ -246,7 +246,7 @@ export default function AutoDroClient() {
           setPollUntil(null);
           setSyncing(false);
           if (d.lastSyncResult.success) {
-            setSyncResult({ ok: true, msg: `Sync complete — ${d.lastSyncResult.routes} routes · ${d.lastSyncResult.stops} stops for ${d.lastSyncResult.sortDate}` });
+            setSyncResult({ ok: true, msg: `Sync complete · ${d.lastSyncResult.routes} routes · ${d.lastSyncResult.stops} stops for ${d.lastSyncResult.sortDate}` });
           } else {
             setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
           }
@@ -276,7 +276,7 @@ export default function AutoDroClient() {
         clearInterval(interval);
         setPollUntil(null);
         setSyncing(false);
-        setSyncResult({ ok: false, msg: "Sync timed out — check Netlify function logs." });
+        setSyncResult({ ok: false, msg: "Sync timed out · check Netlify function logs." });
         return;
       }
       await loadStatus();
@@ -315,7 +315,7 @@ export default function AutoDroClient() {
     try {
       const res = await fetch("/.netlify/functions/dro-login-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
-        setConnectResult({ ok: true, msg: "Login started — takes 2-3 minutes. Once complete, click Sync." });
+        setConnectResult({ ok: true, msg: "Login started · takes 2-3 minutes. Once complete, click Sync." });
       } else {
         setConnectResult({ ok: false, msg: `Unexpected response (${res.status})` });
       }
@@ -491,7 +491,7 @@ export default function AutoDroClient() {
         <div className="mb-4 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <div className={`px-4 py-2.5 flex items-center justify-between ${diagResult.allOk ? "bg-emerald-50 border-b border-emerald-100" : "bg-red-50 border-b border-red-100"}`}>
             <p className={`text-[13px] font-bold ${diagResult.allOk ? "text-emerald-700" : "text-red-700"}`}>
-              {diagResult.allOk ? "✓ All systems go" : "✗ Issues found — see below"}
+              {diagResult.allOk ? "✓ All systems go" : "✗ Issues found · see below"}
             </p>
             <button onClick={() => setDiagResult(null)} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
           </div>
@@ -687,7 +687,7 @@ export default function AutoDroClient() {
                     >
                       <div className="flex items-start justify-between gap-1 mb-0.5">
                         <p className="text-[12px] font-bold text-slate-800 leading-tight truncate">
-                          {r.workAreaName || "—"}
+                          {r.workAreaName || "-"}
                         </p>
                         {r.exceededTargetDuration && (
                           <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
@@ -781,7 +781,7 @@ export default function AutoDroClient() {
                                 {s.reasonCode ? (
                                   <span className="font-mono text-[11px] text-slate-500">{s.reasonCode}</span>
                                 ) : (
-                                  <span className="text-slate-300">—</span>
+                                  <span className="text-slate-300">-</span>
                                 )}
                                 {s.overflowedRoute && (
                                   <p className="text-[11px] text-slate-400">from {s.overflowedRoute}</p>

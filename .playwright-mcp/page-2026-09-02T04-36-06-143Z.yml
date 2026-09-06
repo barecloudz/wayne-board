@@ -1,0 +1,24 @@
+- generic [active] [ref=f4e1]:
+  - generic [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - img "MyGroundOps" [ref=f4e4]
+      - generic [ref=f4e5]:
+        - heading "Sign In" [level=1] [ref=f4e6]
+        - paragraph [ref=f4e7]: Enter your company URL to continue
+    - generic [ref=f4e10]:
+      - generic [ref=f4e11]:
+        - generic [ref=f4e12]: Company URL
+        - generic [ref=f4e13]:
+          - generic [ref=f4e14]: /login/
+          - textbox "your-company" [ref=f4e15]
+      - button "Continue" [disabled] [ref=f4e16]
+      - paragraph [ref=f4e17]:
+        - text: Don't have an account?
+        - link "Get started" [ref=f4e18] [cursor=pointer]:
+          - /url: /signup
+    - paragraph [ref=f4e19]:
+      - text: Powered by
+      - link "MyGroundOps" [ref=f4e20] [cursor=pointer]:
+        - /url: /
+  - button "Open Next.js Dev Tools" [ref=f4e26] [cursor=pointer]
+  - alert [ref=f4e30]

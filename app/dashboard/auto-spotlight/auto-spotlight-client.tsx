@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff } from "lucide-react";
@@ -73,7 +73,7 @@ export default function AutoSpotlightClient() {
           if (d.lastSyncResult.success) {
             setSyncResult({
               ok: true,
-              msg: `Sync complete — ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks`,
+              msg: `Sync complete · ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks`,
             });
           } else {
             setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
@@ -98,7 +98,7 @@ export default function AutoSpotlightClient() {
         clearInterval(interval);
         setPollUntil(null);
         setSyncing(false);
-        setSyncResult({ ok: false, msg: "Sync timed out — check Netlify function logs." });
+        setSyncResult({ ok: false, msg: "Sync timed out · check Netlify function logs." });
         return;
       }
       await loadStatus();
@@ -116,7 +116,7 @@ export default function AutoSpotlightClient() {
     });
     setOtpInput("");
     setOtpSaving(false);
-    setSyncResult({ ok: true, msg: "Code submitted — finishing sync…" });
+    setSyncResult({ ok: true, msg: "Code submitted · finishing sync…" });
   }
 
   async function handleSync() {
@@ -186,7 +186,7 @@ export default function AutoSpotlightClient() {
             <p className="text-[12px] text-slate-400 mt-1">
               {lastSynced
                 ? `Last synced ${lastSynced.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at ${lastSynced.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
-                : "FedEx Spotlight — RYDE customer ratings"
+                : "FedEx Spotlight · RYDE customer ratings"
               }
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function AutoSpotlightClient() {
         </div>
       )}
 
-      {/* OTP prompt — shown when backend is waiting for the verification code */}
+      {/* OTP prompt · shown when backend is waiting for the verification code */}
       {syncStatus === "waiting_for_otp" && (
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-1">
@@ -250,9 +250,9 @@ export default function AutoSpotlightClient() {
         {hasData && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { label: "WEEK",          val: latestWeek ?? "—" },
+              { label: "WEEK",          val: latestWeek ?? "-" },
               { label: "DRIVERS",       val: latestScores.length.toString() },
-              { label: "AVG RYDE SCORE",val: avgScore ? avgScore.toFixed(2) + " ★" : "—" },
+              { label: "AVG RYDE SCORE",val: avgScore ? avgScore.toFixed(2) + " ★" : "-" },
             ].map(({ label, val }) => (
               <div key={label} className={`${CARD} p-5 text-center`}>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{label}</p>
@@ -283,7 +283,7 @@ export default function AutoSpotlightClient() {
               <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left max-w-md">
                 <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-700">
-                  An OTP will be emailed to your FedEx-registered address. Enter your credentials above, then click Sync Now — you&apos;ll be prompted to enter the code.
+                  An OTP will be emailed to your FedEx-registered address. Enter your credentials above, then click Sync Now · you&apos;ll be prompted to enter the code.
                 </p>
               </div>
             </div>
@@ -313,7 +313,7 @@ export default function AutoSpotlightClient() {
                       </td>
                       <td className="py-3 pr-4 text-[13px] text-slate-600">{r.deliveries}</td>
                       <td className="py-3 text-[13px] text-slate-600">
-                        {r.deliveries > 0 ? `${Math.round((r.positiveReviews / r.deliveries) * 100)}%` : "—"}
+                        {r.deliveries > 0 ? `${Math.round((r.positiveReviews / r.deliveries) * 100)}%` : "-"}
                       </td>
                     </tr>
                   ))}

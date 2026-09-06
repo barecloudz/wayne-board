@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { db } from "@/lib/db";
 import { vehicles, vehicleConditions, drivers } from "@/lib/schema";
@@ -69,7 +69,7 @@ export async function deleteCondition(id: number, vehicleId: number) {
   revalidatePath(`/fleet/${vehicleId}`);
 }
 
-// Used by Maintenance History — all resolved conditions across all vehicles
+// Used by Maintenance History · all resolved conditions across all vehicles
 export async function getAllResolvedConditions() {
   const orgId = await requireOrg();
   const orgVehicles = await db
@@ -85,7 +85,7 @@ export async function getAllResolvedConditions() {
     .orderBy(desc(vehicleConditions.resolvedAt));
 }
 
-// Used by the Fleet Status Report PDF — returns all vehicles with their open conditions
+// Used by the Fleet Status Report PDF · returns all vehicles with their open conditions
 export async function getAllVehiclesWithConditions() {
   const orgId = await requireOrg();
   const allVehicles = await db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber);

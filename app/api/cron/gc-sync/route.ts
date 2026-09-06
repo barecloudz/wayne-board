@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { syncGc } from "@/lib/gc-sync";
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   if (yesterday.getDay() === 0) {
-    return NextResponse.json({ success: true, skipped: true, reason: "Sunday — no sync" });
+    return NextResponse.json({ success: true, skipped: true, reason: "Sunday · no sync" });
   }
 
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);

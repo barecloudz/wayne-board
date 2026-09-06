@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
@@ -155,7 +155,7 @@ export default function RoutePlannerClient({
       .then((data) => {
         if (data?.areaStops) setAreaStops(data.areaStops as Record<string, number>);
       })
-      .catch(() => { /* silent — areaStops just won't show */ });
+      .catch(() => { /* silent · areaStops just won't show */ });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplateId]);
 
@@ -303,12 +303,12 @@ export default function RoutePlannerClient({
       if (data.areaStops) setAreaStops(data.areaStops);
       setBalancePanelOpen(true);
       if (data.proposals.length === 0) {
-        addToast("Routes are already balanced — no swaps needed", "info");
+        addToast("Routes are already balanced · no swaps needed", "info");
       } else {
         addToast(`${data.proposals.length} swap${data.proposals.length !== 1 ? "s" : ""} suggested`, "success");
       }
     } catch {
-      addToast("Balance failed — check console", "error");
+      addToast("Balance failed · check console", "error");
     } finally {
       setBalanceLoading(false);
     }
@@ -331,7 +331,7 @@ export default function RoutePlannerClient({
 
     // Clear the accepted ones from proposals view
     setAcceptedProposals(new Set());
-    addToast(`${accepted.length} proposal${accepted.length !== 1 ? "s" : ""} applied — save to persist`, "success");
+    addToast(`${accepted.length} proposal${accepted.length !== 1 ? "s" : ""} applied · save to persist`, "success");
   }
 
   // ── Push to DRO ───────────────────────────────────────────────────────────────
@@ -350,13 +350,13 @@ export default function RoutePlannerClient({
       const data = await res.json();
       setPushResult(data);
       if (data.success) {
-        addToast(`Pushed ${data.routesSent} routes, ${data.totalStops} stops — solve ${data.solveOk ? "triggered ✓" : "failed"}`, "success");
+        addToast(`Pushed ${data.routesSent} routes, ${data.totalStops} stops · solve ${data.solveOk ? "triggered ✓" : "failed"}`, "success");
       } else {
         addToast(data.error ?? "Push failed", "error");
       }
     } catch (err: any) {
       setPushResult({ success: false, error: err?.message ?? "Network error" });
-      addToast("Push failed — check console", "error");
+      addToast("Push failed · check console", "error");
     } finally {
       setPushing(false);
     }
@@ -738,7 +738,7 @@ export default function RoutePlannerClient({
             <ul className="text-[11px] text-slate-500 mb-5 space-y-0.5 pl-3 list-disc">
               <li>Stops are assigned by anchor area → route (not geometry)</li>
               <li>Stops without a work area number stay where they are</li>
-              <li>Solve runs immediately after — takes ~1 min</li>
+              <li>Solve runs immediately after · takes ~1 min</li>
               <li>Takes ~60–90 seconds total (login + push + solve)</li>
             </ul>
 

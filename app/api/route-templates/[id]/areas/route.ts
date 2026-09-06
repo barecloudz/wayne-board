@@ -106,7 +106,7 @@ export async function PUT(
   try {
     const sql = neon(process.env.DATABASE_URL_POOLER ?? process.env.DATABASE_URL!);
 
-    // Bulk update — one query per area (neon serverless doesn't support transactions easily)
+    // Bulk update · one query per area (neon serverless doesn't support transactions easily)
     await Promise.all(
       areas.map((a) =>
         sql`

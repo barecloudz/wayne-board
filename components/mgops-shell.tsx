@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -161,7 +161,7 @@ function MobileNav() {
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Login page — no nav
+  // Login page · no nav
   if (pathname === "/mgops") {
     return (
       <div className="min-h-screen" style={{ background: "#F8FAFC", color: "#0F172A" }}>

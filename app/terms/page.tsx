@@ -1,9 +1,9 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — MyGroundOps",
+  title: "Terms of Service · MyGroundOps",
   description: "Terms of Service for MyGroundOps, a product of Nardoni Digital LLC.",
 };
 

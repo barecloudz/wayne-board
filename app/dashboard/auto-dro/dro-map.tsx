@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { MapContainer, TileLayer, Polygon, CircleMarker, Tooltip } from "react-leaflet";
@@ -75,7 +75,7 @@ export default function DroMap({
     return map;
   }, [routes]);
 
-  // Parse anchor areas — prefer WKT (WGS84) over EPSG:3857 rings
+  // Parse anchor areas · prefer WKT (WGS84) over EPSG:3857 rings
   const polygons = useMemo(() => {
     return anchorAreas.flatMap(a => {
       // Use stored hexCode if available; otherwise color by workAreaNumber

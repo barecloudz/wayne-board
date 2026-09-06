@@ -80,7 +80,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
   const [notifiedAOBCName, setNotifiedAOBCName]   = useState("");
   const [agreedRepairDate, setAgreedRepairDate]   = useState("");
 
-  // Item results — pre-seed tractor-only items as N/A for vans
+  // Item results · pre-seed tractor-only items as N/A for vans
   const [results, setResults] = useState<Record<number, Status>>(() => {
     const init: Record<number, Status> = {};
     INSPECTION_COMPONENTS.forEach((c) => {
@@ -135,7 +135,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
         const result = await saveInspection({
           vehicleId:       vehicle.id,
           inspectorName:   inspectorName.trim(),
-          inspectorId:     inspectorId.trim() || "—",
+          inspectorId:     inspectorId.trim() || "-",
           stationName,
           stationNumber,
           inspectionDate,
@@ -226,7 +226,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
             <input type="text" value={vehicle.unitNumber} readOnly className={`${INPUT} bg-slate-50 text-slate-500`} />
           </Field>
 
-          {/* VIN Scanner — full width */}
+          {/* VIN Scanner · full width */}
           <div className="sm:col-span-2">
             <Field label="Vehicle Identification Number (VIN)">
               {scannedVin ? (
@@ -406,7 +406,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
                           border border-amber-200 rounded-lg px-3 py-2">
                           <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                           <p className="text-[11px] font-medium leading-relaxed">
-                            Safety defect — packages must not be loaded until this item is
+                            Safety defect · packages must not be loaded until this item is
                             confirmed repaired and verified by FedEx management.
                           </p>
                         </div>
@@ -420,7 +420,7 @@ export default function InspectionForm({ vehicle }: { vehicle: Vehicle }) {
         </div>
       )}
 
-      {/* Notification section — only when defects exist */}
+      {/* Notification section · only when defects exist */}
       {hasDefects && !outOfService && (
         <div className="bg-white rounded-2xl border border-amber-200 p-6
           shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]">

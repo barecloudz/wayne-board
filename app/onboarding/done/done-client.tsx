@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { completeOnboarding } from "@/lib/actions/onboarding";
@@ -24,7 +24,7 @@ export default function DoneClient({ gcConnected, vehicleCount, locationNames }:
         className="bg-white rounded-2xl border border-slate-200/60
           shadow-[0_8px_40px_rgba(0,0,0,0.08)] overflow-hidden"
       >
-        {/* Progress bar — full */}
+        {/* Progress bar · full */}
         <div className="h-1 bg-slate-900" />
 
         <div className="px-8 py-8">

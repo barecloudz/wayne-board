@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getAllVehiclesWithConditions } from "@/lib/actions/vehicle-conditions";
 import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 
@@ -123,7 +123,7 @@ export async function GET() {
         {criticalVehicles.length > 0 && (
           <View style={styles.alertBox}>
             <Text style={styles.alertTitle}>
-              Safety Alert — {criticalVehicles.map((v) => `${v.unitNumber}${v.driverName ? ` · ${v.driverName}` : ""}`).join(", ")}
+              Safety Alert · {criticalVehicles.map((v) => `${v.unitNumber}${v.driverName ? ` · ${v.driverName}` : ""}`).join(", ")}
             </Text>
             {criticalVehicles.map((v) =>
               v.conditions.filter((c) => c.severity === "critical").map((c) => (
@@ -155,7 +155,7 @@ export async function GET() {
                 <Text style={[styles.tdText, { width: 30 }]}>{v.year}</Text>
                 <Text style={[styles.tdText, { width: 50 }]}>{v.make}</Text>
                 <Text style={[styles.tdText, { width: 50 }]}>{v.model}</Text>
-                <Text style={[styles.tdMono, { width: 90 }]}>{v.vin || "—"}</Text>
+                <Text style={[styles.tdMono, { width: 90 }]}>{v.vin || "-"}</Text>
                 <Text style={[styles.tdText, { width: 45 }]}>{v.unitNumber}</Text>
                 {/* Route status badge */}
                 <View style={{ width: 60 }}>
@@ -248,7 +248,7 @@ export async function GET() {
                     {v.year} {v.make} {v.model}
                   </Text>
                   <Text style={{ fontSize: 7, color: "#94a3b8", fontFamily: "Courier", marginTop: 2 }}>
-                    VIN {v.vin || "—"}
+                    VIN {v.vin || "-"}
                   </Text>
                   {v.driverName && (
                     <Text style={{ fontSize: 8, color: "#64748b", marginTop: 3 }}>Driver: {v.driverName}</Text>
@@ -285,7 +285,7 @@ export async function GET() {
                 <View style={{ marginTop: 14, backgroundColor: "#fef2f2", border: "1 solid #fecaca", borderRadius: 6, padding: "8 12" }}>
                   <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#dc2626", marginBottom: 3 }}>Status:</Text>
                   <Text style={{ fontSize: 8, color: "#991b1b", lineHeight: 1.4 }}>
-                    {v.conditions.filter((c) => c.severity === "critical").map((c) => c.description).join(" — ")}
+                    {v.conditions.filter((c) => c.severity === "critical").map((c) => c.description).join(" · ")}
                   </Text>
                 </View>
               )}

@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
@@ -23,7 +23,7 @@ export async function GET() {
   results.push(await check("Database connection", async () => {
     const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
     const rows = await sql`SELECT 1 AS ok`;
-    return `Connected — ${rows.length} row returned`;
+    return `Connected · ${rows.length} row returned`;
   }));
 
   // 2. DRO credentials in DB or env
@@ -50,7 +50,7 @@ export async function GET() {
     const cache = Object.fromEntries(rows.map((r: any) => [r.key, r.value]));
     cookieStr   = cache["dro_session_cookies"] ?? "";
     sessionExpiry = cache["dro_session_expires_at"] ?? "";
-    if (!cookieStr) throw new Error("No session cookies stored — click Connect to DRO first");
+    if (!cookieStr) throw new Error("No session cookies stored · click Connect to DRO first");
     if (!sessionExpiry) throw new Error("Cookies stored but no expiry recorded");
     const exp = new Date(sessionExpiry);
     const isValid = exp > new Date();
@@ -64,7 +64,7 @@ export async function GET() {
       signal: AbortSignal.timeout(8000),
       headers: cookieStr ? { Cookie: cookieStr, "Content-Type": "application/json" } : {},
     });
-    if (res.status === 401 || res.status === 403) throw new Error(`Auth error ${res.status} — session may be invalid`);
+    if (res.status === 401 || res.status === 403) throw new Error(`Auth error ${res.status} · session may be invalid`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json().catch(() => null);
     const planId = json?.planId;
@@ -73,7 +73,7 @@ export async function GET() {
 
   // 5. Sort date endpoint
   results.push(await check("DRO sort date", async () => {
-    if (!cookieStr) throw new Error("Skipped — no session cookies");
+    if (!cookieStr) throw new Error("Skipped · no session cookies");
     const res = await fetch(`${DRO_BASE}/api/api/stations/${STATION_ID}/sortDate`, {
       signal: AbortSignal.timeout(8000),
       headers: { Cookie: cookieStr, "Content-Type": "application/json" },
@@ -85,7 +85,7 @@ export async function GET() {
 
   // 6. Waypoints endpoint (just count)
   results.push(await check("DRO waypoints", async () => {
-    if (!cookieStr) throw new Error("Skipped — no session cookies");
+    if (!cookieStr) throw new Error("Skipped · no session cookies");
     const planRes = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/active-route-plan`, {
       headers: { Cookie: cookieStr, "Content-Type": "application/json" },
     });
@@ -104,7 +104,7 @@ export async function GET() {
 
   // 7. ArcGIS proxy (GPS coordinates source)
   results.push(await check("ArcGIS GPS proxy", async () => {
-    if (!cookieStr) throw new Error("Skipped — no session cookies");
+    if (!cookieStr) throw new Error("Skipped · no session cookies");
     const today = new Date().toISOString().slice(0, 10);
     const where = encodeURIComponent(`sort_date = date'${today}' and station_id = '${STATION_ID}' and csa = '304169'`);
     const inner = `http://AGS_URL/rest/services/DRO_Layers/MapServer/8/query?f=json&outFields=wid,route&where=${where}&returnGeometry=true&outSR=102100&resultRecordCount=1`;

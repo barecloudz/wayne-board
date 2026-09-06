@@ -1,8 +1,8 @@
-import { S3Client } from "@aws-sdk/client-s3";
+﻿import { S3Client } from "@aws-sdk/client-s3";
 import https from "https";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
-// R2 requires TLS 1.2 explicitly — Node.js on some platforms negotiates incorrectly otherwise.
+// R2 requires TLS 1.2 explicitly · Node.js on some platforms negotiates incorrectly otherwise.
 const agent = new https.Agent({ secureProtocol: "TLSv1_2_method" });
 
 export const r2 = new S3Client({

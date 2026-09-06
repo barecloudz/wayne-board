@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useTransition } from "react";
 import { setSetting } from "@/lib/actions/settings";
@@ -49,7 +49,7 @@ export default function PortalSettings({
         />
         <ToggleRow
           label="Service Data (DSW)"
-          description="ILS%, service rate, and team scorecard — hide when auto-sync data is stale"
+          description="ILS%, service rate, and team scorecard · hide when auto-sync data is stale"
           enabled={showDsw}
           onToggle={() => toggle("show_dsw", showDsw)}
           disabled={isPending}

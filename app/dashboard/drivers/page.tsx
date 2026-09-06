@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import AppShell from "@/components/app-shell";
@@ -342,7 +342,7 @@ export default function DriversPage() {
                 {s.label}
               </p>
               <span className={`text-[24px] font-extrabold leading-none ${s.color}`}>
-                {loading ? "—" : s.value}
+                {loading ? "-" : s.value}
               </span>
             </div>
           ))}
@@ -448,7 +448,7 @@ export default function DriversPage() {
                         <RoleBadge role={driver.role} />
                       </td>
                       <td className="px-3 py-3 text-slate-400 whitespace-nowrap hidden md:table-cell">
-                        {driver.createdAt ? new Date(driver.createdAt).toLocaleDateString() : "—"}
+                        {driver.createdAt ? new Date(driver.createdAt).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-3 py-3 hidden lg:table-cell">
                         {(() => {
@@ -459,7 +459,7 @@ export default function DriversPage() {
                               {v.unitNumber}
                             </span>
                           ) : (
-                            <span className="text-[12px] text-slate-300">—</span>
+                            <span className="text-[12px] text-slate-300">-</span>
                           );
                         })()}
                       </td>
@@ -670,7 +670,7 @@ export default function DriversPage() {
             <div className="px-6 pt-6 pb-4 border-b border-slate-100">
               <h2 className="text-[16px] font-extrabold text-slate-900">Remove Driver Account</h2>
               <p className="text-[12px] text-slate-400 mt-0.5">
-                <span className="font-semibold text-slate-600">{deleteTarget.name}</span> ({deleteTarget.driverId}) — what&apos;s the reason?
+                <span className="font-semibold text-slate-600">{deleteTarget.name}</span> ({deleteTarget.driverId}) · what&apos;s the reason?
               </p>
             </div>
 
@@ -678,9 +678,9 @@ export default function DriversPage() {
               {/* Type selection */}
               {(["notice", "fired", "mistake"] as const).map((type) => {
                 const labels = {
-                  notice:  { title: "Two Weeks Notice", sub: "Driver gave notice — record kept for history" },
-                  fired:   { title: "Terminated",       sub: "Let go or fired — record kept with reason" },
-                  mistake: { title: "Account Mistake",  sub: "Created in error — permanently deleted" },
+                  notice:  { title: "Two Weeks Notice", sub: "Driver gave notice · record kept for history" },
+                  fired:   { title: "Terminated",       sub: "Let go or fired · record kept with reason" },
+                  mistake: { title: "Account Mistake",  sub: "Created in error · permanently deleted" },
                 };
                 const selected = terminationType === type;
                 return (
@@ -793,10 +793,10 @@ export default function DriversPage() {
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
                 className={INPUT_CLS + " mt-1.5"}
               >
-                <option value="">— None (Coming Soon) —</option>
+                <option value="">- None (Coming Soon) -</option>
                 {vehicles.filter((v) => v.active).map((v) => (
                   <option key={v.id} value={v.id.toString()}>
-                    {v.unitNumber} — {v.year} {v.make} {v.model}
+                    {v.unitNumber} · {v.year} {v.make} {v.model}
                   </option>
                 ))}
               </select>
@@ -879,7 +879,7 @@ export default function DriversPage() {
             <div className="px-6 pt-6 pb-4 border-b border-slate-100">
               <h2 className="text-[16px] font-extrabold text-slate-900">Create Driver Account</h2>
               <p className="text-[12px] text-slate-400 mt-0.5">
-                Driver ID and password are pre-filled — edit them as needed.
+                Driver ID and password are pre-filled · edit them as needed.
               </p>
             </div>
             <div className="px-6 py-5 flex flex-col gap-4">
@@ -905,7 +905,7 @@ export default function DriversPage() {
                   onChange={(e) => setNewDriverId(e.target.value)}
                   className={INPUT_CLS}
                 />
-                <p className="text-[11px] text-slate-400">Auto-generated from first name — you can edit it.</p>
+                <p className="text-[11px] text-slate-400">Auto-generated from first name · you can edit it.</p>
               </div>
               {/* Temp password */}
               <div className="flex flex-col gap-1.5">
@@ -946,7 +946,7 @@ export default function DriversPage() {
                   ))}
                 </div>
               </div>
-              {/* Location picker — only shown when org has multiple locations */}
+              {/* Location picker · only shown when org has multiple locations */}
               {availableLocations.length > 1 && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Location</label>
@@ -955,7 +955,7 @@ export default function DriversPage() {
                     onChange={(e) => setNewLocationId(e.target.value ? parseInt(e.target.value) : undefined)}
                     className={INPUT_CLS}
                   >
-                    <option value="">— Any / All —</option>
+                    <option value="">- Any / All -</option>
                     {availableLocations.map((loc) => (
                       <option key={loc.id} value={loc.id}>{loc.name}</option>
                     ))}
@@ -1004,7 +1004,7 @@ export default function DriversPage() {
                 </div>
               ) : availableLocations.length === 0 ? (
                 <p className="text-[12px] text-slate-400 italic">
-                  No locations set up yet — add them in Settings
+                  No locations set up yet · add them in Settings
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">

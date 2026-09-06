@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Award } from "lucide-react";
@@ -39,7 +39,7 @@ function ilsBg(pct: number | null) {
 }
 
 function formatDriverName(raw: string) {
-  if (!raw) return "—";
+  if (!raw) return "-";
   const [last, ...rest] = raw.split(",");
   const first = rest.join(" ").trim();
   if (!first) return raw;
@@ -75,7 +75,7 @@ export default function AutoDswClient() {
           setPollUntil(null);
           setSyncing(false);
           if (d.lastSyncResult.success) {
-            setSyncResult({ ok: true, msg: `Sync complete — ${d.lastSyncResult.rows} rows for ${d.lastSyncResult.date}` });
+            setSyncResult({ ok: true, msg: `Sync complete · ${d.lastSyncResult.rows} rows for ${d.lastSyncResult.date}` });
           } else {
             setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
           }
@@ -94,7 +94,7 @@ export default function AutoDswClient() {
         clearInterval(interval);
         setPollUntil(null);
         setSyncing(false);
-        setSyncResult({ ok: false, msg: "Sync timed out — check Netlify function logs." });
+        setSyncResult({ ok: false, msg: "Sync timed out · check Netlify function logs." });
         return;
       }
       await loadStatus();
@@ -164,7 +164,7 @@ export default function AutoDswClient() {
             <p className="text-[12px] text-slate-400 mt-1">
               {lastSynced
                 ? `Last synced ${lastSynced.toLocaleDateString("en-US", { month: "short", day: "numeric" })} at ${lastSynced.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
-                : "FedEx Daily Service Worksheet — real delivery data"
+                : "FedEx Daily Service Worksheet · real delivery data"
               }
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function AutoDswClient() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: "ROUTES",      val: latestRows.length.toString() },
-              { label: "AVG ILS%",    val: avgIls ? avgIls.toFixed(1) + "%" : "—" },
+              { label: "AVG ILS%",    val: avgIls ? avgIls.toFixed(1) + "%" : "-" },
               { label: "TOTAL STOPS", val: totalStps.toLocaleString() },
               { label: "WB MATCHED",  val: `${matched}/${latestRows.length}` },
             ].map(({ label, val }) => (
@@ -253,20 +253,20 @@ export default function AutoDswClient() {
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="text-[12px] text-slate-500">{r.waName || "—"}</span>
+                        <span className="text-[12px] text-slate-500">{r.waName || "-"}</span>
                       </td>
                       <td className="py-3 pr-4">
                         {r.ilsPct != null ? (
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[13px] font-bold ${ilsBg(r.ilsPct)}`}>
                             {r.ilsPct.toFixed(1)}%
                           </span>
-                        ) : <span className="text-[12px] text-slate-300">—</span>}
+                        ) : <span className="text-[12px] text-slate-300">-</span>}
                       </td>
-                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.actDelStps ?? "—"}</td>
-                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.actDelPkgs ?? "—"}</td>
-                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.nonDelvdStps ?? "—"}</td>
-                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.miles ?? "—"}</td>
-                      <td className="py-3 text-[13px] text-slate-600">{r.onRoadHours || "—"}</td>
+                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.actDelStps ?? "-"}</td>
+                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.actDelPkgs ?? "-"}</td>
+                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.nonDelvdStps ?? "-"}</td>
+                      <td className="py-3 pr-4 text-[13px] text-slate-600">{r.miles ?? "-"}</td>
+                      <td className="py-3 text-[13px] text-slate-600">{r.onRoadHours || "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -282,7 +282,7 @@ export default function AutoDswClient() {
             <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync Schedule</h2>
           </div>
           <p className="text-[12px] text-slate-400 mb-5">
-            Pulls yesterday&apos;s DSW each morning. Uses your DRO credentials — no separate login needed.
+            Pulls yesterday&apos;s DSW each morning. Uses your DRO credentials · no separate login needed.
           </p>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between py-3 border-b border-slate-100">

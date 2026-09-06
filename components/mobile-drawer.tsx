@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -143,7 +143,7 @@ export default function MobileDrawer() {
 
           <div className="my-3 border-t border-slate-100" />
 
-          {/* Automation — collapsible */}
+          {/* Automation · collapsible */}
           <button
             onClick={() => setAutoOpen(v => !v)}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all w-full text-left ${

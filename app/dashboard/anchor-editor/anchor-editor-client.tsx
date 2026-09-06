@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -11,7 +11,7 @@ import {
   sidColor, sidBlock, stopsInsideRing, drawnColor,
 } from "./anchor-editor-map";
 
-// ── Dynamic import — no SSR for Leaflet ───────────────────────────────────────
+// ── Dynamic import · no SSR for Leaflet ───────────────────────────────────────
 const AnchorEditorMap = dynamic(() => import("./anchor-editor-map"), {
   ssr: false,
   loading: () => (
@@ -212,7 +212,7 @@ export default function AnchorEditorClient() {
             MyGroundOps · Automation
           </p>
           <h1 className="text-[20px] font-extrabold text-slate-900 tracking-tight">Anchor Editor</h1>
-          <p className="text-[12px] text-slate-400 mt-0.5">Work Area 0326 — Mills River</p>
+          <p className="text-[12px] text-slate-400 mt-0.5">Work Area 0326 · Mills River</p>
         </div>
 
         {/* Stats row */}
@@ -258,7 +258,7 @@ export default function AnchorEditorClient() {
               <div className="flex items-center justify-between">
                 <p className="text-[12px] font-bold text-green-700 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-                  Draw mode — click map to add vertices
+                  Draw mode · click map to add vertices
                 </p>
                 <button onClick={cancelDraw} className="text-slate-400 hover:text-slate-700">
                   <X className="w-4 h-4" />
@@ -304,7 +304,7 @@ export default function AnchorEditorClient() {
                 /* Name + save form */
                 <div className="flex flex-col gap-3">
                   <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-[12px] text-green-700 font-medium">
-                    Shape closed — {stopsInDraft.length} stops inside
+                    Shape closed · {stopsInDraft.length} stops inside
                   </div>
 
                   <div>
@@ -503,7 +503,7 @@ export default function AnchorEditorClient() {
               {draftPoints.length === 0
                 ? "Click to start drawing"
                 : draftPoints.length < 3
-                ? `${draftPoints.length} point${draftPoints.length > 1 ? "s" : ""} — keep clicking`
+                ? `${draftPoints.length} point${draftPoints.length > 1 ? "s" : ""} · keep clicking`
                 : 'Click near the first point to close, or use "Close Shape"'}
             </div>
           </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { MapContainer, TileLayer, Polygon, Tooltip } from "react-leaflet";
@@ -252,12 +252,12 @@ export default function RoutePlannerMap({ areas, routes, onReassign, highlighted
               className="w-full text-[12px] font-semibold text-slate-800 bg-slate-50 border border-slate-200
                 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
-              <option value="">— select route —</option>
+              <option value="">- select route -</option>
               {routes
                 .filter((r) => r.slot !== selectedArea.route_slot)
                 .map((r) => (
                   <option key={r.slot} value={r.slot}>
-                    Slot {r.slot} — {r.label}
+                    Slot {r.slot} · {r.label}
                   </option>
                 ))}
             </select>

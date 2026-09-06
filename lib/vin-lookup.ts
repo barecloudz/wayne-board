@@ -1,10 +1,10 @@
-// Local VIN prefix lookup for commercial vehicles that NHTSA vPIC doesn't classify well.
+﻿// Local VIN prefix lookup for commercial vehicles that NHTSA vPIC doesn't classify well.
 // VIN positions: 1=country, 2=make, 3=type, 4=GVW/brake, 5=series, 6=body, ...
 
 export type VinLookup = { make: string; model: string };
 
 // Ford P-Series step vans: WMI=1FD, position 5 (index 4) = 'P'
-// Position 4 (index 3) is the GVW rating — maps to approximate P-series model
+// Position 4 (index 3) is the GVW rating · maps to approximate P-series model
 const FORD_P_GVW: Record<string, string> = {
   E: "P500",   // ~6,000–8,500 lbs
   H: "P700",   // ~8,500–10,000 lbs

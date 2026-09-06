@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -166,7 +166,7 @@ export default function SignupPage() {
             Start your free trial
           </h1>
           <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
-            14 days free — no charge until your trial ends
+            14 days free · no charge until your trial ends
           </p>
         </div>
       </div>
@@ -335,7 +335,7 @@ export default function SignupPage() {
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 1.5l1.5 3 3.5.5-2.5 2.5.5 3.5L7 9.5l-3 1.5.5-3.5L2 5l3.5-.5L7 1.5z" stroke="#16A34A" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
             </svg>
-            14 days free — cancel anytime
+            14 days free · cancel anytime
           </div>
 
           <p className="text-center text-[11px]" style={{ color: "#94A3B8" }}>

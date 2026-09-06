@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { getSession } from "@/lib/session";
@@ -95,7 +95,7 @@ export default async function Home() {
           ))}
         </div>
 
-        {/* Scheduling — hero button */}
+        {/* Scheduling · hero button */}
         <Link
           href="/dashboard/scheduling"
           className="group flex items-center gap-6 bg-slate-900 hover:bg-slate-800 transition-colors

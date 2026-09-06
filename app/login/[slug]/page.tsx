@@ -68,7 +68,7 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
         background: "linear-gradient(160deg, #F1F5F9 0%, #E8EDF4 50%, #E2E8F0 100%)",
       }}
     >
-      {/* Subtle ambient glow from accent color — very faint */}
+      {/* Subtle ambient glow from accent color · very faint */}
       <div
         className="pointer-events-none fixed inset-0"
         style={{

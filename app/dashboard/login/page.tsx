@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Image from "next/image";
 import LoginForm from "@/app/login-form";
 
@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
           MyGroundOps
         </h1>
         <p className="text-[15px] text-white/60 text-center mb-8">
-          Management Portal — Admin Access Only
+          Management Portal · Admin Access Only
         </p>
 
         <div className="bg-white rounded-2xl overflow-hidden shadow-[0_24px_80px_rgba(0,0,0,0.4)] w-full">

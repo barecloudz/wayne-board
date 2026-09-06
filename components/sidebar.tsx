@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -233,7 +233,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Location Switcher — only shown when org has multiple locations */}
+      {/* Location Switcher · only shown when org has multiple locations */}
       {locations.length > 1 && (
         <div ref={locationRef} className="relative px-3 pb-2 pt-2 border-b border-slate-100">
           <button
@@ -344,7 +344,7 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Bottom — logged-in user with account popover */}
+      {/* Bottom · logged-in user with account popover */}
       <div ref={accountRef} className="relative p-3 border-t border-slate-100">
         {accountOpen && (
           <div className="absolute bottom-full left-3 right-3 mb-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
@@ -383,7 +383,7 @@ export default function Sidebar() {
               : <span className="text-[11px] font-bold text-amber-700">{userInitials}</span>}
           </div>
           <div className="flex flex-col leading-none min-w-0 text-left">
-            <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "—"}</span>
+            <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "-"}</span>
             <span className="text-[11px] text-slate-400 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</span>
           </div>
           <ChevronUp className={`ml-auto w-3.5 h-3.5 text-slate-300 transition-transform ${accountOpen ? "" : "rotate-180"}`} />

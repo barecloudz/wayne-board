@@ -1,0 +1,767 @@
+[
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/disabled-features",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.878Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/disabled-features",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.900Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/disabled-features",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.903Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.946Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.976Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:45.996Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:46.011Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:46.034Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/admin-log/download-globalization/en-US",
+    "postData": null,
+    "time": "2026-07-18T21:32:46.100Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/version",
+    "postData": null,
+    "time": "2026-07-18T21:32:46.868Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/settings/default-version",
+    "postData": null,
+    "time": "2026-07-18T21:32:47.813Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/ThirdPartyLogins",
+    "postData": null,
+    "time": "2026-07-18T21:32:47.815Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/disabled-features",
+    "postData": null,
+    "time": "2026-07-18T21:32:47.819Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/country-language",
+    "postData": null,
+    "time": "2026-07-18T21:32:47.822Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/version",
+    "postData": null,
+    "time": "2026-07-18T21:32:58.548Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/user/V2?",
+    "postData": null,
+    "time": "2026-07-18T21:32:58.597Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/stations",
+    "postData": null,
+    "time": "2026-07-18T21:32:58.601Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas",
+    "postData": null,
+    "time": "2026-07-18T21:32:58.604Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/country-language",
+    "postData": null,
+    "time": "2026-07-18T21:32:58.693Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/user/V2?service_area_id=3060743&",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.627Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/stations/259/sortDate",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.726Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/country-language",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.828Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/version",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.830Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/stations/259/dispatch-settings",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.833Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/stations/259/stationvolume",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.898Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/UnroutableWaypoints?",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.900Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/report/packagedetail?unassigned=true",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.902Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/routingstatus?",
+    "postData": null,
+    "time": "2026-07-18T21:33:01.904Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/home/version",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.117Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/waypoints/extent?station_id=259&csa=304169",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.119Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/stations/259/sortDate",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.875Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.890Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/route-plans",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.894Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/waypoints?solutionType=actual",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.895Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer?f=json&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.897Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer?f=json",
+    "postData": null,
+    "time": "2026-07-18T21:33:06.918Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9455873.294025894%2C4180403.1075957497%2C-8900634.720562521%2C4242164.2264501555&bboxSR=102100&imageSR=102100&size=908%2C101&dpi=96&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:08.474Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9455873.294025894%2C4180403.1075957497%2C-8900634.720562521%2C4242164.2264501555&bboxSR=102100&imageSR=102100&size=908%2C101&dpi=96&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:08.476Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:09.280Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9494703.304394754%2C4160835.2283547497%2C-8861804.710193662%2C4261732.105691155&bboxSR=102100&imageSR=102100&size=931%2C148&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:11.591Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9494703.304394754%2C4160835.2283547497%2C-8861804.710193662%2C4261732.105691155&bboxSR=102100&imageSR=102100&size=931%2C148&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:11.593Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:12.354Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9494703.304394754%2C4105800.567989438%2C-8861804.710193662%2C4316766.766056468&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:19.968Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9494703.304394754%2C4105800.567989438%2C-8861804.710193662%2C4316766.766056468&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:19.969Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:20.657Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9317347.10775021%2C4165718.7072353307%2C-9000897.810649596%2C4271201.806268869&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:20.901Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9317347.10775021%2C4165718.7072353307%2C-9000897.810649596%2C4271201.806268869&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:20.902Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:21.672Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9236159.838199813%2C4195372.028745161%2C-9077935.189649574%2C4248113.578261908&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:26.698Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9236159.838199813%2C4195372.028745161%2C-9077935.189649574%2C4248113.578261908&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:26.702Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:27.406Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9194037.462858982%2C4212568.237376889%2C-9114925.138583794%2C4238939.012135286&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:32.234Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9194037.462858982%2C4212568.237376889%2C-9114925.138583794%2C4238939.012135286&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:32.237Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:32.650Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9157180.384435682%2C4227614.919929681%2C-9147291.3439013%2C4230911.266774476&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:33.565Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9157180.384435682%2C4227614.919929681%2C-9147291.3439013%2C4230911.266774476&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:33.568Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:33.666Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9172317.005819533%2C4221366.988892032%2C-9132760.843682006%2C4234552.376271207&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:34.749Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9172317.005819533%2C4221366.988892032%2C-9132760.843682006%2C4234552.376271207&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:34.751Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:35.085Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9171680.027473595%2C4224382.005461296%2C-9132123.865336068%2C4237567.392840471&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:37.584Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9171680.027473595%2C4224382.005461296%2C-9132123.865336068%2C4237567.392840471&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:33:37.587Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:37.951Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/layers?f=json&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "postData": null,
+    "time": "2026-07-18T21:33:39.057Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/8/query?f=pbf&geometry=%7B%22xmin%22%3A-9154848.353813171%2C%22ymin%22%3A4228882.23550158%2C%22xmax%22%3A-9154389.73164346%2C%22ymax%22%3A4229340.857671291%7D&outFields=csa%2Cpickup_only%2Csort_date%2Cstation_id%2Cwave_id%2Cwaypoint_id%2Cwid&spatialRel=esriSpatialRelIntersects&where=sort_date%20%3D%20date%272026-07-18%27%20and%20station_id%20%3D%20%27259%27%20and%20(%20csa%20%3D%20%27304169%27%20)&geometryType=esriGeometryEnvelope&inSR=102100&outSR=102100&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "postData": null,
+    "time": "2026-07-18T21:33:39.132Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9171680.027473595%2C4224382.005461296%2C-9132123.865336068%2C4237567.392840471&bboxSR=102100&imageSR=102100&size=931%2C310&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:33:39.150Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area-waypoints?anchorAreaId=21597641&wave=1",
+    "postData": null,
+    "time": "2026-07-18T21:33:39.430Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:33:39.476Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9171680.027473595%2C4224764.190602722%2C-9132123.865336068%2C4237185.207699046&bboxSR=102100&imageSR=102100&size=931%2C292&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:34:02.789Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9171680.027473595%2C4224764.190602722%2C-9132123.865336068%2C4237185.207699046&bboxSR=102100&imageSR=102100&size=931%2C292&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:34:02.792Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:34:03.156Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9171680.027473595%2C4225738.762713356%2C-9132123.865336068%2C4236210.635588411&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:34:04.823Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9171680.027473595%2C4225738.762713356%2C-9132123.865336068%2C4236210.635588411&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:34:04.826Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:34:05.193Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "DELETE",
+    "url": "https://dro.routesmart.com/api/api/anchor-areas/Deleteanchor-areasvalidated",
+    "postData": "{\"AnchorAreaId\":21597641}",
+    "time": "2026-07-18T21:34:21.050Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "DELETE",
+    "url": "https://dro.routesmart.com/api/api/anchor-areas/Deleteanchor-areasvalidated",
+    "status": 409,
+    "body": {
+      "status": false,
+      "primaryKeyFound": true,
+      "message": "This anchor area will be deleted from 2 route plan(s).",
+      "relatedTables": [
+        {
+          "tableName": "SequenceCluster",
+          "keys": [
+            "501426211",
+            "501468478"
+          ]
+        }
+      ]
+    },
+    "time": "2026-07-18T21:34:21.395Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9163129.318932585%2C4227465.510509658%2C-9143351.237863824%2C4232701.446947184&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:34:21.884Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9163129.318932585%2C4227465.510509658%2C-9143351.237863824%2C4232701.446947184&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:34:21.888Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:34:22.293Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "DELETE",
+    "url": "https://dro.routesmart.com/api/api/anchor-areas/Deleteanchor-areasvalidated?forceDelete=true",
+    "postData": "{\"AnchorAreaId\":21597641}",
+    "time": "2026-07-18T21:34:23.927Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area",
+    "postData": null,
+    "time": "2026-07-18T21:34:24.090Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "DELETE",
+    "url": "https://dro.routesmart.com/api/api/anchor-areas/Deleteanchor-areasvalidated?forceDelete=true",
+    "status": 200,
+    "body": {
+      "code": "",
+      "message": ""
+    },
+    "time": "2026-07-18T21:34:24.336Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9171175.70934853%2C4226147.502454842%2C-9131619.547211003%2C4236619.375329898&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:34:39.234Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9171175.70934853%2C4226147.502454842%2C-9131619.547211003%2C4236619.375329898&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:34:39.238Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:34:39.703Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9156956.332304096%2C4232538.752920527%2C-9147067.291769715%2C4235156.721139291&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:34:42.535Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9156956.332304096%2C4232538.752920527%2C-9147067.291769715%2C4235156.721139291&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:34:42.539Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:34:42.630Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area",
+    "postData": "{\"ServiceAreaId\":3060743,\"Name\":\"Buffalo Creek Park\",\"Station\":\"\",\"Shape\":\"{\\\"spatialReference\\\":{\\\"latestWkid\\\":3857,\\\"wkid\\\":102100},\\\"rings\\\":[[[-9149439.327150704,4228388.593529552],[-9157252.890560439,4228813.243816284],[-9152255.819836302,4234656.430213408],[-9149439.327150704,4228388.593529552]]]}\"}",
+    "time": "2026-07-18T21:35:08.895Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area",
+    "postData": null,
+    "time": "2026-07-18T21:35:09.083Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area",
+    "status": 201,
+    "body": "id: 21625207",
+    "time": "2026-07-18T21:35:09.313Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/8/query?f=pbf&geometry=%7B%22xmin%22%3A-9152313.147607515%2C%22ymin%22%3A4233229.605515329%2C%22xmax%22%3A-9152198.492065089%2C%22ymax%22%3A4233344.261057757%7D&outFields=csa%2Cpickup_only%2Csort_date%2Cstation_id%2Cwave_id%2Cwaypoint_id%2Cwid&spatialRel=esriSpatialRelIntersects&where=sort_date%20%3D%20date%272026-07-18%27%20and%20station_id%20%3D%20%27259%27%20and%20(%20csa%20%3D%20%27304169%27%20)&geometryType=esriGeometryEnvelope&inSR=102100&outSR=102100&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "postData": null,
+    "time": "2026-07-18T21:35:16.012Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area-waypoints?anchorAreaId=21625207&wave=1",
+    "postData": null,
+    "time": "2026-07-18T21:35:16.122Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9156956.332304092%2C4232538.752920526%2C-9147067.291769711%2C4235156.72113929&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:35:19.548Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9156956.332304092%2C4232538.752920526%2C-9147067.291769711%2C4235156.72113929&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:35:19.554Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:35:19.654Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9156892.635169301%2C4232931.554348278%2C-9147003.59463492%2C4235549.522567042&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:35:20.444Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9156892.635169301%2C4232931.554348278%2C-9147003.59463492%2C4235549.522567042&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:35:20.448Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:35:20.526Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "postData": "bbox=-9173124.189924335%2C4226286.575433952%2C-9133568.027786808%2C4236758.448309007&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&dynamicLayers=%5B%7B%22id%22%3A8%2C%22source%22%3A%7B%22type%22%3A%22mapLayer%22%2C%22mapLayerId%22%3A8%7D%2C%22definitionExpression%22%3A%22sort_date%20%3D%20date'2026-07-18'%20and%20station_id%20%3D%20'259'%20and%20(%20csa%20%3D%20'304169'%20)%22%2C%22drawingInfo%22%3A%7B%22renderer%22%3A%7B%22type%22%3A%22uniqueValue%22%2C%22field1%22%3A%22pickup_only%22%2C%22defaultSymbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C255%2C255%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A5%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22uniqueValueGroups%22%3A%5B%7B%22classes%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22values%22%3A%5B%5B%221%22%5D%5D%7D%5D%7D%5D%2C%22uniqueValueInfos%22%3A%5B%7B%22label%22%3A%22Pick%20Up%22%2C%22symbol%22%3A%7B%22type%22%3A%22esriSMS%22%2C%22color%22%3A%5B255%2C0%2C0%2C255%5D%2C%22angle%22%3A0%2C%22xoffset%22%3A0%2C%22yoffset%22%3A0%2C%22size%22%3A7%2C%22style%22%3A%22esriSMSCircle%22%2C%22outline%22%3A%7B%22type%22%3A%22esriSLS%22%2C%22color%22%3A%5B0%2C0%2C0%2C255%5D%2C%22width%22%3A0.5%2C%22style%22%3A%22esriSLSSolid%22%7D%7D%2C%22value%22%3A%221%22%7D%5D%7D%7D%7D%5D&f=image&_ts=1784410386686&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "time": "2026-07-18T21:35:27.151Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export?bbox=-9173124.189924335%2C4226286.575433952%2C-9133568.027786808%2C4236758.448309007&bboxSR=102100&imageSR=102100&size=931%2C246&dpi=86.39999771118164&format=png32&transparent=true&layers=show%3A-1&f=image",
+    "postData": null,
+    "time": "2026-07-18T21:35:27.153Z"
+  },
+  {
+    "type": "RESPONSE",
+    "method": "POST",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/export",
+    "status": 200,
+    "body": "",
+    "time": "2026-07-18T21:35:27.522Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/Proxy?http://AGS_URL/rest/services/DRO_Layers/MapServer/8/query?f=pbf&geometry=%7B%22xmin%22%3A-9152215.873977816%2C%22ymin%22%3A4230918.446958153%2C%22xmax%22%3A-9151757.251808105%2C%22ymax%22%3A4231377.069127863%7D&outFields=csa%2Cpickup_only%2Csort_date%2Cstation_id%2Cwave_id%2Cwaypoint_id%2Cwid&spatialRel=esriSpatialRelIntersects&where=sort_date%20%3D%20date%272026-07-18%27%20and%20station_id%20%3D%20%27259%27%20and%20(%20csa%20%3D%20%27304169%27%20)&geometryType=esriGeometryEnvelope&inSR=102100&outSR=102100&parameterValues=%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D&layerParameterValues=%5B%7B%228%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%2C%7B%2213%22%3A%20%7B%20%22sort_date%22%3A%20%222026-07-18%22%2C%20%22station_id%22%3A%20%22259%22%20%7D%7D%5D",
+    "postData": null,
+    "time": "2026-07-18T21:35:30.079Z"
+  },
+  {
+    "type": "REQUEST",
+    "method": "GET",
+    "url": "https://dro.routesmart.com/api/api/service-areas/3060743/anchor-area-waypoints?anchorAreaId=21625207&wave=1",
+    "postData": null,
+    "time": "2026-07-18T21:35:30.192Z"
+  }
+]

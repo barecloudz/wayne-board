@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -32,7 +32,7 @@ async function getBrowser() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(d: string | null): string {
-  if (!d) return "—";
+  if (!d) return "-";
   const [y, m, day] = d.split("-");
   return `${m}/${day}/${y}`;
 }
@@ -95,7 +95,7 @@ function generateHTML(data: {
   } = data;
 
   const totalRepairStr = totalRepairCost > 0
-    ? `$${totalRepairCost.toLocaleString()}` : "—";
+    ? `$${totalRepairCost.toLocaleString()}` : "-";
 
   function severityBadge(s: string) {
     const cls: Record<string, string> = {
@@ -260,7 +260,7 @@ function generateHTML(data: {
   .alert-body  { font-size: 9px; color: #7f1d1d; line-height: 1.7; }
   .alert-unit  { font-weight: 700; }
 
-  /* ── Section header — sits directly above a <table> ─────────────── */
+  /* ── Section header · sits directly above a <table> ─────────────── */
   .sec-head {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -343,7 +343,7 @@ function generateHTML(data: {
   .mech-issue-line:last-child { margin-bottom: 0; }
   .mech-issue-note { font-size: 8.5px; color: #94a3b8; font-style: italic; display: block; margin-left: 2px; }
 
-  /* ── Inactive section — forced page break ────────────────────────── */
+  /* ── Inactive section · forced page break ────────────────────────── */
   .inactive-section { page-break-before: always; break-before: page; }
 
   /* ── Inactive mini-header ─────────────────────────────────────────── */

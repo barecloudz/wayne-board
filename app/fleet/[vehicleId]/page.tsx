@@ -208,7 +208,7 @@ export default async function VehicleDetailPage({
                             </div>
                           </td>
                           <td className="px-3 py-3 text-slate-500 text-[12px] hidden md:table-cell">
-                            {result?.notes ?? <span className="text-slate-300">—</span>}
+                            {result?.notes ?? <span className="text-slate-300">-</span>}
                           </td>
                         </tr>
                       );

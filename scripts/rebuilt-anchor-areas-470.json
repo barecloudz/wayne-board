@@ -1,0 +1,70 @@
+[
+  {
+    "name": "0470-01-Chimney",
+    "anchorAreaId": 21630217
+  },
+  {
+    "name": "0470-02-Laycock",
+    "anchorAreaId": 21630218
+  },
+  {
+    "name": "0470-03-Union",
+    "anchorAreaId": 21630219
+  },
+  {
+    "name": "0470-04-Marshall",
+    "anchorAreaId": 21630221
+  },
+  {
+    "name": "0470-05-Shiloh",
+    "anchorAreaId": 21630223
+  },
+  {
+    "name": "0470-06-Mountain",
+    "anchorAreaId": 21630224
+  },
+  {
+    "name": "0470-07-Rock",
+    "anchorAreaId": 21630225
+  },
+  {
+    "name": "0470-08-Appleola",
+    "anchorAreaId": 21630226
+  },
+  {
+    "name": "0470-09-Mountain",
+    "anchorAreaId": 21630227
+  },
+  {
+    "name": "0470-10-Roland",
+    "anchorAreaId": 21630228
+  },
+  {
+    "name": "0470-11-Low",
+    "anchorAreaId": 21630229
+  },
+  {
+    "name": "0470-12-Low",
+    "anchorAreaId": 21630230
+  },
+  {
+    "name": "0470-13-Spicer",
+    "anchorAreaId": 21630231
+  },
+  {
+    "name": "0470-14-Lloyd",
+    "anchorAreaId": 21630232
+  },
+  {
+    "name": "0470-15-Sugarloaf",
+    "anchorAreaId": 21630233
+  },
+  {
+    "name": "0470-16-Sugarloaf",
+    "anchorAreaId": 21630234
+  },
+  {
+    "name": "0470-17-Timber",
+    "anchorAreaId": 21630235
+  }
+]

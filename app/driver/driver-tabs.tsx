@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -216,14 +216,14 @@ export default function DriverTabs({
   const atGoal = companyRating != null && companyRating >= RATING_GOAL;
   const goalPct = companyRating != null ? Math.min(100, (companyRating / RATING_GOAL) * 100) : 0;
 
-  // Bottom dock — primary tabs (Account moved to top-right profile circle)
+  // Bottom dock · primary tabs (Account moved to top-right profile circle)
   const dockTabs = ([
     { key: "score",    label: "Score",    Icon: Star,        show: showRyde },
     { key: "schedule", label: "Schedule", Icon: CalendarDays, show: true },
     { key: "gatecodes",label: "Codes",    Icon: Key,         show: true },
   ] as const).filter(t => t.show);
 
-  // More sheet — secondary tabs
+  // More sheet · secondary tabs
   const moreTabs = ([
     { key: "service",     label: "Service",     Icon: Activity,      show: showDsw },
     { key: "maintenance", label: "Maintenance", Icon: Wrench,        show: true },
@@ -379,13 +379,13 @@ export default function DriverTabs({
         );
       })()}
 
-      {/* Tab content — pb-28 so dock doesn't overlap */}
+      {/* Tab content · pb-28 so dock doesn't overlap */}
       <div className="pb-32 flex flex-col gap-4">
 
         {/* ── Score tab ─────────────────────────────────── */}
         {tab === "score" && (
           <>
-            {/* My Ryde Score — hero card (leads now) */}
+            {/* My Ryde Score · hero card (leads now) */}
             <div className="rounded-3xl overflow-hidden" style={glassBright}>
               {/* Orange top bar */}
               <div className="h-1" style={{ background: "linear-gradient(90deg, var(--brand), var(--brand))" }} />
@@ -415,7 +415,7 @@ export default function DriverTabs({
 
               <div className="grid grid-cols-3 divide-x divide-slate-100">
                 {[
-                  { label: "Avg Score",     value: avgScore !== null ? avgScore.toFixed(1) : "—" },
+                  { label: "Avg Score",     value: avgScore !== null ? avgScore.toFixed(1) : "-" },
                   { label: "Total Reviews", value: reviews.length },
                   { label: "Positive",      value: reviews.filter((r) => r.type === "positive").length },
                 ].map((s) => (
@@ -556,7 +556,7 @@ export default function DriverTabs({
                                   <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#d97706" }}>Off</span>
                                 )}
                                 {!isOff && !isWork && (
-                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>—</span>
+                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>-</span>
                                 )}
                                 {isWork && (
                                   <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.6)" }}>On</span>
@@ -722,7 +722,7 @@ export default function DriverTabs({
             <div className="rounded-3xl px-4 py-3 flex gap-3 items-start" style={glass}>
               <span className="text-base shrink-0">⚠️</span>
               <p className="text-[12px] leading-relaxed" style={{ color: "#64748B" }}>
-                One <span className="font-semibold" style={{ color: "#0F172A" }}>at-fault review</span> resets your streak to day 1. Rewards already earned are yours to keep — but you won&apos;t earn them twice.
+                One <span className="font-semibold" style={{ color: "#0F172A" }}>at-fault review</span> resets your streak to day 1. Rewards already earned are yours to keep · but you won&apos;t earn them twice.
               </p>
             </div>
 
@@ -740,7 +740,7 @@ export default function DriverTabs({
                         <p className="text-[14px] font-semibold text-slate-700">{m.name}</p>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ Claimed</span>
                       </div>
-                      <p className="text-[12px] text-slate-400 mt-0.5">Earned at {m.daysRequired} days — yours to keep.</p>
+                      <p className="text-[12px] text-slate-400 mt-0.5">Earned at {m.daysRequired} days · yours to keep.</p>
                     </div>
                   </div>
                 );
@@ -804,7 +804,7 @@ export default function DriverTabs({
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "#94A3B8" }}>Locked</p>
                   <h2 className="text-[22px] font-bold mb-2" style={{ color: "#0F172A" }}>Bonus Structure</h2>
                   <p className="text-[14px] leading-relaxed max-w-xs" style={{ color: "#64748B" }}>
-                    Hit a <span className="font-bold" style={{ color: "#0F172A" }}>90-day clean streak</span> to unlock your performance bonus program — no at-fault reviews, no safety incidents.
+                    Hit a <span className="font-bold" style={{ color: "#0F172A" }}>90-day clean streak</span> to unlock your performance bonus program · no at-fault reviews, no safety incidents.
                   </p>
                   {daysLeft > 0 && (
                     <div className="mt-6 px-5 py-3 rounded-2xl" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
@@ -876,7 +876,7 @@ export default function DriverTabs({
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] mb-0.5" style={{ color: "#94A3B8" }}>Your Rank</p>
                   <p className="text-[18px] font-bold leading-none" style={{ color: "#0F172A" }}>
-                    {myRank === 1 ? "🏆 Top of the fleet" : myRank <= 3 ? "🔥 Top 3 — keep it up" : `${myRank} of ${leaderboard.length}`}
+                    {myRank === 1 ? "🏆 Top of the fleet" : myRank <= 3 ? "🔥 Top 3 · keep it up" : `${myRank} of ${leaderboard.length}`}
                   </p>
                 </div>
               </div>

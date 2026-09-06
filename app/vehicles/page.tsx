@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
 
@@ -101,7 +101,7 @@ export default async function VehiclesPage() {
               value:
                 totalCost > 0
                   ? `$${totalCost.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-                  : "—",
+                  : "-",
               color: "text-indigo-600",
             },
           ].map((kpi) => (

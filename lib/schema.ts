@@ -1,4 +1,4 @@
-import {
+﻿import {
   pgTable, serial, text, real, integer,
   timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -7,7 +7,7 @@ import {
 export const organizations = pgTable("organizations", {
   id:                   serial("id").primaryKey(),
   name:                 text("name").notNull(),                          // "Acme Logistics LLC"
-  slug:                 text("slug").notNull().unique(),                  // "acme-logistics" — URL-safe
+  slug:                 text("slug").notNull().unique(),                  // "acme-logistics" · URL-safe
   plan:                 text("plan").notNull().default("starter"),        // "starter"|"pro"|"enterprise"
   subscriptionStatus:   text("subscription_status").notNull().default("trialing"), // "trialing"|"active"|"past_due"|"canceled"
   logoUrl:              text("logo_url"),               // Cloudflare Images delivery URL
@@ -44,8 +44,8 @@ export const workAreas = pgTable("work_areas", {
 export const drivers = pgTable("drivers", {
   id:                serial("id").primaryKey(),
   organizationId:    integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-  driverId:          text("driver_id").notNull(),  // FedEx ID — used for DSW/review matching, NOT login
-  username:          text("username"),              // login credential — unique globally
+  driverId:          text("driver_id").notNull(),  // FedEx ID · used for DSW/review matching, NOT login
+  username:          text("username"),              // login credential · unique globally
   name:              text("name").notNull(),
   passwordHash:      text("password_hash").notNull(),
   role:              text("role").notNull().default("driver"),  // "driver"|"bc"|"co_owner"|"developer"|"owner"
@@ -73,7 +73,7 @@ export const drivers = pgTable("drivers", {
 export const vehicles = pgTable("vehicles", {
   id:                   serial("id").primaryKey(),
   organizationId:       integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
-  unitNumber:           text("unit_number").notNull(),  // unique per org — enforced by orgUnitUnique index
+  unitNumber:           text("unit_number").notNull(),  // unique per org · enforced by orgUnitUnique index
   make:                 text("make").notNull(),
   model:                text("model").notNull(),
   year:                 integer("year").notNull(),
@@ -276,7 +276,7 @@ export const gateCodeReports = pgTable("gate_code_reports", {
   createdAt:  timestamp("created_at").defaultNow(),
 });
 
-// ── Auto DRO — Ephemeral Route Data ──────────────────────────────────────────
+// ── Auto DRO · Ephemeral Route Data ──────────────────────────────────────────
 export const droRoutes = pgTable("dro_routes", {
   id:                     serial("id").primaryKey(),
   organizationId:         integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
@@ -491,7 +491,7 @@ export const locations = pgTable("locations", {
   id:             serial("id").primaryKey(),
   organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   name:           text("name").notNull(),           // e.g. "Fletcher - 0259"
-  terminalId:     text("terminal_id"),              // e.g. "0259" — internal station code
+  terminalId:     text("terminal_id"),              // e.g. "0259" · internal station code
   gcTerminalId:   integer("gc_terminal_id"),        // GroundCloud terminal ID for filtering
   createdAt:      timestamp("created_at").defaultNow(),
 });

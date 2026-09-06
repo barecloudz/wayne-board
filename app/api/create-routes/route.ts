@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import {
   drivers, driverSchedules, timeOffEntries, scheduleOverrides,
@@ -38,7 +38,7 @@ export async function GET() {
       ...(timeOffIds.length > 0 ? [not(inArray(drivers.driverId, timeOffIds))] : [])
     ));
 
-  // Schedule overrides (one-off extra day) — also non-trainee
+  // Schedule overrides (one-off extra day) · also non-trainee
   const overrides = await db
     .select({ driverId: drivers.driverId, name: drivers.name, workArea: drivers.workArea })
     .from(drivers)
@@ -59,7 +59,7 @@ export async function GET() {
   const [stopRow] = await db.select({ count: sql<number>`count(*)::int` }).from(droStops).where(eq(droStops.organizationId, session.organizationId));
   const totalStops = stopRow?.count ?? 0;
 
-  // Route info from DRO — prefer dro_routes (from route-summary), fall back to
+  // Route info from DRO · prefer dro_routes (from route-summary), fall back to
   // aggregating dro_stops by work_area_number (works during planning window when
   // solutionType=actual returns nothing yet)
   let routes = await db.select({
@@ -70,7 +70,7 @@ export async function GET() {
   }).from(droRoutes).where(eq(droRoutes.organizationId, session.organizationId)).orderBy(droRoutes.workAreaName);
 
   if (routes.length === 0 && totalStops > 0) {
-    // Derive routes from stop records — group by work_area_number
+    // Derive routes from stop records · group by work_area_number
     const derived = await db.execute(sql`
       SELECT
         COALESCE(NULLIF(optimal_route, ''), NULLIF(actual_route, ''), work_area_number) AS work_area_name,

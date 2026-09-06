@@ -1,4 +1,4 @@
-export const maxDuration = 300;
+﻿export const maxDuration = 300;
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -10,7 +10,7 @@ import { getSession } from "@/lib/session";
 const LOAD_THRESHOLD = 0.85;
 // Hard stop cap as a secondary safety net
 const MAX_STOPS = 150;
-// Minimum stops per route (Zirconia is exempt — it runs its own isolated area)
+// Minimum stops per route (Zirconia is exempt · it runs its own isolated area)
 const MIN_STOPS = 80;
 
 const isZirconia = (name: string) => name.toLowerCase().includes("zirconia");
@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
       if (!isNaN(cap) && cap > 0) capacityMap[r.workAreaName.trim()] = cap;
     }
 
-    // Fallback capacity — guard against Math.min(...[]) = Infinity when all caps empty
+    // Fallback capacity · guard against Math.min(...[]) = Infinity when all caps empty
     const capValues = Object.values(capacityMap).filter(v => v > 0);
     const rawMin = capValues.length > 0 ? Math.min(...capValues) : Infinity;
     const defaultCapacity = isFinite(rawMin) && rawMin > 0 ? rawMin : 300;
@@ -445,7 +445,7 @@ export async function POST(req: NextRequest) {
       routeGroups = activeGroups;
     }
 
-    // ── Step 4: Merge to reach driverCount — cube-cap + stop-cap aware ───────
+    // ── Step 4: Merge to reach driverCount · cube-cap + stop-cap aware ───────
     let mergeAttempts = 0;
     const maxAttempts = routeGroups.length * routeGroups.length;
 
@@ -486,7 +486,7 @@ export async function POST(req: NextRequest) {
 
     // ── Step 4b: Enforce minimum stop count (80) via border redistribution ──────
     // For each non-Zirconia route under MIN_STOPS, pull border stops from its
-    // closest neighbor — specifically the stops nearest to the shared boundary
+    // closest neighbor · specifically the stops nearest to the shared boundary
     // (closest to the receiving route's centroid from that neighbor only).
     // Zirconia never donates.
     {
@@ -527,7 +527,7 @@ export async function POST(req: NextRequest) {
           underMin.centLat = uc.lat; underMin.centLng = uc.lng;
 
           moved = true;
-          break; // one stop at a time — re-evaluate after each move
+          break; // one stop at a time · re-evaluate after each move
         }
 
         if (!moved) break; // no neighbor could help
@@ -584,7 +584,7 @@ export async function POST(req: NextRequest) {
       originalRouteCount: currentCount,
       merged:        actualMerged,
       cappedAt:      actualMerged < currentCount - driverCount
-        ? `Could only cut ${actualMerged} — cube capacity would be exceeded`
+        ? `Could only cut ${actualMerged} · cube capacity would be exceeded`
         : null,
       routes: planned,
     });

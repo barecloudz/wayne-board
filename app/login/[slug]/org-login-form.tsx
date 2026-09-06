@@ -42,7 +42,7 @@ export default function OrgLoginForm({
     }
   }
 
-  /* Inset-shadow input style — clean, slightly recessed look */
+  /* Inset-shadow input style · clean, slightly recessed look */
   const inputBase: React.CSSProperties = {
     background: "rgba(241,245,249,0.8)",
     border: "1px solid rgba(203,213,225,0.7)",
@@ -154,7 +154,7 @@ export default function OrgLoginForm({
         </p>
       )}
 
-      {/* CTA button — gloss gradient */}
+      {/* CTA button · gloss gradient */}
       <button
         type="submit"
         disabled={loading || !username.trim() || !password.trim()}

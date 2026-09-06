@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRef, useState } from "react";
 import {
@@ -108,7 +108,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     }
   }
 
-  // Force camera to re-hunt for focus — cycles manual→continuous
+  // Force camera to re-hunt for focus · cycles manual→continuous
   async function triggerRefocus() {
     const track = streamRef.current?.getVideoTracks()[0];
     if (!track || refocusing) return;
@@ -130,7 +130,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     stopCamera();
     setState({ type: "photo" });
 
-    // objectURL is temporary — decoded in memory then immediately revoked
+    // objectURL is temporary · decoded in memory then immediately revoked
     const objectUrl = URL.createObjectURL(file);
 
     try {
@@ -152,7 +152,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
         }
       }
 
-      // Strategy B: ZXing decodeFromImageUrl (still local — objectURL never sent anywhere)
+      // Strategy B: ZXing decodeFromImageUrl (still local · objectURL never sent anywhere)
       const [{ BrowserMultiFormatReader }, { DecodeHintType, BarcodeFormat }] = await Promise.all([
         import("@zxing/browser"),
         import("@zxing/library"),
@@ -226,7 +226,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
         }
       } catch { /* zoom not supported */ }
 
-      // ImageCapture — stored in ref for torch fallback
+      // ImageCapture · stored in ref for torch fallback
       if ("ImageCapture" in window) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -317,7 +317,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                 ctx.drawImage(bitmap, 0, 0);
                 bitmap.close();
                 drew = true;
-              } catch { /* grabFrame failed — fall through to video */ }
+              } catch { /* grabFrame failed · fall through to video */ }
             }
 
             if (!drew && videoRef.current) {
@@ -337,10 +337,10 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                   handleDetected(result.getText());
                   return;
                 }
-              } catch { /* no barcode in frame — keep looping */ }
+              } catch { /* no barcode in frame · keep looping */ }
             }
           }
-        } catch { /* frame grab error — keep looping */ }
+        } catch { /* frame grab error · keep looping */ }
 
         if (scanningRef.current) {
           scanLoopRef.current = setTimeout(decodeFrame, 150);
@@ -381,7 +381,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
       setState({
         type: "confirm",
         vin,
-        nhtsa: { Make: "—", Model: "—", ModelYear: "—", BodyClass: "—", ErrorCode: "1" },
+        nhtsa: { Make: "-", Model: "-", ModelYear: "-", BodyClass: "-", ErrorCode: "1" },
       });
     }
   }
@@ -399,8 +399,8 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
     try {
       const yearNum = parseInt(nhtsa.ModelYear);
       await updateVehicleVinWithNhtsa(vehicleId, vin, {
-        make:  nhtsa.Make !== "—" ? nhtsa.Make : undefined,
-        model: nhtsa.Model !== "—" ? nhtsa.Model : undefined,
+        make:  nhtsa.Make !== "-" ? nhtsa.Make : undefined,
+        model: nhtsa.Model !== "-" ? nhtsa.Model : undefined,
         year:  !isNaN(yearNum) ? yearNum : undefined,
       });
       onVinConfirmed(vin);
@@ -411,13 +411,13 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
   }
 
   function matchBadge(nhtsa: NHTSAResult) {
-    if (nhtsa.Make === "—") return null;
+    if (nhtsa.Make === "-") return null;
     const makeMatch =
       nhtsa.Make.toLowerCase().includes(vehicle.make.toLowerCase()) ||
       vehicle.make.toLowerCase().includes(nhtsa.Make.toLowerCase());
     const yearMatch = nhtsa.ModelYear === String(vehicle.year);
     if (makeMatch && yearMatch) return { ok: true, label: `Matches ${vehicle.unitNumber} record ✓` };
-    return { ok: false, label: `Expected ${vehicle.year} ${vehicle.make} — decoded as ${nhtsa.ModelYear} ${nhtsa.Make}` };
+    return { ok: false, label: `Expected ${vehicle.year} ${vehicle.make} · decoded as ${nhtsa.ModelYear} ${nhtsa.Make}` };
   }
 
   return (
@@ -479,7 +479,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                           </div>
                         </div>
 
-                        {/* Refocus button — bottom left */}
+                        {/* Refocus button · bottom left */}
                         <button
                           type="button"
                           onClick={triggerRefocus}
@@ -497,7 +497,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                           }
                         </button>
 
-                        {/* Torch button — bottom right */}
+                        {/* Torch button · bottom right */}
                         {!torchUnavailable && (
                           <button
                             type="button"
@@ -521,7 +521,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                   </p>
 
                   <div className="flex gap-2">
-                    {/* Take Photo — native camera app handles zoom/focus, image never stored */}
+                    {/* Take Photo · native camera app handles zoom/focus, image never stored */}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -550,7 +550,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                   <div>
                     <p className="text-[13px] font-bold text-slate-800 mb-1">Enter VIN</p>
                     <p className="text-[11px] text-slate-400 mb-3">
-                      Find it on the driver-side door jamb sticker — 17 characters, no I, O, or Q.
+                      Find it on the driver-side door jamb sticker · 17 characters, no I, O, or Q.
                     </p>
                     <input
                       type="text"
@@ -625,11 +625,11 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
                         {[
                           { label: "Make",  value: nhtsa.Make },
                           { label: "Year",  value: nhtsa.ModelYear },
-                          { label: "Body",  value: nhtsa.BodyClass?.split(" ")[0] ?? "—" },
+                          { label: "Body",  value: nhtsa.BodyClass?.split(" ")[0] ?? "-" },
                         ].map(({ label, value }) => (
                           <div key={label} className="bg-white rounded-lg px-2 py-2 border border-slate-200 text-center">
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-                            <p className="text-[12px] font-bold text-slate-800 mt-0.5 truncate">{value || "—"}</p>
+                            <p className="text-[12px] font-bold text-slate-800 mt-0.5 truncate">{value || "-"}</p>
                           </div>
                         ))}
                       </div>
@@ -695,7 +695,7 @@ export default function VinScanner({ vehicleId, currentVin, vehicle, onVinConfir
           </div>
         </div>
       )}
-      {/* Hidden file input — capture="environment" opens native camera on mobile.
+      {/* Hidden file input · capture="environment" opens native camera on mobile.
           accept="image/*" without capture works as gallery fallback on Android 14/15.
           Image is processed locally via objectURL and never uploaded. */}
       <input

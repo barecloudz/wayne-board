@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -149,7 +149,7 @@ export default function TraineesClient() {
                             ✓
                           </span>
                         ) : (
-                          <span className="text-slate-200 text-xs">—</span>
+                          <span className="text-slate-200 text-xs">-</span>
                         )}
                       </td>
                     ))}

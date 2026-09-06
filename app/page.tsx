@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -225,7 +225,7 @@ export default function HomePage() {
           Everything your station needs
         </h2>
 
-        {/* Hairline-divided grid — feels like real operational software, not a card deck */}
+        {/* Hairline-divided grid · feels like real operational software, not a card deck */}
         <div className="grid grid-cols-1 md:grid-cols-2" style={{ border: "1px solid #E5E7EB" }}>
           {FEATURES.map((f, i) => (
             <div

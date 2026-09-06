@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Auto DRO sync engine.
  * Logs into dro.routesmart.com via Okta (Puppeteer), then pulls today's
  * route + stop data via the DRO REST API and stores it in Neon.
@@ -58,7 +58,7 @@ export async function syncDro(): Promise<DroSyncResult> {
   }
 
   try {
-    // ── Step 1: Get headers (strict — cached session only, never runs Puppeteer) ─
+    // ── Step 1: Get headers (strict · cached session only, never runs Puppeteer) ─
     const headers = await getDroHeaders();
 
     // ── Step 2: Pull data via DRO REST API ────────────────────────────────
@@ -79,7 +79,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       const detail = JSON.stringify({ status: planRes.status, body: body.slice(0, 500), capturedHeaderKeys: capturedKeys, at: new Date().toISOString() });
       await sql`INSERT INTO settings (key, value) VALUES ('dro_last_401_detail', ${detail})
                 ON CONFLICT (key) DO UPDATE SET value = ${detail}`;
-      // Mark session as expired (set expires to past) rather than deleting — preserves headers for inspection
+      // Mark session as expired (set expires to past) rather than deleting · preserves headers for inspection
       await sql`INSERT INTO settings (key, value) VALUES ('dro_session_expires_at', '2000-01-01T00:00:00.000Z')
                 ON CONFLICT (key) DO UPDATE SET value = '2000-01-01T00:00:00.000Z'`;
       throw new Error("SESSION_EXPIRED");
@@ -119,7 +119,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       if (d.workAreaNumber) pkgDetailByRoute[d.workAreaNumber] = d;
     }
 
-    // Pull unroutable/unassigned waypoints — DRO couldn't assign these to any route
+    // Pull unroutable/unassigned waypoints · DRO couldn't assign these to any route
     let unroutableWaypoints: any[] = [];
     try {
       const unroutRes  = await fetch(`${DRO_BASE}/api/api/service-areas/${SA_ID}/UnroutableWaypoints?`, { headers });
@@ -133,7 +133,7 @@ export async function syncDro(): Promise<DroSyncResult> {
     const agsWhere = encWhere(`sort_date = date'${sortDate}' and station_id = '${STATION_ID}' and csa = '304169'`);
     const agsParamValues = encodeURIComponent(JSON.stringify({ sort_date: sortDate, station_id: STATION_ID }));
     const agsLayerParamValues = encodeURIComponent(JSON.stringify([{ "8": { sort_date: sortDate, station_id: STATION_ID } }, { "13": { sort_date: sortDate, station_id: STATION_ID } }]));
-    // Use outSR=102100 (EPSG:3857 — same as DRO) and convert to WGS84 client-side
+    // Use outSR=102100 (EPSG:3857 · same as DRO) and convert to WGS84 client-side
     const agsInner = `http://AGS_URL/rest/services/DRO_Layers/MapServer/8/query?f=json&outFields=wid,route&where=${agsWhere}&returnGeometry=true&outSR=102100&parameterValues=${agsParamValues}&layerParameterValues=${agsLayerParamValues}`;
     const agsUrl = `${DRO_BASE}/api/api/Proxy?${agsInner}`;
     let agsFeatures: any[] = [];
@@ -276,7 +276,7 @@ export async function syncDro(): Promise<DroSyncResult> {
       }
     }
 
-    // Insert unroutable stops (no actualRoute — plan engine will assign them)
+    // Insert unroutable stops (no actualRoute · plan engine will assign them)
     for (let i = 0; i < unroutableWaypoints.length; i += BATCH) {
       const batch = unroutableWaypoints.slice(i, i + BATCH);
       for (const w of batch) {

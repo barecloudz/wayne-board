@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import UpdateBanner from "@/components/update-banner";
@@ -12,8 +12,8 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mygroundops.com"),
   title: {
-    default: "MyGroundOps — FedEx Ground ISP Platform",
-    template: "%s — MyGroundOps",
+    default: "MyGroundOps · FedEx Ground ISP Platform",
+    template: "%s · MyGroundOps",
   },
   description:
     "Fleet management, driver scores, route ops, and compliance tools built for FedEx Ground ISPs.",

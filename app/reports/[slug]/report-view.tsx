@@ -308,7 +308,7 @@ function FleetReport({ vehicles }: { vehicles: FleetRow[] }) {
                   <Td>{v.make} {v.model}</Td>
                   <Td mono right>{v.year}</Td>
                   <Td mono right>{v.mileage.toLocaleString()}</Td>
-                  <Td>{v.lastInspection ?? "—"}</Td>
+                  <Td>{v.lastInspection ?? "-"}</Td>
                   <Td><StatusCell color={statusColor(v.status)} label={v.status} /></Td>
                 </tr>
               ))}
@@ -364,7 +364,7 @@ function DriversReport({ drivers }: { drivers: DriverRow[] }) {
         <KpiCard label="Total Accounts" value={drivers.length.toString()} />
         <KpiCard label="Active" value={active.toString()} />
         <KpiCard label="Inactive" value={(drivers.length - active).toString()} />
-        <KpiCard label="Ryde Score Avg" value="—" sub="No data yet" />
+        <KpiCard label="Ryde Score Avg" value="-" sub="No data yet" />
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
@@ -409,7 +409,7 @@ function DriversReport({ drivers }: { drivers: DriverRow[] }) {
               {data.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-[12px] text-slate-400">
-                    {drivers.length === 0 ? "No driver accounts yet — add drivers via Driver Accounts" : "No records match your filter"}
+                    {drivers.length === 0 ? "No driver accounts yet · add drivers via Driver Accounts" : "No records match your filter"}
                   </td>
                 </tr>
               )}
@@ -427,10 +427,10 @@ function PayrollReport() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Weekly Total" value="$—" />
-        <KpiCard label="Drivers Paid" value="—" />
-        <KpiCard label="Avg Stops / Day" value="—" />
-        <KpiCard label="Period" value="—" />
+        <KpiCard label="Weekly Total" value="$-" />
+        <KpiCard label="Drivers Paid" value="-" />
+        <KpiCard label="Avg Stops / Day" value="-" />
+        <KpiCard label="Period" value="-" />
       </div>
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
         <p className="text-[15px] font-semibold text-slate-500 mb-2">No payroll data yet</p>
@@ -446,10 +446,10 @@ function RoutesReport() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Total Routes" value="—" />
-        <KpiCard label="Coverage" value="—" />
-        <KpiCard label="Avg Stops" value="—" />
-        <KpiCard label="On-Time Dispatch" value="—" />
+        <KpiCard label="Total Routes" value="-" />
+        <KpiCard label="Coverage" value="-" />
+        <KpiCard label="Avg Stops" value="-" />
+        <KpiCard label="On-Time Dispatch" value="-" />
       </div>
       <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
         <p className="text-[15px] font-semibold text-slate-500 mb-2">No route data yet</p>

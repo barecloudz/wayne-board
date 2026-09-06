@@ -1,4 +1,4 @@
-export const maxDuration = 60;
+﻿export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No routes provided" }, { status: 400 });
     }
 
-    // ── Step 1: Get session headers (cached — never runs Puppeteer) ──────────
+    // ── Step 1: Get session headers (cached · never runs Puppeteer) ──────────
     let headers: Record<string, string>;
     try {
       headers = await getDroHeadersStrict();
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // Record trainee work days for today (fire-and-forget — non-fatal)
+    // Record trainee work days for today (fire-and-forget · non-fatal)
     const traineeDate = sortDate ?? new Date().toISOString().slice(0, 10);
     const traineeCount = await recordTraineeWorkDays(traineeDate).catch(() => 0);
 

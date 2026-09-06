@@ -1,0 +1,114 @@
+- generic [active] [ref=f13e1]:
+  - generic [ref=f13e2]:
+    - complementary [ref=f13e3]:
+      - generic [ref=f13e4]:
+        - img "Wayne" [ref=f13e5]
+        - generic [ref=f13e6]:
+          - generic [ref=f13e7]: Wayne Board
+          - generic [ref=f13e8]: Operations Suite
+      - navigation [ref=f13e9]:
+        - link "Overview" [ref=f13e10] [cursor=pointer]:
+          - /url: /wayne-board
+        - paragraph [ref=f13e17]: Admin
+        - link "Driver Accounts" [ref=f13e18] [cursor=pointer]:
+          - /url: /wayne-board/drivers
+        - link "Scheduling" [ref=f13e31] [cursor=pointer]:
+          - /url: /wayne-board/scheduling
+        - link "Fleet Status" [ref=f13e34] [cursor=pointer]:
+          - /url: /wayne-board/fleet-status
+        - link "Maintenance" [ref=f13e38] [cursor=pointer]:
+          - /url: /wayne-board/maintenance
+        - link "Performance" [ref=f13e41] [cursor=pointer]:
+          - /url: /wayne-board/performance
+        - link "Ryde Scores" [ref=f13e45] [cursor=pointer]:
+          - /url: /wayne-board/ryde
+        - link "Milestones" [ref=f13e48] [cursor=pointer]:
+          - /url: /wayne-board/milestones
+        - link "Trainee Days" [ref=f13e55] [cursor=pointer]:
+          - /url: /wayne-board/trainees
+        - link "Settings" [ref=f13e59] [cursor=pointer]:
+          - /url: /wayne-board/settings
+        - button "Automation" [ref=f13e64]
+        - generic [ref=f13e71]:
+          - link "Route Planner" [ref=f13e72] [cursor=pointer]:
+            - /url: /wayne-board/route-planner
+          - link "Create Routes" [ref=f13e75] [cursor=pointer]:
+            - /url: /wayne-board/create-routes
+          - link "Anchor Editor" [ref=f13e82] [cursor=pointer]:
+            - /url: /wayne-board/anchor-editor
+          - link "Auto DRO" [ref=f13e85] [cursor=pointer]:
+            - /url: /wayne-board/auto-dro
+          - link "Auto GC" [ref=f13e90] [cursor=pointer]:
+            - /url: /wayne-board/auto-gc
+          - link "Auto DSW" [ref=f13e94] [cursor=pointer]:
+            - /url: /wayne-board/auto-dsw
+          - link "Auto Spotlight" [ref=f13e98] [cursor=pointer]:
+            - /url: /wayne-board/auto-spotlight
+        - paragraph [ref=f13e102]: Compliance
+        - link "Inspections" [ref=f13e103] [cursor=pointer]:
+          - /url: /fleet
+        - link "Vehicles" [ref=f13e108] [cursor=pointer]:
+          - /url: /vehicles
+        - paragraph [ref=f13e112]: Reports
+        - link "Fleet" [ref=f13e113] [cursor=pointer]:
+          - /url: /reports/fleet
+        - link "Payroll" [ref=f13e119] [cursor=pointer]:
+          - /url: /reports/payroll
+        - link "Drivers" [ref=f13e122] [cursor=pointer]:
+          - /url: /reports/drivers
+        - link "Routes" [ref=f13e128] [cursor=pointer]:
+          - /url: /reports/routes
+      - link "My Driver Portal" [ref=f13e132] [cursor=pointer]:
+        - /url: /driver
+      - generic [ref=f13e138]:
+        - generic [ref=f13e139]: BN
+        - generic [ref=f13e141]:
+          - generic [ref=f13e142]: Blake Nardoni
+          - generic [ref=f13e143]: Operations Mgr
+        - generic "Demo" [ref=f13e144]
+    - main [ref=f13e146]:
+      - generic [ref=f13e147]:
+        - paragraph [ref=f13e148]: Wayne Board · Admin
+        - generic [ref=f13e149]:
+          - heading "Auto DRO" [level=1] [ref=f13e152]
+          - generic [ref=f13e153]:
+            - button "Diagnose" [ref=f13e154]
+            - button "Connect to DRO" [disabled] [ref=f13e160]
+            - button "Sync Now" [disabled] [ref=f13e164]
+      - generic [ref=f13e170]:
+        - button "Overview" [ref=f13e171]
+        - button "Schedule" [ref=f13e174]
+        - button "Route Plans" [ref=f13e177]
+        - button "Vehicles" [ref=f13e182]
+        - button "Anchor Areas" [ref=f13e188]
+        - button "Fleet" [ref=f13e192]
+      - generic [ref=f13e197]:
+        - heading "Route Map" [level=2] [ref=f13e202]
+        - generic [ref=f13e207]:
+          - generic [ref=f13e208]:
+            - heading "DRO Credentials" [level=2] [ref=f13e213]
+            - paragraph [ref=f13e214]: Used to log into dro.routesmart.com. Stored securely in your database.
+            - generic [ref=f13e215]:
+              - generic [ref=f13e216]:
+                - generic [ref=f13e217]: Username
+                - textbox "e.g. 6367044" [ref=f13e218]
+              - generic [ref=f13e219]:
+                - generic [ref=f13e220]: Password
+                - generic [ref=f13e221]:
+                  - textbox "DRO password" [ref=f13e222]
+                  - button [ref=f13e223]
+              - button "Save Credentials" [ref=f13e227]
+          - generic [ref=f13e228]:
+            - heading "Auto-Sync Schedule" [level=2] [ref=f13e233]
+            - paragraph [ref=f13e234]: Automatically pulls routes once per night. Planning window is 8 PM – midnight.
+            - generic [ref=f13e235]:
+              - generic [ref=f13e236]:
+                - generic [ref=f13e237]:
+                  - paragraph [ref=f13e238]: Auto-Sync
+                  - paragraph [ref=f13e239]: Run sync automatically each night
+                - switch [ref=f13e240]
+              - generic [ref=f13e241]:
+                - generic [ref=f13e242]: Run at
+                - textbox [ref=f13e243]: 23:55
+              - button "Save Schedule" [ref=f13e244]
+  - alert [ref=f13e245]

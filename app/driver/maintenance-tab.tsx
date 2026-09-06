@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { Wrench, Loader2, CheckCircle2, Clock, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
@@ -82,12 +82,12 @@ export default function MaintenanceTab({
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#64748B" }}>Truck Number *</label>
           <select value={truck} onChange={(e) => setTruck(e.target.value)} className={INPUT}>
-            <option value="">— Select your truck —</option>
+            <option value="">- Select your truck -</option>
             {vehicles.map((v) => {
               const m = v.model ?? "";
               const label = /transit/i.test(m) ? "Transit" : (m.match(/P-?\d+/i)?.[0]?.replace("-", "") ?? m);
               return (
-                <option key={v.id} value={v.unitNumber}>{v.unitNumber} — {label}</option>
+                <option key={v.id} value={v.unitNumber}>{v.unitNumber} · {label}</option>
               );
             })}
           </select>
@@ -102,13 +102,13 @@ export default function MaintenanceTab({
             onChange={(e) => setDesc(e.target.value)}
             className={INPUT + " resize-none"}
           />
-          <p className="text-[11px]" style={{ color: "#94A3B8" }}>Be as specific as possible — when it started, any sounds or warning lights.</p>
+          <p className="text-[11px]" style={{ color: "#94A3B8" }}>Be as specific as possible · when it started, any sounds or warning lights.</p>
         </div>
 
         {submitted && (
           <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <p className="text-[13px] font-semibold text-emerald-700">Request submitted — management has been notified.</p>
+            <p className="text-[13px] font-semibold text-emerald-700">Request submitted · management has been notified.</p>
           </div>
         )}
 
@@ -162,7 +162,7 @@ export default function MaintenanceTab({
         </div>
       )}
 
-      {/* Resolved — collapsible */}
+      {/* Resolved · collapsible */}
       {resolved.length > 0 && (
         <div>
           <button

@@ -248,7 +248,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
                 </div>
               </Field>
 
-              {/* Location picker — only shown when org has multiple locations */}
+              {/* Location picker · only shown when org has multiple locations */}
               {locations.length > 1 && (
                 <Field label="Location">
                   <select
@@ -256,7 +256,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
                     onChange={(e) => setLocationId(e.target.value ? parseInt(e.target.value) : null)}
                     className={INPUT}
                   >
-                    <option value="">— Any / All —</option>
+                    <option value="">- Any / All -</option>
                     {locations.map((loc) => (
                       <option key={loc.id} value={loc.id}>{loc.name}</option>
                     ))}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Spotlight RYDE sync.
  *
  * Flow:
@@ -94,7 +94,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     while (!bearerToken && Date.now() < deadline) {
       await new Promise(r => setTimeout(r, 500));
     }
-    if (!bearerToken) throw new Error("Spotlight login failed — Bearer token not captured after 30s");
+    if (!bearerToken) throw new Error("Spotlight login failed · Bearer token not captured after 30s");
 
     // ── 2. Send OTP via EMAIL (in browser context, cookies included) ─────────
     console.log("[spotlight] Sending OTP via email...");
@@ -128,7 +128,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     }
 
     // ── 3. Poll DB for OTP (user enters it in the app UI) ───────────────────
-    console.log("[spotlight] Waiting for OTP — signalling UI...");
+    console.log("[spotlight] Waiting for OTP · signalling UI...");
 
     // Clear any stale OTP, then signal the UI to prompt the user
     await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at')`;
@@ -257,7 +257,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       if (id && name) fdxToName[id] = name;
     }
 
-    // ── 6. Load our drivers — match by fedex_id (primary) or name (fallback) ──
+    // ── 6. Load our drivers · match by fedex_id (primary) or name (fallback) ──
     const dbDrivers = await sql`SELECT driver_id, name, fedex_id FROM drivers WHERE active = true`;
 
     // Primary: fedex_id → driver_id
@@ -365,7 +365,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
       reviewCount++;
     }
 
-    console.log(`[spotlight] Done — ${scoreCount} scores, ${reviewCount} reviews, ${weeksSeen.size} weeks`);
+    console.log(`[spotlight] Done · ${scoreCount} scores, ${reviewCount} reviews, ${weeksSeen.size} weeks`);
     await sql`
       INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'idle')
       ON CONFLICT (key) DO UPDATE SET value = 'idle'
@@ -396,7 +396,7 @@ function dateToWeekStr(raw: string): string {
   return `${utc.getUTCFullYear()}-W${String(wk).padStart(2, "0")}`;
 }
 
-/** Lowercase, letters only — for fuzzy name matching. */
+/** Lowercase, letters only · for fuzzy name matching. */
 function normName(name: string): string {
   return name.toLowerCase().replace(/[^a-z]/g, "");
 }

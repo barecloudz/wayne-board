@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { Pencil, Check, Loader2, ChevronDown, ChevronUp, FileDown, Plus, X, Wrench } from "lucide-react";
@@ -68,7 +68,7 @@ function statusOf(v: Vehicle, today: string) {
 }
 
 function fmt(d: string | null) {
-  if (!d) return "—";
+  if (!d) return "-";
   const [y, m, day] = d.split("-");
   return `${m}/${day}/${y}`;
 }
@@ -273,7 +273,7 @@ export default function FleetStatusClient({
   const [showInactive, setShowInactive] = useState(false);
   const [, startTransition] = useTransition();
 
-  // Conditions state — mutable locally for optimistic updates
+  // Conditions state · mutable locally for optimistic updates
   const [conditionsMap, setConditionsMap] = useState<Record<number, Condition[]>>(initialConditions);
   const [resolved, setResolved] = useState<Condition[]>(initialResolved);
   const [showHistory, setShowHistory] = useState(false);
@@ -454,7 +454,7 @@ export default function FleetStatusClient({
             { label: "Open Issues",     value: allOpenConditions.length,   color: allOpenConditions.length > 0 ? "text-orange-600" : "text-slate-400" },
             {
               label: "Est. Repair Cost",
-              value: totalRepairCost > 0 ? `$${totalRepairCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "—",
+              value: totalRepairCost > 0 ? `$${totalRepairCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "-",
               color: totalRepairCost > 0 ? "text-red-600" : "text-slate-400",
             },
           ].map((k) => (
@@ -476,7 +476,7 @@ export default function FleetStatusClient({
                   <span key={v.id} className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
                     issues.length > 0 ? "bg-red-100 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}>
-                    {v.unitNumber} — {[...issues, ...warning].join(", ")}
+                    {v.unitNumber} · {[...issues, ...warning].join(", ")}
                   </span>
                 );
               })}
@@ -488,7 +488,7 @@ export default function FleetStatusClient({
         {owned.length > 0 && (
           <section className="mb-8">
             <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">
-              Owned — {owned.length} vehicle{owned.length !== 1 ? "s" : ""}
+              Owned · {owned.length} vehicle{owned.length !== 1 ? "s" : ""}
             </h2>
             <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="overflow-x-auto">
@@ -517,7 +517,7 @@ export default function FleetStatusClient({
         {rentals.length > 0 && (
           <section className="mb-8">
             <h2 className="text-[11px] font-bold text-purple-600 uppercase tracking-widest mb-3">
-              Rentals — {rentals.length} vehicle{rentals.length !== 1 ? "s" : ""}
+              Rentals · {rentals.length} vehicle{rentals.length !== 1 ? "s" : ""}
             </h2>
             <div className="bg-white rounded-2xl border border-purple-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
               <div className="overflow-x-auto">
@@ -546,14 +546,14 @@ export default function FleetStatusClient({
         <section className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[11px] font-bold text-orange-600 uppercase tracking-widest">
-              Mechanical Issues — {allOpenConditions.length} open
+              Mechanical Issues · {allOpenConditions.length} open
               {totalRepairCost > 0 && ` · ~$${totalRepairCost.toLocaleString("en-US", { maximumFractionDigits: 0 })} est.`}
             </h2>
           </div>
 
           {vehiclesWithIssues.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200/80 px-6 py-10 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <p className="text-[13px] text-slate-400">No open mechanical issues — use the wrench icon on any vehicle to report one.</p>
+              <p className="text-[13px] text-slate-400">No open mechanical issues · use the wrench icon on any vehicle to report one.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
@@ -633,7 +633,7 @@ export default function FleetStatusClient({
           )}
         </section>
 
-        {/* Inactive — collapsible */}
+        {/* Inactive · collapsible */}
         {inactive.length > 0 && (
           <section>
             <button
@@ -641,7 +641,7 @@ export default function FleetStatusClient({
               className="flex items-center gap-2 text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors mb-3"
             >
               {showInactive ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              Inactive — {inactive.length} vehicle{inactive.length !== 1 ? "s" : ""}
+              Inactive · {inactive.length} vehicle{inactive.length !== 1 ? "s" : ""}
             </button>
             {showInactive && (
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
@@ -675,7 +675,7 @@ export default function FleetStatusClient({
             className="flex items-center gap-2 text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors mb-3"
           >
             {showHistory ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            Maintenance History — {resolved.length} fixed issue{resolved.length !== 1 ? "s" : ""}
+            Maintenance History · {resolved.length} fixed issue{resolved.length !== 1 ? "s" : ""}
           </button>
           {showHistory && (
             resolved.length === 0 ? (
@@ -745,7 +745,7 @@ export default function FleetStatusClient({
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
               <div>
                 <h2 className="text-[16px] font-extrabold text-slate-900">Report Issue</h2>
-                <p className="text-[12px] text-slate-400 mt-0.5">{reportTarget.unitNumber} — {reportTarget.year} {reportTarget.make} {reportTarget.model}</p>
+                <p className="text-[12px] text-slate-400 mt-0.5">{reportTarget.unitNumber} · {reportTarget.year} {reportTarget.make} {reportTarget.model}</p>
               </div>
               <button onClick={() => setReportTarget(null)} className="p-1.5 rounded-lg hover:bg-slate-100 transition-all">
                 <X className="w-4 h-4 text-slate-400" />
@@ -768,10 +768,10 @@ export default function FleetStatusClient({
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Severity</label>
                 <select value={form.severity} onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as Severity }))} className={INPUT_LG}>
-                  <option value="critical">Critical — safety issue, do not dispatch</option>
-                  <option value="high">High — needs repair soon</option>
-                  <option value="medium">Medium — monitor closely</option>
-                  <option value="low">Low — minor, note for next service</option>
+                  <option value="critical">Critical · safety issue, do not dispatch</option>
+                  <option value="high">High · needs repair soon</option>
+                  <option value="medium">Medium · monitor closely</option>
+                  <option value="low">Low · minor, note for next service</option>
                 </select>
               </div>
 

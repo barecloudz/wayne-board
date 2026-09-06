@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { db } from "@/lib/db";
 import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/schema";
@@ -175,7 +175,7 @@ export async function updateMyAvatar(avatarUrl: string) {
     .where(and(eq(drivers.organizationId, session.organizationId), eq(drivers.driverId, session.driverId)));
 }
 
-// Soft-delete with termination reason — record is kept for records
+// Soft-delete with termination reason · record is kept for records
 export async function terminateDriver(
   id: number,
   type: "notice" | "fired",

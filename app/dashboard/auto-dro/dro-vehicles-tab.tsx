@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, CheckCircle, XCircle, Plus, X, Truck } from "lucide-react";
@@ -112,7 +112,7 @@ export default function DroVehiclesTab() {
       routeType: vehicle.route_type ?? vehicle.routeType ?? "REG",
       vehicleOrder: vehicleSet.length + 1,
     };
-    // Optimistic update — add placeholder
+    // Optimistic update · add placeholder
     const optimisticItem: VehicleSetItem = {
       vehicleSetId: -vehicle.vehId, // temp id
       vehicleId: vehicle.vehId,
@@ -295,7 +295,7 @@ export default function DroVehiclesTab() {
                         {v.vehicleName}
                       </p>
                       <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md mt-0.5 ${routeTypeBadge(v.route_type ?? v.routeType ?? "")}`}>
-                        {v.route_type ?? v.routeType ?? "—"}
+                        {v.route_type ?? v.routeType ?? "-"}
                       </span>
                     </div>
                     <button

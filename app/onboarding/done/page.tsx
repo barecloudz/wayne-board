@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/session";
+﻿import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { settings, vehicles } from "@/lib/schema";
@@ -25,7 +25,7 @@ export default async function OnboardingDone() {
     .from(vehicles)
     .where(eq(vehicles.organizationId, orgId));
 
-  // Try to read locations — table may not exist yet if locations agent hasn't run
+  // Try to read locations · table may not exist yet if locations agent hasn't run
   let locationNames: string[] = [];
   try {
     const locRows = await db.execute(
@@ -33,7 +33,7 @@ export default async function OnboardingDone() {
     );
     locationNames = (locRows.rows as { name: string }[]).map((r) => r.name);
   } catch {
-    // locations table doesn't exist yet — that's fine
+    // locations table doesn't exist yet · that's fine
   }
 
   return (

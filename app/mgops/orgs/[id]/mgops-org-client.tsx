@@ -93,8 +93,8 @@ export default function MgopsOrgClient({ org }: { org: Org }) {
             ["Slug", org.slug],
             ["Plan", org.plan],
             ["Status", org.subscriptionStatus],
-            ["Created", org.createdAt ? new Date(org.createdAt).toLocaleDateString() : "—"],
-            ["Trial ends", org.trialEndsAt ? new Date(org.trialEndsAt).toLocaleDateString() : "—"],
+            ["Created", org.createdAt ? new Date(org.createdAt).toLocaleDateString() : "-"],
+            ["Trial ends", org.trialEndsAt ? new Date(org.trialEndsAt).toLocaleDateString() : "-"],
           ].map(([k, v]) => (
             <div key={k} className="flex flex-col gap-0.5">
               <span style={{ color: "#94A3B8" }}>{k}</span>

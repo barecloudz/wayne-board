@@ -1,0 +1,129 @@
+{
+  "generated": "2026-07-18T23:38:19.990Z",
+  "daysBack": 30,
+  "daysWithData": 26,
+  "totalStops": 2057,
+  "unassigned": 316,
+  "areas": [
+    {
+      "id": 21627065,
+      "name": "0326-01-Apple Valley Rd",
+      "avgDeliveryTimeET": " 4:25 PM",
+      "avgDeliveryMinutes": 985.112426035503,
+      "stopCount": 169,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627066,
+      "name": "0326-02-S Mills Gap Rd",
+      "avgDeliveryTimeET": " 4:44 PM",
+      "avgDeliveryMinutes": 1004.3962264150944,
+      "stopCount": 53,
+      "sampleDays": 22
+    },
+    {
+      "id": 21627068,
+      "name": "0326-03-Old Clear Creek Rd",
+      "avgDeliveryTimeET": " 4:37 PM",
+      "avgDeliveryMinutes": 997.4,
+      "stopCount": 80,
+      "sampleDays": 24
+    },
+    {
+      "id": 21627069,
+      "name": "0326-04-Bearwallow Rd",
+      "avgDeliveryTimeET": " 3:57 PM",
+      "avgDeliveryMinutes": 957.1714285714286,
+      "stopCount": 105,
+      "sampleDays": 25
+    },
+    {
+      "id": 21627070,
+      "name": "0326-05-Old Cannon Dr",
+      "avgDeliveryTimeET": " 4:57 PM",
+      "avgDeliveryMinutes": 1017.4592592592593,
+      "stopCount": 135,
+      "sampleDays": 25
+    },
+    {
+      "id": 21627072,
+      "name": "0326-06-Stoney Creek Rd",
+      "avgDeliveryTimeET": " 4:21 PM",
+      "avgDeliveryMinutes": 981.2950819672132,
+      "stopCount": 122,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627073,
+      "name": "0326-07-Hudgins Rd",
+      "avgDeliveryTimeET": " 4:39 PM",
+      "avgDeliveryMinutes": 998.7793427230047,
+      "stopCount": 213,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627074,
+      "name": "0326-08-Legend Ct",
+      "avgDeliveryTimeET": " 6:19 PM",
+      "avgDeliveryMinutes": 1099.0260869565218,
+      "stopCount": 115,
+      "sampleDays": 23
+    },
+    {
+      "id": 21627076,
+      "name": "0326-09-Snow Ridge Dr",
+      "avgDeliveryTimeET": " 6:28 PM",
+      "avgDeliveryMinutes": 1108.1333333333334,
+      "stopCount": 90,
+      "sampleDays": 25
+    },
+    {
+      "id": 21627077,
+      "name": "0326-10-Bearwallow Subdivision Rd",
+      "avgDeliveryTimeET": " 6:13 PM",
+      "avgDeliveryMinutes": 1092.7025089605734,
+      "stopCount": 279,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627078,
+      "name": "0326-11-Montane Ln",
+      "avgDeliveryTimeET": " 5:59 PM",
+      "avgDeliveryMinutes": 1078.5031847133757,
+      "stopCount": 157,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627079,
+      "name": "0326-12-Upper Bat Cave Dr",
+      "avgDeliveryTimeET": " 5:16 PM",
+      "avgDeliveryMinutes": 1035.8275862068965,
+      "stopCount": 87,
+      "sampleDays": 22
+    },
+    {
+      "id": 21627080,
+      "name": "0326-13-Grand Oaks Dr",
+      "avgDeliveryTimeET": " 5:32 PM",
+      "avgDeliveryMinutes": 1052.437037037037,
+      "stopCount": 135,
+      "sampleDays": 26
+    },
+    {
+      "id": 21627081,
+      "name": "0326-14-Lake Lure S",
+      "avgDeliveryTimeET": null,
+      "avgDeliveryMinutes": null,
+      "stopCount": 0,
+      "sampleDays": 0
+    },
+    {
+      "id": 21627082,
+      "name": "0326-15-Lake Lure N",
+      "avgDeliveryTimeET": " 9:33 PM",
+      "avgDeliveryMinutes": 1293,
+      "stopCount": 1,
+      "sampleDays": 1
+    }
+  ]
+}

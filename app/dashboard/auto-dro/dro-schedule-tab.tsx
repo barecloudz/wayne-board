@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Loader2, CheckCircle, XCircle, Save, Calendar } from "lucide-react";
@@ -66,7 +66,7 @@ const DAY_COLORS: Record<DayKey, { border: string; header: string; badge: string
   sunday:    { border: "border-red-300",     header: "bg-red-500",     badge: "bg-red-100 text-red-700",        ring: "ring-red-400" },
 };
 
-// 0=Sun,1=Mon...6=Sat in JS getDay() — map to DayKey
+// 0=Sun,1=Mon...6=Sat in JS getDay() · map to DayKey
 const JS_DAY_TO_KEY: DayKey[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 async function droManage(action: string, payload: Record<string, unknown> = {}) {

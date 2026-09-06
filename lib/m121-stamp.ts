@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+﻿import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import path from "path";
 import fs from "fs";
 import { INSPECTION_COMPONENTS } from "./inspection-components";
@@ -37,7 +37,7 @@ export type StampVehicle = {
 //
 // Page size: 792 × 612 pts (landscape). Origin = bottom-left. Y increases up.
 //
-// Header field underlines (both pages) — text sits just above the underline:
+// Header field underlines (both pages) · text sits just above the underline:
 //   Employee value:   x=122,  y=530  (underline y=527)
 //   Station value:    x=366,  y=530
 //   Vehicle Unit:     x=567,  y=530

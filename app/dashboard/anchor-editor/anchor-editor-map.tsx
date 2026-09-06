@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   MapContainer, TileLayer, CircleMarker, Polygon, Polyline, Tooltip, useMapEvents,
@@ -118,7 +118,7 @@ export default function AnchorEditorMap({
 
         <ClickHandler drawMode={drawMode} onMapClick={onMapClick} />
 
-        {/* Existing DRO anchor areas — dashed outlines */}
+        {/* Existing DRO anchor areas · dashed outlines */}
         {droAreas.map(area => (
           area.rings[0] && (
             <Polygon

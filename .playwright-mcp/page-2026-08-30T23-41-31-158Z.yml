@@ -1,0 +1,122 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - img "MyGroundOps" [ref=e5]
+      - generic [ref=e6]:
+        - link "Sign In" [ref=e7] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Get Access" [ref=e8] [cursor=pointer]:
+          - /url: /signup
+    - generic [ref=e9]:
+      - generic [ref=e10]: Built by a FedEx Ground contractor, for FedEx Ground contractors
+      - heading "Run your operation like a pro." [level=1] [ref=e13]: Run your operationlike a pro.
+      - paragraph [ref=e14]: MyGroundOps is the all-in-one platform built for FedEx Ground ISPs. Fleet management, driver scores, compliance forms, route ops — everything in one place.
+      - generic [ref=e15]:
+        - link "Get Access" [ref=e16] [cursor=pointer]:
+          - /url: "#pricing"
+        - link "Watch Demo" [ref=e19] [cursor=pointer]:
+          - /url: "#demo"
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: 17+
+          - generic [ref=e23]: Trucks managed
+        - generic [ref=e24]:
+          - generic [ref=e25]: 100%
+          - generic [ref=e26]: MMR compliance
+        - generic [ref=e27]:
+          - generic [ref=e28]: 1 platform
+          - generic [ref=e29]: Everything you need
+    - generic [ref=e32]:
+      - paragraph [ref=e36]: Demo coming soon
+      - paragraph [ref=e37]: Full platform walkthrough video
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - paragraph [ref=e40]: Platform
+        - heading "Everything your station needs" [level=2] [ref=e41]
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - generic [ref=e51]:
+            - generic [ref=e52]: Fleet Inspection
+            - generic [ref=e53]: New
+          - paragraph [ref=e54]: Interactive 3D truck viewer. Click tires, open the hood, log fluid levels and battery status. Every inspection timestamped and saved per unit.
+        - generic [ref=e55]:
+          - generic [ref=e56]: MMR Generator
+          - paragraph [ref=e63]: Auto-generate MGBA-355 Monthly Maintenance Records for all units. Pre-fills from your maintenance tracker. One click, submission-ready PDF.
+        - generic [ref=e64]:
+          - generic [ref=e65]: Driver Scores
+          - paragraph [ref=e71]: Drivers log in to see their Ryde scores and delivery stats. You get the full management dashboard with trends and comparisons.
+        - generic [ref=e72]:
+          - generic [ref=e77]:
+            - generic [ref=e78]: Route Operations
+            - generic [ref=e79]: Beta
+          - paragraph [ref=e80]: Manage daily routes with SID-based stop sequencing, geographic balancing, and dispatch integration.
+        - generic [ref=e81]:
+          - generic [ref=e82]: Driver Management
+          - paragraph [ref=e91]: Full driver profiles, FedEx ID tracking, performance history, and leaderboards. Know your top performers at a glance.
+        - generic [ref=e92]:
+          - generic [ref=e93]: Compliance Tools
+          - paragraph [ref=e99]: Stay on top of FedEx compliance. MMR tracking, inspection records, and document management — always audit-ready.
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - paragraph [ref=e102]: Pricing
+        - heading "Simple, flat pricing" [level=2] [ref=e103]
+        - paragraph [ref=e104]: One price per station. No per-driver fees. No surprises.
+      - generic [ref=e105]:
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - paragraph [ref=e108]: Starter
+            - generic [ref=e109]:
+              - generic [ref=e110]: $99
+              - generic [ref=e111]: /mo
+            - paragraph [ref=e112]: Perfect for smaller stations getting started.
+          - list [ref=e113]:
+            - listitem [ref=e114]: Up to 10 vehicles
+            - listitem [ref=e117]: MMR Generator
+            - listitem [ref=e120]: Driver Portal
+            - listitem [ref=e123]: Basic reporting
+          - link "Get Started" [ref=e126] [cursor=pointer]:
+            - /url: /signup
+        - generic [ref=e127]:
+          - generic [ref=e128]: Most Popular
+          - generic [ref=e129]:
+            - paragraph [ref=e130]: Pro
+            - generic [ref=e131]:
+              - generic [ref=e132]: $199
+              - generic [ref=e133]: /mo
+            - paragraph [ref=e134]: Everything you need to run a full operation.
+          - list [ref=e135]:
+            - listitem [ref=e136]: Unlimited vehicles
+            - listitem [ref=e139]: 3D Fleet Inspector
+            - listitem [ref=e142]: Route Operations
+            - listitem [ref=e145]: Driver Leaderboards
+            - listitem [ref=e148]: Compliance Tools
+            - listitem [ref=e151]: Priority support
+          - link "Get Started" [ref=e154] [cursor=pointer]:
+            - /url: /signup
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - paragraph [ref=e157]: Enterprise
+            - generic [ref=e158]: Custom
+            - paragraph [ref=e160]: Multiple stations, custom integrations, white-glove setup.
+          - list [ref=e161]:
+            - listitem [ref=e162]: Multiple stations
+            - listitem [ref=e165]: Custom integrations
+            - listitem [ref=e168]: Dedicated support
+            - listitem [ref=e171]: Custom reporting
+            - listitem [ref=e174]: SLA guarantee
+          - button "Contact Us" [ref=e177]
+    - contentinfo [ref=e178]:
+      - generic [ref=e179]:
+        - img "MyGroundOps" [ref=e180]
+        - generic [ref=e181]: Nardoni Digital LLC dba MyGroundOps
+      - generic [ref=e182]:
+        - link "Driver Login" [ref=e183] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Sign In" [ref=e184] [cursor=pointer]:
+          - /url: /sign-in
+        - link "Terms" [ref=e185] [cursor=pointer]:
+          - /url: /terms
+        - link "Privacy" [ref=e186] [cursor=pointer]:
+          - /url: /privacy
+        - generic [ref=e187]: © 2026 Nardoni Digital LLC
+  - alert [ref=e188]

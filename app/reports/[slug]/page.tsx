@@ -82,7 +82,7 @@ export default async function ReportPage({
             day:   "numeric",
             year:  "numeric",
           })
-        : "—",
+        : "-",
     }));
   }
 

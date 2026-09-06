@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Auto GC sync engine.
  * Logs into groundcloud.io via the DRF session endpoint (fetch-based),
  * pulls route-day performance data, name-matches drivers to Wayne Board, upserts.
@@ -49,7 +49,7 @@ function apiGet(cookieHdr: string, path: string): Promise<any> {
 export async function syncGc(dateOverride?: string, orgIdOverride?: number): Promise<GcSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  // Resolve orgId — required for gc_route_days unique constraint (organization_id, gc_route_day_id)
+  // Resolve orgId · required for gc_route_days unique constraint (organization_id, gc_route_day_id)
   let orgId = orgIdOverride;
   if (!orgId) {
     const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
@@ -125,7 +125,7 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
       // Provide a richer error: include status and redirect location to aid debugging
       const redirectTo = loginRes.headers.get("location") ?? "(no redirect)";
       throw new Error(
-        `GroundCloud login failed — no session ID cookie (HTTP ${loginRes.status}, location: ${redirectTo}). ` +
+        `GroundCloud login failed · no session ID cookie (HTTP ${loginRes.status}, location: ${redirectTo}). ` +
         `Check that your GroundCloud credentials are correct.`
       );
     }

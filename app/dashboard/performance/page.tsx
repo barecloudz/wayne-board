@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import AppShell from "@/components/app-shell";
@@ -113,7 +113,7 @@ function SphBar({ value, max }: { value: number | null; max: number }) {
 }
 
 function SphBadge({ value }: { value: number | null }) {
-  if (!value) return <span className="text-[11px] text-slate-300">—</span>;
+  if (!value) return <span className="text-[11px] text-slate-300">-</span>;
   const tier = sphTier(value);
   return (
     <span className={`inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-md ${tier?.bg} ${tier?.color}`}>
@@ -221,7 +221,7 @@ function SphChart({ allDrivers }: { allDrivers: Driver[] }) {
     <div className="bg-white rounded-2xl border border-slate-200 p-5">
       <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
         <div>
-          <h2 className="text-[15px] font-bold text-slate-900">Stops Per Hour — Trend</h2>
+          <h2 className="text-[15px] font-bold text-slate-900">Stops Per Hour · Trend</h2>
           <p className="text-[11px] text-slate-400 mt-0.5">How many packages each driver delivers per hour of active route time</p>
         </div>
 
@@ -407,51 +407,51 @@ function DriverDetail({ driver, onClose }: { driver: Driver; onClose: () => void
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           {
-            label: "SPH — 30 Day",
+            label: "SPH · 30 Day",
             tip: "Average stops delivered per hour over the last 30 working days",
-            value: driver.avg_sph_30d?.toFixed(1) ?? "—",
+            value: driver.avg_sph_30d?.toFixed(1) ?? "-",
             sub: <SphBadge value={driver.avg_sph_30d} />,
           },
           {
-            label: "SPH — 90 Day",
-            tip: "Average stops delivered per hour over the last 90 working days — longer-term baseline",
-            value: driver.avg_sph_90d?.toFixed(1) ?? "—",
+            label: "SPH · 90 Day",
+            tip: "Average stops delivered per hour over the last 90 working days · longer-term baseline",
+            value: driver.avg_sph_90d?.toFixed(1) ?? "-",
             sub: <span className="text-[10px] text-slate-400">longer-term avg</span>,
           },
           {
             label: "Consistency",
             tip: "Standard deviation of daily SPH. Lower = more predictable. Above 4 = high variability.",
-            value: driver.stddev_sph_30d?.toFixed(2) ?? "—",
+            value: driver.stddev_sph_30d?.toFixed(2) ?? "-",
             sub: <span className="text-[10px] text-slate-400">{driver.stddev_sph_30d ? (driver.stddev_sph_30d < 2 ? "Very consistent" : driver.stddev_sph_30d < 4 ? "Moderate" : "Variable") : "no data"}</span>,
           },
           {
             label: "Days Worked",
             tip: "Number of days with a GroundCloud route record in the time period",
-            value: String(driver.days_worked_30d ?? "—"),
-            sub: <span className="text-[10px] text-slate-400">{driver.days_worked_90d ?? "—"} last 90 days</span>,
+            value: String(driver.days_worked_30d ?? "-"),
+            sub: <span className="text-[10px] text-slate-400">{driver.days_worked_90d ?? "-"} last 90 days</span>,
           },
           {
             label: "Best Day",
             tip: "Single highest SPH recorded",
-            value: driver.best_sph?.toFixed(1) ?? "—",
-            sub: <span className="text-[10px] text-slate-400">{driver.best_date ? formatDate(driver.best_date) : "—"}</span>,
+            value: driver.best_sph?.toFixed(1) ?? "-",
+            sub: <span className="text-[10px] text-slate-400">{driver.best_date ? formatDate(driver.best_date) : "-"}</span>,
           },
           {
             label: "Worst Day",
             tip: "Single lowest SPH recorded",
-            value: driver.worst_sph?.toFixed(1) ?? "—",
-            sub: <span className="text-[10px] text-slate-400">{driver.worst_date ? formatDate(driver.worst_date) : "—"}</span>,
+            value: driver.worst_sph?.toFixed(1) ?? "-",
+            sub: <span className="text-[10px] text-slate-400">{driver.worst_date ? formatDate(driver.worst_date) : "-"}</span>,
           },
           {
             label: "Avg Miles / Day",
             tip: "Average route distance driven per working day, last 30 days",
-            value: driver.avg_miles_30d?.toFixed(0) ?? "—",
+            value: driver.avg_miles_30d?.toFixed(0) ?? "-",
             sub: <span className="text-[10px] text-slate-400">miles, last 30 days</span>,
           },
           {
             label: "Ryde Score",
-            tip: "FedEx safety & service score from the Ryde platform. Scored weekly — higher is better.",
-            value: driver.ryde_score?.toFixed(2) ?? "—",
+            tip: "FedEx safety & service score from the Ryde platform. Scored weekly · higher is better.",
+            value: driver.ryde_score?.toFixed(2) ?? "-",
             sub: <span className="text-[10px] text-slate-400">{driver.ryde_week ? `week of ${driver.ryde_week}` : "no data"}</span>,
           },
         ].map(({ label, tip, value, sub }) => (
@@ -587,7 +587,7 @@ export default function PerformancePage() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Team Avg SPH</p>
                 <InfoTip text="Average stops per hour across all drivers with GroundCloud data, last 30 days" />
               </div>
-              <p className="text-[28px] font-black text-slate-900 leading-none">{teamAvgSph ? teamAvgSph.toFixed(1) : "—"}</p>
+              <p className="text-[28px] font-black text-slate-900 leading-none">{teamAvgSph ? teamAvgSph.toFixed(1) : "-"}</p>
               <div className="mt-1.5"><SphBadge value={teamAvgSph} /></div>
             </div>
 
@@ -611,7 +611,7 @@ export default function PerformancePage() {
                   <p className="text-[11px] text-slate-400 mt-1.5">{withData[0].avg_sph_30d?.toFixed(1)} SPH avg · 30 days</p>
                 </>
               ) : (
-                <p className="text-[13px] text-slate-300 mt-1">—</p>
+                <p className="text-[13px] text-slate-300 mt-1">-</p>
               )}
             </div>
           </div>
@@ -653,7 +653,7 @@ export default function PerformancePage() {
                         <span className="text-[10px] text-slate-400">Ryde</span>
                       </div>
                     ) : <span />}
-                    <span className="text-[10px] text-slate-400">{d.days_worked_30d ?? "—"} days worked</span>
+                    <span className="text-[10px] text-slate-400">{d.days_worked_30d ?? "-"} days worked</span>
                   </div>
                 </button>
               );
@@ -723,7 +723,7 @@ export default function PerformancePage() {
                     </div>
 
                     <div className="flex items-center">
-                      <span className="text-[12px] text-slate-500">{d.avg_sph_90d?.toFixed(1) ?? "—"}</span>
+                      <span className="text-[12px] text-slate-500">{d.avg_sph_90d?.toFixed(1) ?? "-"}</span>
                     </div>
 
                     <div className="flex items-center">
@@ -733,12 +733,12 @@ export default function PerformancePage() {
                           <span className="text-[12px] font-semibold text-slate-700">{d.ryde_score.toFixed(2)}</span>
                         </div>
                       ) : (
-                        <span className="text-[12px] text-slate-300">—</span>
+                        <span className="text-[12px] text-slate-300">-</span>
                       )}
                     </div>
 
                     <div className="flex items-center">
-                      <span className="text-[12px] font-medium text-slate-600">{d.days_worked_30d ?? "—"}</span>
+                      <span className="text-[12px] font-medium text-slate-600">{d.days_worked_30d ?? "-"}</span>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -771,7 +771,7 @@ export default function PerformancePage() {
                     <div key={d.driver_id} className="grid grid-cols-[36px_1fr_110px_90px_70px_72px_80px] gap-2 px-4 py-2.5 opacity-40">
                       <div />
                       <p className="text-[12px] font-medium text-slate-600 truncate col-span-1 flex items-center">{d.name}</p>
-                      <p className="text-[11px] text-slate-400 italic col-span-5 flex items-center">No data — unmatched in GroundCloud</p>
+                      <p className="text-[11px] text-slate-400 italic col-span-5 flex items-center">No data · unmatched in GroundCloud</p>
                     </div>
                   ))}
                 </>
@@ -788,7 +788,7 @@ export default function PerformancePage() {
           <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Metric Guide</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
             {[
-              { term: "SPH", def: "Stops Per Hour — packages delivered per hour of active driving. The core delivery efficiency metric." },
+              { term: "SPH", def: "Stops Per Hour · packages delivered per hour of active driving. The core delivery efficiency metric." },
               { term: "Ryde Score", def: "FedEx safety & service rating from the Ryde platform. Scored weekly, higher is better." },
               { term: "Trend", def: "Your 14-day SPH average compared to the prior 14-day window. Green = improving, red = declining." },
               { term: "Consistency", def: "Standard deviation of daily SPH. Lower = steadier. High variability means good and bad days vary widely." },

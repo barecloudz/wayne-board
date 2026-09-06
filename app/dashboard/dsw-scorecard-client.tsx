@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 function driverName(raw: string): string {
-  if (!raw) return "—";
+  if (!raw) return "-";
   const [last, ...rest] = raw.split(",");
   const first = rest.join(" ").trim().split(" ")[0];
   if (!first) return last.trim();
@@ -43,7 +43,7 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
             </h2>
             <p className="text-[12px] text-white/80 mt-1">
               {teamPassing
-                ? "Keep it up — every driver needs to deliver everything on their truck."
+                ? "Keep it up · every driver needs to deliver everything on their truck."
                 : "We are below 99% ILS. Every undelivered package hurts the whole team."}
             </p>
           </div>
@@ -51,7 +51,7 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
             <div className="text-center">
               <p className="text-[10px] font-bold text-white/60 uppercase tracking-wide">Team ILS</p>
               <p className="text-[34px] font-extrabold text-white leading-none">
-                {teamIlsPct != null ? teamIlsPct.toFixed(1) + "%" : "—"}
+                {teamIlsPct != null ? teamIlsPct.toFixed(1) + "%" : "-"}
               </p>
               <p className="text-[10px] font-semibold text-white/70">Need ≥ 99.0%</p>
             </div>
@@ -90,7 +90,7 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
         <span className="text-lg shrink-0">⚠️</span>
         <p className="text-[12px] text-slate-300 leading-relaxed">
           <span className="text-white font-bold">ILS impacts come from status codes 2, 3, 12, and 27.</span>{" "}
-          These mean a package was not delivered. Deliver everything on your truck — zero impacts is the standard.
+          These mean a package was not delivered. Deliver everything on your truck · zero impacts is the standard.
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
               }`}>
                 <div className="min-w-0">
                   <p className="text-[15px] font-extrabold text-white leading-tight truncate">{name}</p>
-                  <p className="text-[10px] text-white/70">{r.waName || "—"}</p>
+                  <p className="text-[10px] text-white/70">{r.waName || "-"}</p>
                 </div>
                 <div className="text-right shrink-0 ml-2">
                   <p className="text-[24px] font-extrabold text-white leading-none">
@@ -130,10 +130,10 @@ export default function DswScorecardClient({ drivers, latestDate }: { drivers: a
               <div className="py-3 px-3 text-center">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">ILS %</p>
                 <p className={`text-[20px] font-extrabold leading-none ${ilsFail ? "text-red-500" : "text-emerald-600"}`}>
-                  {r.ilsPct != null ? r.ilsPct.toFixed(1) : "—"}
+                  {r.ilsPct != null ? r.ilsPct.toFixed(1) : "-"}
                 </p>
                 <p className={`text-[10px] font-bold mt-0.5 ${ilsFail ? "text-red-400" : "text-emerald-500"}`}>
-                  {r.ilsPct != null ? (ilsFail ? "FAIL" : "PASS") : "—"}
+                  {r.ilsPct != null ? (ilsFail ? "FAIL" : "PASS") : "-"}
                 </p>
               </div>
             </div>

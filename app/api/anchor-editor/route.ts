@@ -1,7 +1,7 @@
-/**
- * GET  /api/anchor-editor?wan=0326        — anchor areas + stops for a work area
- * POST /api/anchor-editor                 — create new anchor area in DRO
- * DELETE /api/anchor-editor?id=123        — delete anchor area from DRO
+﻿/**
+ * GET  /api/anchor-editor?wan=0326        · anchor areas + stops for a work area
+ * POST /api/anchor-editor                 · create new anchor area in DRO
+ * DELETE /api/anchor-editor?id=123        · delete anchor area from DRO
  */
 
 export const dynamic = "force-dynamic";
@@ -119,7 +119,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (check.status === 409) {
-      // Assigned to route plans — force delete
+      // Assigned to route plans · force delete
       const force = await fetch(`${DRO_BASE}/api/api/anchor-areas/Deleteanchor-areasvalidated?forceDelete=true`, {
         method: "DELETE", headers, body,
       });

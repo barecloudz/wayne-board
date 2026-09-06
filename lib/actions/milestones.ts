@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { db } from "@/lib/db";
 import { milestoneRewards, rydeReviews, drivers, driverMilestoneClaims } from "@/lib/schema";
@@ -59,7 +59,7 @@ export async function getDriverClaims(driverId: string) {
 }
 
 export async function claimMilestone(driverId: string, milestoneId: number) {
-  // Idempotent — only insert if not already claimed
+  // Idempotent · only insert if not already claimed
   const existing = await db
     .select({ id: driverMilestoneClaims.id })
     .from(driverMilestoneClaims)

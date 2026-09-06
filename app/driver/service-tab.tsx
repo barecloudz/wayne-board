@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 export type DswRow = {
   id: number;
@@ -56,7 +56,7 @@ const tierStyles = {
   green:  { row: "bg-emerald-50/60 border-l-2 border-emerald-400", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-400", label: "CLEAN" },
   yellow: { row: "bg-amber-50/60 border-l-2 border-amber-400",    badge: "bg-amber-100 text-amber-700",    dot: "bg-amber-400",   label: "WATCH" },
   red:    { row: "bg-red-50/60 border-l-2 border-red-400",        badge: "bg-red-100 text-red-600",        dot: "bg-red-500",     label: "HIGH"  },
-  none:   { row: "bg-slate-50 border-l-2 border-slate-200",       badge: "bg-slate-100 text-slate-400",    dot: "bg-slate-300",   label: "—"     },
+  none:   { row: "bg-slate-50 border-l-2 border-slate-200",       badge: "bg-slate-100 text-slate-400",    dot: "bg-slate-300",   label: "-"     },
 };
 
 function svcBadge(rate: number | null) {
@@ -157,7 +157,7 @@ export default function ServiceTab({
   const myTier     = myRow ? ilsTier(myImpacts, true) : "none";
   const svcFail    = mySvcRate != null && mySvcRate < 99.0;
 
-  // Week calendar — team pass/fail per day
+  // Week calendar · team pass/fail per day
   const weekSlots = thisWeekSlots();
   const today = new Date().toISOString().slice(0, 10);
   const historyByDate = teamDailyPass(myHistory);
@@ -168,9 +168,9 @@ export default function ServiceTab({
   const earned    = ilsStreak >= STREAK_GOAL;
 
   const statusConfig = {
-    green:  { headline: "Looking Good!", sub: "Clean ILS — keep everything off the truck delivered.", emoji: "✅" },
-    yellow: { headline: "Watch Your ILS", sub: `${myImpacts} ILS impact${myImpacts !== 1 ? "s" : ""} — keep it under 4.`, emoji: "⚠️" },
-    red:    { headline: "Needs Attention", sub: `${myImpacts} ILS impacts — talk to your manager.`, emoji: "🔴" },
+    green:  { headline: "Looking Good!", sub: "Clean ILS · keep everything off the truck delivered.", emoji: "✅" },
+    yellow: { headline: "Watch Your ILS", sub: `${myImpacts} ILS impact${myImpacts !== 1 ? "s" : ""} · keep it under 4.`, emoji: "⚠️" },
+    red:    { headline: "Needs Attention", sub: `${myImpacts} ILS impacts · talk to your manager.`, emoji: "🔴" },
     none:   { headline: "No Data Found", sub: "Your route may not have synced yet.", emoji: "❓" },
   }[myTier];
 
@@ -203,8 +203,8 @@ export default function ServiceTab({
                 {earned
                   ? "The whole team passed service for 2 weeks. Show this to your manager!"
                   : daysLeft === 1
-                  ? "1 more team clean day — everyone gets Chick-fil-A!"
-                  : `${daysLeft} more team clean days — one bad day resets everyone`}
+                  ? "1 more team clean day · everyone gets Chick-fil-A!"
+                  : `${daysLeft} more team clean days · one bad day resets everyone`}
               </p>
             </div>
             <span className="text-4xl shrink-0 ml-3">{CFA_EMOJI}</span>
@@ -277,7 +277,7 @@ export default function ServiceTab({
               : "linear-gradient(135deg, #64748b, #94a3b8)",
           }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Today — {dateLabel}</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-1">Today · {dateLabel}</p>
           <div className="flex items-center gap-3">
             <span className="text-2xl leading-none">{statusConfig.emoji}</span>
             <div>
@@ -302,7 +302,7 @@ export default function ServiceTab({
                     </p>
                   </>
                 ) : (
-                  <p className="text-[22px] font-extrabold text-slate-300">—</p>
+                  <p className="text-[22px] font-extrabold text-slate-300">-</p>
                 )}
               </div>
               <div className="px-4 py-4 text-center">
@@ -316,7 +316,7 @@ export default function ServiceTab({
               </div>
               <div className="px-4 py-4 text-center">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stops Del&apos;d</p>
-                <p className="text-[24px] font-extrabold text-slate-800 leading-none">{myRow.actDelStps ?? "—"}</p>
+                <p className="text-[24px] font-extrabold text-slate-800 leading-none">{myRow.actDelStps ?? "-"}</p>
                 {myRow.delStpsPlanned
                   ? <p className="text-[11px] text-slate-400 mt-1">of {myRow.delStpsPlanned}</p>
                   : <p className="text-[11px] text-slate-400 mt-1">&nbsp;</p>}
@@ -328,12 +328,12 @@ export default function ServiceTab({
                 <div className="flex items-center gap-6 text-center">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loaded</p>
-                    <p className="text-[16px] font-extrabold text-slate-700">{myRow.vscanPkgs ?? "—"}</p>
+                    <p className="text-[16px] font-extrabold text-slate-700">{myRow.vscanPkgs ?? "-"}</p>
                   </div>
                   <span className="text-slate-300 text-lg">→</span>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivered</p>
-                    <p className="text-[16px] font-extrabold text-slate-700">{myRow.actDelPkgs ?? "—"}</p>
+                    <p className="text-[16px] font-extrabold text-slate-700">{myRow.actDelPkgs ?? "-"}</p>
                   </div>
                   {(myRow.nonDelvdStps ?? 0) > 0 && (
                     <>
@@ -347,7 +347,7 @@ export default function ServiceTab({
                 </div>
                 {svcFail && (
                   <span className="text-[11px] font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200">
-                    Below 99% — Fail
+                    Below 99% · Fail
                   </span>
                 )}
               </div>
@@ -396,7 +396,7 @@ export default function ServiceTab({
                   <p className={`text-[13px] font-bold truncate ${isMe ? "text-purple-800" : "text-slate-700"}`}>
                     {initials}{isMe ? " (You)" : ""}
                   </p>
-                  <p className="text-[11px] text-slate-400 truncate">{row.waName || "—"}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{row.waName || "-"}</p>
                 </div>
                 <div className="shrink-0">{svcBadge(svc)}</div>
                 <div className="shrink-0 text-right min-w-[52px]">

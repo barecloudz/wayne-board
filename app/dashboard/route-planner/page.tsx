@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import RoutePlannerClient from "./route-planner-client";
 
@@ -29,7 +29,7 @@ export default async function RoutePlannerPage() {
       ORDER BY is_default DESC, name
     `) as Template[];
   } catch {
-    // Table may not exist yet — show empty state
+    // Table may not exist yet · show empty state
   }
 
   return (

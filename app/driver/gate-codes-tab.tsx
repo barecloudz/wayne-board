@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { ThumbsDown, Plus, ChevronDown, ChevronUp, Trash2, Loader2, X, MapPin, AlertTriangle } from "lucide-react";
@@ -434,7 +434,7 @@ export default function GateCodesTab({
                 </>
               ) : (
                 <>
-                  <p className="text-[13px]" style={{ color: "#475569" }}>Got it — we&apos;ll mark this code as reported.</p>
+                  <p className="text-[13px]" style={{ color: "#475569" }}>Got it · we&apos;ll mark this code as reported.</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setReportTarget(null)}
