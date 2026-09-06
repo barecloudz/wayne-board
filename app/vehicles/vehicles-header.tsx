@@ -35,8 +35,13 @@ export default function VehiclesHeader() {
       const data = await res.json();
       const r = data?.Results?.[0];
       if (r?.Make) setMake(r.Make.charAt(0).toUpperCase() + r.Make.slice(1).toLowerCase());
-      if (r?.Model) setModel(r.Model);
       if (r?.ModelYear) setYear(r.ModelYear);
+      const genericModels = ["commercial chassis", "incomplete vehicle", "multipurpose passenger vehicle (mpv)"];
+      const rawModel = r?.Model ?? "";
+      const series = r?.Series ?? "";
+      const modelIsGeneric = genericModels.includes(rawModel.toLowerCase());
+      const resolved = modelIsGeneric && series ? series : rawModel && series && !rawModel.toLowerCase().includes(series.toLowerCase()) ? `${rawModel} ${series}` : rawModel;
+      if (resolved) setModel(resolved);
       if (r?.Make) setVinDecoded(true);
     } catch { /* silent — user can fill manually */ }
     finally { setVinLoading(false); }
