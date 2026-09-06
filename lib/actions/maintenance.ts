@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { maintenanceRequests } from "@/lib/schema";
+import { maintenanceRequests, vehicleMaintenanceRecords } from "@/lib/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
@@ -58,5 +58,53 @@ export async function updateRequestStatus(id: number, status: RequestStatus, adm
 export async function deleteRequest(id: number) {
   const orgId = await requireOrg();
   await db.delete(maintenanceRequests).where(and(eq(maintenanceRequests.id, id), eq(maintenanceRequests.organizationId, orgId)));
+  revalidatePath("/dashboard/maintenance");
+}
+
+// ── Vehicle Maintenance Records (admin-logged completed work) ─────────────────
+
+export type MaintenanceRecordType = "oil_change" | "tire_rotation" | "mmr" | "fed_inspection" | "registration" | "repair" | "other";
+
+export async function createMaintenanceRecord(data: {
+  vehicleId?: number;
+  truckNumber: string;
+  serviceDate: string;
+  type: MaintenanceRecordType;
+  description: string;
+  mileage?: number;
+  cost?: number;
+  vendor?: string;
+  createdBy: string;
+}) {
+  const orgId = await requireOrg();
+  await db.insert(vehicleMaintenanceRecords).values({
+    organizationId: orgId,
+    vehicleId: data.vehicleId ?? null,
+    truckNumber: data.truckNumber.trim(),
+    serviceDate: data.serviceDate,
+    type: data.type,
+    description: data.description.trim(),
+    mileage: data.mileage ?? null,
+    cost: data.cost ?? null,
+    vendor: data.vendor?.trim() || null,
+    createdBy: data.createdBy,
+  });
+  revalidatePath("/dashboard/maintenance");
+}
+
+export async function getMaintenanceRecords() {
+  const orgId = await requireOrg();
+  return db
+    .select()
+    .from(vehicleMaintenanceRecords)
+    .where(eq(vehicleMaintenanceRecords.organizationId, orgId))
+    .orderBy(desc(vehicleMaintenanceRecords.serviceDate), desc(vehicleMaintenanceRecords.createdAt));
+}
+
+export async function deleteMaintenanceRecord(id: number) {
+  const orgId = await requireOrg();
+  await db.delete(vehicleMaintenanceRecords).where(
+    and(eq(vehicleMaintenanceRecords.id, id), eq(vehicleMaintenanceRecords.organizationId, orgId))
+  );
   revalidatePath("/dashboard/maintenance");
 }

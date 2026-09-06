@@ -455,3 +455,19 @@ export const gcRouteDays = pgTable("gc_route_days", {
 }, (t) => ({
   orgGcDayUnique: uniqueIndex("gc_route_days_org_gc_day_unique").on(t.organizationId, t.gcRouteDayId),
 }));
+
+// ── Vehicle Maintenance Records (admin-logged completed work) ─────────────────
+export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  vehicleId:      integer("vehicle_id").references(() => vehicles.id, { onDelete: "set null" }),
+  truckNumber:    text("truck_number").notNull(),
+  serviceDate:    date("service_date").notNull(),
+  type:           text("type").notNull(),                  // "oil_change"|"tire_rotation"|"mmr"|"fed_inspection"|"registration"|"repair"|"other"
+  description:    text("description").notNull().default(""),
+  mileage:        integer("mileage"),
+  cost:           real("cost"),
+  vendor:         text("vendor"),
+  createdBy:      text("created_by").notNull(),
+  createdAt:      timestamp("created_at").defaultNow(),
+});

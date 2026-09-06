@@ -79,8 +79,16 @@ export default function AutoGcClient() {
   const [syncing,     setSyncing]     = useState(false);
   const [syncResult,  setSyncResult]  = useState<{ ok: boolean; msg: string } | null>(null);
 
+  const [backfillDate,     setBackfillDate]     = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 90);
+    return d.toISOString().slice(0, 10);
+  });
+  const [backfilling,      setBackfilling]      = useState(false);
+  const [backfillProgress, setBackfillProgress] = useState<{ current: number; total: number; date: string } | null>(null);
+  const [backfillDone,     setBackfillDone]     = useState<{ totalRoutes: number; totalMatched: number; errors: number; days: number } | null>(null);
+
   const [autoEnabled, setAutoEnabled] = useState(false);
-  const [autoTime,    setAutoTime]    = useState("07:00");
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
 
@@ -90,7 +98,6 @@ export default function AutoGcClient() {
       const d: Status = await res.json();
       setData(d);
       setAutoEnabled(d.autoEnabled);
-      setAutoTime(d.autoTime);
     }
     setLoading(false);
   }
@@ -134,12 +141,48 @@ export default function AutoGcClient() {
     }
   }
 
+  async function handleBackfill() {
+    setBackfilling(true);
+    setBackfillProgress(null);
+    setBackfillDone(null);
+
+    const res = await fetch("/api/auto-gc/backfill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startDate: backfillDate }),
+    });
+
+    if (!res.ok || !res.body) {
+      setBackfilling(false);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const msg = JSON.parse(line);
+          if (msg.type === "progress") setBackfillProgress({ current: msg.current, total: msg.total, date: msg.date });
+          if (msg.type === "done") { setBackfillDone(msg); setBackfillProgress(null); }
+        } catch {}
+      }
+    }
+    setBackfilling(false);
+    await loadStatus();
+  }
+
   async function saveSchedule() {
     setSchedSaving(true);
-    await Promise.all([
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "gc_auto_sync_enabled", value: String(autoEnabled) }) }),
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "gc_auto_sync_time", value: autoTime }) }),
-    ]);
+    await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "gc_auto_sync_enabled", value: String(autoEnabled) }) });
     setSchedSaving(false);
     setSchedSaved(true);
     setTimeout(() => setSchedSaved(false), 3000);
@@ -378,13 +421,13 @@ export default function AutoGcClient() {
               <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync Schedule</h2>
             </div>
             <p className="text-[12px] text-slate-400 mb-5">
-              Automatically pulls yesterday&apos;s performance data each morning after dispatch.
+              Automatically pulls yesterday&apos;s SPH data each morning. No login required — runs server-side.
             </p>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between py-3 border-b border-slate-100">
                 <div>
                   <p className="text-[13px] font-semibold text-slate-800">Auto-Sync</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Run sync automatically each morning</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Enabled runs every day at 2:00 AM Eastern</p>
                 </div>
                 <button
                   onClick={() => setAutoEnabled(v => !v)}
@@ -399,15 +442,8 @@ export default function AutoGcClient() {
                   />
                 </button>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[13px] text-slate-600 font-medium">Run at</span>
-                <input
-                  type="time"
-                  value={autoTime}
-                  onChange={e => setAutoTime(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800
-                    outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
-                />
+              <div className="px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[12px] text-slate-500">
+                Runs daily at <span className="font-semibold text-slate-700">6:00 AM UTC (2:00 AM Eastern)</span> — skips Sundays automatically.
               </div>
               <button
                 onClick={saveSchedule}
@@ -419,13 +455,81 @@ export default function AutoGcClient() {
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
                   : schedSaved
                   ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
-                  : "Save Schedule"
+                  : "Save"
                 }
               </button>
             </div>
           </div>
 
         </div>
+
+        {/* ── Backfill ── */}
+        <div className={CARD}>
+          <div className="flex items-center gap-2 mb-1">
+            <RefreshCw className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[15px] font-extrabold text-slate-900">Backfill Historical Data</h2>
+          </div>
+          <p className="text-[12px] text-slate-400 mb-5">
+            Pull stops-per-hour history from a past date up to yesterday. Safe to re-run — duplicates are overwritten.
+          </p>
+
+          <div className="flex items-end gap-3 mb-4">
+            <div className="flex flex-col gap-1.5 flex-1">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Start Date</label>
+              <input
+                type="date"
+                value={backfillDate}
+                onChange={e => setBackfillDate(e.target.value)}
+                disabled={backfilling}
+                className={INPUT}
+              />
+            </div>
+            <button
+              onClick={handleBackfill}
+              disabled={backfilling}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold
+                bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {backfilling
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Running…</>
+                : <><RefreshCw className="w-4 h-4" /> Start Backfill</>
+              }
+            </button>
+          </div>
+
+          {/* Live progress */}
+          {backfillProgress && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-slate-500">
+                  Pulling <span className="font-semibold text-slate-700">{backfillProgress.date}</span>
+                </span>
+                <span className="text-slate-400">{backfillProgress.current} / {backfillProgress.total}</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-slate-900 rounded-full transition-all duration-300"
+                  style={{ width: `${(backfillProgress.current / backfillProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Done summary */}
+          {backfillDone && (
+            <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-[13px]">
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-emerald-800">Backfill complete</p>
+                <p className="text-emerald-700 mt-0.5">
+                  {backfillDone.days} days pulled · {backfillDone.totalRoutes} routes · {backfillDone.totalMatched} matched to drivers
+                  {backfillDone.errors > 0 && <span className="text-amber-600"> · {backfillDone.errors} days had errors</span>}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
     </main>
   );
