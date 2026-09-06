@@ -43,3 +43,4 @@ scripts/groundswell-deep.json
 scripts/groundswell-api-calls.json
 .neon
 .claude/
+.playwright-mcp/
