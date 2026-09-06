@@ -14,6 +14,7 @@ type Vehicle = {
   mileage: number;
   vin: string;
   type: string;
+  ownership: string;
   active: boolean;
 };
 
@@ -82,6 +83,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
           mileage: mileageNum,
           vin: vin.trim().toUpperCase(),
           type,
+          ownership: vehicle.ownership,
           active,
         });
         setOpen(false);
