@@ -36,6 +36,8 @@ export async function createVehicle(data: {
       ownership:  data.ownership ?? "owned",
       active:     true,
     }).returning({ id: vehicles.id });
+    revalidatePath("/vehicles");
+    revalidatePath("/fleet");
     return vehicle;
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
