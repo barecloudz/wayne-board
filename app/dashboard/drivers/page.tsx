@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition, useRef, useCallback } from "react";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Truck, Clock, ChevronRight,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Truck, Clock, ChevronRight, MapPin,
 } from "lucide-react";
 import {
   getDrivers, createDriver, setDriverActive, setDriverRole, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
@@ -89,6 +89,10 @@ export default function DriversPage() {
   const [usernameTarget, setUsernameTarget] = useState<{ id: number; name: string; current: string | null } | null>(null);
   const [newUsername, setNewUsername] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [locationTarget, setLocationTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
+  const [availableLocations, setAvailableLocations] = useState<{ id: number; name: string }[]>([]);
+  const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   async function refresh() {
     const [driverData, vehicleData] = await Promise.all([getDrivers(), getVehicles()]);
@@ -240,6 +244,41 @@ export default function DriversPage() {
       setTerminationNote("");
       setPurgeRydeData(true);
       await refresh();
+    });
+  }
+
+  async function openLocationModal(driver: Driver) {
+    setLocationTarget({ id: driver.id, driverId: driver.driverId, name: driver.name });
+    setSelectedLocationIds([]);
+    setLocationsLoading(true);
+    setMenuOpen(null);
+    setMenuPos(null);
+    const [locsRes, assignedRes] = await Promise.all([
+      fetch("/api/locations"),
+      fetch(`/api/user-locations?userId=${encodeURIComponent(driver.driverId)}`),
+    ]);
+    const locs = await locsRes.json();
+    const assigned = await assignedRes.json();
+    setAvailableLocations(locs);
+    setSelectedLocationIds(Array.isArray(assigned) ? assigned : []);
+    setLocationsLoading(false);
+  }
+
+  function toggleLocation(id: number) {
+    setSelectedLocationIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  function handleSaveLocations() {
+    if (!locationTarget) return;
+    startTransition(async () => {
+      await fetch("/api/user-locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: locationTarget.driverId, locationIds: selectedLocationIds }),
+      });
+      setLocationTarget(null);
     });
   }
 
@@ -543,6 +582,15 @@ export default function DriversPage() {
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />Change Username
                 </button>
+                {driver.role === "bc" && (
+                  <button
+                    onClick={() => openLocationModal(driver)}
+                    className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                      hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-amber-500" />Manage Locations
+                  </button>
+                )}
                 <button
                   onClick={() => openDeleteModal({ id: driver.id, driverId: driver.driverId, name: driver.name })}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-red-500
@@ -915,6 +963,72 @@ export default function DriversPage() {
           </div>
         </div>
       )}
+      {/* Location assignment modal */}
+      {locationTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Manage Locations</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Assign locations for <span className="font-semibold text-slate-600">{locationTarget.name}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-3">Locations</p>
+              {locationsLoading ? (
+                <div className="flex items-center gap-2 text-slate-400 py-4">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-[13px]">Loading...</span>
+                </div>
+              ) : availableLocations.length === 0 ? (
+                <p className="text-[12px] text-slate-400 italic">
+                  No locations set up yet — add them in Settings
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {availableLocations.map((loc) => (
+                    <label
+                      key={loc.id}
+                      className="flex items-center gap-3 cursor-pointer select-none px-1 py-1 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedLocationIds.includes(loc.id)}
+                        onChange={() => toggleLocation(loc.id)}
+                        className="w-4 h-4 accent-amber-500 cursor-pointer"
+                      />
+                      <span className="text-[13px] text-slate-700 font-medium">{loc.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-slate-400 mt-4 italic">
+                BCs only see data for their assigned locations
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setLocationTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveLocations}
+                disabled={isPending || locationsLoading}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AppShell>
   );
 }

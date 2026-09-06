@@ -9,6 +9,7 @@ import {
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
   Zap, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
+  Building2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -117,9 +118,51 @@ export default function Sidebar() {
   const [accountOpen,  setAccountOpen]  = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
 
+  type Location = { id: number; name: string; terminalId: string | null };
+  const [locations,       setLocations]       = useState<Location[]>([]);
+  const [activeLocationId, setActiveLocationId] = useState<number | null>(null);
+  const [locationOpen,    setLocationOpen]    = useState(false);
+  const locationRef = useRef<HTMLDivElement>(null);
+
   const ROLE_LABELS: Record<string, string> = {
     owner: "Owner", co_owner: "Co-Owner", developer: "Developer", bc: "Business Contact", driver: "Driver",
   };
+
+  useEffect(() => {
+    // Initialize active location from localStorage
+    const stored = localStorage.getItem("mgops-location-id");
+    if (stored !== null && stored !== "null") {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed)) setActiveLocationId(parsed);
+    }
+
+    fetch("/api/locations")
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Location[]) => setLocations(data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function handleLocationClickOutside(e: MouseEvent) {
+      if (locationRef.current && !locationRef.current.contains(e.target as Node)) {
+        setLocationOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleLocationClickOutside);
+    return () => document.removeEventListener("mousedown", handleLocationClickOutside);
+  }, []);
+
+  async function handleLocationSelect(id: number | null) {
+    setActiveLocationId(id);
+    setLocationOpen(false);
+    localStorage.setItem("mgops-location-id", id === null ? "null" : String(id));
+    await fetch("/api/location/set", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locationId: id }),
+    });
+    router.refresh();
+  }
 
   useEffect(() => {
     fetch("/api/me")
@@ -189,6 +232,53 @@ export default function Sidebar() {
           <span className="text-[11px] text-slate-400 mt-0.5">Admin Dashboard</span>
         </div>
       </div>
+
+      {/* Location Switcher — only shown when org has multiple locations */}
+      {locations.length > 1 && (
+        <div ref={locationRef} className="relative px-3 pb-2 pt-2 border-b border-slate-100">
+          <button
+            onClick={() => setLocationOpen(v => !v)}
+            className="flex items-center gap-2 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <Building2 className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <span className="flex-1 text-left truncate">
+              {activeLocationId === null
+                ? "All Locations"
+                : (locations.find(l => l.id === activeLocationId)?.name ?? "All Locations")}
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform ${locationOpen ? "rotate-180" : ""}`} />
+          </button>
+          {locationOpen && (
+            <div className="absolute top-full left-3 right-3 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+              <button
+                onClick={() => handleLocationSelect(null)}
+                className={`flex items-center gap-2 w-full px-3 py-2 text-[12px] font-semibold text-left transition-colors ${
+                  activeLocationId === null
+                    ? "bg-slate-900 text-white rounded-lg mx-1 my-1 w-[calc(100%-8px)]"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
+                All Locations
+              </button>
+              {locations.map(loc => (
+                <button
+                  key={loc.id}
+                  onClick={() => handleLocationSelect(loc.id)}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-[12px] font-semibold text-left transition-colors ${
+                    activeLocationId === loc.id
+                      ? "bg-slate-900 text-white rounded-lg mx-1 my-1 w-[calc(100%-8px)]"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5 flex-shrink-0 opacity-60" />
+                  {loc.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex flex-col gap-0.5 p-3 flex-1 pt-4 overflow-y-auto">
