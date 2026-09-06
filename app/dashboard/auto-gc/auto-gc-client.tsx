@@ -69,6 +69,9 @@ const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13p
 export default function AutoGcClient() {
   const [data,        setData]        = useState<Status | null>(null);
   const [loading,     setLoading]     = useState(true);
+  const [wbDrivers,   setWbDrivers]   = useState<{ driver_id: string; name: string }[]>([]);
+  const [matching,    setMatching]    = useState<Record<string, boolean>>({});
+  const [matchSelect, setMatchSelect] = useState<Record<string, string>>({});
 
   const [username,    setUsername]    = useState("");
   const [password,    setPassword]    = useState("");
@@ -113,6 +116,9 @@ export default function AutoGcClient() {
   useEffect(() => {
     loadStatus();
     loadCreds();
+    fetch("/api/drivers/active").then(r => r.ok ? r.json() : []).then(d => {
+      if (Array.isArray(d)) setWbDrivers(d);
+    }).catch(() => {});
   }, []);
 
   async function saveCreds() {
@@ -139,6 +145,19 @@ export default function AutoGcClient() {
     } else {
       setSyncResult({ ok: false, msg: r.error ?? "Sync failed" });
     }
+  }
+
+  async function handleMatch(gcName: string) {
+    const driverId = matchSelect[gcName];
+    if (!driverId) return;
+    setMatching(prev => ({ ...prev, [gcName]: true }));
+    await fetch("/api/auto-gc/map-driver", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gcName, driverId }),
+    });
+    setMatching(prev => ({ ...prev, [gcName]: false }));
+    await loadStatus();
   }
 
   async function handleBackfill() {
@@ -325,7 +344,7 @@ export default function AutoGcClient() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {["Driver", "Route", "Stops/hr", "Miles", "Drive Time", "Status"].map(h => (
+                    {["Driver", "Route", "Stops/hr", "Miles", "Drive Time", showUnmatched ? "Match to Driver" : "Status"].map(h => (
                       <th key={h} className="pb-3 pr-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
                         {h}
                       </th>
@@ -338,13 +357,11 @@ export default function AutoGcClient() {
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           {r.driverId ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Matched to MyGroundOps" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                           ) : (
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-200 shrink-0" title="No match" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                           )}
-                          <span className="text-[13px] font-semibold text-slate-800">
-                            {r.driverName || "—"}
-                          </span>
+                          <span className="text-[13px] font-semibold text-slate-800">{r.driverName || "—"}</span>
                         </div>
                       </td>
                       <td className="py-3 pr-4">
@@ -355,22 +372,41 @@ export default function AutoGcClient() {
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[13px] font-bold ${sphBg(r.stopsPerHour)}`}>
                             {r.stopsPerHour.toFixed(1)}
                           </span>
-                        ) : (
-                          <span className="text-[12px] text-slate-300">—</span>
-                        )}
+                        ) : <span className="text-[12px] text-slate-300">—</span>}
                       </td>
                       <td className="py-3 pr-4">
-                        <span className="text-[13px] text-slate-600">
-                          {r.milesTotal ? r.milesTotal.toFixed(1) : "—"}
-                        </span>
+                        <span className="text-[13px] text-slate-600">{r.milesTotal ? r.milesTotal.toFixed(1) : "—"}</span>
                       </td>
                       <td className="py-3 pr-4">
                         <span className="text-[13px] text-slate-600">{fmtDriveTime(r.driveTime)}</span>
                       </td>
                       <td className="py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${statusBadge(r.status)}`}>
-                          {r.status || "—"}
-                        </span>
+                        {showUnmatched && !r.driverId ? (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={matchSelect[r.driverName] ?? ""}
+                              onChange={e => setMatchSelect(prev => ({ ...prev, [r.driverName]: e.target.value }))}
+                              className="text-[12px] border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-slate-400 bg-white"
+                            >
+                              <option value="">Select driver…</option>
+                              {wbDrivers.map(d => (
+                                <option key={d.driver_id} value={d.driver_id}>{d.name}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleMatch(r.driverName)}
+                              disabled={!matchSelect[r.driverName] || matching[r.driverName]}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors whitespace-nowrap flex items-center gap-1"
+                            >
+                              {matching[r.driverName] ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                              Match
+                            </button>
+                          </div>
+                        ) : (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${statusBadge(r.status)}`}>
+                            {r.status || "—"}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

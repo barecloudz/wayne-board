@@ -456,6 +456,17 @@ export const gcRouteDays = pgTable("gc_route_days", {
   orgGcDayUnique: uniqueIndex("gc_route_days_org_gc_day_unique").on(t.organizationId, t.gcRouteDayId),
 }));
 
+// ── GroundCloud Driver Name Mappings (manual overrides) ──────────────────────
+export const gcNameMappings = pgTable("gc_name_mappings", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  gcName:         text("gc_name").notNull(),   // name as it appears in GroundCloud
+  driverId:       text("driver_id").notNull(), // matched Wayne Board driver_id
+  createdAt:      timestamp("created_at").defaultNow(),
+}, (t) => ({
+  orgGcNameUnique: uniqueIndex("gc_name_mappings_org_name_unique").on(t.organizationId, t.gcName),
+}));
+
 // ── Vehicle Maintenance Records (admin-logged completed work) ─────────────────
 export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", {
   id:             serial("id").primaryKey(),

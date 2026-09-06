@@ -160,6 +160,13 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
       wbByName[normName(d.name)] = d.driver_id;
     }
 
+    // Load manual name mappings (gc_name → driver_id overrides)
+    const mappingRows = await sql`SELECT gc_name, driver_id FROM gc_name_mappings WHERE organization_id = ${orgId}`;
+    const gcMappings: Record<string, string> = {};
+    for (const m of mappingRows as any[]) {
+      gcMappings[normName(m.gc_name)] = m.driver_id;
+    }
+
     // ── Upsert each route-day ────────────────────────────────────────────────
     let matched = 0;
     for (const detail of details) {
@@ -168,9 +175,9 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
         : "";
 
       const norm = normName(gcDriverName);
-      let driverId: string | null = wbByName[norm] ?? null;
+      // Manual mapping takes priority, then exact name, then first-name fallback
+      let driverId: string | null = gcMappings[norm] ?? wbByName[norm] ?? null;
 
-      // Fallback: first-name match
       if (!driverId && norm) {
         const firstName = norm.split(" ")[0];
         const hit = Object.entries(wbByName).find(([k]) => k.startsWith(firstName + " "));
