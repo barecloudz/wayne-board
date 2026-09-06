@@ -8,7 +8,7 @@ import {
   Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
-  Zap, ChevronDown, ChevronUp, PenLine, LogOut,
+  Zap, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -67,23 +67,25 @@ function CollapsibleSection({
     <>
       <button
         onClick={onToggle}
-        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 w-full text-left ${
-          active ? "text-slate-900 bg-slate-50" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-        }`}
+        className={`group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 w-full text-left
+          border shadow-sm
+          ${active
+            ? "bg-gradient-to-b from-slate-800 to-slate-950 text-white border-slate-700 shadow-slate-900/30"
+            : "bg-gradient-to-b from-white to-slate-50 text-slate-700 border-slate-200 hover:from-slate-50 hover:to-slate-100 hover:border-slate-300 hover:text-slate-900"
+          }`}
       >
-        {iconEl ?? (
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{label}</span>
-        )}
-        {iconEl && <span className="flex-1">{label}</span>}
-        {!iconEl && <span className="flex-1" />}
-        {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1" />}
+        <span className={active ? "text-white" : "text-slate-500 group-hover:text-slate-700"}>
+          {iconEl}
+        </span>
+        <span className="flex-1">{label}</span>
+        {active && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-0.5" />}
         {open
-          ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
-          : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+          ? <ChevronUp className={`w-3.5 h-3.5 ${active ? "text-slate-300" : "text-slate-400"}`} />
+          : <ChevronDown className={`w-3.5 h-3.5 ${active ? "text-slate-300" : "text-slate-400"}`} />
         }
       </button>
       {open && (
-        <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
+        <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-1">
           {children}
         </div>
       )}
@@ -194,31 +196,49 @@ export default function Sidebar() {
 
         <div className="my-3 border-t border-slate-100" />
 
-        <CollapsibleSection label="Admin" open={adminOpen} onToggle={() => setAdminOpen(v => !v)}>
+        <CollapsibleSection
+          label="Admin"
+          open={adminOpen}
+          onToggle={() => setAdminOpen(v => !v)}
+          active={adminActive}
+          iconEl={<SlidersHorizontal className="w-4 h-4 flex-shrink-0" />}
+        >
           {adminItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
 
-        <div className="my-3 border-t border-slate-100" />
+        <div className="my-2 border-t border-slate-100" />
 
         <CollapsibleSection
           label="Automation"
           open={autoOpen}
           onToggle={() => setAutoOpen(v => !v)}
           active={autoActive}
-          iconEl={<Zap className={`w-4 h-4 flex-shrink-0 ${autoActive ? "text-slate-700" : "text-slate-400"}`} />}
+          iconEl={<Zap className="w-4 h-4 flex-shrink-0" />}
         >
           {automationItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
 
-        <div className="my-3 border-t border-slate-100" />
+        <div className="my-2 border-t border-slate-100" />
 
-        <CollapsibleSection label="Compliance" open={compOpen} onToggle={() => setCompOpen(v => !v)}>
+        <CollapsibleSection
+          label="Compliance"
+          open={compOpen}
+          onToggle={() => setCompOpen(v => !v)}
+          active={compActive}
+          iconEl={<ShieldCheck className="w-4 h-4 flex-shrink-0" />}
+        >
           {complianceItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
 
-        <div className="my-3 border-t border-slate-100" />
+        <div className="my-2 border-t border-slate-100" />
 
-        <CollapsibleSection label="Reports" open={reportOpen} onToggle={() => setReportOpen(v => !v)}>
+        <CollapsibleSection
+          label="Reports"
+          open={reportOpen}
+          onToggle={() => setReportOpen(v => !v)}
+          active={reportActive}
+          iconEl={<BarChart2 className="w-4 h-4 flex-shrink-0" />}
+        >
           {reportItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
       </nav>
