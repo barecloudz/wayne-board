@@ -6,9 +6,10 @@ import AppShell from "@/components/app-shell";
 export const metadata: Metadata = { title: "Fleet" };
 import { db } from "@/lib/db";
 import { vehicles, inspections } from "@/lib/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import FleetHeader from "./fleet-header";
 import { getVehicleImage } from "@/lib/vehicle-image";
+import { getActiveLocationId } from "@/lib/active-location";
 
 type InspectionStatus = "Complete" | "Defects Pending Repair" | "Out of Service" | "Draft";
 
@@ -21,8 +22,9 @@ const STATUS_BADGE: Record<InspectionStatus | "None", { label: string; className
 };
 
 export default async function FleetPage() {
+  const locationId = await getActiveLocationId();
   const [trucks, allInspections] = await Promise.all([
-    db.select().from(vehicles).orderBy(vehicles.unitNumber),
+    db.select().from(vehicles).where(locationId !== null ? eq(vehicles.locationId, locationId) : undefined).orderBy(vehicles.unitNumber),
     db.select({
       vehicleId:      inspections.vehicleId,
       status:         inspections.status,

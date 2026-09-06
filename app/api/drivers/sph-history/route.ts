@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getSession } from "@/lib/session";
+import { getActiveLocationId } from "@/lib/active-location";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -13,6 +14,7 @@ export async function GET(req: NextRequest) {
     const days = parseInt(searchParams.get("days") || "30", 10);
     const driverIdsParam = searchParams.get("driverIds");
     const driverIds = driverIdsParam ? driverIdsParam.split(",").filter(Boolean) : null;
+    const locationId = await getActiveLocationId();
 
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
@@ -20,44 +22,85 @@ export async function GET(req: NextRequest) {
 
     let rows: any[];
     if (driverIds && driverIds.length > 0) {
-      rows = await sql`
-        SELECT
-          grd.driver_id,
-          d.name,
-          grd.date::text AS date,
-          grd.stops_per_hour,
-          grd.route_name
-        FROM gc_route_days grd
-        JOIN drivers d ON d.driver_id = grd.driver_id
-        WHERE d.active = true
-          AND d.role = 'driver'
-          AND d.organization_id = ${session.organizationId}
-          AND grd.organization_id = ${session.organizationId}
-          AND grd.driver_id = ANY(${driverIds})
-          AND grd.date >= ${cutoffStr}
-          AND grd.stops_per_hour IS NOT NULL
-          AND EXTRACT(DOW FROM grd.date) != 0
-        ORDER BY grd.date ASC
-      `;
+      rows = locationId !== null
+        ? await sql`
+            SELECT
+              grd.driver_id,
+              d.name,
+              grd.date::text AS date,
+              grd.stops_per_hour,
+              grd.route_name
+            FROM gc_route_days grd
+            JOIN drivers d ON d.driver_id = grd.driver_id
+            WHERE d.active = true
+              AND d.role = 'driver'
+              AND d.organization_id = ${session.organizationId}
+              AND d.location_id = ${locationId}
+              AND grd.organization_id = ${session.organizationId}
+              AND grd.driver_id = ANY(${driverIds})
+              AND grd.date >= ${cutoffStr}
+              AND grd.stops_per_hour IS NOT NULL
+              AND EXTRACT(DOW FROM grd.date) != 0
+            ORDER BY grd.date ASC
+          `
+        : await sql`
+            SELECT
+              grd.driver_id,
+              d.name,
+              grd.date::text AS date,
+              grd.stops_per_hour,
+              grd.route_name
+            FROM gc_route_days grd
+            JOIN drivers d ON d.driver_id = grd.driver_id
+            WHERE d.active = true
+              AND d.role = 'driver'
+              AND d.organization_id = ${session.organizationId}
+              AND grd.organization_id = ${session.organizationId}
+              AND grd.driver_id = ANY(${driverIds})
+              AND grd.date >= ${cutoffStr}
+              AND grd.stops_per_hour IS NOT NULL
+              AND EXTRACT(DOW FROM grd.date) != 0
+            ORDER BY grd.date ASC
+          `;
     } else {
-      rows = await sql`
-        SELECT
-          grd.driver_id,
-          d.name,
-          grd.date::text AS date,
-          grd.stops_per_hour,
-          grd.route_name
-        FROM gc_route_days grd
-        JOIN drivers d ON d.driver_id = grd.driver_id
-        WHERE d.active = true
-          AND d.role = 'driver'
-          AND d.organization_id = ${session.organizationId}
-          AND grd.organization_id = ${session.organizationId}
-          AND grd.date >= ${cutoffStr}
-          AND grd.stops_per_hour IS NOT NULL
-          AND EXTRACT(DOW FROM grd.date) != 0
-        ORDER BY grd.date ASC
-      `;
+      rows = locationId !== null
+        ? await sql`
+            SELECT
+              grd.driver_id,
+              d.name,
+              grd.date::text AS date,
+              grd.stops_per_hour,
+              grd.route_name
+            FROM gc_route_days grd
+            JOIN drivers d ON d.driver_id = grd.driver_id
+            WHERE d.active = true
+              AND d.role = 'driver'
+              AND d.organization_id = ${session.organizationId}
+              AND d.location_id = ${locationId}
+              AND grd.organization_id = ${session.organizationId}
+              AND grd.date >= ${cutoffStr}
+              AND grd.stops_per_hour IS NOT NULL
+              AND EXTRACT(DOW FROM grd.date) != 0
+            ORDER BY grd.date ASC
+          `
+        : await sql`
+            SELECT
+              grd.driver_id,
+              d.name,
+              grd.date::text AS date,
+              grd.stops_per_hour,
+              grd.route_name
+            FROM gc_route_days grd
+            JOIN drivers d ON d.driver_id = grd.driver_id
+            WHERE d.active = true
+              AND d.role = 'driver'
+              AND d.organization_id = ${session.organizationId}
+              AND grd.organization_id = ${session.organizationId}
+              AND grd.date >= ${cutoffStr}
+              AND grd.stops_per_hour IS NOT NULL
+              AND EXTRACT(DOW FROM grd.date) != 0
+            ORDER BY grd.date ASC
+          `;
     }
 
     // Collect all dates that have at least one driver's data

@@ -55,6 +55,7 @@ export const drivers = pgTable("drivers", {
   workArea:          text("work_area"),
   defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),
   active:            boolean("active").notNull().default(true),
+  locationId:        integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   loginDisabled:     boolean("login_disabled").notNull().default(false),
   isTrainee:         boolean("is_trainee").notNull().default(false),
   noticeDate:        date("notice_date"),
@@ -84,6 +85,7 @@ export const vehicles = pgTable("vehicles", {
   federalInspectionDue: date("federal_inspection_due"),
   registrationExpiry:   date("registration_expiry"),
   active:               boolean("active").notNull().default(true),
+  locationId:           integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   createdAt:            timestamp("created_at").defaultNow(),
 }, (t) => ({
   orgUnitUnique: uniqueIndex("vehicles_org_unit_unique").on(t.organizationId, t.unitNumber),
@@ -451,6 +453,7 @@ export const gcRouteDays = pgTable("gc_route_days", {
   milesTraveled:  real("miles_traveled"),
   driveTime:      integer("drive_time"),   // seconds
   status:         text("status").notNull().default(""),
+  locationId:     integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   syncedAt:       timestamp("synced_at").defaultNow(),
 }, (t) => ({
   orgGcDayUnique: uniqueIndex("gc_route_days_org_gc_day_unique").on(t.organizationId, t.gcRouteDayId),

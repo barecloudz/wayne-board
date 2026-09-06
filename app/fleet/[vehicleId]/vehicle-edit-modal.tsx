@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, X, Loader2, CheckCheck, AlertCircle } from "lucide-react";
 import { updateVehicle } from "@/lib/actions/vehicles";
@@ -16,6 +16,7 @@ type Vehicle = {
   type: string;
   ownership: string;
   active: boolean;
+  locationId?: number | null;
 };
 
 const INPUT =
@@ -49,6 +50,12 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
   const [vin, setVin]               = useState(vehicle.vin ?? "");
   const [type, setType]             = useState(vehicle.type);
   const [active, setActive]         = useState(vehicle.active);
+  const [locationId, setLocationId] = useState<number | null | undefined>(vehicle.locationId ?? null);
+  const [locations, setLocations]   = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/locations").then(r => r.json()).then(d => setLocations(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
 
   function openModal() {
     // Reset to current vehicle values each time
@@ -60,6 +67,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
     setVin(vehicle.vin ?? "");
     setType(vehicle.type);
     setActive(vehicle.active);
+    setLocationId(vehicle.locationId ?? null);
     setError("");
     setOpen(true);
   }
@@ -85,6 +93,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
           type,
           ownership: vehicle.ownership,
           active,
+          locationId: locationId ?? null,
         });
         setOpen(false);
         router.refresh();
@@ -238,6 +247,22 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
                   ))}
                 </div>
               </Field>
+
+              {/* Location picker — only shown when org has multiple locations */}
+              {locations.length > 1 && (
+                <Field label="Location">
+                  <select
+                    value={locationId ?? ""}
+                    onChange={(e) => setLocationId(e.target.value ? parseInt(e.target.value) : null)}
+                    className={INPUT}
+                  >
+                    <option value="">— Any / All —</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                </Field>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-[12px] text-red-700">

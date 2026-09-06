@@ -191,10 +191,22 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
       const trav  = parseFloat(detail.miles_traveled) || null;
       const dt    = detail.drive_time != null ? Math.round(detail.drive_time) : null;
 
+      // Try to match route to a location via GC terminal ID
+      const routeTerminalId = detail.route?.terminal?.id ?? null;
+      let routeLocationId: number | null = null;
+      if (routeTerminalId) {
+        const locRow = await sql`
+          SELECT id FROM locations
+          WHERE organization_id = ${orgId} AND gc_terminal_id = ${routeTerminalId}
+          LIMIT 1
+        `;
+        routeLocationId = (locRow as any[])[0]?.id ?? null;
+      }
+
       await sql`
         INSERT INTO gc_route_days
           (organization_id, gc_route_day_id, driver_id, driver_name, route_name, date,
-           stops_per_hour, miles_total, miles_traveled, drive_time, status)
+           stops_per_hour, miles_total, miles_traveled, drive_time, status, location_id)
         VALUES (
           ${orgId},
           ${detail.id},
@@ -206,7 +218,8 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
           ${miles},
           ${trav},
           ${dt},
-          ${detail.status ?? ""}
+          ${detail.status ?? ""},
+          ${routeLocationId}
         )
         ON CONFLICT (organization_id, gc_route_day_id) DO UPDATE SET
           driver_id      = EXCLUDED.driver_id,
@@ -218,6 +231,7 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
           miles_traveled = EXCLUDED.miles_traveled,
           drive_time     = EXCLUDED.drive_time,
           status         = EXCLUDED.status,
+          location_id    = EXCLUDED.location_id,
           synced_at      = NOW()
       `;
     }

@@ -5,6 +5,7 @@ import { vehicles, inspections, inspectionResults } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { getActiveLocationId } from "@/lib/active-location";
 
 async function requireOrg() {
   const session = await getSession();
@@ -21,6 +22,7 @@ export async function createVehicle(data: {
   vin?: string;
   type?: string;
   ownership?: string;
+  locationId?: number;
 }): Promise<{ id: number } | { error: string }> {
   const orgId = await requireOrg();
   try {
@@ -35,6 +37,7 @@ export async function createVehicle(data: {
       type:       data.type ?? "van",
       ownership:  data.ownership ?? "owned",
       active:     true,
+      locationId: data.locationId ?? null,
     }).returning({ id: vehicles.id });
     revalidatePath("/vehicles");
     revalidatePath("/fleet");
@@ -76,7 +79,8 @@ export async function deleteVehicle(vehicleId: number) {
 
 export async function getVehicles() {
   const orgId = await requireOrg();
-  return db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber);
+  const locationId = await getActiveLocationId();
+  return db.select().from(vehicles).where(and(eq(vehicles.organizationId, orgId), locationId !== null ? eq(vehicles.locationId, locationId) : undefined)).orderBy(vehicles.unitNumber);
 }
 
 export async function updateVehicleVin(vehicleId: number, vin: string) {
@@ -109,6 +113,7 @@ export async function updateVehicle(
     type: string;
     ownership: string;
     active: boolean;
+    locationId?: number | null;
   }
 ) {
   const orgId = await requireOrg();

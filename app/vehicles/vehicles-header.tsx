@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { createVehicle } from "@/lib/actions/vehicles";
@@ -24,6 +24,12 @@ export default function VehiclesHeader() {
   const [vinDecoded, setVinDecoded] = useState(false);
   const [ownership, setOwnership] = useState<"owned" | "rental">("owned");
   const [error, setError] = useState("");
+  const [locations, setLocations] = useState<{ id: number; name: string }[]>([]);
+  const [locationId, setLocationId] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    fetch("/api/locations").then(r => r.json()).then(d => setLocations(Array.isArray(d) ? d : [])).catch(() => {});
+  }, []);
 
   async function handleVinChange(raw: string) {
     const v = raw.toUpperCase();
@@ -63,6 +69,7 @@ export default function VehiclesHeader() {
   function openModal() {
     setUnitNumber(""); setMake(""); setModel(""); setYear("");
     setMileage("0"); setVin(""); setOwnership("owned"); setError("");
+    setLocationId(undefined);
     setShowModal(true);
   }
 
@@ -87,6 +94,7 @@ export default function VehiclesHeader() {
         vin: vin.trim().toUpperCase(),
         type: "van",
         ownership,
+        locationId,
       });
       if ("error" in result) {
         setError(result.error);
@@ -230,6 +238,23 @@ export default function VehiclesHeader() {
                   />
                 </div>
               </div>
+
+              {/* Location picker — only shown when org has multiple locations */}
+              {locations.length > 1 && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Location</label>
+                  <select
+                    value={locationId ?? ""}
+                    onChange={(e) => setLocationId(e.target.value ? parseInt(e.target.value) : undefined)}
+                    className={INPUT}
+                  >
+                    <option value="">— Any / All —</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-[12px] text-red-700">

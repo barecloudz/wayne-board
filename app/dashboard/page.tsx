@@ -22,8 +22,9 @@ import WorkAreaManager from "./work-area-manager";
 import DswScorecard from "./dsw-scorecard";
 import { db } from "@/lib/db";
 import { vehicles, drivers, inspections } from "@/lib/schema";
-import { count, eq } from "drizzle-orm";
+import { count, eq, and } from "drizzle-orm";
 import { getSetting } from "@/lib/actions/settings";
+import { getActiveLocationId } from "@/lib/active-location";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 import Link from "next/link";
 import {
@@ -38,10 +39,12 @@ export default async function Home() {
   const onboardingComplete = await getSetting("onboarding_complete", "");
   if (onboardingComplete !== "true") redirect("/onboarding");
 
+  const locationId = await getActiveLocationId();
+
   const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList] =
     await Promise.all([
-      db.select({ vehicleCount: count() }).from(vehicles).where(eq(vehicles.active, true)),
-      db.select({ driverCount: count() }).from(drivers).where(eq(drivers.active, true)),
+      db.select({ vehicleCount: count() }).from(vehicles).where(and(eq(vehicles.active, true), locationId !== null ? eq(vehicles.locationId, locationId) : undefined)),
+      db.select({ driverCount: count() }).from(drivers).where(and(eq(drivers.active, true), locationId !== null ? eq(drivers.locationId, locationId) : undefined)),
       db.select({ completedCount: count() }).from(inspections).where(eq(inspections.status, "Complete")),
       db.select({ oosCount: count() }).from(inspections).where(eq(inspections.status, "Out of Service")),
       getSetting("show_ryde", "true"),

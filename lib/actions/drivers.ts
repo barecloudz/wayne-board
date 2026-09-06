@@ -5,6 +5,7 @@ import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/s
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { getSession, createSession } from "@/lib/session";
+import { getActiveLocationId } from "@/lib/active-location";
 
 async function requireOrg() {
   const session = await getSession();
@@ -32,6 +33,7 @@ export async function isDriverIdTaken(driverId: string) {
 
 export async function getDrivers() {
   const orgId = await requireOrg();
+  const locationId = await getActiveLocationId();
   return db.select({
     id:                drivers.id,
     driverId:          drivers.driverId,
@@ -48,7 +50,7 @@ export async function getDrivers() {
     terminationNote:   drivers.terminationNote,
     terminatedAt:      drivers.terminatedAt,
     username:          drivers.username,
-  }).from(drivers).where(eq(drivers.organizationId, orgId)).orderBy(drivers.id);
+  }).from(drivers).where(and(eq(drivers.organizationId, orgId), locationId !== null ? eq(drivers.locationId, locationId) : undefined)).orderBy(drivers.id);
 }
 
 export async function getMyProfile() {
@@ -72,13 +74,14 @@ export async function createDriver(
   role: "driver" | "bc",
   customDriverId?: string,
   customTempPassword?: string,
+  locationId?: number,
 ) {
   const orgId = await requireOrg();
   const driverId     = customDriverId     ?? suggestDriverId(name);
   const tempPassword = customTempPassword ?? "Fedex1234#";
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-  await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role });
+  await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role, locationId: locationId ?? null });
 
   return { driverId, tempPassword };
 }

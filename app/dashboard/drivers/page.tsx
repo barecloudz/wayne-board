@@ -93,6 +93,7 @@ export default function DriversPage() {
   const [availableLocations, setAvailableLocations] = useState<{ id: number; name: string }[]>([]);
   const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
+  const [newLocationId, setNewLocationId] = useState<number | undefined>(undefined);
 
   async function refresh() {
     const [driverData, vehicleData] = await Promise.all([getDrivers(), getVehicles()]);
@@ -125,9 +126,14 @@ export default function DriversPage() {
     setNewDriverId("");
     setNewTempPassword("Fedex1234#");
     setNewRole("driver");
+    setNewLocationId(undefined);
     setCreated(null);
     setShowNewPassword(false);
     setShowCreate(true);
+    // Fetch locations for picker (if not yet loaded)
+    if (availableLocations.length === 0) {
+      fetch("/api/locations").then(r => r.json()).then(d => setAvailableLocations(Array.isArray(d) ? d : [])).catch(() => {});
+    }
   }
 
   function handleNameChange(val: string) {
@@ -143,7 +149,7 @@ export default function DriversPage() {
   function handleCreate() {
     if (!newName.trim() || !newDriverId.trim() || !newTempPassword.trim()) return;
     startTransition(async () => {
-      const result = await createDriver(newName.trim(), newRole, newDriverId.trim(), newTempPassword.trim());
+      const result = await createDriver(newName.trim(), newRole, newDriverId.trim(), newTempPassword.trim(), newLocationId);
       setCreated({ driverId: result.driverId, password: result.tempPassword });
       setShowCreate(false);
       await refresh();
@@ -940,6 +946,22 @@ export default function DriversPage() {
                   ))}
                 </div>
               </div>
+              {/* Location picker — only shown when org has multiple locations */}
+              {availableLocations.length > 1 && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Location</label>
+                  <select
+                    value={newLocationId ?? ""}
+                    onChange={(e) => setNewLocationId(e.target.value ? parseInt(e.target.value) : undefined)}
+                    className={INPUT_CLS}
+                  >
+                    <option value="">— Any / All —</option>
+                    {availableLocations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="px-6 pb-6 flex gap-2">
               <button

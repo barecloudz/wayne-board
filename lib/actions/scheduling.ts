@@ -5,6 +5,7 @@ import { drivers, driverSchedules, timeOffEntries, scheduleOverrides } from "@/l
 import { eq, and, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { getActiveLocationId } from "@/lib/active-location";
 
 async function requireOrg() {
   const session = await getSession();
@@ -18,6 +19,7 @@ export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export async function getAllSchedules() {
   const orgId = await requireOrg();
+  const locationId = await getActiveLocationId();
   const rows = await db
     .select({
       id:                drivers.id,
@@ -34,7 +36,12 @@ export async function getAllSchedules() {
     })
     .from(drivers)
     .leftJoin(driverSchedules, eq(drivers.driverId, driverSchedules.driverId))
-    .where(eq(drivers.organizationId, orgId))
+    .where(
+      and(
+        eq(drivers.organizationId, orgId),
+        locationId !== null ? eq(drivers.locationId, locationId) : undefined
+      )
+    )
     .orderBy(drivers.name);
   return rows;
 }
