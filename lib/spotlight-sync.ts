@@ -96,116 +96,188 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
     }
     if (!bearerToken) throw new Error("Spotlight login failed · Bearer token not captured after 30s");
 
-    // ── 2. Ask user to choose OTP delivery method ─────────────────────────────
-    console.log("[spotlight] Waiting for user to choose OTP delivery method...");
+    // ── 2. Fetch available MFA methods from user/details ─────────────────────
+    console.log("[spotlight] Fetching MFA options...");
 
-    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method')`;
-    await sql`
-      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'choosing_mfa')
-      ON CONFLICT (key) DO UPDATE SET value = 'choosing_mfa'
-    `;
-
-    let mfaMethod = "";
-    const mfaDeadline = Date.now() + 2 * 60 * 1000;
-    while (!mfaMethod && Date.now() < mfaDeadline) {
-      await new Promise(r => setTimeout(r, 3000));
-      const rows = await sql`SELECT value FROM settings WHERE key = 'spotlight_mfa_method'`;
-      if (rows[0]?.value) mfaMethod = rows[0].value as string;
-    }
-    if (!mfaMethod) mfaMethod = "EMAIL"; // default if user doesn't respond
-
-    console.log("[spotlight] OTP delivery method chosen:", mfaMethod);
-
-    // ── 3. Send OTP via chosen method (in browser context, cookies included) ──
-    console.log("[spotlight] Sending OTP via", mfaMethod, "...");
-
-    const genResult: any = await page.evaluate(
-      async (mfaBase: string, bearer: string, userId: string, method: string) => {
+    const userDetails: any = await page.evaluate(
+      async (mfaBase: string, bearer: string, userId: string) => {
         const h = { Authorization: bearer, "Content-Type": "application/json" };
-
         await fetch(`${mfaBase}/csrftoken?`, { credentials: "include", headers: h });
-        await fetch(`${mfaBase}/user/details?userId=${userId}?withCredentials=true`, {
+        const r = await fetch(`${mfaBase}/user/details?userId=${userId}?withCredentials=true`, {
           method: "POST", credentials: "include", headers: h, body: "{}",
-        });
-
-        const r = await fetch(`${mfaBase}/passcode/generate?withCredentials=true`, {
-          method: "POST",
-          credentials: "include",
-          headers: h,
-          body: JSON.stringify({
-            userPreference: { userId, userPreferredChoice: method },
-            regenerateCount: 0,
-          }),
         });
         return r.json();
       },
-      MFA_BASE, bearerToken, USER_ID, mfaMethod
+      MFA_BASE, bearerToken, USER_ID
     );
 
+    console.log("[spotlight] user/details:", JSON.stringify(userDetails).slice(0, 500));
+
+    // Parse available methods — FedEx returns them in various shapes; normalize to array
+    const rawMethods: string[] = [];
+    const ud = userDetails?.userInfo ?? userDetails?.data ?? userDetails ?? {};
+    if (ud.emailAddress || ud.maskedEmail || ud.email) rawMethods.push("EMAIL");
+    if (ud.phoneNumber || ud.maskedPhone || ud.phone || ud.smsNumber) rawMethods.push("PHONE");
+    // Fallback: if nothing detected, assume email is available
+    const availableMethods = rawMethods.length > 0 ? rawMethods : ["EMAIL"];
+
+    console.log("[spotlight] Available MFA methods:", availableMethods);
+
+    // Store available methods in DB so UI can display correct options
+    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method', 'spotlight_mfa_options')`;
+    await sql`
+      INSERT INTO settings (key, value) VALUES ('spotlight_mfa_options', ${availableMethods.join(",")})
+      ON CONFLICT (key) DO UPDATE SET value = ${availableMethods.join(",")}
+    `;
+
+    // ── 3. Choose OTP delivery method ────────────────────────────────────────
+    let mfaMethod: string;
+
+    if (availableMethods.length === 1) {
+      // Only one option — auto-select, no UI choice needed
+      mfaMethod = availableMethods[0];
+      console.log("[spotlight] Only one MFA method available, auto-selecting:", mfaMethod);
+    } else {
+      // Multiple options — ask user via UI
+      console.log("[spotlight] Waiting for user to choose MFA method...");
+      await sql`
+        INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'choosing_mfa')
+        ON CONFLICT (key) DO UPDATE SET value = 'choosing_mfa'
+      `;
+
+      let chosen = "";
+      const choiceDeadline = Date.now() + 2 * 60 * 1000;
+      while (!chosen && Date.now() < choiceDeadline) {
+        await new Promise(r => setTimeout(r, 3000));
+        const rows = await sql`SELECT value FROM settings WHERE key = 'spotlight_mfa_method'`;
+        if (rows[0]?.value) chosen = rows[0].value as string;
+      }
+      mfaMethod = chosen || availableMethods[0]; // fallback to first available
+      console.log("[spotlight] User chose MFA method:", mfaMethod);
+    }
+
+    // ── 4. Send OTP + retry loop (max 3 attempts) ────────────────────────────
+    async function sendOtp(method: string, regenerateCount: number) {
+      return page.evaluate(
+        async (mfaBase: string, bearer: string, userId: string, m: string, rc: number) => {
+          const h = { Authorization: bearer, "Content-Type": "application/json" };
+          const r = await fetch(`${mfaBase}/passcode/generate?withCredentials=true`, {
+            method: "POST", credentials: "include", headers: h,
+            body: JSON.stringify({ userPreference: { userId, userPreferredChoice: m }, regenerateCount: rc }),
+          });
+          return r.json();
+        },
+        MFA_BASE, bearerToken, USER_ID, method, regenerateCount
+      );
+    }
+
+    async function verifyOtp(passcode: string) {
+      return page.evaluate(
+        async (mfaBase: string, bearer: string, userId: string, code: string) => {
+          const h = { Authorization: bearer, "Content-Type": "application/json" };
+          const vr = await fetch(`${mfaBase}/passcode/verify?withCredentials=true`, {
+            method: "POST", credentials: "include", headers: h,
+            body: JSON.stringify({ userId, passcode: code, verifyCount: 1 }),
+          });
+          return vr.json();
+        },
+        MFA_BASE, bearerToken, USER_ID, passcode
+      );
+    }
+
+    // Send initial OTP
+    console.log("[spotlight] Sending OTP via", mfaMethod, "...");
+    let genResult: any = await sendOtp(mfaMethod, 0);
     console.log("[spotlight] OTP generate result:", JSON.stringify(genResult));
     if (!genResult?.passcodeSent) {
       throw new Error("OTP send failed: " + JSON.stringify(genResult));
     }
 
-    // ── 4. Poll DB for OTP (user enters it in the app UI) ───────────────────
-    console.log("[spotlight] Waiting for OTP · signalling UI...");
+    // Poll for OTP with retry/resend support
+    let embedToken = "";
+    const MAX_ATTEMPTS = 3;
 
-    // Clear stale keys, signal UI to show OTP input
-    await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method')`;
-    await sql`
-      INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'waiting_for_otp')
-      ON CONFLICT (key) DO UPDATE SET value = 'waiting_for_otp'
-    `;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      // Signal UI: waiting for code
+      await sql`DELETE FROM settings WHERE key IN ('spotlight_otp', 'spotlight_otp_at', 'spotlight_mfa_method', 'spotlight_resend_otp')`;
+      await sql`
+        INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'waiting_for_otp')
+        ON CONFLICT (key) DO UPDATE SET value = 'waiting_for_otp'
+      `;
 
-    let otp = "";
-    const otpDeadline = Date.now() + 5 * 60 * 1000;
-    while (!otp && Date.now() < otpDeadline) {
-      await new Promise(r => setTimeout(r, 10000));
-      const rows = await sql`SELECT value FROM settings WHERE key = 'spotlight_otp'`;
-      if (rows[0]?.value) {
-        otp = rows[0].value as string;
-        console.log("[spotlight] OTP received from DB:", otp);
+      console.log(`[spotlight] Waiting for OTP (attempt ${attempt}/${MAX_ATTEMPTS})...`);
+
+      let otp = "";
+      let resendRequested = false;
+      const otpDeadline = Date.now() + 5 * 60 * 1000;
+
+      while (!otp && !resendRequested && Date.now() < otpDeadline) {
+        await new Promise(r => setTimeout(r, 5000));
+        const [otpRow, resendRow] = await Promise.all([
+          sql`SELECT value FROM settings WHERE key = 'spotlight_otp'`,
+          sql`SELECT value FROM settings WHERE key = 'spotlight_resend_otp'`,
+        ]);
+        if (otpRow[0]?.value) otp = otpRow[0].value as string;
+        if (resendRow[0]?.value === "1") resendRequested = true;
+      }
+
+      if (resendRequested) {
+        console.log("[spotlight] Resend requested, sending new OTP...");
+        genResult = await sendOtp(mfaMethod, attempt);
+        console.log("[spotlight] Resend result:", JSON.stringify(genResult));
+        attempt--; // don't count resend as an attempt
+        continue;
+      }
+
+      if (!otp) {
+        throw new Error("Verification code not received within 5 minutes.");
+      }
+
+      console.log("[spotlight] Verifying OTP, attempt", attempt, "...");
+      const verifyResult: any = await verifyOtp(otp);
+      console.log("[spotlight] Verify result:", JSON.stringify(verifyResult).slice(0, 200));
+
+      if (verifyResult?.passcodeVerified) {
+        // Success — get EmbedToken
+        const embedResult: any = await page.evaluate(
+          async (mfaBase: string, spoiBase: string, bearer: string, userId: string, csaId: string, reportId: string) => {
+            const h = { Authorization: bearer, "Content-Type": "application/json" };
+            await fetch(`${spoiBase}/csrftoken?`, { credentials: "include", headers: h });
+            const dr = await fetch(`${spoiBase}/powerbi/dashboard?withCredentials=true`, {
+              method: "POST", credentials: "include", headers: h,
+              body: JSON.stringify({ userId, selectedCSAId: csaId, reportId }),
+            });
+            return dr.json();
+          },
+          MFA_BASE, SPOI_BASE, bearerToken, USER_ID, CSA_ID, RYDE_REPORT_ID
+        );
+        embedToken = embedResult?.embedToken?.token ?? "";
+        if (!embedToken) throw new Error("No EmbedToken in dashboard response: " + JSON.stringify(embedResult).slice(0, 300));
+        break;
+      }
+
+      // Wrong code
+      const errMsg = verifyResult?.message ?? verifyResult?.errorMessage ?? "Incorrect code";
+      console.log("[spotlight] OTP verify failed:", errMsg);
+
+      if (attempt < MAX_ATTEMPTS) {
+        // Signal UI to let user try again
+        await sql`DELETE FROM settings WHERE key = 'spotlight_otp'`;
+        await sql`
+          INSERT INTO settings (key, value) VALUES ('spotlight_sync_status', 'otp_failed')
+          ON CONFLICT (key) DO UPDATE SET value = 'otp_failed'
+        `;
+        await sql`
+          INSERT INTO settings (key, value) VALUES ('spotlight_otp_error', ${errMsg})
+          ON CONFLICT (key) DO UPDATE SET value = ${errMsg}
+        `;
+        console.log("[spotlight] Waiting for user to re-enter code...");
+      } else {
+        throw new Error(`Verification failed after ${MAX_ATTEMPTS} attempts: ${errMsg}`);
       }
     }
 
-    if (!otp) {
-      throw new Error("OTP not received within 5 minutes. Enter the code sent to your FedEx email/phone in the Auto Spotlight page.");
-    }
-
-    // ── 4. Verify OTP + get EmbedToken ────────────────────────────────────────
-    console.log("[spotlight] Verifying OTP and fetching EmbedToken...");
-
-    const embedResult: any = await page.evaluate(
-      async (mfaBase: string, spoiBase: string, bearer: string, userId: string, csaId: string, reportId: string, passcode: string) => {
-        const h = { Authorization: bearer, "Content-Type": "application/json" };
-
-        // Verify
-        const vr = await fetch(`${mfaBase}/passcode/verify?withCredentials=true`, {
-          method: "POST", credentials: "include", headers: h,
-          body: JSON.stringify({ userId, passcode, verifyCount: 1 }),
-        });
-        const vd = await vr.json();
-        if (!vd.passcodeVerified) return { __error: "OTP verify failed: " + JSON.stringify(vd) };
-
-        // SPOI CSRF
-        await fetch(`${spoiBase}/csrftoken?`, { credentials: "include", headers: h });
-
-        // Get EmbedToken
-        const dr = await fetch(`${spoiBase}/powerbi/dashboard?withCredentials=true`, {
-          method: "POST", credentials: "include", headers: h,
-          body: JSON.stringify({ userId, selectedCSAId: csaId, reportId }),
-        });
-        return dr.json();
-      },
-      MFA_BASE, SPOI_BASE, bearerToken, USER_ID, CSA_ID, RYDE_REPORT_ID, otp
-    );
-
-    if (embedResult?.__error) throw new Error(embedResult.__error);
-
-    const embedToken = embedResult?.embedToken?.token;
-    if (!embedToken) {
-      throw new Error("No EmbedToken in dashboard response: " + JSON.stringify(embedResult).slice(0, 300));
-    }
+    if (!embedToken) throw new Error("Failed to obtain EmbedToken after all attempts.");
 
     console.log("[spotlight] EmbedToken acquired, closing browser...");
     await browser.close();

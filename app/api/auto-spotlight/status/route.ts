@@ -8,7 +8,7 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const orgId = session.organizationId;
-  const [scores, allDrivers, lastSynced, lastSyncResultRaw, autoEnabled, autoTime, syncStatus] = await Promise.all([
+  const [scores, allDrivers, lastSynced, lastSyncResultRaw, autoEnabled, autoTime, syncStatus, mfaOptionsRaw, otpError] = await Promise.all([
     db.select({
       id:              rydeScores.id,
       driverId:        rydeScores.driverId,
@@ -31,10 +31,14 @@ export async function GET() {
     db.select().from(settings).where(and(eq(settings.key, "spotlight_auto_sync_enabled"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? "false"),
     db.select().from(settings).where(and(eq(settings.key, "spotlight_auto_sync_time"), eq(settings.organizationId, orgId))).then(r => r[0]?.value ?? "09:00"),
     db.select().from(settings).where(eq(settings.key, "spotlight_sync_status")).then(r => r[0]?.value ?? "idle"),
+    db.select().from(settings).where(eq(settings.key, "spotlight_mfa_options")).then(r => r[0]?.value ?? ""),
+    db.select().from(settings).where(eq(settings.key, "spotlight_otp_error")).then(r => r[0]?.value ?? ""),
   ]);
 
   let lastSyncResult: any = null;
   try { if (lastSyncResultRaw) lastSyncResult = JSON.parse(lastSyncResultRaw as string); } catch {}
+
+  const mfaOptions = mfaOptionsRaw ? (mfaOptionsRaw as string).split(",").filter(Boolean) : [];
 
   return NextResponse.json({
     scores,
@@ -43,5 +47,7 @@ export async function GET() {
     autoEnabled: autoEnabled === "true",
     autoTime,
     syncStatus,
+    mfaOptions,
+    otpError: otpError || null,
   });
 }

@@ -19,7 +19,9 @@ type Status = {
   lastSyncResult: { success: boolean; error?: string; drivers?: number; weeks?: number; reviews?: number; completedAt?: string } | null;
   autoEnabled: boolean;
   autoTime: string;
-  syncStatus: "idle" | "choosing_mfa" | "waiting_for_otp";
+  syncStatus: "idle" | "choosing_mfa" | "waiting_for_otp" | "otp_failed";
+  mfaOptions: string[];
+  otpError: string | null;
 };
 
 function starBg(score: number | null) {
@@ -42,7 +44,9 @@ export default function AutoSpotlightClient() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
-  const [syncStatus,  setSyncStatus]  = useState<"idle" | "choosing_mfa" | "waiting_for_otp">("idle");
+  const [syncStatus,  setSyncStatus]  = useState<"idle" | "choosing_mfa" | "waiting_for_otp" | "otp_failed">("idle");
+  const [mfaOptions,  setMfaOptions]  = useState<string[]>([]);
+  const [otpError,    setOtpError]    = useState<string | null>(null);
   const [otpInput,    setOtpInput]    = useState("");
   const [otpSaving,   setOtpSaving]   = useState(false);
   const triggeredAt = useRef<number>(0);
@@ -65,6 +69,8 @@ export default function AutoSpotlightClient() {
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
       setSyncStatus(d.syncStatus ?? "idle");
+      setMfaOptions(d.mfaOptions ?? []);
+      setOtpError(d.otpError ?? null);
       if (triggeredAt.current && d.lastSyncResult?.completedAt) {
         const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
         if (resultTime > triggeredAt.current) {
@@ -220,42 +226,48 @@ export default function AutoSpotlightClient() {
         </div>
       )}
 
-      {/* MFA method choice · shown after login while waiting for delivery preference */}
+      {/* MFA method choice · shown when multiple delivery options exist */}
       {syncStatus === "choosing_mfa" && (
         <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
-            <p className="text-[14px] font-bold text-indigo-900">How should FedEx send your verification code?</p>
+            <p className="text-[14px] font-bold text-indigo-900">Where should FedEx send your verification code?</p>
           </div>
           <p className="text-[12px] text-indigo-700 mb-4">
-            FedEx is ready to send a one-time code. Choose where you want to receive it.
+            Choose how you want to receive the code. Check that source once it arrives, then enter it here.
           </p>
           <div className="flex gap-3">
-            <button
-              onClick={() => submitMfaChoice("EMAIL")}
-              className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors"
-            >
-              Send to Email
-            </button>
-            <button
-              onClick={() => submitMfaChoice("PHONE")}
-              className="flex-1 py-2.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 text-[13px] font-semibold hover:bg-indigo-50 transition-colors"
-            >
-              Send to Phone
-            </button>
+            {(mfaOptions.length > 0 ? mfaOptions : ["EMAIL", "PHONE"]).map((method) => (
+              <button
+                key={method}
+                onClick={() => submitMfaChoice(method as "EMAIL" | "PHONE")}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors first:bg-indigo-600 last:bg-white last:border last:border-indigo-200 last:text-indigo-700 last:hover:bg-indigo-50"
+              >
+                {method === "EMAIL" ? "Send to Email" : "Send to Phone"}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* OTP prompt · shown when backend is waiting for the verification code */}
-      {syncStatus === "waiting_for_otp" && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-5">
+      {/* OTP entry · waiting for code */}
+      {(syncStatus === "waiting_for_otp" || syncStatus === "otp_failed") && (
+        <div className={`mb-6 rounded-2xl p-5 border ${syncStatus === "otp_failed" ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"}`}>
           <div className="flex items-center gap-2 mb-1">
-            <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-            <p className="text-[14px] font-bold text-blue-900">Enter your verification code</p>
+            {syncStatus === "otp_failed"
+              ? <XCircle className="w-4 h-4 text-red-500" />
+              : <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />}
+            <p className={`text-[14px] font-bold ${syncStatus === "otp_failed" ? "text-red-900" : "text-blue-900"}`}>
+              {syncStatus === "otp_failed" ? "Incorrect code — try again" : "Enter your verification code"}
+            </p>
           </div>
-          <p className="text-[12px] text-blue-700 mb-4">
-            FedEx sent a one-time code to your registered email or phone. Enter it below to complete sign-in.
+          {syncStatus === "otp_failed" && otpError && (
+            <p className="text-[11px] text-red-600 mb-2">{otpError}</p>
+          )}
+          <p className={`text-[12px] mb-4 ${syncStatus === "otp_failed" ? "text-red-700" : "text-blue-700"}`}>
+            {syncStatus === "otp_failed"
+              ? "The code you entered wasn't accepted. Enter the correct code and press Enter."
+              : "FedEx sent a one-time code. Find it in your email or phone, enter it below, and press Enter."}
           </p>
           <div className="flex gap-2">
             <input
@@ -266,13 +278,17 @@ export default function AutoSpotlightClient() {
               onChange={e => setOtpInput(e.target.value.replace(/\D/g, ""))}
               onKeyDown={e => e.key === "Enter" && submitOtp()}
               placeholder="123456"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-blue-200 bg-white text-[16px] font-bold text-slate-900 tracking-widest outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+              className={`flex-1 px-4 py-2.5 rounded-xl border bg-white text-[16px] font-bold text-slate-900 tracking-widest outline-none transition
+                ${syncStatus === "otp_failed"
+                  ? "border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                  : "border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"}`}
               autoFocus
             />
             <button
               onClick={submitOtp}
               disabled={otpSaving || !otpInput.trim()}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className={`px-5 py-2.5 rounded-xl text-white text-[13px] font-semibold disabled:opacity-50 transition-colors
+                ${syncStatus === "otp_failed" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
             >
               {otpSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
             </button>
