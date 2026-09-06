@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import PwaInstallPrompt from "@/components/pwa-install-prompt";
 
 export const metadata: Metadata = {
   title: "MyGroundOps Driver Portal",
@@ -32,5 +33,10 @@ export const viewport: Viewport = {
 };
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      {children}
+      <PwaInstallPrompt />
+    </>
+  );
 }
