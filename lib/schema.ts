@@ -482,3 +482,23 @@ export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", 
   createdBy:      text("created_by").notNull(),
   createdAt:      timestamp("created_at").defaultNow(),
 });
+
+// ── Locations (delivery stations operated by this ISP) ────────────────────────
+export const locations = pgTable("locations", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  name:           text("name").notNull(),           // e.g. "Fletcher - 0259"
+  terminalId:     text("terminal_id"),              // e.g. "0259" — internal station code
+  gcTerminalId:   integer("gc_terminal_id"),        // GroundCloud terminal ID for filtering
+  createdAt:      timestamp("created_at").defaultNow(),
+});
+
+export const userLocations = pgTable("user_locations", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  userId:         text("user_id").notNull(),        // references drivers.driver_id (user accounts use same ID)
+  locationId:     integer("location_id").notNull().references(() => locations.id, { onDelete: "cascade" }),
+  createdAt:      timestamp("created_at").defaultNow(),
+}, (t) => ({
+  userLocationUnique: uniqueIndex("user_locations_user_location_unique").on(t.userId, t.locationId),
+}));

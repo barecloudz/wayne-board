@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import { getSession } from "@/lib/session";
 import { organizations } from "@/lib/schema";
@@ -31,6 +32,12 @@ import {
 } from "lucide-react";
 
 export default async function Home() {
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
+
+  const onboardingComplete = await getSetting("onboarding_complete", "");
+  if (onboardingComplete !== "true") redirect("/onboarding");
+
   const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList] =
     await Promise.all([
       db.select({ vehicleCount: count() }).from(vehicles).where(eq(vehicles.active, true)),

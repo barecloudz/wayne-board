@@ -6,8 +6,10 @@ export const metadata: Metadata = { title: "Settings" };
 import WorkAreaManager from "../work-area-manager";
 import GcSyncSettings from "../gc-sync-settings";
 import BrandingSettings from "../branding-settings";
+import LocationManager from "../location-manager";
 import { getSetting } from "@/lib/actions/settings";
 import { getWorkAreas } from "@/lib/actions/work-areas";
+import { getLocations } from "@/lib/actions/locations";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
@@ -22,13 +24,14 @@ export default async function SettingsPage() {
         .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
     : [null];
 
-  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getSetting("clock_in_enabled", "false"),
     getSetting("show_dsw", "true"),
     getWorkAreas(),
     getSetting("gc_sync_interval", "daily"),
+    getLocations(),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -48,6 +51,7 @@ export default async function SettingsPage() {
           <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} initialOgImageUrl={orgRow?.ogImageUrl ?? null} />
           <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} showDsw={showDsw} />
           <WorkAreaManager initial={workAreasList as any} />
+          <LocationManager initial={locationsList} />
           <GcSyncSettings initialInterval={gcSyncInterval} />
         </div>
       </main>
