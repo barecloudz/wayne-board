@@ -7,6 +7,7 @@ import {
   CheckCircle2, XCircle, ChevronRight, Truck, Plus, Loader2, AlertCircle,
 } from "lucide-react";
 import { createVehicle } from "@/lib/actions/vehicles";
+import { vinPrefixLookup } from "@/lib/vin-lookup";
 
 type Vehicle = {
   id: number;
@@ -43,18 +44,30 @@ export default function FleetHeader({ trucks }: { trucks: Vehicle[] }) {
     if (v.length !== 17) return;
     setVinLoading(true);
     try {
+      const local = vinPrefixLookup(v);
       const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${v}?format=json`);
       const data = await res.json();
       const r = data?.Results?.[0];
-      if (r?.Make) setMake(r.Make.charAt(0).toUpperCase() + r.Make.slice(1).toLowerCase());
       if (r?.ModelYear) setYear(r.ModelYear);
-      const genericModels = ["commercial chassis", "incomplete vehicle", "multipurpose passenger vehicle (mpv)"];
-      const rawModel = r?.Model ?? "";
-      const series = r?.Series ?? "";
-      const modelIsGeneric = genericModels.includes(rawModel.toLowerCase());
-      const resolved = modelIsGeneric && series ? series : rawModel && series && !rawModel.toLowerCase().includes(series.toLowerCase()) ? `${rawModel} ${series}` : rawModel;
-      if (resolved) setModel(resolved);
-      if (r?.Make) setVinDecoded(true);
+      if (local) {
+        setMake(local.make);
+        setModel(local.model);
+        setVinDecoded(true);
+      } else {
+        if (r?.Make) setMake(r.Make.charAt(0).toUpperCase() + r.Make.slice(1).toLowerCase());
+        const genericModels = ["commercial chassis", "incomplete vehicle", "multipurpose passenger vehicle (mpv)"];
+        const rawModel = r?.Model ?? "";
+        const series = r?.Series ?? "";
+        const bodyClass = r?.BodyClass?.toLowerCase() ?? "";
+        const modelIsGeneric = genericModels.includes(rawModel.toLowerCase());
+        let resolved: string;
+        if (modelIsGeneric && series) resolved = series;
+        else if (modelIsGeneric && bodyClass.includes("step van")) resolved = "Step Van";
+        else if (rawModel && series && !rawModel.toLowerCase().includes(series.toLowerCase())) resolved = `${rawModel} ${series}`;
+        else resolved = rawModel;
+        if (resolved) setModel(resolved);
+        if (r?.Make) setVinDecoded(true);
+      }
     } catch { /* silent — user can fill manually */ }
     finally { setVinLoading(false); }
   }
