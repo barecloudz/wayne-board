@@ -11,7 +11,7 @@ import https from "https";
 import { neon } from "@neondatabase/serverless";
 
 const GC_BASE = "https://www.groundcloud.io";
-const CUSTOMER = 439;
+const CUSTOMER = 6711;
 
 export type GcSyncResult = {
   success: boolean;
@@ -46,11 +46,21 @@ function apiGet(cookieHdr: string, path: string): Promise<any> {
   });
 }
 
-export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
+export async function syncGc(dateOverride?: string, orgIdOverride?: number): Promise<GcSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
+  // Resolve orgId — required for gc_route_days unique constraint (organization_id, gc_route_day_id)
+  let orgId = orgIdOverride;
+  if (!orgId) {
+    const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+    orgId = (orgRows as any[])[0]?.id;
+  }
+  if (!orgId) {
+    return { success: false, date: "", routeDays: 0, matched: 0, error: "No organization found." };
+  }
+
   // Read credentials from DB, fall back to env vars
-  const credsRows = await sql`SELECT key, value FROM settings WHERE key IN ('gc_username', 'gc_password')`;
+  const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('gc_username', 'gc_password')`;
   const credsMap  = Object.fromEntries((credsRows as any[]).map((r) => [r.key, r.value]));
   const username  = credsMap["gc_username"] || process.env.GC_USERNAME;
   const password  = credsMap["gc_password"] || process.env.GC_PASSWORD;
@@ -127,7 +137,7 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
     const routeDays: any[] = rdResp.results || [];
 
     if (routeDays.length === 0) {
-      await sql`INSERT INTO settings (key, value) VALUES ('gc_last_synced_at', NOW()::text) ON CONFLICT (key) DO UPDATE SET value = NOW()::text`;
+      await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'gc_last_synced_at', NOW()::text) ON CONFLICT (organization_id, key) DO UPDATE SET value = NOW()::text`;
       return { success: true, date: targetDate, routeDays: 0, matched: 0 };
     }
 
@@ -176,9 +186,10 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
 
       await sql`
         INSERT INTO gc_route_days
-          (gc_route_day_id, driver_id, driver_name, route_name, date,
+          (organization_id, gc_route_day_id, driver_id, driver_name, route_name, date,
            stops_per_hour, miles_total, miles_traveled, drive_time, status)
         VALUES (
+          ${orgId},
           ${detail.id},
           ${driverId},
           ${gcDriverName},
@@ -190,7 +201,7 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
           ${dt},
           ${detail.status ?? ""}
         )
-        ON CONFLICT (gc_route_day_id) DO UPDATE SET
+        ON CONFLICT (organization_id, gc_route_day_id) DO UPDATE SET
           driver_id      = EXCLUDED.driver_id,
           driver_name    = EXCLUDED.driver_name,
           route_name     = EXCLUDED.route_name,
@@ -204,7 +215,7 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
       `;
     }
 
-    await sql`INSERT INTO settings (key, value) VALUES ('gc_last_synced_at', NOW()::text) ON CONFLICT (key) DO UPDATE SET value = NOW()::text`;
+    await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'gc_last_synced_at', NOW()::text) ON CONFLICT (organization_id, key) DO UPDATE SET value = NOW()::text`;
 
     return { success: true, date: targetDate, routeDays: details.length, matched };
 
