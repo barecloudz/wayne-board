@@ -1,16 +1,12 @@
 /**
  * Auto GC sync engine.
- * Logs into groundcloud.io via Puppeteer (Django session), pulls today's
- * route-day performance data, name-matches drivers to Wayne Board, upserts.
+ * Logs into groundcloud.io via the DRF session endpoint (fetch-based),
+ * pulls route-day performance data, name-matches drivers to Wayne Board, upserts.
  *
  * Credentials come from DB settings (gc_username, gc_password)
  * or env vars GC_USERNAME, GC_PASSWORD.
  */
 
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
-
-const CHROMIUM_PACK = "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
 import https from "https";
 import { neon } from "@neondatabase/serverless";
 
@@ -24,6 +20,14 @@ export type GcSyncResult = {
   matched: number;
   error?: string;
 };
+
+function parseCookieValue(headers: string[], name: string): string | null {
+  for (const h of headers) {
+    const match = h.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+    if (match) return match[1];
+  }
+  return null;
+}
 
 function apiGet(cookieHdr: string, path: string): Promise<any> {
   return new Promise((resolve) => {
@@ -62,38 +66,61 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
     return d.toISOString().slice(0, 10);
   })();
 
-  let browser: any;
   try {
-    // ── Login via Puppeteer (Django form submit) ───────────────────────────────
-    browser = await puppeteer.launch({
-      executablePath: await chromium.executablePath(CHROMIUM_PACK),
-      headless: true,
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-features=WebBluetooth,WebUSB"],
+    // ── Login via DRF session endpoint (fetch-based, no Puppeteer) ────────────
+    // Step 1: GET /api/auth/login/ to obtain the csrftoken cookie
+    const loginPageRes = await fetch(`${GC_BASE}/api/auth/login/`, {
+      headers: { "Accept": "text/html,application/xhtml+xml" },
+      redirect: "follow",
+    });
+    if (!loginPageRes.ok) {
+      throw new Error(`GroundCloud login page returned ${loginPageRes.status}`);
+    }
+
+    // Extract csrftoken from Set-Cookie header
+    const setCookieHeaders = loginPageRes.headers.getSetCookie
+      ? loginPageRes.headers.getSetCookie()
+      : [(loginPageRes.headers.get("set-cookie") ?? "")];
+
+    const csrfFromGet = parseCookieValue(setCookieHeaders, "csrftoken");
+
+    // Step 2: POST credentials to DRF login endpoint
+    const body = new URLSearchParams({
+      username,
+      password,
+      csrfmiddlewaretoken: csrfFromGet ?? "",
     });
 
-    const page = await browser.newPage();
-    page.on("dialog", async (d: any) => { try { await d.dismiss(); } catch {} });
+    const loginRes = await fetch(`${GC_BASE}/api/auth/login/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Referer": `${GC_BASE}/api/auth/login/`,
+        "Cookie": csrfFromGet ? `csrftoken=${csrfFromGet}` : "",
+        "X-CSRFToken": csrfFromGet ?? "",
+      },
+      body: body.toString(),
+      redirect: "manual",
+    });
 
-    await page.goto(`${GC_BASE}/dashboard/login/`, { waitUntil: "networkidle2" });
+    // Collect all Set-Cookie headers from login response
+    const loginCookieHeaders = loginRes.headers.getSetCookie
+      ? loginRes.headers.getSetCookie()
+      : [(loginRes.headers.get("set-cookie") ?? "")];
 
-    const userInput = await page.$('input[name="auth-username"]') || await page.$('input[type="text"]');
-    const passInput = await page.$('input[name="auth-password"]') || await page.$('input[type="password"]');
-    if (userInput) await (userInput as any).type(username, { delay: 30 });
-    if (passInput) await (passInput as any).type(password, { delay: 30 });
+    const sidValue  = parseCookieValue(loginCookieHeaders, "sessionid");
+    const csrfValue = parseCookieValue(loginCookieHeaders, "csrftoken") ?? csrfFromGet ?? "";
 
-    // Submit via form.submit() — button click approach causes waitForNavigation race
-    await page.evaluate(() => { (document.querySelector("form") as HTMLFormElement)?.submit(); });
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {});
+    if (!sidValue) {
+      // Provide a richer error: include status and redirect location to aid debugging
+      const redirectTo = loginRes.headers.get("location") ?? "(no redirect)";
+      throw new Error(
+        `GroundCloud login failed — no session ID cookie (HTTP ${loginRes.status}, location: ${redirectTo}). ` +
+        `Check that your GroundCloud credentials are correct.`
+      );
+    }
 
-    const cookies = await page.cookies();
-    await browser.close();
-    browser = undefined;
-
-    const sid = (cookies as any[]).find((c) => c.name === "sessionid");
-    if (!sid) throw new Error("GroundCloud login failed — no sessionid cookie");
-
-    const csrf     = (cookies as any[]).find((c) => c.name === "csrftoken");
-    const cookieHdr = `sessionid=${sid.value}; csrftoken=${csrf?.value || ""}`;
+    const cookieHdr = `sessionid=${sidValue}; csrftoken=${csrfValue}`;
 
     // ── Fetch route-day list ──────────────────────────────────────────────────
     const rdResp   = await apiGet(cookieHdr, `/api/route-days/?customer=${CUSTOMER}&day=${targetDate}`);
@@ -182,7 +209,6 @@ export async function syncGc(dateOverride?: string): Promise<GcSyncResult> {
     return { success: true, date: targetDate, routeDays: details.length, matched };
 
   } catch (err: any) {
-    if (browser) await browser.close().catch(() => {});
     return { success: false, date: "", routeDays: 0, matched: 0, error: err?.message ?? String(err) };
   }
 }

@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     } : undefined,
   };
 }
+
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -33,14 +34,26 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
 
   if (!org) redirect("/");
 
+  const accent = org.accentColor ?? "#FF6200";
+
   if (org.subscriptionStatus === "canceled") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F8FAFC" }}>
-        <div className="text-center px-6">
-          <p className="text-[15px]" style={{ color: "#475569" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)" }}
+      >
+        <div
+          className="text-center px-8 py-10 rounded-3xl"
+          style={{
+            background: "linear-gradient(160deg, #FFFFFF 0%, #EEF2F7 100%)",
+            border: "1px solid rgba(203,213,225,0.6)",
+            boxShadow: "0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 32px rgba(148,163,184,0.2), 0 2px 8px rgba(148,163,184,0.12)",
+          }}
+        >
+          <p className="text-[15px] font-medium" style={{ color: "#64748B" }}>
             This station&apos;s subscription is no longer active.
           </p>
-          <a href="/" className="text-[13px] mt-4 inline-block font-medium" style={{ color: "#FF6200" }}>
+          <a href="/" className="text-[13px] mt-4 inline-block font-semibold hover:underline" style={{ color: accent }}>
             ← MyGroundOps
           </a>
         </div>
@@ -49,41 +62,90 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-5" style={{ background: "#F8FAFC" }}>
-      {/* Logo + org name */}
-      <div className="mb-8 flex flex-col items-center gap-4">
-        <div className="rounded-2xl p-1" style={{ background: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
-          {org.logoUrl ? (
-            <img src={org.logoUrl} alt={org.name} style={{ width: 60, height: 60, objectFit: "contain", borderRadius: 10 }} />
-          ) : (
-            <Image src="/logo-icon.png" alt="MyGroundOps" width={60} height={60} className="rounded-xl object-contain" />
-          )}
-        </div>
-        <div className="text-center">
-          <h1 className="text-[24px] font-extrabold tracking-tight leading-tight" style={{ color: "#0F172A" }}>
-            {org.name}
-          </h1>
-          <p className="text-[13px] mt-1 font-medium" style={{ color: "#94A3B8" }}>
-            Driver Portal
-          </p>
-        </div>
-      </div>
-
-      {/* Login card */}
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
+      style={{
+        background: "linear-gradient(160deg, #F1F5F9 0%, #E8EDF4 50%, #E2E8F0 100%)",
+      }}
+    >
+      {/* Subtle ambient glow from accent color — very faint */}
       <div
-        className="w-full max-w-[400px] rounded-2xl px-7 py-7"
+        className="pointer-events-none fixed inset-0"
         style={{
-          background: "#ffffff",
-          border: "1px solid #E2E8F0",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.06)",
+          background: `radial-gradient(ellipse 60% 40% at 50% 10%, ${accent}0A 0%, transparent 70%)`,
+        }}
+      />
+
+      {/* Glass card */}
+      <div
+        className="relative w-full max-w-[420px] rounded-[24px] px-8 py-10 flex flex-col items-center"
+        style={{
+          background: "linear-gradient(160deg, #FFFFFF 0%, #F4F7FB 55%, #EEF2F7 100%)",
+          border: "1px solid rgba(203,213,225,0.65)",
+          boxShadow: [
+            "0 1px 0 0 rgba(255,255,255,0.95) inset",         /* top gloss highlight */
+            "0 -1px 0 0 rgba(255,255,255,0.4) inset",
+            "0 2px 6px rgba(148,163,184,0.10)",               /* near shadow */
+            "0 8px 24px rgba(148,163,184,0.18)",              /* mid shadow */
+            "0 24px 64px rgba(100,116,139,0.14)",             /* deep shadow */
+          ].join(", "),
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
         }}
       >
-        {/* Orange accent bar */}
-        <div className="h-[3px] -mx-7 -mt-7 mb-6 rounded-t-2xl" style={{ background: org.accentColor ?? "#FF6200" }} />
-        <OrgLoginForm orgSlug={slug} />
+        {/* Logo */}
+        <div
+          className="w-20 h-20 rounded-2xl flex items-center justify-center overflow-hidden mb-5"
+          style={{
+            background: "linear-gradient(145deg, #FFFFFF 0%, #F0F4F8 100%)",
+            border: "1px solid rgba(203,213,225,0.7)",
+            boxShadow: [
+              "0 1px 0 0 rgba(255,255,255,1) inset",
+              "0 4px 12px rgba(148,163,184,0.20)",
+              "0 1px 3px rgba(148,163,184,0.15)",
+            ].join(", "),
+          }}
+        >
+          {org.logoUrl ? (
+            <img
+              src={org.logoUrl}
+              alt={org.name}
+              style={{ width: 52, height: 52, objectFit: "contain" }}
+            />
+          ) : (
+            <Image src="/logo-icon.png" alt="MyGroundOps" width={52} height={52} className="object-contain" />
+          )}
+        </div>
+
+        {/* Org name */}
+        <h1
+          className="text-[22px] font-extrabold tracking-tight text-center leading-tight mb-1"
+          style={{ color: "#0F172A" }}
+        >
+          {org.name}
+        </h1>
+        <p
+          className="text-[13px] font-medium text-center mb-8"
+          style={{ color: "#94A3B8" }}
+        >
+          Driver Portal
+        </p>
+
+        {/* Divider */}
+        <div
+          className="w-full mb-7"
+          style={{
+            height: 1,
+            background: "linear-gradient(to right, transparent, rgba(203,213,225,0.7), transparent)",
+          }}
+        />
+
+        {/* Form */}
+        <OrgLoginForm orgSlug={slug} accentColor={accent} />
       </div>
 
-      <p className="mt-8 text-[12px]" style={{ color: "#94A3B8" }}>
+      {/* Powered by */}
+      <p className="mt-8 text-[11px] font-medium" style={{ color: "#CBD5E1" }}>
         Powered by{" "}
         <a href="/" className="hover:underline" style={{ color: "#94A3B8" }}>
           MyGroundOps

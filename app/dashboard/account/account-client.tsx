@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
-import { Camera, Loader2, Check, User } from "lucide-react";
+import { Camera, Loader2, Check, User, ExternalLink } from "lucide-react";
 import { updateMyAvatar } from "@/lib/actions/drivers";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -15,6 +15,19 @@ const ROLE_COLORS: Record<string, string> = {
   driver:    "bg-slate-100 text-slate-600",
 };
 
+const PLAN_LABELS: Record<string, string> = {
+  starter:    "Starter",
+  pro:        "Pro",
+  enterprise: "Enterprise",
+};
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  trialing: { label: "Trial",    className: "bg-amber-100 text-amber-700" },
+  active:   { label: "Active",   className: "bg-emerald-100 text-emerald-700" },
+  past_due: { label: "Past Due", className: "bg-red-100 text-red-700" },
+  canceled: { label: "Canceled", className: "bg-slate-100 text-slate-500" },
+};
+
 type Profile = {
   id: number;
   driverId: string;
@@ -24,12 +37,39 @@ type Profile = {
   avatarUrl: string | null;
 };
 
-export default function AccountClient({ profile }: { profile: Profile }) {
+type OrgSubscription = {
+  plan: string;
+  subscriptionStatus: string;
+} | null;
+
+export default function AccountClient({
+  profile,
+  orgSubscription,
+}: {
+  profile: Profile;
+  orgSubscription: OrgSubscription;
+}) {
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? "");
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleManageBilling() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const { url, error } = await res.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        console.error("Billing portal error:", error);
+      }
+    } finally {
+      setPortalLoading(false);
+    }
+  }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -114,6 +154,47 @@ export default function AccountClient({ profile }: { profile: Profile }) {
           Click the camera icon to upload a new profile picture. Square images work best.
         </p>
       </div>
+
+      {profile.role === "owner" && orgSubscription && (
+        <div className="mt-6 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] p-6">
+          <h3 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+            Subscription
+          </h3>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div>
+                <p className="text-[15px] font-bold text-slate-900">
+                  {PLAN_LABELS[orgSubscription.plan] ?? orgSubscription.plan} Plan
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  {(() => {
+                    const cfg = STATUS_CONFIG[orgSubscription.subscriptionStatus] ?? {
+                      label: orgSubscription.subscriptionStatus,
+                      className: "bg-slate-100 text-slate-500",
+                    };
+                    return (
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${cfg.className}`}>
+                        {cfg.label}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleManageBilling}
+              disabled={portalLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              {portalLoading
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <ExternalLink className="w-3.5 h-3.5" />}
+              Manage Billing
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

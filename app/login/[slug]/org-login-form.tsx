@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
-export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
+export default function OrgLoginForm({
+  orgSlug,
+  accentColor,
+}: {
+  orgSlug: string;
+  accentColor: string;
+}) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -36,30 +42,57 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
     }
   }
 
+  /* Inset-shadow input style — clean, slightly recessed look */
   const inputBase: React.CSSProperties = {
-    background: "#F8FAFC",
-    border: "1px solid #E2E8F0",
+    background: "rgba(241,245,249,0.8)",
+    border: "1px solid rgba(203,213,225,0.7)",
+    boxShadow: "inset 0 2px 4px rgba(148,163,184,0.12), inset 0 1px 2px rgba(148,163,184,0.08)",
     color: "#0F172A",
     borderRadius: 12,
-    padding: "12px 16px",
+    padding: "13px 16px",
     fontSize: 15,
     width: "100%",
     outline: "none",
-    transition: "border-color 0.15s",
+    transition: "border-color 0.15s, box-shadow 0.15s",
   };
 
   function onFocus(e: React.FocusEvent<HTMLInputElement>) {
-    e.target.style.borderColor = "#FF6200";
+    e.target.style.borderColor = accentColor;
+    e.target.style.boxShadow = `inset 0 2px 4px rgba(148,163,184,0.10), 0 0 0 3px ${accentColor}28`;
+    e.target.style.background = "#FFFFFF";
   }
   function onBlur(e: React.FocusEvent<HTMLInputElement>) {
-    e.target.style.borderColor = "#E2E8F0";
+    e.target.style.borderColor = "rgba(203,213,225,0.7)";
+    e.target.style.boxShadow = "inset 0 2px 4px rgba(148,163,184,0.12), inset 0 1px 2px rgba(148,163,184,0.08)";
+    e.target.style.background = "rgba(241,245,249,0.8)";
   }
 
+  /* Derive a slightly lighter tint for the button gloss */
+  function hexLighten(hex: string, amount: number): string {
+    const n = parseInt(hex.replace("#", ""), 16);
+    const r = Math.min(255, ((n >> 16) & 0xff) + amount);
+    const g = Math.min(255, ((n >> 8) & 0xff) + amount);
+    const b = Math.min(255, (n & 0xff) + amount);
+    return `rgb(${r},${g},${b})`;
+  }
+  function hexDarken(hex: string, amount: number): string {
+    const n = parseInt(hex.replace("#", ""), 16);
+    const r = Math.max(0, ((n >> 16) & 0xff) - amount);
+    const g = Math.max(0, ((n >> 8) & 0xff) - amount);
+    const b = Math.max(0, (n & 0xff) - amount);
+    return `rgb(${r},${g},${b})`;
+  }
+
+  const btnGradient = `linear-gradient(180deg, ${hexLighten(accentColor, 24)} 0%, ${accentColor} 48%, ${hexDarken(accentColor, 18)} 100%)`;
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
       {/* Username */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#64748B" }}>
+        <label
+          className="text-[11px] font-semibold uppercase tracking-widest"
+          style={{ color: "#94A3B8" }}
+        >
           Username
         </label>
         <input
@@ -73,13 +106,16 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
           style={inputBase}
           onFocus={onFocus}
           onBlur={onBlur}
-          className="placeholder-slate-300"
+          className="placeholder:text-slate-300"
         />
       </div>
 
       {/* Password */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#64748B" }}>
+        <label
+          className="text-[11px] font-semibold uppercase tracking-widest"
+          style={{ color: "#94A3B8" }}
+        >
           Password
         </label>
         <div className="relative">
@@ -92,12 +128,12 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
             style={{ ...inputBase, paddingRight: 44 }}
             onFocus={onFocus}
             onBlur={onBlur}
-            className="placeholder-slate-300"
+            className="placeholder:text-slate-300"
           />
           <button
             type="button"
             onClick={() => setShowPassword((p) => !p)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-80"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-60"
             style={{ color: "#94A3B8" }}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -106,14 +142,32 @@ export default function OrgLoginForm({ orgSlug }: { orgSlug: string }) {
       </div>
 
       {error && (
-        <p className="text-[12px] text-center font-medium" style={{ color: "#f87171" }}>{error}</p>
+        <p
+          className="text-[12px] text-center font-medium rounded-xl px-3 py-2.5"
+          style={{
+            color: "#DC2626",
+            background: "rgba(254,226,226,0.7)",
+            border: "1px solid rgba(252,165,165,0.5)",
+          }}
+        >
+          {error}
+        </p>
       )}
 
+      {/* CTA button — gloss gradient */}
       <button
         type="submit"
         disabled={loading || !username.trim() || !password.trim()}
-        className="w-full py-3.5 rounded-xl text-[14px] font-bold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-30 flex items-center justify-center gap-2 mt-1"
-        style={{ background: "#FF6200" }}
+        className="w-full py-3.5 rounded-xl text-[14px] font-bold text-white transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 mt-1"
+        style={{
+          background: btnGradient,
+          boxShadow: [
+            `0 1px 0 0 ${hexLighten(accentColor, 40)}60 inset`,  /* top gloss on button */
+            `0 4px 14px ${accentColor}50`,                        /* color glow */
+            `0 1px 3px rgba(0,0,0,0.15)`,                        /* base shadow */
+          ].join(", "),
+          letterSpacing: "0.01em",
+        }}
       >
         {loading && <Loader2 className="w-4 h-4 animate-spin" />}
         {loading ? "Signing in…" : "Sign In"}
