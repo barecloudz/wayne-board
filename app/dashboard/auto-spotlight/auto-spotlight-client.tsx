@@ -81,6 +81,7 @@ export default function AutoSpotlightClient() {
       setMfaOptions(d.mfaOptions ?? []);
       setOtpError(d.otpError ?? null);
       if (d.syncStatus === "waiting_for_otp" || d.syncStatus === "otp_failed") setShowOtpPanel(true);
+      if (d.syncStatus === "pulling_data" || d.syncStatus === "idle") setShowOtpPanel(false);
       if (triggeredAt.current) {
         // Sync finished with a result
         if (d.lastSyncResult?.completedAt) {
