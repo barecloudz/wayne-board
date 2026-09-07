@@ -27,7 +27,7 @@ const adminItems = [
 ];
 
 const automationItems = [
-  { icon: TrendingUp,    label: "Auto GC",       href: "/dashboard/auto-gc",       exact: true },
+  { icon: ClipboardList, label: "Auto DSW",      href: "/dashboard/auto-dsw",      exact: true },
 ];
 
 const complianceItems = [
