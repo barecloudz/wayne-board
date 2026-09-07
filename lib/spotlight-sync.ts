@@ -383,23 +383,87 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
         console.log("[spotlight] OTP input error:", e.message);
       }
 
-      // Wait up to 30s for EmbedToken (appears after successful MFA)
-      console.log("[spotlight] Waiting for EmbedToken after OTP submission...");
-      const verifyDeadline = Date.now() + 30000;
+      // Give Spotlight a moment to process the OTP and redirect
+      await sleep(4000);
+
+      // Check for error on page BEFORE navigation (wrong code shows error immediately)
+      const errText: string = await spotPage.evaluate(() => {
+        const el = document.querySelector('[class*="error"], [class*="invalid"], [role="alert"], .sr-error-message');
+        return el?.textContent?.trim() ?? "";
+      }).catch(() => "");
+
+      if (errText) {
+        const errMsg = errText;
+        console.log("[spotlight] OTP error on page:", errMsg);
+        if (attempt < MAX_ATTEMPTS) {
+          await deleteSetting("spotlight_otp");
+          await setStatus("otp_failed");
+          await upsertSetting("spotlight_otp_error", errMsg);
+          console.log("[spotlight] Waiting for user to re-enter code...");
+        } else {
+          throw new Error(`Verification failed after ${MAX_ATTEMPTS} attempts: ${errMsg}`);
+        }
+        continue;
+      }
+
+      // OTP accepted — navigate toward RYDE report to trigger EmbedToken in network traffic
+      console.log("[spotlight] OTP accepted, navigating to RYDE report to capture EmbedToken...");
+      await setStatus("pulling_data");
+
+      // Try UI navigation: U.S. Pickup & Delivery -> Report Selection -> P&D Cust Exp -> RYDE
+      try {
+        const uspd = await spotPage.waitForSelector(
+          'button::-p-text(U.S. Pickup & Delivery), a::-p-text(U.S. Pickup & Delivery)',
+          { timeout: 10000 }
+        ).catch(() => null);
+        if (uspd) { await (uspd as any).click(); await sleep(1500); }
+
+        const reportSel = await spotPage.$('button::-p-text(Report Selection), a::-p-text(Report Selection)').catch(() => null);
+        if (reportSel) { await (reportSel as any).click(); await sleep(1000); }
+
+        const pdNav = await spotPage.$('[class*="dropdown"]::-p-text(P&D Customer Experience), a::-p-text(P&D Customer Experience)').catch(() => null);
+        if (pdNav) { await (pdNav as any).click(); await sleep(800); }
+
+        const rydeNav = await spotPage.$('a::-p-text(RYDE), button::-p-text(RYDE), li::-p-text(RYDE)').catch(() => null);
+        if (rydeNav) { await (rydeNav as any).click(); await sleep(3000); }
+      } catch (e: any) { console.log("[spotlight] Nav error:", e.message); }
+
+      // Wait up to 60s for EmbedToken from network traffic as Power BI loads
+      console.log("[spotlight] Waiting for EmbedToken in network traffic...");
+      const verifyDeadline = Date.now() + 60000;
       while (!embedToken && Date.now() < verifyDeadline) await sleep(1000);
+
+      // Fallback: if still no EmbedToken, try SPOI API directly with Bearer + browser session cookies
+      if (!embedToken && bearerToken) {
+        console.log("[spotlight] Trying SPOI API fallback to get EmbedToken...");
+        try {
+          const embedResult: any = await spotPage.evaluate(
+            async (spoiBase: string, bearer: string, userId: string, csaId: string, reportId: string) => {
+              const h = { Authorization: bearer, "Content-Type": "application/json" };
+              await fetch(`${spoiBase}/csrftoken?`, { credentials: "include", headers: h });
+              const dr = await fetch(`${spoiBase}/powerbi/dashboard?withCredentials=true`, {
+                method: "POST", credentials: "include", headers: h,
+                body: JSON.stringify({ userId, selectedCSAId: csaId, reportId }),
+              });
+              return dr.ok ? dr.json() : { error: `HTTP ${dr.status}` };
+            },
+            SPOI_BASE, bearerToken, username, CSA_ID, RYDE_REPORT_ID
+          );
+          if (embedResult?.embedToken?.token) {
+            embedToken = embedResult.embedToken.token;
+            console.log("[spotlight] EmbedToken obtained via SPOI API fallback");
+          } else {
+            console.log("[spotlight] SPOI API fallback result:", JSON.stringify(embedResult).slice(0, 200));
+          }
+        } catch (e: any) { console.log("[spotlight] SPOI API fallback error:", e.message); }
+      }
 
       if (embedToken) {
         console.log("[spotlight] Authentication complete, EmbedToken captured!");
         break;
       }
 
-      // No EmbedToken — OTP may have been wrong; check page for error text
-      const errText: string = await spotPage.evaluate(() => {
-        const el = document.querySelector('[class*="error"], [class*="invalid"], [role="alert"], .sr-error-message');
-        return el?.textContent?.trim() ?? "";
-      }).catch(() => "");
-
-      const errMsg = errText || `OTP attempt ${attempt} did not authenticate (no EmbedToken received)`;
+      const errMsg = `OTP verified but could not reach Power BI report (attempt ${attempt})`;
       console.log("[spotlight] OTP verify error:", errMsg);
 
       if (attempt < MAX_ATTEMPTS) {
