@@ -23,7 +23,7 @@ export async function GET(
     sql`
       SELECT id, name, dro_plan_id, dro_plan_name, driver_count, day_of_week, is_default, notes
       FROM route_templates
-      WHERE id = ${templateId}
+      WHERE id = ${templateId} AND organization_id = ${session.organizationId}
     `,
     sql`
       SELECT
@@ -105,6 +105,10 @@ export async function PUT(
 
   try {
     const sql = neon(process.env.DATABASE_URL_POOLER ?? process.env.DATABASE_URL!);
+
+    // Verify this template belongs to the requesting org before updating
+    const ownerCheck = await sql`SELECT id FROM route_templates WHERE id = ${templateId} AND organization_id = ${session.organizationId}`;
+    if (ownerCheck.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // Bulk update · one query per area (neon serverless doesn't support transactions easily)
     await Promise.all(

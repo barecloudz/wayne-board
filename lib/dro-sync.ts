@@ -76,17 +76,17 @@ export async function syncDro(): Promise<DroSyncResult> {
       const body = await planRes.text().catch(() => "(unreadable)");
       console.error(`[dro-sync] active-route-plan returned ${planRes.status}. Body: ${body.slice(0, 500)}`);
       // Log captured header keys (not values) so we can see what was sent
-      const hdrRows = await sql`SELECT value FROM settings WHERE key = 'dro_session_headers'`;
+      const hdrRows = await sql`SELECT value FROM settings WHERE organization_id = ${orgId} AND key = 'dro_session_headers'`;
       let capturedKeys = "(none)";
       if (hdrRows[0]?.value) {
         try { capturedKeys = Object.keys(JSON.parse(hdrRows[0].value)).join(", "); } catch {}
       }
       const detail = JSON.stringify({ status: planRes.status, body: body.slice(0, 500), capturedHeaderKeys: capturedKeys, at: new Date().toISOString() });
-      await sql`INSERT INTO settings (key, value) VALUES ('dro_last_401_detail', ${detail})
-                ON CONFLICT (key) DO UPDATE SET value = ${detail}`;
+      await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'dro_last_401_detail', ${detail})
+                ON CONFLICT (organization_id, key) DO UPDATE SET value = ${detail}`;
       // Mark session as expired (set expires to past) rather than deleting · preserves headers for inspection
-      await sql`INSERT INTO settings (key, value) VALUES ('dro_session_expires_at', '2000-01-01T00:00:00.000Z')
-                ON CONFLICT (key) DO UPDATE SET value = '2000-01-01T00:00:00.000Z'`;
+      await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'dro_session_expires_at', '2000-01-01T00:00:00.000Z')
+                ON CONFLICT (organization_id, key) DO UPDATE SET value = '2000-01-01T00:00:00.000Z'`;
       throw new Error("SESSION_EXPIRED");
     }
     const planText = await planRes.text();
@@ -169,9 +169,9 @@ export async function syncDro(): Promise<DroSyncResult> {
     }
 
     // ── Step 5: Wipe today's ephemeral data and reload ──────────────────────
-    await sql`DELETE FROM dro_stops`;
-    await sql`DELETE FROM dro_routes`;
-    await sql`DELETE FROM dro_anchor_areas`;
+    await sql`DELETE FROM dro_stops WHERE organization_id = ${orgId}`;
+    await sql`DELETE FROM dro_routes WHERE organization_id = ${orgId}`;
+    await sql`DELETE FROM dro_anchor_areas WHERE organization_id = ${orgId}`;
 
     // Insert routes with LP/SM/bulk/reg breakdown from packagedetail.
     // If route-summary is empty (pre-solve planning window), fall back to vehicle-set
@@ -194,12 +194,13 @@ export async function syncDro(): Promise<DroSyncResult> {
       const pd = pkgDetailByRoute[r.workAreaNumber ?? ""] ?? {};
       await sql`
         INSERT INTO dro_routes
-          (work_area_name, work_area_number, route_type, stops, packages,
+          (organization_id, work_area_name, work_area_number, route_type, stops, packages,
            distance, time_hours, cube, vehicle_capacity, sort_date,
            lp_stops, lp_packages, sm_stops, sm_packages,
            bulk_stops, bulk_packages, reg_stops, reg_packages,
            exceeded_target_duration, time_critical_stops)
         VALUES (
+          ${orgId},
           ${r.workAreaName     ?? ""},
           ${r.workAreaNumber   ?? ""},
           ${r.routeType        ?? ""},
@@ -232,7 +233,7 @@ export async function syncDro(): Promise<DroSyncResult> {
         const coords = widCoords[String(w.wid)] ?? [null, null];
         await sql`
           INSERT INTO dro_stops
-            (waypoint_id, stop_id, firm_name, address, city, state, postal_code,
+            (organization_id, waypoint_id, stop_id, firm_name, address, city, state, postal_code,
              actual_route, actual_sequence, arrival_time, stop_class,
              no_packages, total_weight, total_cube, is_lp_package, is_bulk_stop,
              work_area_number, lat, lng, sort_date,
@@ -241,6 +242,7 @@ export async function syncDro(): Promise<DroSyncResult> {
              tracking_ids, actual_assignment_type, pickup_type, reason_code,
              overflowed_route, num_lp_packages)
           VALUES (
+            ${orgId},
             ${w.waypointId       ?? ""},
             ${w.stopId           ?? ""},
             ${w.firmName         ?? ""},
@@ -288,7 +290,7 @@ export async function syncDro(): Promise<DroSyncResult> {
         const coords = widCoords[String(w.wid)] ?? [null, null];
         await sql`
           INSERT INTO dro_stops
-            (waypoint_id, stop_id, firm_name, address, city, state, postal_code,
+            (organization_id, waypoint_id, stop_id, firm_name, address, city, state, postal_code,
              actual_route, actual_sequence, arrival_time, stop_class,
              no_packages, total_weight, total_cube, is_lp_package, is_bulk_stop,
              work_area_number, lat, lng, sort_date,
@@ -297,6 +299,7 @@ export async function syncDro(): Promise<DroSyncResult> {
              tracking_ids, actual_assignment_type, pickup_type, reason_code,
              overflowed_route, num_lp_packages)
           VALUES (
+            ${orgId},
             ${w.waypointId       ?? ""},
             ${w.stopId           ?? ""},
             ${w.firmName         ?? ""},
@@ -341,8 +344,9 @@ export async function syncDro(): Promise<DroSyncResult> {
     for (const p of (allRoutePlans ?? [])) {
       await sql`
         INSERT INTO dro_route_plans
-          (plan_id, name, total_routes, lp_routes, bulk_routes, reg_routes, small_routes, is_active, last_used_date)
+          (organization_id, plan_id, name, total_routes, lp_routes, bulk_routes, reg_routes, small_routes, is_active, last_used_date)
         VALUES (
+          ${orgId},
           ${p.planId},
           ${p.name ?? ""},
           ${p.totalRoutes ?? 0},
@@ -353,7 +357,7 @@ export async function syncDro(): Promise<DroSyncResult> {
           ${p.planId === planId},
           ${p.lastUsedDate ?? ""}
         )
-        ON CONFLICT (plan_id) DO UPDATE SET
+        ON CONFLICT (organization_id, plan_id) DO UPDATE SET
           name           = EXCLUDED.name,
           total_routes   = EXCLUDED.total_routes,
           is_active      = EXCLUDED.is_active,
@@ -366,9 +370,10 @@ export async function syncDro(): Promise<DroSyncResult> {
     for (const o of (stopOverridesRaw ?? [])) {
       await sql`
         INSERT INTO dro_stop_overrides
-          (override_id, stop_id, recipient_name, address, postal_code,
+          (organization_id, override_id, stop_id, recipient_name, address, postal_code,
            type, value, window_open, window_close, work_area_num, route_plan_ids)
         VALUES (
+          ${orgId},
           ${String(o.stopOverride_id ?? o.id ?? "")},
           ${o.stopId        ?? ""},
           ${o.recipientName ?? ""},
@@ -381,7 +386,7 @@ export async function syncDro(): Promise<DroSyncResult> {
           ${String(o.workAreaNum ?? "")},
           ${JSON.stringify(o.routePlanIds ?? o.activeRoutePlans ?? [])}
         )
-        ON CONFLICT (override_id) DO UPDATE SET
+        ON CONFLICT (organization_id, override_id) DO UPDATE SET
           value         = EXCLUDED.value,
           work_area_num = EXCLUDED.work_area_num,
           synced_at     = NOW()
@@ -390,8 +395,8 @@ export async function syncDro(): Promise<DroSyncResult> {
 
     // Persist planning window state
     await sql`
-      INSERT INTO settings (key, value) VALUES ('dro_planning_window_open', ${String(planningWindowOpen)})
-      ON CONFLICT (key) DO UPDATE SET value = ${String(planningWindowOpen)}
+      INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'dro_planning_window_open', ${String(planningWindowOpen)})
+      ON CONFLICT (organization_id, key) DO UPDATE SET value = ${String(planningWindowOpen)}
     `;
 
     // Insert anchor areas
@@ -404,15 +409,16 @@ export async function syncDro(): Promise<DroSyncResult> {
       } catch {}
 
       await sql`
-        INSERT INTO dro_anchor_areas (anchor_area_id, name, shape_json, enabled_route_plans, wkt_poly)
+        INSERT INTO dro_anchor_areas (organization_id, anchor_area_id, name, shape_json, enabled_route_plans, wkt_poly)
         VALUES (
+          ${orgId},
           ${a.anchorAreaId},
           ${a.name ?? ""},
           ${shapeStr},
           ${JSON.stringify(a.enabledRoutePlans ?? [])},
           ${wktPoly}
         )
-        ON CONFLICT (anchor_area_id) DO UPDATE SET
+        ON CONFLICT (organization_id, anchor_area_id) DO UPDATE SET
           name                = EXCLUDED.name,
           shape_json          = EXCLUDED.shape_json,
           enabled_route_plans = EXCLUDED.enabled_route_plans,
@@ -432,9 +438,9 @@ export async function syncDro(): Promise<DroSyncResult> {
     const totalDistance = routes.reduce((s: number, r: any) => s + (r.distance ?? 0), 0);
 
     await sql`
-      INSERT INTO dro_daily_totals (date, routes, total_stops, total_packages, total_distance)
-      VALUES (${sortDate}, ${routes.length}, ${totalStops}, ${totalPackages}, ${totalDistance})
-      ON CONFLICT (date) DO UPDATE SET
+      INSERT INTO dro_daily_totals (organization_id, date, routes, total_stops, total_packages, total_distance)
+      VALUES (${orgId}, ${sortDate}, ${routes.length}, ${totalStops}, ${totalPackages}, ${totalDistance})
+      ON CONFLICT (organization_id, date) DO UPDATE SET
         routes         = EXCLUDED.routes,
         total_stops    = EXCLUDED.total_stops,
         total_packages = EXCLUDED.total_packages,
@@ -444,8 +450,8 @@ export async function syncDro(): Promise<DroSyncResult> {
 
     // Update last synced timestamp in settings
     await sql`
-      INSERT INTO settings (key, value) VALUES ('dro_last_synced_at', NOW()::text)
-      ON CONFLICT (key) DO UPDATE SET value = NOW()::text
+      INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'dro_last_synced_at', NOW()::text)
+      ON CONFLICT (organization_id, key) DO UPDATE SET value = NOW()::text
     `;
 
     return { success: true, sortDate, routes: routesToInsert.length, stops: waypoints.length, unroutable: unroutableWaypoints.length, anchorAreas: anchorAreas.length, stopsWithCoords: agsFeatures.length, routePlans: (allRoutePlans ?? []).length, stopOverrides: (stopOverridesRaw ?? []).length, planningWindowOpen };

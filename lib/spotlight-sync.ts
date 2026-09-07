@@ -43,9 +43,10 @@ export async function syncSpotlight(
 ): Promise<SpotlightSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  // Resolve org
+  // Resolve org (cron/background — no session; always use first org until multi-org support added)
   const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
-  const orgId = (orgRows[0]?.id as number) ?? 1;
+  const orgId = orgRows[0]?.id as number;
+  if (!orgId) throw new Error("No organization found");
 
   // Load credentials from user_settings (per-user) when we know who triggered the sync
   let username: string | undefined;

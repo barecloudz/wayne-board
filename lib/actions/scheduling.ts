@@ -176,18 +176,27 @@ export async function removeScheduleOverride(id: number) {
 }
 
 export async function getOverridesInRange(startDate: string, endDate: string) {
-  return db.select().from(scheduleOverrides)
+  const orgId = await requireOrg();
+  return db.select({ id: scheduleOverrides.id, driverId: scheduleOverrides.driverId, date: scheduleOverrides.date, note: scheduleOverrides.note, createdAt: scheduleOverrides.createdAt })
+    .from(scheduleOverrides)
+    .innerJoin(drivers, and(eq(scheduleOverrides.driverId, drivers.driverId), eq(drivers.organizationId, orgId)))
     .where(and(gte(scheduleOverrides.date, startDate), lte(scheduleOverrides.date, endDate)));
 }
 
 export async function getAllUpcomingOverrides(fromDate: string) {
-  return db.select().from(scheduleOverrides)
+  const orgId = await requireOrg();
+  return db.select({ id: scheduleOverrides.id, driverId: scheduleOverrides.driverId, date: scheduleOverrides.date, note: scheduleOverrides.note, createdAt: scheduleOverrides.createdAt })
+    .from(scheduleOverrides)
+    .innerJoin(drivers, and(eq(scheduleOverrides.driverId, drivers.driverId), eq(drivers.organizationId, orgId)))
     .where(gte(scheduleOverrides.date, fromDate))
     .orderBy(scheduleOverrides.driverId, scheduleOverrides.date);
 }
 
 export async function getAllOverrides() {
-  return db.select().from(scheduleOverrides)
+  const orgId = await requireOrg();
+  return db.select({ id: scheduleOverrides.id, driverId: scheduleOverrides.driverId, date: scheduleOverrides.date, note: scheduleOverrides.note, createdAt: scheduleOverrides.createdAt })
+    .from(scheduleOverrides)
+    .innerJoin(drivers, and(eq(scheduleOverrides.driverId, drivers.driverId), eq(drivers.organizationId, orgId)))
     .orderBy(scheduleOverrides.driverId, scheduleOverrides.date);
 }
 

@@ -21,6 +21,7 @@ export async function GET() {
         is_default,
         notes
       FROM route_templates
+      WHERE organization_id = ${session.organizationId}
       ORDER BY is_default DESC, name
     `;
 
