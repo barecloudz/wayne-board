@@ -11,23 +11,32 @@ import { neon } from "@neondatabase/serverless";
 
 export const handler: BackgroundHandler = async (event) => {
   let date: string | undefined;
+  let orgId: number | undefined;
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     date = body.date;
+    orgId = body.orgId ? Number(body.orgId) : undefined;
   } catch {}
 
-  console.log(`[dsw-sync-background] Starting DSW sync${date ? ` for ${date}` : " for yesterday"}`);
+  console.log(`[dsw-sync-background] Starting DSW sync${date ? ` for ${date}` : " for yesterday"} org=${orgId ?? "LIMIT1"}`);
 
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
+  // Resolve org for result writing (mirrors syncDsw fallback when orgId not passed)
+  let resolvedOrgId = orgId;
+  if (!resolvedOrgId) {
+    const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+    resolvedOrgId = (orgRows[0]?.id as number) ?? 1;
+  }
+
   async function writeResult(payload: object) {
     const val = JSON.stringify({ ...payload, completedAt: new Date().toISOString() });
-    await sql`INSERT INTO settings (key, value) VALUES ('dsw_last_sync_result', ${val})
-              ON CONFLICT (key) DO UPDATE SET value = ${val}`;
+    await sql`INSERT INTO settings (organization_id, key, value) VALUES (${resolvedOrgId}, 'dsw_last_sync_result', ${val})
+              ON CONFLICT (organization_id, key) DO UPDATE SET value = ${val}`;
   }
 
   try {
-    const result = await syncDsw(date);
+    const result = await syncDsw(date, orgId);
     console.log(`[dsw-sync-background] Done — rows=${result.rows} matched=${result.matched} success=${result.success}`);
     await writeResult(result);
   } catch (err: any) {

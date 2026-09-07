@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff, X } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff, X } from "lucide-react";
 
 type ScoreRow = {
   id: number;
@@ -17,8 +17,6 @@ type Status = {
   scores: ScoreRow[];
   lastSynced: string;
   lastSyncResult: { success: boolean; error?: string; drivers?: number; weeks?: number; reviews?: number; completedAt?: string } | null;
-  autoEnabled: boolean;
-  autoTime: string;
   syncStatus: "idle" | "launching" | "logging_in" | "detecting_mfa" | "choosing_mfa" | "waiting_for_otp" | "otp_failed" | "pulling_data";
   mfaOptions: string[];
   otpError: string | null;
@@ -40,19 +38,17 @@ export default function AutoSpotlightClient() {
   const [loading,     setLoading]     = useState(true);
   const [syncing,     setSyncing]     = useState(false);
   const [syncResult,  setSyncResult]  = useState<{ ok: boolean; msg: string } | null>(null);
-  const [autoEnabled, setAutoEnabled] = useState(false);
-  const [autoTime,    setAutoTime]    = useState("09:00");
-  const [schedSaving, setSchedSaving] = useState(false);
-  const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
   const [syncStatus,  setSyncStatus]  = useState<"idle" | "launching" | "logging_in" | "detecting_mfa" | "choosing_mfa" | "waiting_for_otp" | "otp_failed" | "pulling_data">("idle");
   const [mfaOptions,  setMfaOptions]  = useState<string[]>([]);
   const [otpError,    setOtpError]    = useState<string | null>(null);
   const [otpInput,    setOtpInput]    = useState("");
   const [otpSaving,   setOtpSaving]   = useState(false);
+  const [otpSubmitted, setOtpSubmitted] = useState(false);
   const [mfaChosen,   setMfaChosen]   = useState<string | null>(null);
   const [showOtpPanel, setShowOtpPanel] = useState(false);
   const triggeredAt = useRef<number>(0);
+  const syncingRef  = useRef(false);
 
   const [myDriverId,    setMyDriverId]    = useState("");
   const [credUsername,  setCredUsername]  = useState("");
@@ -67,45 +63,60 @@ export default function AutoSpotlightClient() {
   const [lookbackSaved,  setLookbackSaved]  = useState(false);
 
   // Latest week for display
-  const latestWeek = data?.scores[0]?.week ?? null;
+  const latestWeek = data?.scores.reduce((best: string | null, s) => !best || s.week > best ? s.week : best, null);
 
-  async function loadStatus() {
+  async function loadStatus(isPolling = false) {
     const res = await fetch("/api/auto-spotlight/status");
     if (res.ok) {
       const d: Status = await res.json();
       setData(d);
-      setAutoEnabled(d.autoEnabled);
-      setAutoTime(d.autoTime);
       if (d.driverId) setMyDriverId(d.driverId);
-      setSyncStatus(d.syncStatus ?? "idle");
+      const status = d.syncStatus ?? "idle";
+      setSyncStatus(status);
       setMfaOptions(d.mfaOptions ?? []);
       setOtpError(d.otpError ?? null);
-      if (d.syncStatus === "waiting_for_otp" || d.syncStatus === "otp_failed") setShowOtpPanel(true);
-      if (d.syncStatus === "pulling_data" || d.syncStatus === "idle") setShowOtpPanel(false);
-      if (triggeredAt.current) {
-        // Sync finished with a result
-        if (d.lastSyncResult?.completedAt) {
-          const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
-          if (resultTime > triggeredAt.current) {
-            setPollUntil(null);
-            setSyncing(false);
-            setMfaChosen(null);
-            if (d.lastSyncResult.success) {
-              setSyncResult({
-                ok: true,
-                msg: `Sync complete · ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks`,
-              });
-            } else {
-              setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
-            }
-          }
-        }
-        // Status returned to idle without a result (crash / timeout / bad creds)
-        if ((d.syncStatus ?? "idle") === "idle" && syncing) {
+
+      // Show OTP panel when waiting; hide when past that stage
+      if (status === "waiting_for_otp" || status === "otp_failed") {
+        setShowOtpPanel(true);
+        setOtpSubmitted(false);
+      }
+      if (status === "pulling_data" || status === "idle") {
+        setShowOtpPanel(false);
+        setMfaChosen(null);
+      }
+
+      // If sync is in progress on page load, resume polling
+      if (!isPolling && status !== "idle") {
+        setSyncing(true);
+        syncingRef.current = true;
+        if (!pollUntil) setPollUntil(Date.now() + 10 * 60 * 1000);
+      }
+
+      // Check for completion
+      if (d.lastSyncResult?.completedAt) {
+        const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
+        const since = triggeredAt.current || (Date.now() - 15 * 60 * 1000); // 15min window on page load
+        if (resultTime > since && syncingRef.current) {
           setPollUntil(null);
           setSyncing(false);
+          syncingRef.current = false;
           setMfaChosen(null);
+          setOtpSubmitted(false);
+          setSyncResult(
+            d.lastSyncResult.success
+              ? { ok: true, msg: `Sync complete · ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks` }
+              : { ok: false, msg: d.lastSyncResult.error ?? "Sync failed" }
+          );
         }
+      }
+      // Status returned to idle without a fresh result
+      if (status === "idle" && syncingRef.current && isPolling) {
+        setPollUntil(null);
+        setSyncing(false);
+        syncingRef.current = false;
+        setMfaChosen(null);
+        setOtpSubmitted(false);
       }
     }
     setLoading(false);
@@ -128,10 +139,12 @@ export default function AutoSpotlightClient() {
         clearInterval(interval);
         setPollUntil(null);
         setSyncing(false);
+        syncingRef.current = false;
+        setOtpSubmitted(false);
         setSyncResult({ ok: false, msg: "Sync timed out · check Netlify function logs." });
         return;
       }
-      await loadStatus();
+      await loadStatus(true);
     }, 5000);
     return () => clearInterval(interval);
   }, [pollUntil]);
@@ -143,7 +156,8 @@ export default function AutoSpotlightClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: "spotlight_mfa_method", value: method }),
     });
-    setSyncResult({ ok: true, msg: `Sending code to your ${method === "EMAIL" ? "email" : "phone"}…` });
+    // Don't set syncResult here — polling will update syncStatus to waiting_for_otp
+    // which will show the OTP panel automatically
   }
 
   async function submitOtp() {
@@ -157,7 +171,8 @@ export default function AutoSpotlightClient() {
     setOtpInput("");
     setOtpSaving(false);
     setShowOtpPanel(false);
-    setSyncResult({ ok: true, msg: "Code submitted · finishing sync…" });
+    setOtpSubmitted(true);
+    setMfaChosen(null);
   }
 
   async function cancelSync() {
@@ -168,8 +183,10 @@ export default function AutoSpotlightClient() {
     });
     setPollUntil(null);
     setSyncing(false);
+    syncingRef.current = false;
     setSyncStatus("idle");
     setMfaChosen(null);
+    setOtpSubmitted(false);
     setShowOtpPanel(false);
     setSyncResult(null);
   }
@@ -178,6 +195,7 @@ export default function AutoSpotlightClient() {
     setShowOtpPanel(false);
     setMfaChosen(null);
     setSyncing(true);
+    syncingRef.current = true;
     setSyncResult(null);
     triggeredAt.current = Date.now();
     // Record which user triggered this sync so the background function can load their credentials
@@ -192,15 +210,17 @@ export default function AutoSpotlightClient() {
       const res = await fetch("/.netlify/functions/spotlight-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
         setPollUntil(Date.now() + 10 * 60 * 1000);
-        setSyncResult({ ok: true, msg: "Logging in to FedEx Spotlight… you'll be asked how to receive your verification code." });
+        setSyncResult({ ok: true, msg: "Sync started — you can navigate away. Come back here to enter your verification code when it arrives." });
       } else {
         const body = await res.json().catch(() => ({}));
         setSyncResult({ ok: false, msg: body?.error ?? `Unexpected response (${res.status})` });
         setSyncing(false);
+        syncingRef.current = false;
       }
     } catch (err: any) {
       setSyncResult({ ok: false, msg: err?.message ?? "Network error" });
       setSyncing(false);
+      syncingRef.current = false;
     }
   }
 
@@ -231,22 +251,12 @@ export default function AutoSpotlightClient() {
     setTimeout(() => setLookbackSaved(false), 3000);
   }
 
-  async function saveSchedule() {
-    setSchedSaving(true);
-    await Promise.all([
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_auto_sync_enabled", value: String(autoEnabled) }) }),
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_auto_sync_time", value: autoTime }) }),
-    ]);
-    setSchedSaving(false);
-    setSchedSaved(true);
-    setTimeout(() => setSchedSaved(false), 3000);
-  }
 
   const lastSynced    = data?.lastSynced ? new Date(data.lastSynced) : null;
-  const latestScores  = data?.scores.filter(s => s.week === latestWeek) ?? [];
-  const hasData       = latestScores.length > 0;
+  const allScores     = data?.scores ?? [];
+  const hasData       = allScores.length > 0;
   const avgScore      = hasData
-    ? latestScores.reduce((s, r) => s + r.score, 0) / latestScores.length
+    ? allScores.reduce((s, r) => s + r.score, 0) / allScores.length
     : null;
 
   return (
@@ -291,6 +301,17 @@ export default function AutoSpotlightClient() {
         </div>
       </div>
 
+      {/* Privacy + navigation info */}
+      {!syncing && !syncResult && (
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-[12px] text-slate-500 bg-slate-50 border border-slate-200 mb-4">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-slate-400" />
+          <span>
+            Sync runs in the background — <strong>you can navigate away freely</strong> and come back to enter your code.
+            Only star ratings, review categories, and driver names are pulled. No customer names, addresses, or package details are stored.
+          </span>
+        </div>
+      )}
+
       {syncResult && (
         <div className={`flex items-start gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium mb-4 border ${
           syncResult.ok ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"
@@ -300,15 +321,18 @@ export default function AutoSpotlightClient() {
         </div>
       )}
 
-      {/* Sync progress bar · shown during active sync stages */}
-      {syncStatus !== "idle" && syncStatus !== "choosing_mfa" && syncStatus !== "waiting_for_otp" && syncStatus !== "otp_failed" && (() => {
+      {/* Sync progress bar · shown during active sync stages and after OTP submission */}
+      {(syncStatus !== "idle" && syncStatus !== "choosing_mfa" && syncStatus !== "waiting_for_otp" && syncStatus !== "otp_failed") || otpSubmitted ? (() => {
+        const isPulling = syncStatus === "pulling_data" || otpSubmitted;
         const STAGES: { key: string; label: string; pct: number }[] = [
-          { key: "launching",     label: "Starting browser",          pct: 15 },
-          { key: "logging_in",    label: "Logging in to FedEx",       pct: 35 },
-          { key: "detecting_mfa", label: "Detecting verification options", pct: 55 },
-          { key: "pulling_data",  label: "Pulling Ryde data",         pct: 80 },
+          { key: "launching",     label: "Starting browser",    pct: 15 },
+          { key: "logging_in",    label: "Logging in",          pct: 35 },
+          { key: "detecting_mfa", label: "Verifying",           pct: 55 },
+          { key: "pulling_data",  label: "Pulling RYDE data",   pct: 80 },
         ];
-        const stage = STAGES.find(s => s.key === syncStatus) ?? STAGES[0];
+        const stage = isPulling
+          ? STAGES[3]
+          : (STAGES.find(s => s.key === syncStatus) ?? STAGES[0]);
         return (
           <div className="mb-6 bg-slate-50 border border-slate-200 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-2">
@@ -316,17 +340,24 @@ export default function AutoSpotlightClient() {
                 <Loader2 className="w-4 h-4 text-slate-500 animate-spin" />
                 <p className="text-[13px] font-semibold text-slate-700">{stage.label}</p>
               </div>
-              <span className="text-[12px] font-bold text-slate-400">{stage.pct}%</span>
+              {isPulling
+                ? <span className="text-[12px] text-slate-400">This takes 2–3 minutes…</span>
+                : <span className="text-[12px] font-bold text-slate-400">{stage.pct}%</span>
+              }
             </div>
             <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 rounded-full transition-all duration-700"
-                style={{ width: `${stage.pct}%` }}
-              />
+              {isPulling ? (
+                <div className="h-full bg-indigo-500 rounded-full animate-pulse" style={{ width: "85%" }} />
+              ) : (
+                <div
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-700"
+                  style={{ width: `${stage.pct}%` }}
+                />
+              )}
             </div>
             <div className="flex gap-4 mt-3">
               {STAGES.map((s, i) => {
-                const currentIdx = STAGES.findIndex(x => x.key === syncStatus);
+                const currentIdx = isPulling ? 3 : STAGES.findIndex(x => x.key === syncStatus);
                 const isDone = i < currentIdx;
                 const isActive = i === currentIdx;
                 return (
@@ -341,7 +372,7 @@ export default function AutoSpotlightClient() {
             </div>
           </div>
         );
-      })()}
+      })() : null}
 
       {/* MFA method choice · shown when multiple delivery options exist */}
       {syncStatus === "choosing_mfa" && (
@@ -351,7 +382,7 @@ export default function AutoSpotlightClient() {
             <p className="text-[14px] font-bold text-indigo-900">Where should FedEx send your verification code?</p>
           </div>
           <p className="text-[12px] text-indigo-700 mb-4">
-            Choose how you want to receive the code. Check that source once it arrives, then enter it here.
+            Choose how you want to receive the code. You can navigate away — come back here to enter it once it arrives.
           </p>
           <div className="flex gap-3">
             {(mfaOptions.length > 0 ? mfaOptions : ["EMAIL", "PHONE"]).map((method) => {
@@ -396,7 +427,7 @@ export default function AutoSpotlightClient() {
           <p className={`text-[12px] mb-4 ${syncStatus === "otp_failed" ? "text-red-700" : "text-blue-700"}`}>
             {syncStatus === "otp_failed"
               ? "The code you entered wasn't accepted. Enter the correct code and press Enter."
-              : "FedEx sent a one-time code. Find it in your email or phone, enter it below, and press Enter."}
+              : "FedEx sent a one-time code. Find it in your email or phone, enter it below, and press Submit. You can navigate away and come back — the sync keeps running in the background."}
           </p>
           <div className="flex gap-2">
             <input
@@ -431,8 +462,8 @@ export default function AutoSpotlightClient() {
         {hasData && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { label: "WEEK",          val: latestWeek ?? "-" },
-              { label: "DRIVERS",       val: latestScores.length.toString() },
+              { label: "LATEST WEEK",   val: latestWeek ?? "-" },
+              { label: "DRIVERS",       val: allScores.length.toString() },
               { label: "AVG RYDE SCORE",val: avgScore ? avgScore.toFixed(2) + " ★" : "-" },
             ].map(({ label, val }) => (
               <div key={label} className={`${CARD} p-5 text-center`}>
@@ -448,7 +479,7 @@ export default function AutoSpotlightClient() {
           <div className="flex items-center gap-2 mb-5">
             <Star className="w-4 h-4 text-slate-400" />
             <h2 className="text-[14px] font-extrabold text-slate-900">RYDE Scores</h2>
-            {latestWeek && <span className="text-[11px] text-slate-400 ml-1">{latestWeek}</span>}
+            {latestWeek && <span className="text-[11px] text-slate-400 ml-1">Most recent: {latestWeek}</span>}
             <span className="ml-auto text-[11px] text-slate-400">FedEx Spotlight data</span>
           </div>
 
@@ -479,7 +510,7 @@ export default function AutoSpotlightClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {latestScores.map((r, i) => (
+                  {allScores.map((r, i) => (
                     <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="py-3 pr-4">
                         <span className="text-[12px] font-bold text-slate-400">{i + 1}</span>
@@ -610,46 +641,6 @@ export default function AutoSpotlightClient() {
           </div>
         </div>
 
-        {/* Schedule */}
-        <div className={`${CARD} max-w-md`}>
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-4 h-4 text-slate-400" />
-            <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync Schedule</h2>
-          </div>
-          <p className="text-[12px] text-slate-400 mb-5">
-            Pulls RYDE scores from FedEx Spotlight each morning. Requires OTP delivery to your FedEx email.
-          </p>
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between py-3 border-b border-slate-100">
-              <div>
-                <p className="text-[13px] font-semibold text-slate-800">Auto-Sync</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Run sync automatically each morning</p>
-              </div>
-              <button
-                onClick={() => setAutoEnabled(v => !v)}
-                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${autoEnabled ? "bg-slate-900" : "bg-slate-200"}`}
-                role="switch" aria-checked={autoEnabled}
-              >
-                <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ${autoEnabled ? "translate-x-5" : "translate-x-0"}`} />
-              </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] text-slate-600 font-medium">Run at</span>
-              <input
-                type="time" value={autoTime} onChange={e => setAutoTime(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
-              />
-            </div>
-            <button
-              onClick={saveSchedule} disabled={schedSaving}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
-            >
-              {schedSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-                : schedSaved ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
-                : "Save Schedule"}
-            </button>
-          </div>
-        </div>
 
       </div>
     </main>

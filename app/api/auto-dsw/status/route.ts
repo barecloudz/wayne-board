@@ -19,5 +19,5 @@ export async function GET() {
   let lastSyncResult: any = null;
   try { if (lastSyncResultRaw) lastSyncResult = JSON.parse(lastSyncResultRaw); } catch {}
 
-  return NextResponse.json({ rows, lastSynced, autoEnabled: autoEnabled === "true", autoTime, lastSyncResult });
+  return NextResponse.json({ rows, lastSynced, autoEnabled: autoEnabled === "true", autoTime, lastSyncResult, orgId });
 }

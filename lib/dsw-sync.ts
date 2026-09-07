@@ -50,13 +50,19 @@ function parseInt2(s: string): number | null {
   return isNaN(n) ? null : n;
 }
 
-export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
+export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Promise<DswSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  // DSW uses same credentials as DRO, scoped per organization
-  const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
-  const orgId   = (orgRows as any[])[0]?.id;
-  if (!orgId) return { success: false, date: "", rows: 0, matched: 0, error: "No organization found." };
+  // Resolve org: use explicit override (from authenticated trigger) or fall back to first org (cron)
+  let orgId: number;
+  if (orgIdOverride) {
+    orgId = orgIdOverride;
+  } else {
+    const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+    orgId = (orgRows as any[])[0]?.id;
+    if (!orgId) return { success: false, date: "", rows: 0, matched: 0, error: "No organization found." };
+  }
+
   const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('dro_username', 'dro_password')`;
   const credsMap  = Object.fromEntries((credsRows as any[]).map((r) => [r.key, r.value]));
   const username  = credsMap["dro_username"] || process.env.DRO_USERNAME;
@@ -184,7 +190,7 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
     }
 
     // ── Match and upsert ─────────────────────────────────────────────────────
-    const wbDrivers = await sql`SELECT driver_id, name FROM drivers WHERE active = true`;
+    const wbDrivers = await sql`SELECT driver_id, name FROM drivers WHERE active = true AND organization_id = ${orgId}`;
     const wbByName: Record<string, string> = {};
     for (const d of wbDrivers as any[]) {
       wbByName[d.name.toLowerCase().trim().replace(/\s+/g, " ")] = d.driver_id;
@@ -193,8 +199,8 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
     let matched = 0;
     let inserted = 0;
 
-    // Delete today's existing data for this date first
-    await sql`DELETE FROM dsw_route_days WHERE date = ${targetDateIso}`;
+    // Delete this org's existing data for this date first
+    await sql`DELETE FROM dsw_route_days WHERE date = ${targetDateIso} AND organization_id = ${orgId}`;
 
     for (const row of tableRows) {
       const driverRaw = row[4] || "";
@@ -226,11 +232,12 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
 
       await sql`
         INSERT INTO dsw_route_days
-          (date, driver_id, driver_name_raw, wa_name, wa_number,
+          (organization_id, date, driver_id, driver_name_raw, wa_name, wa_number,
            ils_pct, act_del_stps, act_del_pkgs, non_delvd_stps,
            all_status_code_pkgs, miles, on_road_hours, on_duty_hours,
            vscan_pkgs, del_stps_planned)
         VALUES (
+          ${orgId},
           ${targetDateIso},
           ${driverId},
           ${driverRaw},
@@ -251,7 +258,7 @@ export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
       inserted++;
     }
 
-    await sql`INSERT INTO settings (key, value) VALUES ('dsw_last_synced_at', NOW()::text) ON CONFLICT (key) DO UPDATE SET value = NOW()::text`;
+    await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'dsw_last_synced_at', NOW()::text) ON CONFLICT (organization_id, key) DO UPDATE SET value = NOW()::text`;
 
     return { success: true, date: targetDateIso, rows: inserted, matched };
 

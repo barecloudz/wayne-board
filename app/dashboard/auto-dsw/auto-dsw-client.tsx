@@ -28,6 +28,7 @@ type Status = {
   autoEnabled: boolean;
   autoTime: string;
   lastSyncResult: { success: boolean; error?: string; rows?: number; date?: string; completedAt?: string } | null;
+  orgId: number;
 };
 
 function ilsBg(pct: number | null) {
@@ -51,6 +52,7 @@ const CARD  = "bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px
 
 export default function AutoDswClient() {
   const [data,        setData]        = useState<Status | null>(null);
+  const orgId = useRef<number>(0);
   const [loading,     setLoading]     = useState(true);
   const [syncing,     setSyncing]     = useState(false);
   const [syncResult,  setSyncResult]  = useState<{ ok: boolean; msg: string } | null>(null);
@@ -66,6 +68,7 @@ export default function AutoDswClient() {
     if (res.ok) {
       const d: Status = await res.json();
       setData(d);
+      if (d.orgId) orgId.current = d.orgId;
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
       // If we're polling and a result arrived after we triggered, stop polling and show it
@@ -107,7 +110,11 @@ export default function AutoDswClient() {
     setSyncResult(null);
     triggeredAt.current = Date.now();
     try {
-      const res = await fetch("/.netlify/functions/dsw-sync-background", { method: "POST" });
+      const res = await fetch("/.netlify/functions/dsw-sync-background", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId: orgId.current }),
+      });
       if (res.status === 202 || res.ok) {
         setPollUntil(Date.now() + 6 * 60 * 1000); // poll for up to 6 min
         setSyncResult({ ok: true, msg: "Syncing… checking for result every 10 seconds." });
