@@ -38,27 +38,50 @@ export type SpotlightSyncResult = {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
-export async function syncSpotlight(): Promise<SpotlightSyncResult> {
+export async function syncSpotlight(
+  { triggeredByDriverId }: { triggeredByDriverId?: string | null } = {}
+): Promise<SpotlightSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  const credsRows = await sql`
-    SELECT organization_id, key, value FROM settings
-    WHERE key IN ('spotlight_username','spotlight_password','spotlight_lookback_weeks','spotlight_csa_id')
-    LIMIT 4
+  // Resolve org
+  const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+  const orgId = (orgRows[0]?.id as number) ?? 1;
+
+  // Load credentials from user_settings (per-user) when we know who triggered the sync
+  let username: string | undefined;
+  let password: string | undefined;
+  if (triggeredByDriverId) {
+    const userCredsRows = await sql`
+      SELECT key, value FROM user_settings
+      WHERE driver_id = ${triggeredByDriverId} AND key IN ('spotlight_username', 'spotlight_password')
+    `;
+    const map = Object.fromEntries((userCredsRows as any[]).map(r => [r.key, r.value]));
+    username = map["spotlight_username"];
+    password = map["spotlight_password"];
+  }
+
+  // Fallback to org-level settings or env (cron jobs, legacy)
+  if (!username || !password) {
+    const orgCredsRows = await sql`
+      SELECT key, value FROM settings
+      WHERE organization_id = ${orgId} AND key IN ('spotlight_username', 'spotlight_password')
+    `;
+    const map = Object.fromEntries((orgCredsRows as any[]).map(r => [r.key, r.value]));
+    username = username || map["spotlight_username"];
+    password = password || map["spotlight_password"] || process.env.SPOTLIGHT_PASSWORD;
+  }
+
+  // Org-level settings: CSA ID (one-time per org) and lookback range
+  const orgSettingsRows = await sql`
+    SELECT key, value FROM settings
+    WHERE organization_id = ${orgId} AND key IN ('spotlight_lookback_weeks', 'spotlight_csa_id')
   `;
-  const orgId    = (credsRows[0]?.organization_id as number) ?? 1;
-  const credsMap = Object.fromEntries(credsRows.map((r: any) => [r.key, r.value]));
-  const username    = credsMap["spotlight_username"];
-  const password    = credsMap["spotlight_password"] || process.env.SPOTLIGHT_PASSWORD;
-  const csaId       = credsMap["spotlight_csa_id"] || process.env.SPOTLIGHT_CSA_ID || "";
-  // 0 = all data, otherwise limit to N weeks back from today
-  const lookbackWeeks = parseInt(credsMap["spotlight_lookback_weeks"] ?? "0", 10);
+  const orgMap = Object.fromEntries((orgSettingsRows as any[]).map(r => [r.key, r.value]));
+  const csaId       = orgMap["spotlight_csa_id"] || process.env.SPOTLIGHT_CSA_ID || "";
+  const lookbackWeeks = parseInt(orgMap["spotlight_lookback_weeks"] ?? "0", 10);
 
   if (!username || !password) {
-    throw new Error("Spotlight credentials not configured. Add spotlight_username and spotlight_password in Settings.");
-  }
-  if (!csaId) {
-    throw new Error("Spotlight CSA ID not configured. Add your FedEx Contract Service Area ID in Settings.");
+    throw new Error("Spotlight credentials not configured. Go to Auto Spotlight → Credentials and save your FedEx login.");
   }
 
   async function upsertSetting(key: string, value: string) {

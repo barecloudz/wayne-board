@@ -176,6 +176,16 @@ export const settings = pgTable("settings", {
   orgKeyUnique: uniqueIndex("settings_org_key_unique").on(t.organizationId, t.key),
 }));
 
+// ── User Settings (per-user credentials & preferences) ───────────────────────
+export const userSettings = pgTable("user_settings", {
+  id:       serial("id").primaryKey(),
+  driverId: text("driver_id").notNull(),
+  key:      text("key").notNull(),
+  value:    text("value").notNull(),
+}, (t) => ({
+  driverKeyUnique: uniqueIndex("user_settings_driver_key_unique").on(t.driverId, t.key),
+}));
+
 // ── Vehicle Conditions ────────────────────────────────────────────────────────
 export const vehicleConditions = pgTable("vehicle_conditions", {
   id:             serial("id").primaryKey(),

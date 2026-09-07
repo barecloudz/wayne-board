@@ -16,10 +16,16 @@ export const handler: BackgroundHandler = async () => {
 
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
+  // Resolve org for result writing
+  const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+  const orgId = (orgRows[0]?.id as number) ?? 1;
+
+  // Resolve which user triggered this sync — use their credentials
+  const triggeredByRows = await sql`SELECT value FROM settings WHERE organization_id = ${orgId} AND key = 'spotlight_sync_triggered_by' LIMIT 1`;
+  const triggeredByDriverId = (triggeredByRows[0]?.value as string) ?? null;
+
   async function writeResult(payload: object) {
     const val = JSON.stringify({ ...payload, completedAt: new Date().toISOString() });
-    const orgRows = await sql`SELECT organization_id FROM settings WHERE key = 'spotlight_username' LIMIT 1`;
-    const orgId = (orgRows[0]?.organization_id as number) ?? 1;
     await sql`
       INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'spotlight_last_sync_result', ${val})
       ON CONFLICT (organization_id, key) DO UPDATE SET value = ${val}
@@ -31,7 +37,7 @@ export const handler: BackgroundHandler = async () => {
   }
 
   try {
-    const result = await syncSpotlight();
+    const result = await syncSpotlight({ triggeredByDriverId });
     console.log(`[spotlight-sync-background] Done — drivers=${result.drivers} weeks=${result.weeks} reviews=${result.reviews}`);
     await writeResult(result);
   } catch (err: any) {

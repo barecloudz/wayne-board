@@ -22,6 +22,7 @@ type Status = {
   syncStatus: "idle" | "launching" | "logging_in" | "detecting_mfa" | "choosing_mfa" | "waiting_for_otp" | "otp_failed" | "pulling_data";
   mfaOptions: string[];
   otpError: string | null;
+  driverId: string;
 };
 
 function starBg(score: number | null) {
@@ -53,9 +54,9 @@ export default function AutoSpotlightClient() {
   const [showOtpPanel, setShowOtpPanel] = useState(false);
   const triggeredAt = useRef<number>(0);
 
+  const [myDriverId,    setMyDriverId]    = useState("");
   const [credUsername,  setCredUsername]  = useState("");
   const [credPassword,  setCredPassword]  = useState("");
-  const [credCsaId,     setCredCsaId]     = useState("");
   const [showPassword,  setShowPassword]  = useState(false);
   const [credSaving,    setCredSaving]    = useState(false);
   const [credSaved,     setCredSaved]     = useState(false);
@@ -75,6 +76,7 @@ export default function AutoSpotlightClient() {
       setData(d);
       setAutoEnabled(d.autoEnabled);
       setAutoTime(d.autoTime);
+      if (d.driverId) setMyDriverId(d.driverId);
       setSyncStatus(d.syncStatus ?? "idle");
       setMfaOptions(d.mfaOptions ?? []);
       setOtpError(d.otpError ?? null);
@@ -110,11 +112,8 @@ export default function AutoSpotlightClient() {
 
   useEffect(() => {
     loadStatus();
-    fetch("/api/settings?key=spotlight_username").then(r => r.json()).then(d => {
+    fetch("/api/user-settings?key=spotlight_username").then(r => r.json()).then(d => {
       if (d.value) { setCredUsername(d.value); setCredConfigured(true); }
-    });
-    fetch("/api/settings?key=spotlight_csa_id").then(r => r.json()).then(d => {
-      if (d.value) setCredCsaId(d.value);
     });
     fetch("/api/settings?key=spotlight_lookback_weeks").then(r => r.json()).then(d => {
       if (d.value) setLookbackWeeks(d.value);
@@ -180,6 +179,14 @@ export default function AutoSpotlightClient() {
     setSyncing(true);
     setSyncResult(null);
     triggeredAt.current = Date.now();
+    // Record which user triggered this sync so the background function can load their credentials
+    if (myDriverId) {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "spotlight_sync_triggered_by", value: myDriverId }),
+      });
+    }
     try {
       const res = await fetch("/.netlify/functions/spotlight-sync-background", { method: "POST" });
       if (res.status === 202 || res.ok) {
@@ -199,10 +206,9 @@ export default function AutoSpotlightClient() {
   async function saveCreds() {
     setCredSaving(true);
     await Promise.all([
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_username", value: credUsername.trim() }) }),
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_csa_id", value: credCsaId.trim() }) }),
+      fetch("/api/user-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_username", value: credUsername.trim() }) }),
       credPassword
-        ? fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_password", value: credPassword }) })
+        ? fetch("/api/user-settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_password", value: credPassword }) })
         : Promise.resolve(),
     ]);
     setCredSaving(false);
@@ -509,7 +515,7 @@ export default function AutoSpotlightClient() {
             )}
           </div>
           <p className="text-[12px] text-slate-400 mb-5">
-            Your FedEx MyBiz / Spotlight login. Each organization sets their own. Password is stored securely and never displayed.
+            Your personal FedEx MyBiz / Spotlight login. Each admin sets their own — credentials are tied to your account only.
           </p>
           <div className="flex flex-col gap-3">
             <div>
@@ -519,18 +525,6 @@ export default function AutoSpotlightClient() {
                 value={credUsername}
                 onChange={e => setCredUsername(e.target.value)}
                 placeholder="e.g. 6367044"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                CSA ID <span className="text-slate-400 font-normal">(Contract Service Area — find it in Spotlight)</span>
-              </label>
-              <input
-                type="text"
-                value={credCsaId}
-                onChange={e => setCredCsaId(e.target.value)}
-                placeholder="e.g. 304169"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
               />
             </div>

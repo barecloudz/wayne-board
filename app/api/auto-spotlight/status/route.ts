@@ -58,5 +58,6 @@ export async function GET() {
     syncStatus: effectiveStatus,
     mfaOptions,
     otpError: otpError || null,
+    driverId: session.driverId,
   });
 }
