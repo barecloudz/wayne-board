@@ -47,8 +47,13 @@ export async function syncDro(): Promise<DroSyncResult> {
   try {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  // Read credentials from DB settings first, fall back to env vars
-  const credsRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_username','dro_password')`;
+  // Resolve org — called from cron (no session), fall back to first org
+  const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+  const orgId   = (orgRows as any[])[0]?.id;
+  if (!orgId) return { success: false, sortDate: "", routes: 0, stops: 0, error: "No organization found." };
+
+  // Read credentials per-org from DB, fall back to env vars
+  const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('dro_username','dro_password')`;
   const credsMap  = Object.fromEntries(credsRows.map((r: any) => [r.key, r.value]));
   const username  = credsMap["dro_username"] || process.env.DRO_USERNAME;
   const password  = credsMap["dro_password"] || process.env.DRO_PASSWORD;

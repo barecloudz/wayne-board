@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
-import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, Loader2, Star, AlertCircle, KeyRound, Eye, EyeOff, X } from "lucide-react";
 
 type ScoreRow = {
   id: number;
@@ -50,10 +50,12 @@ export default function AutoSpotlightClient() {
   const [otpInput,    setOtpInput]    = useState("");
   const [otpSaving,   setOtpSaving]   = useState(false);
   const [mfaChosen,   setMfaChosen]   = useState<string | null>(null);
+  const [showOtpPanel, setShowOtpPanel] = useState(false);
   const triggeredAt = useRef<number>(0);
 
   const [credUsername,  setCredUsername]  = useState("");
   const [credPassword,  setCredPassword]  = useState("");
+  const [credCsaId,     setCredCsaId]     = useState("");
   const [showPassword,  setShowPassword]  = useState(false);
   const [credSaving,    setCredSaving]    = useState(false);
   const [credSaved,     setCredSaved]     = useState(false);
@@ -76,19 +78,30 @@ export default function AutoSpotlightClient() {
       setSyncStatus(d.syncStatus ?? "idle");
       setMfaOptions(d.mfaOptions ?? []);
       setOtpError(d.otpError ?? null);
-      if (triggeredAt.current && d.lastSyncResult?.completedAt) {
-        const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
-        if (resultTime > triggeredAt.current) {
+      if (d.syncStatus === "waiting_for_otp" || d.syncStatus === "otp_failed") setShowOtpPanel(true);
+      if (triggeredAt.current) {
+        // Sync finished with a result
+        if (d.lastSyncResult?.completedAt) {
+          const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
+          if (resultTime > triggeredAt.current) {
+            setPollUntil(null);
+            setSyncing(false);
+            setMfaChosen(null);
+            if (d.lastSyncResult.success) {
+              setSyncResult({
+                ok: true,
+                msg: `Sync complete · ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks`,
+              });
+            } else {
+              setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
+            }
+          }
+        }
+        // Status returned to idle without a result (crash / timeout / bad creds)
+        if ((d.syncStatus ?? "idle") === "idle" && syncing) {
           setPollUntil(null);
           setSyncing(false);
-          if (d.lastSyncResult.success) {
-            setSyncResult({
-              ok: true,
-              msg: `Sync complete · ${d.lastSyncResult.drivers} driver scores, ${d.lastSyncResult.reviews} reviews across ${d.lastSyncResult.weeks} weeks`,
-            });
-          } else {
-            setSyncResult({ ok: false, msg: d.lastSyncResult.error ?? "Sync failed" });
-          }
+          setMfaChosen(null);
         }
       }
     }
@@ -99,6 +112,9 @@ export default function AutoSpotlightClient() {
     loadStatus();
     fetch("/api/settings?key=spotlight_username").then(r => r.json()).then(d => {
       if (d.value) { setCredUsername(d.value); setCredConfigured(true); }
+    });
+    fetch("/api/settings?key=spotlight_csa_id").then(r => r.json()).then(d => {
+      if (d.value) setCredCsaId(d.value);
     });
     fetch("/api/settings?key=spotlight_lookback_weeks").then(r => r.json()).then(d => {
       if (d.value) setLookbackWeeks(d.value);
@@ -140,10 +156,27 @@ export default function AutoSpotlightClient() {
     });
     setOtpInput("");
     setOtpSaving(false);
+    setShowOtpPanel(false);
     setSyncResult({ ok: true, msg: "Code submitted · finishing sync…" });
   }
 
+  async function cancelSync() {
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "spotlight_sync_status", value: "idle" }),
+    });
+    setPollUntil(null);
+    setSyncing(false);
+    setSyncStatus("idle");
+    setMfaChosen(null);
+    setShowOtpPanel(false);
+    setSyncResult(null);
+  }
+
   async function handleSync() {
+    setShowOtpPanel(false);
+    setMfaChosen(null);
     setSyncing(true);
     setSyncResult(null);
     triggeredAt.current = Date.now();
@@ -167,6 +200,7 @@ export default function AutoSpotlightClient() {
     setCredSaving(true);
     await Promise.all([
       fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_username", value: credUsername.trim() }) }),
+      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_csa_id", value: credCsaId.trim() }) }),
       credPassword
         ? fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "spotlight_password", value: credPassword }) })
         : Promise.resolve(),
@@ -226,15 +260,27 @@ export default function AutoSpotlightClient() {
               }
             </p>
           </div>
-          <button
-            onClick={handleSync}
-            disabled={syncing || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold
-              bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-sm"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing…" : "Sync Now"}
-          </button>
+          <div className="flex items-center gap-2">
+            {syncing && (
+              <button
+                onClick={cancelSync}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold
+                  bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+            )}
+            <button
+              onClick={handleSync}
+              disabled={syncing || loading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold
+                bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors shadow-sm"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Now"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -327,7 +373,7 @@ export default function AutoSpotlightClient() {
       )}
 
       {/* OTP entry · waiting for code */}
-      {(syncStatus === "waiting_for_otp" || syncStatus === "otp_failed") && (
+      {showOtpPanel && (
         <div className={`mb-6 rounded-2xl p-5 border ${syncStatus === "otp_failed" ? "bg-red-50 border-red-200" : "bg-blue-50 border-blue-200"}`}>
           <div className="flex items-center gap-2 mb-1">
             {syncStatus === "otp_failed"
@@ -463,16 +509,28 @@ export default function AutoSpotlightClient() {
             )}
           </div>
           <p className="text-[12px] text-slate-400 mb-5">
-            Your FedEx Spotlight login. Password is stored securely and never displayed.
+            Your FedEx MyBiz / Spotlight login. Each organization sets their own. Password is stored securely and never displayed.
           </p>
           <div className="flex flex-col gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1">Username / User ID</label>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">Username / FedEx ID</label>
               <input
                 type="text"
                 value={credUsername}
                 onChange={e => setCredUsername(e.target.value)}
                 placeholder="e.g. 6367044"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                CSA ID <span className="text-slate-400 font-normal">(Contract Service Area — find it in Spotlight)</span>
+              </label>
+              <input
+                type="text"
+                value={credCsaId}
+                onChange={e => setCredCsaId(e.target.value)}
+                placeholder="e.g. 304169"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
               />
             </div>

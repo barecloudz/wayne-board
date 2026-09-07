@@ -18,12 +18,13 @@ import { neon } from "@neondatabase/serverless";
 const CHROMIUM_PACK =
   "https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar";
 
-const MYBIZ_BASE      = "https://mybizaccount.fedex.com";
-const SPOI_BASE       = "https://api.dataworks.fedex.com/spoi-api/spoi/v1";
-const WABI_BASE       = "https://wabi-us-north-central-e-primary-redirect.analysis.windows.net";
+const MYBIZ_BASE  = "https://mybizaccount.fedex.com";
+const SPOI_BASE   = "https://api.dataworks.fedex.com/spoi-api/spoi/v1";
+const WABI_BASE   = "https://wabi-us-north-central-e-primary-redirect.analysis.windows.net";
+
+// These are FedEx Spotlight's internal Power BI IDs — same for all orgs using Spotlight
 const RYDE_REPORT_ID  = "8dc4a4f1-561f-4a04-a947-628cea03ee2d";
 const RYDE_DATASET_ID = "16d67ff6-ea2d-42ba-8650-a7983b9f6262";
-const CSA_ID          = "304169";
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -42,18 +43,22 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
 
   const credsRows = await sql`
     SELECT organization_id, key, value FROM settings
-    WHERE key IN ('spotlight_username','spotlight_password','spotlight_lookback_weeks')
-    LIMIT 3
+    WHERE key IN ('spotlight_username','spotlight_password','spotlight_lookback_weeks','spotlight_csa_id')
+    LIMIT 4
   `;
   const orgId    = (credsRows[0]?.organization_id as number) ?? 1;
   const credsMap = Object.fromEntries(credsRows.map((r: any) => [r.key, r.value]));
-  const username = credsMap["spotlight_username"];
-  const password = credsMap["spotlight_password"] || process.env.SPOTLIGHT_PASSWORD;
+  const username    = credsMap["spotlight_username"];
+  const password    = credsMap["spotlight_password"] || process.env.SPOTLIGHT_PASSWORD;
+  const csaId       = credsMap["spotlight_csa_id"] || process.env.SPOTLIGHT_CSA_ID || "";
   // 0 = all data, otherwise limit to N weeks back from today
   const lookbackWeeks = parseInt(credsMap["spotlight_lookback_weeks"] ?? "0", 10);
 
   if (!username || !password) {
     throw new Error("Spotlight credentials not configured. Add spotlight_username and spotlight_password in Settings.");
+  }
+  if (!csaId) {
+    throw new Error("Spotlight CSA ID not configured. Add your FedEx Contract Service Area ID in Settings.");
   }
 
   async function upsertSetting(key: string, value: string) {
@@ -324,7 +329,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
 
       let otp = "";
       let resendRequested = false;
-      const otpDeadline = Date.now() + 5 * 60 * 1000;
+      const otpDeadline = Date.now() + 10 * 60 * 1000; // 10 min — enough time to receive + enter code
 
       while (!otp && !resendRequested && Date.now() < otpDeadline) {
         await sleep(5000);
@@ -447,7 +452,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
               });
               return dr.ok ? dr.json() : { error: `HTTP ${dr.status}` };
             },
-            SPOI_BASE, bearerToken, username, CSA_ID, RYDE_REPORT_ID
+            SPOI_BASE, bearerToken, username, csaId, RYDE_REPORT_ID
           );
           if (embedResult?.embedToken?.token) {
             embedToken = embedResult.embedToken.token;

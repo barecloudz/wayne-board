@@ -53,8 +53,11 @@ function parseInt2(s: string): number | null {
 export async function syncDsw(dateOverride?: string): Promise<DswSyncResult> {
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
 
-  // DSW uses same credentials as DRO
-  const credsRows = await sql`SELECT key, value FROM settings WHERE key IN ('dro_username', 'dro_password')`;
+  // DSW uses same credentials as DRO, scoped per organization
+  const orgRows = await sql`SELECT id FROM organizations LIMIT 1`;
+  const orgId   = (orgRows as any[])[0]?.id;
+  if (!orgId) return { success: false, date: "", rows: 0, matched: 0, error: "No organization found." };
+  const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('dro_username', 'dro_password')`;
   const credsMap  = Object.fromEntries((credsRows as any[]).map((r) => [r.key, r.value]));
   const username  = credsMap["dro_username"] || process.env.DRO_USERNAME;
   const password  = credsMap["dro_password"] || process.env.DRO_PASSWORD;
