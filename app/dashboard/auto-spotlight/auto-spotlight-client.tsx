@@ -19,7 +19,7 @@ type Status = {
   lastSyncResult: { success: boolean; error?: string; drivers?: number; weeks?: number; reviews?: number; completedAt?: string } | null;
   autoEnabled: boolean;
   autoTime: string;
-  syncStatus: "idle" | "choosing_mfa" | "waiting_for_otp" | "otp_failed";
+  syncStatus: "idle" | "launching" | "logging_in" | "detecting_mfa" | "choosing_mfa" | "waiting_for_otp" | "otp_failed" | "pulling_data";
   mfaOptions: string[];
   otpError: string | null;
 };
@@ -44,7 +44,7 @@ export default function AutoSpotlightClient() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
-  const [syncStatus,  setSyncStatus]  = useState<"idle" | "choosing_mfa" | "waiting_for_otp" | "otp_failed">("idle");
+  const [syncStatus,  setSyncStatus]  = useState<"idle" | "launching" | "logging_in" | "detecting_mfa" | "choosing_mfa" | "waiting_for_otp" | "otp_failed" | "pulling_data">("idle");
   const [mfaOptions,  setMfaOptions]  = useState<string[]>([]);
   const [otpError,    setOtpError]    = useState<string | null>(null);
   const [otpInput,    setOtpInput]    = useState("");
@@ -57,6 +57,10 @@ export default function AutoSpotlightClient() {
   const [credSaving,    setCredSaving]    = useState(false);
   const [credSaved,     setCredSaved]     = useState(false);
   const [credConfigured, setCredConfigured] = useState(false);
+
+  const [lookbackWeeks, setLookbackWeeks] = useState("0");
+  const [lookbackSaving, setLookbackSaving] = useState(false);
+  const [lookbackSaved,  setLookbackSaved]  = useState(false);
 
   // Latest week for display
   const latestWeek = data?.scores[0]?.week ?? null;
@@ -94,6 +98,9 @@ export default function AutoSpotlightClient() {
     loadStatus();
     fetch("/api/settings?key=spotlight_username").then(r => r.json()).then(d => {
       if (d.value) { setCredUsername(d.value); setCredConfigured(true); }
+    });
+    fetch("/api/settings?key=spotlight_lookback_weeks").then(r => r.json()).then(d => {
+      if (d.value) setLookbackWeeks(d.value);
     });
   }, []);
 
@@ -169,6 +176,18 @@ export default function AutoSpotlightClient() {
     setTimeout(() => setCredSaved(false), 3000);
   }
 
+  async function saveLookback() {
+    setLookbackSaving(true);
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "spotlight_lookback_weeks", value: lookbackWeeks }),
+    });
+    setLookbackSaving(false);
+    setLookbackSaved(true);
+    setTimeout(() => setLookbackSaved(false), 3000);
+  }
+
   async function saveSchedule() {
     setSchedSaving(true);
     await Promise.all([
@@ -225,6 +244,49 @@ export default function AutoSpotlightClient() {
           <span>{syncResult.msg}</span>
         </div>
       )}
+
+      {/* Sync progress bar · shown during active sync stages */}
+      {syncStatus !== "idle" && syncStatus !== "choosing_mfa" && syncStatus !== "waiting_for_otp" && syncStatus !== "otp_failed" && (() => {
+        const STAGES: { key: string; label: string; pct: number }[] = [
+          { key: "launching",     label: "Starting browser",          pct: 15 },
+          { key: "logging_in",    label: "Logging in to FedEx",       pct: 35 },
+          { key: "detecting_mfa", label: "Detecting verification options", pct: 55 },
+          { key: "pulling_data",  label: "Pulling Ryde data",         pct: 80 },
+        ];
+        const stage = STAGES.find(s => s.key === syncStatus) ?? STAGES[0];
+        return (
+          <div className="mb-6 bg-slate-50 border border-slate-200 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 text-slate-500 animate-spin" />
+                <p className="text-[13px] font-semibold text-slate-700">{stage.label}</p>
+              </div>
+              <span className="text-[12px] font-bold text-slate-400">{stage.pct}%</span>
+            </div>
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 rounded-full transition-all duration-700"
+                style={{ width: `${stage.pct}%` }}
+              />
+            </div>
+            <div className="flex gap-4 mt-3">
+              {STAGES.map((s, i) => {
+                const currentIdx = STAGES.findIndex(x => x.key === syncStatus);
+                const isDone = i < currentIdx;
+                const isActive = i === currentIdx;
+                return (
+                  <div key={s.key} className="flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isDone ? "bg-indigo-400" : isActive ? "bg-indigo-600" : "bg-slate-300"}`} />
+                    <span className={`text-[10px] font-medium ${isActive ? "text-indigo-700" : isDone ? "text-slate-400" : "text-slate-300"}`}>
+                      {s.label.split(" ")[0]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MFA method choice · shown when multiple delivery options exist */}
       {syncStatus === "choosing_mfa" && (
@@ -429,6 +491,53 @@ export default function AutoSpotlightClient() {
               {credSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
                 : credSaved ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
                 : "Save Credentials"}
+            </button>
+          </div>
+        </div>
+
+        {/* Data Lookback */}
+        <div className={`${CARD} max-w-md`}>
+          <div className="flex items-center gap-2 mb-1">
+            <RefreshCw className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[15px] font-extrabold text-slate-900">Data Range</h2>
+          </div>
+          <p className="text-[12px] text-slate-400 mb-5">
+            How far back to pull RYDE data on each sync. &quot;All available&quot; fetches everything FedEx has stored — use a shorter range for weekly syncs to keep it fast.
+          </p>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-2">Lookback period</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "All available", value: "0" },
+                  { label: "52 weeks",      value: "52" },
+                  { label: "26 weeks",      value: "26" },
+                  { label: "12 weeks",      value: "12" },
+                  { label: "8 weeks",       value: "8" },
+                  { label: "4 weeks",       value: "4" },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setLookbackWeeks(opt.value)}
+                    className={`py-2 rounded-lg text-[12px] font-semibold border transition-colors ${
+                      lookbackWeeks === opt.value
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={saveLookback}
+              disabled={lookbackSaving}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            >
+              {lookbackSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                : lookbackSaved ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
+                : "Save"}
             </button>
           </div>
         </div>

@@ -18,9 +18,15 @@ export const handler: BackgroundHandler = async () => {
 
   async function writeResult(payload: object) {
     const val = JSON.stringify({ ...payload, completedAt: new Date().toISOString() });
+    const orgRows = await sql`SELECT organization_id FROM settings WHERE key = 'spotlight_username' LIMIT 1`;
+    const orgId = (orgRows[0]?.organization_id as number) ?? 1;
     await sql`
-      INSERT INTO settings (key, value) VALUES ('spotlight_last_sync_result', ${val})
-      ON CONFLICT (key) DO UPDATE SET value = ${val}
+      INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'spotlight_last_sync_result', ${val})
+      ON CONFLICT (organization_id, key) DO UPDATE SET value = ${val}
+    `;
+    await sql`
+      INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'spotlight_sync_status', 'idle')
+      ON CONFLICT (organization_id, key) DO UPDATE SET value = 'idle'
     `;
   }
 
