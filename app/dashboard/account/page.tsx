@@ -19,14 +19,14 @@ export default async function AccountPage() {
   const profile = await getMyProfile();
   if (!profile) redirect("/driver");
 
-  let orgSubscription: { plan: string; subscriptionStatus: string } | null = null;
+  let orgSubscription: { plan: string; subscriptionStatus: string; hasStripeAccount: boolean } | null = null;
   if (profile.role === "owner") {
     const [org] = await db
-      .select({ plan: organizations.plan, subscriptionStatus: organizations.subscriptionStatus })
+      .select({ plan: organizations.plan, subscriptionStatus: organizations.subscriptionStatus, stripeCustomerId: organizations.stripeCustomerId })
       .from(organizations)
       .where(eq(organizations.id, session.organizationId))
       .limit(1);
-    orgSubscription = org ?? null;
+    if (org) orgSubscription = { plan: org.plan, subscriptionStatus: org.subscriptionStatus, hasStripeAccount: !!org.stripeCustomerId };
   }
 
   return (
