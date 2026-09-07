@@ -30,10 +30,7 @@ const automationItems = [
   { icon: Map,           label: "Route Planner", href: "/dashboard/route-planner", exact: true },
   { icon: Scissors,      label: "Create Routes", href: "/dashboard/create-routes", exact: true },
   { icon: PenLine,       label: "Anchor Editor", href: "/dashboard/anchor-editor", exact: true },
-  { icon: Route,         label: "Auto DRO",      href: "/dashboard/auto-dro",      exact: true },
   { icon: TrendingUp,    label: "Auto GC",       href: "/dashboard/auto-gc",       exact: true },
-  { icon: ClipboardList, label: "Auto DSW",      href: "/dashboard/auto-dsw",      exact: true },
-  { icon: Zap,           label: "Auto Spotlight",href: "/dashboard/auto-spotlight",exact: true },
 ];
 
 const complianceItems = [
