@@ -234,6 +234,7 @@ export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Pr
         INSERT INTO dsw_route_days
           (organization_id, date, driver_id, driver_name_raw, wa_name, wa_number,
            ils_pct, act_del_stps, act_del_pkgs, non_delvd_stps,
+           dna, code_85, ils_impact_pkgs,
            all_status_code_pkgs, miles, on_road_hours, on_duty_hours,
            vscan_pkgs, del_stps_planned)
         VALUES (
@@ -246,7 +247,10 @@ export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Pr
           ${parseIls(row[15])},
           ${parseInt2(row[11])},
           ${parseInt2(row[12])},
-          ${parseInt2(row[17])},
+          ${parseInt2(row[18])},
+          ${parseInt2(row[21])},
+          ${parseInt2(row[23])},
+          ${parseInt2(row[16])},
           ${parseInt2(row[19])},
           ${parseInt2(row[26])},
           ${row[27] || null},
