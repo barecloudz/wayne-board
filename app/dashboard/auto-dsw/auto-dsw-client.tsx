@@ -26,7 +26,6 @@ type Status = {
   rows: DswRow[];
   lastSynced: string;
   autoEnabled: boolean;
-  autoTime: string;
   lastSyncResult: { success: boolean; error?: string; rows?: number; date?: string; completedAt?: string } | null;
   orgId: number;
 };
@@ -57,7 +56,6 @@ export default function AutoDswClient() {
   const [syncing,     setSyncing]     = useState(false);
   const [syncResult,  setSyncResult]  = useState<{ ok: boolean; msg: string } | null>(null);
   const [autoEnabled, setAutoEnabled] = useState(false);
-  const [autoTime,    setAutoTime]    = useState("07:00");
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
   const [pollUntil,   setPollUntil]   = useState<number | null>(null);
@@ -70,7 +68,6 @@ export default function AutoDswClient() {
       setData(d);
       if (d.orgId) orgId.current = d.orgId;
       setAutoEnabled(d.autoEnabled);
-      setAutoTime(d.autoTime);
       // If we're polling and a result arrived after we triggered, stop polling and show it
       if (triggeredAt.current && d.lastSyncResult?.completedAt) {
         const resultTime = new Date(d.lastSyncResult.completedAt).getTime();
@@ -131,10 +128,7 @@ export default function AutoDswClient() {
 
   async function saveSchedule() {
     setSchedSaving(true);
-    await Promise.all([
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "dsw_auto_sync_enabled", value: String(autoEnabled) }) }),
-      fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "dsw_auto_sync_time", value: autoTime }) }),
-    ]);
+    await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "dsw_auto_sync_enabled", value: String(autoEnabled) }) });
     setSchedSaving(false);
     setSchedSaved(true);
     setTimeout(() => setSchedSaved(false), 3000);
@@ -286,16 +280,16 @@ export default function AutoDswClient() {
         <div className={`${CARD} max-w-md`}>
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-4 h-4 text-slate-400" />
-            <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync Schedule</h2>
+            <h2 className="text-[15px] font-extrabold text-slate-900">Auto-Sync</h2>
           </div>
           <p className="text-[12px] text-slate-400 mb-5">
-            Pulls yesterday&apos;s DSW each morning. Uses your DRO credentials · no separate login needed.
+            Runs daily at <span className="font-semibold text-slate-500">6:00 AM Eastern</span>, pulling the previous day&apos;s DSW automatically. Uses your DRO credentials.
           </p>
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between py-3 border-b border-slate-100">
               <div>
-                <p className="text-[13px] font-semibold text-slate-800">Auto-Sync</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Run sync automatically each morning</p>
+                <p className="text-[13px] font-semibold text-slate-800">Enable Auto-Sync</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">{autoEnabled ? "Sync will run automatically each morning" : "Manual sync only"}</p>
               </div>
               <button
                 onClick={() => setAutoEnabled(v => !v)}
@@ -305,20 +299,13 @@ export default function AutoDswClient() {
                 <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform transition duration-200 ${autoEnabled ? "translate-x-5" : "translate-x-0"}`} />
               </button>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] text-slate-600 font-medium">Run at</span>
-              <input
-                type="time" value={autoTime} onChange={e => setAutoTime(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
-              />
-            </div>
             <button
               onClick={saveSchedule} disabled={schedSaving}
               className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
             >
               {schedSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
                 : schedSaved ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Saved</>
-                : "Save Schedule"}
+                : "Save"}
             </button>
           </div>
         </div>
