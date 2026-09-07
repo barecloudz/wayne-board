@@ -27,9 +27,6 @@ const adminItems = [
 ];
 
 const automationItems = [
-  { icon: Map,           label: "Route Planner", href: "/dashboard/route-planner", exact: true },
-  { icon: Scissors,      label: "Create Routes", href: "/dashboard/create-routes", exact: true },
-  { icon: PenLine,       label: "Anchor Editor", href: "/dashboard/anchor-editor", exact: true },
   { icon: TrendingUp,    label: "Auto GC",       href: "/dashboard/auto-gc",       exact: true },
 ];
 
