@@ -8,7 +8,8 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const orgId = session.organizationId;
-  const [scores, allDrivers, lastSynced, lastSyncResultRaw, autoEnabled, autoTime, syncStatus, mfaOptionsRaw, otpError] = await Promise.all([
+
+  const [scores, allDrivers, lastSynced, lastSyncResultRaw, autoEnabled, autoTime, syncStatus, mfaOptionsRaw, otpError, startedAt] = await Promise.all([
     db.select({
       id:              rydeScores.id,
       driverId:        rydeScores.driverId,
@@ -33,6 +34,7 @@ export async function GET() {
     db.select().from(settings).where(eq(settings.key, "spotlight_sync_status")).then(r => r[0]?.value ?? "idle"),
     db.select().from(settings).where(eq(settings.key, "spotlight_mfa_options")).then(r => r[0]?.value ?? ""),
     db.select().from(settings).where(eq(settings.key, "spotlight_otp_error")).then(r => r[0]?.value ?? ""),
+    db.select().from(settings).where(eq(settings.key, "spotlight_sync_started_at")).then(r => r[0]?.value ?? ""),
   ]);
 
   let lastSyncResult: any = null;
@@ -40,13 +42,20 @@ export async function GET() {
 
   const mfaOptions = mfaOptionsRaw ? (mfaOptionsRaw as string).split(",").filter(Boolean) : [];
 
+  // Auto-reset if a sync has been stuck for more than 20 minutes (crashed/timed out/wrong creds)
+  let effectiveStatus = syncStatus as string;
+  if (effectiveStatus !== "idle" && startedAt) {
+    const elapsed = Date.now() - new Date(startedAt as string).getTime();
+    if (elapsed > 20 * 60 * 1000) effectiveStatus = "idle";
+  }
+
   return NextResponse.json({
     scores,
     lastSynced,
     lastSyncResult,
     autoEnabled: autoEnabled === "true",
     autoTime,
-    syncStatus,
+    syncStatus: effectiveStatus,
     mfaOptions,
     otpError: otpError || null,
   });

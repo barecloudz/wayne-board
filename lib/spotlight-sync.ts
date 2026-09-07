@@ -75,6 +75,7 @@ export async function syncSpotlight(): Promise<SpotlightSyncResult> {
 
   // ── 1. Launch browser ─────────────────────────────────────────────────────
   await setStatus("launching");
+  await upsertSetting("spotlight_sync_started_at", new Date().toISOString());
   console.log("[spotlight] Launching browser...");
 
   const localChrome    = process.env.CHROME_EXECUTABLE_PATH;

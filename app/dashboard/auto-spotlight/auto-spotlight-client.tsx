@@ -49,6 +49,7 @@ export default function AutoSpotlightClient() {
   const [otpError,    setOtpError]    = useState<string | null>(null);
   const [otpInput,    setOtpInput]    = useState("");
   const [otpSaving,   setOtpSaving]   = useState(false);
+  const [mfaChosen,   setMfaChosen]   = useState<string | null>(null);
   const triggeredAt = useRef<number>(0);
 
   const [credUsername,  setCredUsername]  = useState("");
@@ -120,6 +121,7 @@ export default function AutoSpotlightClient() {
   }, [pollUntil]);
 
   async function submitMfaChoice(method: "EMAIL" | "PHONE") {
+    setMfaChosen(method);
     await fetch("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -299,15 +301,27 @@ export default function AutoSpotlightClient() {
             Choose how you want to receive the code. Check that source once it arrives, then enter it here.
           </p>
           <div className="flex gap-3">
-            {(mfaOptions.length > 0 ? mfaOptions : ["EMAIL", "PHONE"]).map((method) => (
-              <button
-                key={method}
-                onClick={() => submitMfaChoice(method as "EMAIL" | "PHONE")}
-                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-[13px] font-semibold hover:bg-indigo-700 transition-colors first:bg-indigo-600 last:bg-white last:border last:border-indigo-200 last:text-indigo-700 last:hover:bg-indigo-50"
-              >
-                {method === "EMAIL" ? "Send to Email" : "Send to Phone"}
-              </button>
-            ))}
+            {(mfaOptions.length > 0 ? mfaOptions : ["EMAIL", "PHONE"]).map((method) => {
+              const chosen = mfaChosen === method;
+              return (
+                <button
+                  key={method}
+                  onClick={() => submitMfaChoice(method as "EMAIL" | "PHONE")}
+                  disabled={!!mfaChosen}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold border transition-all ${
+                    chosen
+                      ? "bg-indigo-700 text-white border-indigo-700 scale-95"
+                      : mfaChosen
+                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                      : "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+                  }`}
+                >
+                  {chosen && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {method === "EMAIL" ? "Send to Email" : "Send to Phone"}
+                  {chosen && <span className="text-indigo-300 text-[11px]">Sending…</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -469,6 +483,7 @@ export default function AutoSpotlightClient() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   value={credPassword}
                   onChange={e => setCredPassword(e.target.value)}
                   placeholder={credConfigured ? "••••••••" : "Enter password"}
