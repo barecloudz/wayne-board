@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,7 +44,12 @@ const reportItems = [
 
 export default function MobileDrawer() {
   const [open, setOpen] = useState(false);
+  const [userRole, setUserRole] = useState("driver");
   const pathname = usePathname();
+
+  useEffect(() => {
+    fetch("/api/me").then(r => r.json()).then(d => { if (d.role) setUserRole(d.role); }).catch(() => {});
+  }, []);
   const automationActive = automationItems.some(i => pathname === i.href);
   const [autoOpen, setAutoOpen] = useState(automationActive);
 
