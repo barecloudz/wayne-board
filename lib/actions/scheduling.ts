@@ -18,8 +18,11 @@ export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 // ── Schedules ─────────────────────────────────────────────────────────────────
 
 export async function getAllSchedules() {
-  const orgId = await requireOrg();
-  const locationId = await getActiveLocationId();
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  // BC role sees all locations regardless of the location switcher
+  const locationId = session.role === "bc" ? null : await getActiveLocationId();
   const rows = await db
     .select({
       id:                drivers.id,
