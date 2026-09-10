@@ -47,7 +47,7 @@ export default function ProfileButton({
   function goAccount() {
     setOpen(false);
     window.dispatchEvent(
-      new CustomEvent("mgops:goto-driver-tab", { detail: "account" })
+      new CustomEvent("mgops:goto-driver-tab", { detail: "me" })
     );
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
