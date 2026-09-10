@@ -1,9 +1,4 @@
-export const DEFAULT_GATE_AREAS = [
-  "East Hendersonville",
-  "West Hendersonville",
-  "North Hendersonville",
-  "Zirconia",
-];
+export const DEFAULT_GATE_AREAS: string[] = [];
 
 // Keep GATE_AREAS export for backwards-compat
 export const GATE_AREAS = DEFAULT_GATE_AREAS;

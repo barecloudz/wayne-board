@@ -34,6 +34,9 @@ export default function GateCodesTab({
   const [newAreaName, setNewAreaName] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  // Delete confirmation modal state
+  const [deleteTarget, setDeleteTarget] = useState<GateCodeRow | null>(null);
+
   // Thumbs-down modal state
   const [reportTarget, setReportTarget] = useState<GateCodeRow | null>(null);
   const [hasNew, setHasNew] = useState<boolean | null>(null);
@@ -339,7 +342,7 @@ export default function GateCodesTab({
                         {/* Admin delete */}
                         {isAdmin && (
                           <button
-                            onClick={() => handleDelete(c.id)}
+                            onClick={() => setDeleteTarget(c)}
                             disabled={isPending}
                             className="p-2 rounded-xl bg-slate-50 text-slate-300 hover:bg-red-50 hover:text-red-400 transition-colors shrink-0"
                           >
@@ -355,6 +358,46 @@ export default function GateCodesTab({
           </div>
         );
       })}
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.2)] bg-white border border-slate-200">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-extrabold text-slate-900">Delete Gate Code?</p>
+                  <p className="text-[12px] text-slate-400">{deleteTarget.location}{deleteTarget.roadName ? ` · ${deleteTarget.roadName}` : ""}</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <p className="text-[13px] text-slate-600">
+                Code <span className="font-mono font-bold text-slate-900">{deleteTarget.code}</span> will be permanently deleted. This cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { handleDelete(deleteTarget.id); setDeleteTarget(null); }}
+                  disabled={isPending}
+                  className="flex-1 py-2.5 rounded-xl text-[13px] font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Report modal */}
       {reportTarget && (
