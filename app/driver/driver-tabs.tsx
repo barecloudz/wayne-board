@@ -517,7 +517,7 @@ export default function DriverTabs({
             <button
               key={key}
               onClick={() => goTab(key)}
-              className="flex-1 flex flex-col items-center justify-center pt-2 pb-1.5 relative gap-0.5"
+              className="flex-1 flex flex-col items-center justify-center pt-2 pb-1.5 relative gap-0.5 rounded-xl active:bg-slate-100 transition-colors"
             >
               {/* Active indicator bar */}
               {active && (
@@ -531,11 +531,11 @@ export default function DriverTabs({
                 <span className="absolute top-1.5 right-[calc(50%-14px)] w-2 h-2 bg-red-500 rounded-full border border-white" />
               )}
               <Icon
-                className={`w-5 h-5 transition-colors ${active ? "fill-current" : "text-slate-600"}`}
+                className={`w-5 h-5 transition-colors ${active ? "fill-current" : "text-slate-500"}`}
                 style={active ? { color: "var(--brand)" } : {}}
               />
               <span
-                className={`text-[10px] font-semibold transition-colors ${active ? "" : "text-slate-600"}`}
+                className={`text-[10px] font-semibold transition-colors ${active ? "" : "text-slate-500"}`}
                 style={active ? { color: "var(--brand)" } : {}}
               >
                 {label}
