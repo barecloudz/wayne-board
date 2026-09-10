@@ -28,6 +28,7 @@ export type MePanelProps = {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>;
   driverId: string;
   vehicles: Array<{ id: number; unitNumber: string }>;
+  maintenanceRequests: any[];
 };
 
 type MeSection = "milestones" | "maintenance" | "account";
@@ -42,6 +43,7 @@ export default function MePanel({
   onChangePassword,
   driverId,
   vehicles,
+  maintenanceRequests,
 }: MePanelProps) {
   const defaultSection: MeSection = showMilestones ? "milestones" : "maintenance";
   const [section, setSection] = useState<MeSection>(defaultSection);
@@ -80,8 +82,8 @@ export default function MePanel({
       setPwMsg({ error: true, text: "Passwords don't match" });
       return;
     }
-    if (newPw.length < 6) {
-      setPwMsg({ error: true, text: "Password must be at least 6 characters" });
+    if (newPw.length < 8) {
+      setPwMsg({ error: true, text: "Password must be at least 8 characters" });
       return;
     }
     const result = await onChangePassword(currentPw, newPw);
@@ -217,7 +219,7 @@ export default function MePanel({
       {section === "maintenance" && (
         <div className="px-4 pb-6">
           <MaintenanceTab
-            initial={[]}
+            initial={maintenanceRequests}
             driverId={driverId}
             driverName={driverName}
             vehicles={vehicles.map((v) => ({ id: v.id, unitNumber: v.unitNumber, model: "" }))}

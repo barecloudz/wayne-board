@@ -22,7 +22,9 @@ export type ScorePanelProps = {
   }>;
   currentDriverId: string;
   serviceRows: DswRow[];
+  myDswHistory: DswRow[];
   showDsw: boolean;
+  accent?: string;
 };
 
 type ScoreSection = "score" | "leaderboard" | "reviews" | "service";
@@ -44,7 +46,9 @@ export default function ScorePanel({
   leaderboard,
   currentDriverId,
   serviceRows,
+  myDswHistory,
   showDsw,
+  accent = "#FF6200",
 }: ScorePanelProps) {
   const [section, setSection] = useState<ScoreSection>("score");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
@@ -234,7 +238,7 @@ export default function ScorePanel({
       {/* Service/DSW section */}
       {section === "service" && showDsw && (
         <div className="px-4 pb-6">
-          <ServiceTab rows={serviceRows} myDriverId={currentDriverId} />
+          <ServiceTab rows={serviceRows} myDriverId={currentDriverId} myHistory={myDswHistory} accent={accent} />
         </div>
       )}
     </div>

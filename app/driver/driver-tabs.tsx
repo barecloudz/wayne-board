@@ -483,7 +483,9 @@ export default function DriverTabs({
             leaderboard={scorePanelLeaderboard}
             currentDriverId={driverId}
             serviceRows={dswRows}
+            myDswHistory={myDswHistory}
             showDsw={showDsw}
+            accent={accentColor}
           />
         )}
 
@@ -499,6 +501,7 @@ export default function DriverTabs({
             onChangePassword={handleChangePassword}
             driverId={driverId}
             vehicles={mePanelVehicles}
+            maintenanceRequests={maintenanceRequests}
           />
         )}
       </div>
