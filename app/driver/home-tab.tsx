@@ -166,7 +166,7 @@ export default function HomeTab({
               className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200/80 px-4 py-3.5 text-left shadow-[0_1px_3px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-transform"
             >
               <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center shrink-0`}>
-                <Icon className={`w-4.5 h-4.5 ${color}`} />
+                <Icon className={`w-4 h-4 ${color}`} />
               </div>
               <span className="text-[13px] font-bold text-slate-700">{label}</span>
             </button>
