@@ -62,6 +62,7 @@ function WorkAreaShape({ shape, color, size = 14 }: { shape: string; color: stri
 export default async function DriverDashboard() {
   const session = await getSession();
   if (!session) redirect("/sign-in");
+  if (session.role !== "driver") redirect("/dashboard");
 
   const today = new Date().toISOString().slice(0, 10);
 

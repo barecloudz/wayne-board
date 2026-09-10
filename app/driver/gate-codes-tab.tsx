@@ -22,7 +22,10 @@ export default function GateCodesTab({
 }) {
   const [codes, setCodes] = useState<GateCodeRow[]>(initial);
   const [allAreas, setAllAreas] = useState<string[]>(areas);
-  const [openAreas, setOpenAreas] = useState<Set<string>>(new Set(areas));
+  // Areas with codes start expanded; empty areas start collapsed
+  const [openAreas, setOpenAreas] = useState<Set<string>>(
+    new Set(areas.filter((a) => initial.some((c) => c.location === a)))
+  );
   const [showAdd, setShowAdd] = useState(false);
   const [addArea, setAddArea] = useState<string>(areas[0] ?? "");
   const [addRoadName, setAddRoadName] = useState("");

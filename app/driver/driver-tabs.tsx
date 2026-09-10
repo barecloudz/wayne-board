@@ -415,9 +415,9 @@ export default function DriverTabs({
 
               <div className="grid grid-cols-3 divide-x divide-slate-100">
                 {[
-                  { label: "Avg Score",     value: avgScore !== null ? avgScore.toFixed(1) : "-" },
-                  { label: "Total Reviews", value: reviews.length },
-                  { label: "Positive",      value: reviews.filter((r) => r.type === "positive").length },
+                  { label: "Avg Score", value: avgScore !== null ? avgScore.toFixed(1) : "-" },
+                  { label: "Reviews",   value: reviews.length },
+                  { label: "Positive",  value: reviews.filter((r) => r.type === "positive").length },
                 ].map((s) => (
                   <div key={s.label} className="px-4 py-5 text-center">
                     <p className="text-[24px] font-bold text-slate-800">{s.value}</p>
@@ -495,6 +495,17 @@ export default function DriverTabs({
         {/* ── Schedule tab ──────────────────────────────── */}
         {tab === "schedule" && (
           <>
+            {/* Streak badge — shown at top of Schedule tab when active */}
+            {streakDays > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl self-start"
+                style={{ background: "#fffbeb", border: "1px solid #fde68a" }}>
+                <span className="text-base leading-none">🔥</span>
+                <span className="text-[13px] font-bold" style={{ color: "#92400e" }}>
+                  {streakDays} day streak
+                </span>
+              </div>
+            )}
+
             {/* 2-week calendar card */}
             <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
@@ -517,14 +528,18 @@ export default function DriverTabs({
                   const timeOffEntry = upcomingTimeOff.find(t => t.startDate <= dateStr && t.endDate >= dateStr) ?? null;
                   return { d, dateStr, dow, dateNum: d.getDate(), isToday: dateStr === todayStr, isWork, timeOffEntry };
                 });
-                const DOW_LABELS = ["S","M","T","W","T","F","S"];
+                const DOW_LABELS_2 = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+                // Month label: use the month of the first day of the current week
+                const monthLabel = startOfWeek.toLocaleDateString("en-US", { month: "long", year: "numeric" });
                 return (
                   <div className="px-5 pt-4 pb-5 flex flex-col gap-5">
+                    {/* Month header */}
+                    <p className="text-[13px] font-bold text-slate-700 -mb-2">{monthLabel}</p>
                     {[
-                      { label: "This Week", days: calDays.slice(0, 7) },
-                      { label: "Next Week", days: calDays.slice(7) },
-                    ].map(({ label, days }) => (
-                      <div key={label}>
+                      { label: "This Week", days: calDays.slice(0, 7), muted: false },
+                      { label: "Next Week", days: calDays.slice(7), muted: true },
+                    ].map(({ label, days, muted }) => (
+                      <div key={label} style={{ opacity: muted ? 0.65 : 1 }}>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">{label}</p>
                         <div className="grid grid-cols-7 gap-1">
                           {days.map((day) => {
@@ -533,33 +548,53 @@ export default function DriverTabs({
                             return (
                               <div
                                 key={day.dateStr}
-                                className={`flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all ${
-                                  day.isToday ? "ring-2 ring-orange-400 ring-offset-1" : ""
-                                }`}
+                                className="flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all"
                                 style={{
-                                  background: isOff ? "#fffbeb" : isWork ? "var(--brand)" : "#F8FAFC",
+                                  background: day.isToday
+                                    ? "var(--brand)"
+                                    : isOff ? "#fffbeb"
+                                    : isWork ? "var(--brand)"
+                                    : "#F8FAFC",
+                                  opacity: day.isToday ? 1 : undefined,
+                                  boxShadow: day.isToday ? "0 0 0 2px var(--brand), 0 0 0 4px rgba(255,98,0,0.18)" : undefined,
                                 }}
                               >
                                 <span
                                   className="text-[9px] font-bold uppercase"
-                                  style={{ color: isOff ? "#d97706" : isWork ? "rgba(255,255,255,0.75)" : "#CBD5E1" }}
+                                  style={{
+                                    color: day.isToday
+                                      ? "rgba(255,255,255,0.8)"
+                                      : isOff ? "#d97706"
+                                      : isWork ? "rgba(255,255,255,0.75)"
+                                      : "#CBD5E1"
+                                  }}
                                 >
-                                  {DOW_LABELS[day.dow]}
+                                  {DOW_LABELS_2[day.dow]}
                                 </span>
                                 <span
                                   className="text-[15px] font-extrabold leading-none"
-                                  style={{ color: isOff ? "#b45309" : isWork ? "#ffffff" : "#CBD5E1" }}
+                                  style={{
+                                    color: day.isToday
+                                      ? "#ffffff"
+                                      : isOff ? "#b45309"
+                                      : isWork ? "#ffffff"
+                                      : "#CBD5E1"
+                                  }}
                                 >
                                   {day.dateNum}
                                 </span>
-                                {isOff && (
-                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#d97706" }}>Off</span>
+                                {isOff && !day.isToday && (
+                                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
+                                    style={{ background: "#fef3c7", color: "#b45309" }}>Off</span>
                                 )}
-                                {!isOff && !isWork && (
+                                {!isOff && !isWork && !day.isToday && (
                                   <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>-</span>
                                 )}
-                                {isWork && (
-                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.6)" }}>On</span>
+                                {(isWork || day.isToday) && !isOff && (
+                                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
+                                    style={{ background: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.9)" }}>
+                                    {day.isToday && !isWork ? "Today" : "On"}
+                                  </span>
                                 )}
                               </div>
                             );
@@ -1112,13 +1147,18 @@ export default function DriverTabs({
           />
           {/* Sheet */}
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl pb-safe"
+            className="fixed bottom-0 left-0 right-0 z-50 flex justify-center"
+            style={{ pointerEvents: "none" }}
+          >
+          <div
+            className="w-full max-w-2xl rounded-t-3xl pb-safe"
             style={{
               background: "#ffffff",
               border: "1px solid #E2E8F0",
               borderBottom: "none",
               boxShadow: "0 -4px 32px rgba(0,0,0,0.08)",
               paddingBottom: "calc(env(safe-area-inset-bottom) + 80px)",
+              pointerEvents: "auto",
             }}
           >
             {/* Handle */}
@@ -1161,6 +1201,7 @@ export default function DriverTabs({
                 );
               })}
             </div>
+          </div>
           </div>
         </>
       )}
