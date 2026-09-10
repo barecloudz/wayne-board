@@ -531,11 +531,11 @@ export default function DriverTabs({
                 <span className="absolute top-1.5 right-[calc(50%-14px)] w-2 h-2 bg-red-500 rounded-full border border-white" />
               )}
               <Icon
-                className={`w-5 h-5 transition-colors ${active ? "fill-current" : "text-slate-400"}`}
+                className={`w-5 h-5 transition-colors ${active ? "fill-current" : "text-slate-600"}`}
                 style={active ? { color: "var(--brand)" } : {}}
               />
               <span
-                className={`text-[10px] font-semibold transition-colors ${active ? "" : "text-slate-400"}`}
+                className={`text-[10px] font-semibold transition-colors ${active ? "" : "text-slate-600"}`}
                 style={active ? { color: "var(--brand)" } : {}}
               >
                 {label}
