@@ -2,9 +2,10 @@
 
 import * as XLSX from "xlsx";
 import { db } from "@/lib/db";
-import { dswRouteDays } from "@/lib/schema";
+import { dswRouteDays, dswNameMappings, drivers } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/session";
+import { revalidatePath } from "next/cache";
 
 function parseDateFromTitle(title: string): string | null {
   // Matches MM/DD/YYYY at end of title
@@ -22,7 +23,7 @@ function parseIlsPct(val: unknown): number | null {
 
 export async function uploadDswFile(
   formData: FormData
-): Promise<{ success: boolean; date?: string; rowsInserted?: number; error?: string }> {
+): Promise<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string }> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   const orgId = session.organizationId;
@@ -63,6 +64,13 @@ export async function uploadDswFile(
     }
   }
 
+  // --- Load saved name mappings for this org ---
+  const savedMappings = await db
+    .select({ dswName: dswNameMappings.dswName, driverId: dswNameMappings.driverId })
+    .from(dswNameMappings)
+    .where(eq(dswNameMappings.organizationId, orgId));
+  const mappingLookup = new Map(savedMappings.map((m) => [m.dswName, m.driverId]));
+
   // Delete existing rows for this org+date before inserting fresh
   await db
     .delete(dswRouteDays)
@@ -70,6 +78,8 @@ export async function uploadDswFile(
 
   // --- Insert DSW rows (data starts at row index 4) ---
   let rowsInserted = 0;
+  const unmatchedNames: string[] = [];
+
   for (let r = 4; r < dswRows.length; r++) {
     const row = dswRows[r];
     const driverNameRaw = String(row[3] ?? "").trim();
@@ -96,10 +106,17 @@ export async function uploadDswFile(
     const breakdown = codeMap.get(waKey) ?? null;
     const codeBreakdown = breakdown ? JSON.stringify(breakdown) : null;
 
+    // Resolve driverId from saved mappings
+    const resolvedDriverId = mappingLookup.get(driverNameRaw) ?? null;
+    if (!resolvedDriverId && !unmatchedNames.includes(driverNameRaw)) {
+      unmatchedNames.push(driverNameRaw);
+    }
+
     await db.insert(dswRouteDays).values({
       organizationId: orgId,
       date,
       driverNameRaw,
+      driverId: resolvedDriverId ?? undefined,
       waName,
       waNumber,
       ...(ilsPct != null ? { ilsPct } : {}),
@@ -121,5 +138,54 @@ export async function uploadDswFile(
     rowsInserted++;
   }
 
-  return { success: true, date, rowsInserted };
+  return { success: true, date, rowsInserted, unmatchedNames };
+}
+
+// ── Save a DSW name → driver mapping and retroactively patch existing rows ────
+
+export async function saveDswNameMapping(
+  dswName: string,
+  driverId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  // Upsert the mapping
+  await db
+    .insert(dswNameMappings)
+    .values({ organizationId: orgId, dswName, driverId })
+    .onConflictDoUpdate({
+      target: [dswNameMappings.organizationId, dswNameMappings.dswName],
+      set: { driverId },
+    });
+
+  // Retroactively patch all existing dswRouteDays rows for this name
+  await db
+    .update(dswRouteDays)
+    .set({ driverId })
+    .where(
+      and(
+        eq(dswRouteDays.organizationId, orgId),
+        eq(dswRouteDays.driverNameRaw, dswName),
+      )
+    );
+
+  revalidatePath("/dashboard/payroll");
+  return { success: true };
+}
+
+// ── Get active drivers for the org (for mapping dropdown) ────────────────────
+
+export async function getActiveDriversForOrg(): Promise<Array<{ driverId: string; name: string }>> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select({ driverId: drivers.driverId, name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
 }

@@ -484,6 +484,17 @@ export const gcNameMappings = pgTable("gc_name_mappings", {
   orgGcNameUnique: uniqueIndex("gc_name_mappings_org_name_unique").on(t.organizationId, t.gcName),
 }));
 
+// ── DSW Driver Name Mappings (persistent links: raw DSW name → driver account) ─
+export const dswNameMappings = pgTable("dsw_name_mappings", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  dswName:        text("dsw_name").notNull(),   // name as it appears in DSW (e.g. "CROMPTON,BRITT EUGENE")
+  driverId:       text("driver_id").notNull(),  // matched Wayne Board driver_id
+  createdAt:      timestamp("created_at").defaultNow(),
+}, (t) => ({
+  orgDswNameUnique: uniqueIndex("dsw_name_mappings_org_name_unique").on(t.organizationId, t.dswName),
+}));
+
 // ── Vehicle Maintenance Records (admin-logged completed work) ─────────────────
 export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", {
   id:             serial("id").primaryKey(),

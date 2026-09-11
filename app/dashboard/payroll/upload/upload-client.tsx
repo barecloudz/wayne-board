@@ -1,20 +1,35 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { uploadDswFile } from "@/lib/actions/dsw-upload";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { useState, useTransition, useRef, useEffect } from "react";
+import { uploadDswFile, saveDswNameMapping, getActiveDriversForOrg } from "@/lib/actions/dsw-upload";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2 } from "lucide-react";
+
+type DriverOption = { driverId: string; name: string };
 
 export default function UploadClient() {
   const [dswFile, setDswFile] = useState<File | null>(null);
   const [pldFile, setPldFile] = useState<File | null>(null);
-  const [result, setResult] = useState<{ success: boolean; date?: string; rowsInserted?: number; error?: string } | null>(null);
+  const [result, setResult] = useState<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
+  const [mappings, setMappings] = useState<Record<string, string>>({}); // dswName -> driverId
+  const [savingName, setSavingName] = useState<string | null>(null);
+  const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
   const dswRef = useRef<HTMLInputElement>(null);
   const pldRef = useRef<HTMLInputElement>(null);
+
+  // Load driver options once when unmatched names appear
+  useEffect(() => {
+    if (result?.unmatchedNames && result.unmatchedNames.length > 0 && driverOptions.length === 0) {
+      getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
+    }
+  }, [result, driverOptions.length]);
 
   function handleUpload() {
     if (!dswFile) return;
     setResult(null);
+    setSavedNames(new Set());
+    setMappings({});
     startTransition(async () => {
       const fd = new FormData();
       fd.append("dsw", dswFile);
@@ -23,6 +38,18 @@ export default function UploadClient() {
       setResult(res);
     });
   }
+
+  async function handleSaveMapping(dswName: string) {
+    const driverId = mappings[dswName];
+    if (!driverId) return;
+    setSavingName(dswName);
+    await saveDswNameMapping(dswName, driverId);
+    setSavedNames((prev) => new Set([...prev, dswName]));
+    setSavingName(null);
+  }
+
+  const unmatchedNames = result?.unmatchedNames ?? [];
+  const pendingUnmatched = unmatchedNames.filter((n) => !savedNames.has(n));
 
   return (
     <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto">
@@ -104,6 +131,58 @@ export default function UploadClient() {
                   </>
               }
             </div>
+          </div>
+        )}
+
+        {/* Unmatched driver names panel */}
+        {result?.success && pendingUnmatched.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Link2 className="w-4 h-4 text-amber-700" />
+              <p className="text-[14px] font-bold text-amber-900">Link unmatched drivers</p>
+            </div>
+            <p className="text-[12px] text-amber-700 mb-4">
+              These DSW names don&apos;t match any driver account yet. Link each one once and it will auto-match on every future upload.
+            </p>
+            <div className="flex flex-col gap-3">
+              {pendingUnmatched.map((dswName) => (
+                <div key={dswName} className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-mono font-semibold text-slate-700 truncate">{dswName}</p>
+                  </div>
+                  <select
+                    className="text-[12px] border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800 min-w-[160px]"
+                    value={mappings[dswName] ?? ""}
+                    onChange={(e) => setMappings((prev) => ({ ...prev, [dswName]: e.target.value }))}
+                  >
+                    <option value="">Select driver…</option>
+                    {driverOptions.map((d) => (
+                      <option key={d.driverId} value={d.driverId}>{d.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => handleSaveMapping(dswName)}
+                    disabled={!mappings[dswName] || savingName === dswName}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                  >
+                    {savingName === dswName ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                    Save
+                  </button>
+                </div>
+              ))}
+            </div>
+            {savedNames.size > 0 && (
+              <p className="text-[11px] text-emerald-700 mt-3 font-medium">
+                {savedNames.size} link{savedNames.size === 1 ? "" : "s"} saved — these drivers will auto-match on future uploads.
+              </p>
+            )}
+          </div>
+        )}
+
+        {result?.success && unmatchedNames.length > 0 && pendingUnmatched.length === 0 && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            <p className="text-[13px] font-medium text-emerald-800">All drivers linked successfully.</p>
           </div>
         )}
       </div>
