@@ -12,7 +12,7 @@ async function requireOrg(): Promise<number> {
   return session.organizationId;
 }
 
-export type AttendanceStatus = "work" | "half_day" | "cut" | "call_out" | "trainee" | "day_off";
+export type AttendanceStatus = "work" | "half_day" | "cut" | "call_out" | "trainee" | "day_off" | "holiday";
 
 export type AttendanceRecord = {
   driverId: string;

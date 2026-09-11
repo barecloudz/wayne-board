@@ -131,7 +131,7 @@ export default function SchedulingClient({
   }
 
   // ── Note modal state ──────────────────────────────────────────────────────
-  type AttendanceAction = "cut" | "call_out" | "half_day";
+  type AttendanceAction = "cut" | "call_out" | "half_day" | "holiday";
   const [noteAction, setNoteAction] = useState<AttendanceAction | null>(null);
   const [noteText, setNoteText] = useState("");
 
@@ -277,6 +277,7 @@ export default function SchedulingClient({
       const status: AttendanceStatus =
         noteAction === "half_day" ? "half_day"
         : noteAction === "cut" ? "cut"
+        : noteAction === "holiday" ? "holiday"
         : "call_out";
       await upsertAttendance(driver.driverId, driver.name, dateStr, status, note);
 
@@ -1059,6 +1060,7 @@ export default function SchedulingClient({
                         const isLastDay = d.lastDay === dateStr;
                         const isTrainee = d.isTrainee;
                         const attendanceEntry = attendanceMap.get(`${d.driverId}|${dateStr}`);
+                        const isHoliday = attendanceEntry?.status === "holiday";
                         const isHalfDay = attendanceEntry?.status === "half_day";
                         const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
                         const droRoute = d.workArea
@@ -1070,7 +1072,9 @@ export default function SchedulingClient({
                               <button
                                 onClick={() => openCoverageModal(d, dateStr)}
                                 className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 flex items-center gap-1 ${
-                                  isHalfDay
+                                  isHoliday
+                                    ? "text-slate-600 bg-slate-100 border border-slate-200"
+                                    : isHalfDay
                                     ? "text-yellow-800 bg-gradient-to-b from-yellow-200 to-white border border-yellow-300"
                                     : isTrainee
                                     ? "text-blue-700 bg-blue-50 border border-blue-100"
@@ -1078,6 +1082,7 @@ export default function SchedulingClient({
                                     ? "text-red-700 bg-red-50 border border-red-100"
                                     : "text-slate-700 bg-emerald-50 border border-emerald-100"
                                 }`}>
+                                {isHoliday && <span className="text-[9px] font-extrabold text-slate-500">H</span>}
                                 {isHalfDay && <span className="text-[9px] font-extrabold text-yellow-700">½</span>}
                                 {d.name}
                               </button>
@@ -1121,6 +1126,10 @@ export default function SchedulingClient({
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-yellow-200 to-white border border-yellow-300 inline-block" />
               Half Day
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-200 inline-block" />
+              Holiday (FedEx closed)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-blue-100 border border-blue-200 inline-block" />
@@ -1417,13 +1426,14 @@ export default function SchedulingClient({
               {noteAction && (
                 <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 gap-4 z-10">
                   <p className="text-[15px] font-extrabold text-slate-900 text-center">
-                    {noteAction === "cut" ? "Cut Day" : noteAction === "call_out" ? "Call Out" : "Half Day"}
+                    {noteAction === "cut" ? "Cut Day" : noteAction === "call_out" ? "Call Out" : noteAction === "half_day" ? "Half Day" : "Holiday"}
                     {" — "}{coverageModal?.driver.name}
                   </p>
                   <p className="text-[12px] text-slate-500 text-center">
                     {noteAction === "cut" && "Management decision — not using this driver today."}
                     {noteAction === "call_out" && "Driver called in and won't be coming in."}
                     {noteAction === "half_day" && "Driver worked a partial day and left early."}
+                    {noteAction === "holiday" && "FedEx is closed today — no deliveries."}
                   </p>
                   <textarea
                     autoFocus
@@ -1481,7 +1491,7 @@ export default function SchedulingClient({
                 {/* Cut / Call Out / Half Day */}
                 <div className="flex flex-col gap-2">
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Not working this day?</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <button
                       onClick={() => { setNoteAction("cut"); setNoteText(""); }}
                       disabled={isPending}
@@ -1505,8 +1515,15 @@ export default function SchedulingClient({
                     >
                       ½ Half Day
                     </button>
+                    <button
+                      onClick={() => { setNoteAction("holiday"); setNoteText(""); }}
+                      disabled={isPending}
+                      className="py-3 rounded-xl text-[13px] font-bold bg-slate-500 text-white hover:bg-slate-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      🏖 Holiday
+                    </button>
                   </div>
-                  <p className="text-[11px] text-slate-400">Cut = management · Call Out = driver · Half Day = left early</p>
+                  <p className="text-[11px] text-slate-400">Cut = management · Call Out = driver · Half Day = left early · Holiday = FedEx closed</p>
                 </div>
 
                 {/* Assign vehicle */}

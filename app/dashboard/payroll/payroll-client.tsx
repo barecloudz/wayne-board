@@ -48,6 +48,12 @@ function StatusCell({ status, note }: { status: AttendanceStatus | undefined; no
       {note && <span className="text-[9px] text-slate-400 leading-none" title={note}>📝</span>}
     </div>
   );
+  if (status === "holiday") return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200" title={note ?? undefined}>H</span>
+      {note && <span className="text-[9px] text-slate-400 leading-none" title={note}>📝</span>}
+    </div>
+  );
   if (status === "trainee") return (
     <div className="flex flex-col items-center gap-0.5">
       <span className="text-[11px] font-extrabold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 border border-blue-200" title={note ?? undefined}>T</span>
@@ -190,6 +196,7 @@ export default function PayrollClient({ weekData, currentOffset }: { weekData: P
             <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 font-bold">Cut</span> Management cut</span>
             <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 font-bold">Out</span> Called out</span>
             <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 border border-blue-200 font-bold">T</span> Trainee day</span>
+            <span className="flex items-center gap-1.5"><span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 font-bold">H</span> Holiday</span>
             <span className="flex items-center gap-1.5">📝 Note — hover to read</span>
           </div>
         </div>
