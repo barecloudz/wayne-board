@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Printer, Settings } from "lucide-react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Printer, Settings, Upload } from "lucide-react";
 import type { PayrollWeekData, AttendanceStatus } from "@/lib/actions/attendance";
+import type { DswDayRow } from "@/lib/actions/dsw-data";
 import PayWeekModal from "./pay-week-modal";
 
 const WEEK_DAY_LABELS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -76,7 +78,35 @@ function computeRowTotals(attendance: Record<string, AttendanceStatus>) {
   return { workDays, traineeDays };
 }
 
-export default function PayrollClient({ weekData, currentOffset, payWeekStart }: { weekData: PayrollWeekData; currentOffset: number; payWeekStart: number }) {
+function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function matchDswName(driverName: string, dswNameRaw: string): boolean {
+  // DSW: "CROMPTON,BRITT EUGENE" → parts: ["CROMPTON", "BRITT", "EUGENE"]
+  // Driver name: "Britt Crompton" or "Britt Eugene Crompton"
+  void normalizeName; // used for reference; matching is done via parts
+  const dswParts = dswNameRaw.toUpperCase().replace(",", " ").split(/\s+/).filter(Boolean);
+  const driverParts = driverName.toUpperCase().split(/\s+/).filter(Boolean);
+  // Match if at least 2 parts appear in both
+  let matches = 0;
+  for (const p of driverParts) {
+    if (dswParts.some(d => d === p)) matches++;
+  }
+  return matches >= 2;
+}
+
+export default function PayrollClient({
+  weekData,
+  currentOffset,
+  payWeekStart,
+  dswRows,
+}: {
+  weekData: PayrollWeekData;
+  currentOffset: number;
+  payWeekStart: number;
+  dswRows: DswDayRow[];
+}) {
   const router = useRouter();
   const [showPayWeekModal, setShowPayWeekModal] = useState(false);
   const weekDates = getWeekDates(weekData.weekStart);
@@ -84,6 +114,18 @@ export default function PayrollClient({ weekData, currentOffset, payWeekStart }:
 
   function navigate(newOffset: number) {
     router.push(`/dashboard/payroll?offset=${newOffset}`);
+  }
+
+  // Build DSW map: driverId -> Map<date, DswDayRow>
+  const dswByDriverDate = new Map<string, Map<string, DswDayRow>>();
+  for (const driver of weekData.drivers) {
+    const driverDsw = new Map<string, DswDayRow>();
+    for (const row of dswRows) {
+      if (matchDswName(driver.name, row.driverNameRaw)) {
+        driverDsw.set(row.date, row);
+      }
+    }
+    if (driverDsw.size > 0) dswByDriverDate.set(driver.driverId, driverDsw);
   }
 
   return (
@@ -95,6 +137,10 @@ export default function PayrollClient({ weekData, currentOffset, payWeekStart }:
           <p className="text-[14px] text-slate-400 mt-2">Weekly attendance for payroll processing. Print this page and review with your records.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/dashboard/payroll/upload" className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors print:hidden">
+            <Upload className="w-4 h-4" />
+            Upload DSW
+          </Link>
           <button onClick={() => setShowPayWeekModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
             <Settings className="w-4 h-4" />
             Pay Week
@@ -155,58 +201,99 @@ export default function PayrollClient({ weekData, currentOffset, payWeekStart }:
                 {weekData.drivers.map((driver) => {
                   const { workDays, traineeDays } = computeRowTotals(driver.attendance);
                   const showDeduction = driver.isTerminated && driver.terminationType === "notice";
+                  const driverDsw = dswByDriverDate.get(driver.driverId);
                   return (
-                    <tr key={driver.driverId} className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/40">
-                      <td className="px-5 py-3">
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-slate-800">{driver.name}</span>
-                            {driver.isTerminated && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">Terminated</span>
-                            )}
+                    <>
+                      <tr key={driver.driverId} className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/40">
+                        <td className="px-5 py-3">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-slate-800">{driver.name}</span>
+                              {driver.isTerminated && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">Terminated</span>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-400">{driver.driverId}</span>
+                            {driver.terminationNote && <span className="text-[11px] text-slate-400 italic">{driver.terminationNote}</span>}
+                            {showDeduction && <span className="text-[11px] font-bold text-red-600 mt-0.5">−${weekData.deductionAmount} · No Notice</span>}
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400">{driver.driverId}</span>
-                          {driver.terminationNote && <span className="text-[11px] text-slate-400 italic">{driver.terminationNote}</span>}
-                          {showDeduction && <span className="text-[11px] font-bold text-red-600 mt-0.5">−${weekData.deductionAmount} · No Notice</span>}
-                        </div>
-                      </td>
-                      {weekDates.map((dateStr) => {
-                        const status = driver.attendance[dateStr];
-                        const cellBg =
-                          status === "call_out" ? "bg-red-50"
-                          : status === "half_day" ? "bg-yellow-50"
-                          : status === "cut" ? "bg-slate-100"
-                          : status === "holiday" ? "bg-slate-50"
-                          : status === "trainee" ? "bg-blue-50"
-                          : "";
-                        return (
-                          <td key={dateStr} className={`px-3 py-3 text-center ${cellBg}`}>
-                            <StatusCell status={status} note={driver.notes[dateStr]} />
+                        </td>
+                        {weekDates.map((dateStr) => {
+                          const status = driver.attendance[dateStr];
+                          const cellBg =
+                            status === "call_out" ? "bg-red-50"
+                            : status === "half_day" ? "bg-yellow-50"
+                            : status === "cut" ? "bg-slate-100"
+                            : status === "holiday" ? "bg-slate-50"
+                            : status === "trainee" ? "bg-blue-50"
+                            : "";
+                          return (
+                            <td key={dateStr} className={`px-3 py-3 text-center ${cellBg}`}>
+                              <StatusCell status={status} note={driver.notes[dateStr]} />
+                            </td>
+                          );
+                        })}
+                        <td className="px-3 py-3 text-center">
+                          <span className="text-[13px] font-bold text-slate-800">{workDays % 1 === 0 ? workDays : workDays.toFixed(1)}</span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {traineeDays > 0 ? <span className="text-[13px] font-bold text-blue-600">{traineeDays}</span> : <span className="text-slate-300 text-[11px]">—</span>}
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex flex-col gap-0.5">
+                            {weekDates.map((dateStr, i) => {
+                              const note = driver.notes[dateStr];
+                              if (!note) return null;
+                              const status = driver.attendance[dateStr];
+                              return (
+                                <span key={dateStr} className="text-[11px] text-slate-500">
+                                  <span className="font-semibold text-slate-600 mr-1">{WEEK_DAY_LABELS[i]}:</span>
+                                  {note}{status === "half_day" && " (half day)"}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </td>
+                      </tr>
+                      {driverDsw && driverDsw.size > 0 && (
+                        <tr key={driver.driverId + "-dsw"} className="border-b border-slate-100/40 last:border-0 bg-slate-50/30">
+                          <td className="px-5 py-1.5">
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Performance</span>
                           </td>
-                        );
-                      })}
-                      <td className="px-3 py-3 text-center">
-                        <span className="text-[13px] font-bold text-slate-800">{workDays % 1 === 0 ? workDays : workDays.toFixed(1)}</span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        {traineeDays > 0 ? <span className="text-[13px] font-bold text-blue-600">{traineeDays}</span> : <span className="text-slate-300 text-[11px]">—</span>}
-                      </td>
-                      <td className="px-5 py-3">
-                        <div className="flex flex-col gap-0.5">
-                          {weekDates.map((dateStr, i) => {
-                            const note = driver.notes[dateStr];
-                            if (!note) return null;
-                            const status = driver.attendance[dateStr];
+                          {weekDates.map((dateStr) => {
+                            const dsw = driverDsw.get(dateStr);
+                            if (!dsw) return <td key={dateStr} className="px-3 py-1.5 text-center"><span className="text-slate-200 text-[10px]">—</span></td>;
+                            const ilsColor = dsw.ilsPct == null ? "text-slate-400" : dsw.ilsPct >= 100 ? "text-emerald-600" : dsw.ilsPct >= 99 ? "text-yellow-600" : "text-red-600";
+                            const codeStr = dsw.codeBreakdown
+                              ? Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(" ")
+                              : dsw.allStatusCodePkgs ? `${dsw.allStatusCodePkgs} codes` : null;
                             return (
-                              <span key={dateStr} className="text-[11px] text-slate-500">
-                                <span className="font-semibold text-slate-600 mr-1">{WEEK_DAY_LABELS[i]}:</span>
-                                {note}{status === "half_day" && " (half day)"}
-                              </span>
+                              <td key={dateStr} className="px-1 py-1.5 text-center">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  {dsw.ilsPct != null && (
+                                    <span className={`text-[10px] font-bold ${ilsColor}`}>{dsw.ilsPct}%</span>
+                                  )}
+                                  {codeStr && (
+                                    <span className="text-[9px] text-slate-400 leading-tight" title={codeStr}>{codeStr}</span>
+                                  )}
+                                </div>
+                              </td>
                             );
                           })}
-                        </div>
-                      </td>
-                    </tr>
+                          <td className="px-3 py-1.5 text-center">
+                            {(() => {
+                              const vals = weekDates.map(d => driverDsw.get(d)?.ilsPct).filter((v): v is number => v != null);
+                              if (!vals.length) return null;
+                              const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                              const color = avg >= 100 ? "text-emerald-600" : avg >= 99 ? "text-yellow-600" : "text-red-600";
+                              return <span className={`text-[10px] font-bold ${color}`}>{avg.toFixed(1)}%</span>;
+                            })()}
+                          </td>
+                          <td className="px-3 py-1.5" />
+                          <td className="px-5 py-1.5" />
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </tbody>
@@ -226,6 +313,7 @@ export default function PayrollClient({ weekData, currentOffset, payWeekStart }:
 
       <style>{`
         @media print {
+          @page { size: landscape; margin: 0.5in; }
           .print\\:hidden { display: none !important; }
           .print\\:mb-4 { margin-bottom: 1rem !important; }
           .print\\:block { display: block !important; }

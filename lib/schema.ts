@@ -449,6 +449,7 @@ export const dswRouteDays = pgTable("dsw_route_days", {
   onDutyHours:       text("on_duty_hours"),
   vscanPkgs:         integer("vscan_pkgs"),
   delStpsPlanned:    integer("del_stps_planned"),
+  codeBreakdown:     text("code_breakdown"),
   syncedAt:          timestamp("synced_at").defaultNow(),
 });
 

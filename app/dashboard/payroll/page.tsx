@@ -4,6 +4,7 @@ import AppShell from "@/components/app-shell";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getPayrollWeek } from "@/lib/actions/attendance";
+import { getDswDataForRange } from "@/lib/actions/dsw-data";
 import { getSetting } from "@/lib/actions/settings";
 import PayrollClient from "./payroll-client";
 
@@ -35,11 +36,15 @@ export default async function PayrollPage({ searchParams }: Props) {
   const payWeekStartStr = await getSetting("pay_week_start", "6");
   const payWeekStart = parseInt(payWeekStartStr, 10);
   const { weekStart, weekEnd } = getPayWeekBounds(offset, payWeekStart);
-  const weekData = await getPayrollWeek(weekStart, weekEnd);
+
+  const [weekData, dswRows] = await Promise.all([
+    getPayrollWeek(weekStart, weekEnd),
+    getDswDataForRange(weekStart, weekEnd),
+  ]);
 
   return (
     <AppShell>
-      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} />
+      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} />
     </AppShell>
   );
 }
