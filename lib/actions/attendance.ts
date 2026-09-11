@@ -188,6 +188,9 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       }
     }
 
+    // Skip drivers with no attendance data for this week
+    if (Object.keys(attendanceByDate).length === 0) continue;
+
     const name = driverRecord?.name ?? (driverRecords[0]?.driverName ?? driverId);
 
     payrollDrivers.push({
