@@ -22,6 +22,15 @@ export type AttendanceRecord = {
   note: string | null;
 };
 
+// ── Helper: normalize any date value to "YYYY-MM-DD" string ─────────────────
+// Postgres `date` columns may return full ISO timestamps or Date objects
+// depending on the driver/ORM version. Slicing to 10 chars handles both.
+
+function normalizeDate(d: string | Date): string {
+  if (typeof d === "string") return d.slice(0, 10);
+  return d.toISOString().slice(0, 10);
+}
+
 // ── Helper: map a date string to the schedule boolean key ────────────────────
 
 function getScheduleKey(dateStr: string): "sat" | "sun" | "mon" | "tue" | "wed" | "thu" | "fri" {
@@ -82,7 +91,7 @@ export async function getAttendanceForRange(
         lte(attendanceLog.date, endDate),
       )
     );
-  return rows as AttendanceRecord[];
+  return rows.map(r => ({ ...r, date: normalizeDate(r.date) })) as AttendanceRecord[];
 }
 
 // ── Types for payroll report ─────────────────────────────────────────────────
@@ -167,8 +176,8 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     const attendanceByDate: Record<string, AttendanceStatus> = {};
     const notesByDate: Record<string, string | null> = {};
     for (const r of driverRecords) {
-      attendanceByDate[r.date] = r.status as AttendanceStatus;
-      notesByDate[r.date] = r.note;
+      attendanceByDate[normalizeDate(r.date)] = r.status as AttendanceStatus;
+      notesByDate[normalizeDate(r.date)] = r.note;
     }
 
     // Infer "work" for scheduled days with no attendance record (active drivers only)
@@ -178,7 +187,7 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart + "T00:00:00");
         d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().slice(0, 10);
+        const dateStr = normalizeDate(d.toISOString().slice(0, 10));
         if (attendanceByDate[dateStr]) continue; // already has a record
         const key = getScheduleKey(dateStr);
         if (schedule[key]) {
@@ -310,7 +319,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
   const attendanceByDriver = new Map<string, Map<string, string>>();
   for (const r of records) {
     if (!attendanceByDriver.has(r.driverId)) attendanceByDriver.set(r.driverId, new Map());
-    attendanceByDriver.get(r.driverId)!.set(r.date, r.status);
+    attendanceByDriver.get(r.driverId)!.set(normalizeDate(r.date), r.status);
   }
 
   // Add inferred work days for active drivers
@@ -322,7 +331,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
     for (let i = 0; i < 7; i++) {
       const d = new Date(weekStart + "T00:00:00");
       d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().slice(0, 10);
+      const dateStr = normalizeDate(d.toISOString().slice(0, 10));
       if (driverAttendance.has(dateStr)) continue;
       const key = getScheduleKey(dateStr);
       if (schedule[key]) driverAttendance.set(dateStr, "work");
