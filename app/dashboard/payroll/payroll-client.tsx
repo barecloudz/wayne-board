@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, Settings } from "lucide-react";
 import type { PayrollWeekData, AttendanceStatus } from "@/lib/actions/attendance";
+import PayWeekModal from "./pay-week-modal";
 
 const WEEK_DAY_LABELS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
 
@@ -74,8 +76,9 @@ function computeRowTotals(attendance: Record<string, AttendanceStatus>) {
   return { workDays, traineeDays };
 }
 
-export default function PayrollClient({ weekData, currentOffset }: { weekData: PayrollWeekData; currentOffset: number }) {
+export default function PayrollClient({ weekData, currentOffset, payWeekStart }: { weekData: PayrollWeekData; currentOffset: number; payWeekStart: number }) {
   const router = useRouter();
+  const [showPayWeekModal, setShowPayWeekModal] = useState(false);
   const weekDates = getWeekDates(weekData.weekStart);
   const weekLabel = `${formatShortDate(weekData.weekStart)} – ${formatShortDate(weekData.weekEnd)}`;
 
@@ -91,11 +94,20 @@ export default function PayrollClient({ weekData, currentOffset }: { weekData: P
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Payroll</h1>
           <p className="text-[14px] text-slate-400 mt-2">Weekly attendance for payroll processing. Print this page and review with your records.</p>
         </div>
-        <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
-          <Printer className="w-4 h-4" />
-          Print
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowPayWeekModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <Settings className="w-4 h-4" />
+            Pay Week
+          </button>
+          <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            <Printer className="w-4 h-4" />
+            Print
+          </button>
+        </div>
       </div>
+      {showPayWeekModal && (
+        <PayWeekModal initialDay={payWeekStart} onClose={() => setShowPayWeekModal(false)} />
+      )}
 
       <div className="flex items-center gap-3 mb-6 print:mb-4">
         <button onClick={() => navigate(currentOffset + 1)} className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors print:hidden" title="Previous week">

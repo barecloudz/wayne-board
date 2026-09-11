@@ -4,18 +4,20 @@ import AppShell from "@/components/app-shell";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getPayrollWeek } from "@/lib/actions/attendance";
+import { getSetting } from "@/lib/actions/settings";
 import PayrollClient from "./payroll-client";
 
-function getPayWeekBounds(offsetWeeks: number): { weekStart: string; weekEnd: string } {
+function getPayWeekBounds(offsetWeeks: number, payWeekStart: number): { weekStart: string; weekEnd: string } {
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=Sun...6=Sat
-  const daysToFri = ((dayOfWeek + 2) % 7) || 7;
-  const lastFriday = new Date(today);
-  lastFriday.setDate(today.getDate() - daysToFri - offsetWeeks * 7);
-  const weekEnd = lastFriday.toISOString().slice(0, 10);
-  const satStart = new Date(lastFriday);
-  satStart.setDate(lastFriday.getDate() - 6);
-  const weekStart = satStart.toISOString().slice(0, 10);
+  const dayOfWeek = today.getDay();
+  const payWeekEnd = (payWeekStart + 6) % 7;
+  const daysToEnd = ((dayOfWeek - payWeekEnd + 7) % 7) || 7;
+  const lastEndDay = new Date(today);
+  lastEndDay.setDate(today.getDate() - daysToEnd - offsetWeeks * 7);
+  const weekEnd = lastEndDay.toISOString().slice(0, 10);
+  const weekStartDate = new Date(lastEndDay);
+  weekStartDate.setDate(lastEndDay.getDate() - 6);
+  const weekStart = weekStartDate.toISOString().slice(0, 10);
   return { weekStart, weekEnd };
 }
 
@@ -30,12 +32,14 @@ export default async function PayrollPage({ searchParams }: Props) {
   const params = await searchParams;
   const offset = Math.max(0, parseInt(params.offset ?? "0", 10) || 0);
 
-  const { weekStart, weekEnd } = getPayWeekBounds(offset);
+  const payWeekStartStr = await getSetting("pay_week_start", "6");
+  const payWeekStart = parseInt(payWeekStartStr, 10);
+  const { weekStart, weekEnd } = getPayWeekBounds(offset, payWeekStart);
   const weekData = await getPayrollWeek(weekStart, weekEnd);
 
   return (
     <AppShell>
-      <PayrollClient weekData={weekData} currentOffset={offset} />
+      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} />
     </AppShell>
   );
 }

@@ -5,6 +5,7 @@ import { attendanceLog, drivers, settings, driverSchedules } from "@/lib/schema"
 import { eq, and, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { getSetting } from "@/lib/actions/settings";
 
 async function requireOrg(): Promise<number> {
   const session = await getSession();
@@ -279,14 +280,17 @@ export type PayrollCardSummary = {
 export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
   const orgId = await requireOrg();
 
+  const payWeekStartStr = await getSetting("pay_week_start", "6");
+  const payWeekStart = parseInt(payWeekStartStr, 10);
+  const payWeekEnd = (payWeekStart + 6) % 7;
   const today = new Date();
   const dayOfWeek = today.getDay();
-  const daysToFri = ((dayOfWeek + 2) % 7) || 7;
-  const lastFriday = new Date(today);
-  lastFriday.setDate(today.getDate() - daysToFri);
-  const weekEnd = lastFriday.toISOString().slice(0, 10);
-  const weekStartDate = new Date(lastFriday);
-  weekStartDate.setDate(lastFriday.getDate() - 6);
+  const daysToEnd = ((dayOfWeek - payWeekEnd + 7) % 7) || 7;
+  const lastEndDay = new Date(today);
+  lastEndDay.setDate(today.getDate() - daysToEnd);
+  const weekEnd = lastEndDay.toISOString().slice(0, 10);
+  const weekStartDate = new Date(lastEndDay);
+  weekStartDate.setDate(lastEndDay.getDate() - 6);
   const weekStart = weekStartDate.toISOString().slice(0, 10);
 
   const records = await db

@@ -7,6 +7,7 @@ import WorkAreaManager from "../work-area-manager";
 import GcSyncSettings from "../gc-sync-settings";
 import BrandingSettings from "../branding-settings";
 import LocationManager from "../location-manager";
+import PayrollWeekSettings from "../payroll-week-settings";
 import { getSetting } from "@/lib/actions/settings";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 import { getLocations } from "@/lib/actions/locations";
@@ -24,7 +25,7 @@ export default async function SettingsPage() {
         .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
     : [null];
 
-  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList, payWeekStartSetting] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getSetting("clock_in_enabled", "false"),
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
     getWorkAreas(),
     getSetting("gc_sync_interval", "daily"),
     getLocations(),
+    getSetting("pay_week_start", "6"),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -53,6 +55,7 @@ export default async function SettingsPage() {
           <WorkAreaManager initial={workAreasList as any} />
           <LocationManager initial={locationsList} />
           <GcSyncSettings initialInterval={gcSyncInterval} />
+          <PayrollWeekSettings initialDay={parseInt(payWeekStartSetting, 10)} />
         </div>
       </main>
     </AppShell>

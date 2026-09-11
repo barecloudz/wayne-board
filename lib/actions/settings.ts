@@ -31,3 +31,9 @@ export async function setSetting(key: string, value: string) {
   revalidatePath("/driver");
   revalidatePath("/dashboard");
 }
+
+export async function setPayWeekStart(day: number): Promise<void> {
+  await setSetting("pay_week_start", String(day));
+  revalidatePath("/dashboard/payroll");
+  revalidatePath("/dashboard/settings");
+}
