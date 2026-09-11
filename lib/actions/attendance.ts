@@ -178,6 +178,26 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
   return { weekStart, weekEnd, drivers: payrollDrivers, deductionAmount };
 }
 
+// ── Mark all drivers on a day as Holiday ─────────────────────────────────────
+
+export async function markDayHoliday(
+  date: string,
+  drivers: Array<{ driverId: string; driverName: string }>,
+): Promise<void> {
+  const orgId = await requireOrg();
+  for (const { driverId, driverName } of drivers) {
+    await db
+      .insert(attendanceLog)
+      .values({ organizationId: orgId, driverId, driverName, date, status: "holiday", note: null })
+      .onConflictDoUpdate({
+        target: [attendanceLog.organizationId, attendanceLog.driverId, attendanceLog.date],
+        set: { status: "holiday", note: null, updatedAt: new Date() },
+      });
+  }
+  revalidatePath("/dashboard/scheduling");
+  revalidatePath("/dashboard/payroll");
+}
+
 // ── Quick summary for dashboard payroll card ─────────────────────────────────
 
 export type PayrollCardSummary = {

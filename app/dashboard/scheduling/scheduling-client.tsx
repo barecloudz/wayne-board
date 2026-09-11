@@ -6,7 +6,7 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
-import { upsertAttendance } from "@/lib/actions/attendance";
+import { upsertAttendance, markDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
@@ -1027,6 +1027,8 @@ export default function SchedulingClient({
                 const isToday = dateStr === today;
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                 const routeCount = working.filter((d) => !d.isTrainee).length;
+                const isHolidayDay = working.length > 0 &&
+                  working.every(d => attendanceMap.get(`${d.driverId}|${dateStr}`)?.status === "holiday");
 
                 return (
                   <div
@@ -1052,55 +1054,82 @@ export default function SchedulingClient({
                       }`}>
                         {routeCount} route{routeCount !== 1 ? "s" : ""}
                       </p>
+                      {!isHolidayDay && working.length > 0 && (
+                        <button
+                          onClick={() => {
+                            startTransition(async () => {
+                              await markDayHoliday(
+                                dateStr,
+                                working.map(d => ({ driverId: d.driverId, driverName: d.name }))
+                              );
+                            });
+                          }}
+                          disabled={isPending}
+                          className="text-[9px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 px-1.5 py-0.5 rounded transition-colors disabled:opacity-40"
+                          title="Mark day as FedEx holiday"
+                        >
+                          Holiday
+                        </button>
+                      )}
                     </div>
 
                     {/* Drivers working */}
                     <div className="flex flex-col p-2 gap-1 flex-1">
-                      {working.map((d) => {
-                        const isLastDay = d.lastDay === dateStr;
-                        const isTrainee = d.isTrainee;
-                        const attendanceEntry = attendanceMap.get(`${d.driverId}|${dateStr}`);
-                        const isHoliday = attendanceEntry?.status === "holiday";
-                        const isHalfDay = attendanceEntry?.status === "half_day";
-                        const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
-                        const droRoute = d.workArea
-                          ? droRoutes.find(r => r.workAreaName === d.workArea)
-                          : null;
-                        return (
-                          <div key={d.driverId} className="flex flex-col gap-0.5 w-full">
-                            <div className="flex items-center gap-1 w-full">
-                              <button
-                                onClick={() => openCoverageModal(d, dateStr)}
-                                className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 flex items-center gap-1 ${
-                                  isHoliday
-                                    ? "text-slate-600 bg-slate-100 border border-slate-200"
-                                    : isHalfDay
-                                    ? "text-yellow-800 bg-gradient-to-b from-yellow-200 to-white border border-yellow-300"
-                                    : isTrainee
-                                    ? "text-blue-700 bg-blue-50 border border-blue-100"
-                                    : isLastDay
-                                    ? "text-red-700 bg-red-50 border border-red-100"
-                                    : "text-slate-700 bg-emerald-50 border border-emerald-100"
-                                }`}>
-                                {isHoliday && <span className="text-[9px] font-extrabold text-slate-500">H</span>}
-                                {isHalfDay && <span className="text-[9px] font-extrabold text-yellow-700">½</span>}
-                                {d.name}
-                              </button>
-                              {wa && !droRoute && (
-                                <>
-                                  <span className="text-[10px] font-semibold text-slate-500 shrink-0 max-w-[36px] truncate">{wa.name}</span>
-                                  <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />
-                                </>
-                              )}
-                            </div>
-                            {droRoute && (
-                              <span className="text-[10px] font-bold text-slate-500 px-1.5 py-0.5 rounded bg-slate-100 font-mono truncate">
-                                {droRoute.workAreaNumber} {droRoute.workAreaName.replace(/^742\s*/i, "")}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {isHolidayDay ? (
+                        <div className="flex flex-col items-center justify-center gap-1 py-3 px-2 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                          <span className="text-[13px]">🏖</span>
+                          <p className="text-[10px] font-bold text-slate-500 leading-tight">FedEx Closed</p>
+                          <p className="text-[9px] text-slate-400">Holiday</p>
+                        </div>
+                      ) : (
+                        <>
+                          {working.map((d) => {
+                            const isLastDay = d.lastDay === dateStr;
+                            const isTrainee = d.isTrainee;
+                            const attendanceEntry = attendanceMap.get(`${d.driverId}|${dateStr}`);
+                            const isHoliday = attendanceEntry?.status === "holiday";
+                            const isHalfDay = attendanceEntry?.status === "half_day";
+                            const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
+                            const droRoute = d.workArea
+                              ? droRoutes.find(r => r.workAreaName === d.workArea)
+                              : null;
+                            return (
+                              <div key={d.driverId} className="flex flex-col gap-0.5 w-full">
+                                <div className="flex items-center gap-1 w-full">
+                                  <button
+                                    onClick={() => openCoverageModal(d, dateStr)}
+                                    className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 flex items-center gap-1 ${
+                                      isHoliday
+                                        ? "text-slate-600 bg-slate-100 border border-slate-200"
+                                        : isHalfDay
+                                        ? "text-yellow-800 bg-gradient-to-b from-yellow-200 to-white border border-yellow-300"
+                                        : isTrainee
+                                        ? "text-blue-700 bg-blue-50 border border-blue-100"
+                                        : isLastDay
+                                        ? "text-red-700 bg-red-50 border border-red-100"
+                                        : "text-slate-700 bg-emerald-50 border border-emerald-100"
+                                    }`}>
+                                    {isHoliday && <span className="text-[9px] font-extrabold text-slate-500">H</span>}
+                                    {isHalfDay && <span className="text-[9px] font-extrabold text-yellow-700">½</span>}
+                                    {d.name}
+                                  </button>
+                                  {wa && !droRoute && (
+                                    <>
+                                      <span className="text-[10px] font-semibold text-slate-500 shrink-0 max-w-[36px] truncate">{wa.name}</span>
+                                      <WorkAreaShape shape={wa.shape} color={wa.color} size={10} />
+                                    </>
+                                  )}
+                                </div>
+                                {droRoute && (
+                                  <span className="text-[10px] font-bold text-slate-500 px-1.5 py-0.5 rounded bg-slate-100 font-mono truncate">
+                                    {droRoute.workAreaNumber} {droRoute.workAreaName.replace(/^742\s*/i, "")}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
                       {offToday.map((d) => (
                         <span key={d.driverId}
                           className="text-[11px] font-semibold text-slate-400 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md truncate line-through">
