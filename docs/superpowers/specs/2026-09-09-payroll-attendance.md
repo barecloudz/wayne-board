@@ -10,7 +10,7 @@ Add daily attendance tracking (Work / Half Day / Cut / Call Out / Trainee / Day 
 - **Cut:** management decision to not use the driver that day (too many people, uncertainty)
 - **Call Out:** driver-initiated absence
 - **Trainee:** driver was shadowing/training that specific day, not running their own route — paid at trainee rate
-- **Notice deduction flag:** automatically shown on payroll report when driver's `terminationType = "notice"` (quit without completing notice or didn't give notice). If `terminationType = "fired"` — no deduction, company's decision. The deduction amount is configurable per org via a setting key `notice_deduction_amount` stored in the existing `settings` table (defaults to `500`). Shown as "−$X" on the report where X is the org's configured amount.
+- **Notice deduction flag:** automatically shown on payroll report when driver's `terminationType = "notice"` (quit without completing notice or didn't give notice). If `terminationType = "fired"` — no deduction, company's decision. The deduction amount is configurable per org via a setting key `no_notice_deduction_amount` stored in the existing `settings` table (defaults to `500`). Shown as "−$X · No Notice" on the report where X is the org's configured amount.
 - Terminated drivers must appear on the payroll report for any week they have attendance records — `driverId` stored as plain text (not FK) so records survive hard delete
 
 ## Data Model
@@ -86,7 +86,7 @@ Each cell shows:
 Row footer:
 - Days worked count (Work + Half Day count as days, Half Day = 0.5)
 - Trainee days count (separate)
-- Any termination deduction flag: "−$X" badge if terminationType="notice" (X = org's configured notice_deduction_amount, default 500)
+- Any termination deduction flag: "−$X · No Notice" badge if terminationType="notice" (X = org's configured no_notice_deduction_amount, default 500)
 
 ### Terminated drivers
 - If a driver was terminated during the displayed week, show their row with a "Terminated" badge
