@@ -208,9 +208,11 @@ export default function AutoGcClient() {
     await loadStatus();
   }
 
-  async function saveSchedule() {
+  async function saveSchedule(newValue: boolean) {
     setSchedSaving(true);
-    await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "gc_auto_sync_enabled", value: String(autoEnabled) }) });
+    await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: "gc_auto_sync_enabled", value: String(newValue) }) });
+    // Re-read from DB to confirm the write landed before showing Saved
+    await loadStatus();
     setSchedSaving(false);
     setSchedSaved(true);
     setTimeout(() => setSchedSaved(false), 3000);
@@ -494,7 +496,7 @@ export default function AutoGcClient() {
                   <p className="text-[11px] text-slate-400 mt-0.5">Enabled runs every day at 2:00 AM Eastern</p>
                 </div>
                 <button
-                  onClick={() => setAutoEnabled(v => !v)}
+                  onClick={() => { const next = !autoEnabled; setAutoEnabled(next); saveSchedule(next); }}
                   className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent
                     transition-colors duration-200 focus:outline-none
                     ${autoEnabled ? "bg-slate-900" : "bg-slate-200"}`}
@@ -510,7 +512,7 @@ export default function AutoGcClient() {
                 Runs daily at <span className="font-semibold text-slate-700">6:00 AM UTC (2:00 AM Eastern)</span> · skips Sundays automatically.
               </div>
               <button
-                onClick={saveSchedule}
+                onClick={() => saveSchedule(autoEnabled)}
                 disabled={schedSaving}
                 className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-semibold
                   bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
