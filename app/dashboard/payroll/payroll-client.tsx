@@ -158,11 +158,21 @@ export default function PayrollClient({ weekData, currentOffset }: { weekData: P
                           {showDeduction && <span className="text-[11px] font-bold text-red-600 mt-0.5">−${weekData.deductionAmount} · No Notice</span>}
                         </div>
                       </td>
-                      {weekDates.map((dateStr) => (
-                        <td key={dateStr} className="px-3 py-3 text-center">
-                          <StatusCell status={driver.attendance[dateStr]} note={driver.notes[dateStr]} />
-                        </td>
-                      ))}
+                      {weekDates.map((dateStr) => {
+                        const status = driver.attendance[dateStr];
+                        const cellBg =
+                          status === "call_out" ? "bg-red-50"
+                          : status === "half_day" ? "bg-yellow-50"
+                          : status === "cut" ? "bg-slate-100"
+                          : status === "holiday" ? "bg-slate-50"
+                          : status === "trainee" ? "bg-blue-50"
+                          : "";
+                        return (
+                          <td key={dateStr} className={`px-3 py-3 text-center ${cellBg}`}>
+                            <StatusCell status={status} note={driver.notes[dateStr]} />
+                          </td>
+                        );
+                      })}
                       <td className="px-3 py-3 text-center">
                         <span className="text-[13px] font-bold text-slate-800">{workDays % 1 === 0 ? workDays : workDays.toFixed(1)}</span>
                       </td>
