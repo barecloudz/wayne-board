@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { attendanceLog, drivers, settings } from "@/lib/schema";
+import { attendanceLog, drivers, settings, driverSchedules } from "@/lib/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
@@ -21,6 +21,15 @@ export type AttendanceRecord = {
   status: AttendanceStatus;
   note: string | null;
 };
+
+// ── Helper: map a date string to the schedule boolean key ────────────────────
+
+function getScheduleKey(dateStr: string): "sat" | "sun" | "mon" | "tue" | "wed" | "thu" | "fri" {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const keys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+  return keys[day];
+}
 
 // ── Upsert a single attendance record ────────────────────────────────────────
 
@@ -137,6 +146,12 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     .from(drivers)
     .where(eq(drivers.organizationId, orgId));
 
+  // Fetch schedules for all drivers
+  const schedules = await db
+    .select()
+    .from(driverSchedules);
+  const scheduleMap = new Map(schedules.map(s => [s.driverId, s]));
+
   const driverMap = new Map(allDrivers.map((d) => [d.driverId, d]));
 
   const attendanceDriverIds = new Set(records.map((r) => r.driverId));
@@ -154,6 +169,23 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     for (const r of driverRecords) {
       attendanceByDate[r.date] = r.status as AttendanceStatus;
       notesByDate[r.date] = r.note;
+    }
+
+    // Infer "work" for scheduled days with no attendance record (active drivers only)
+    const isActive = driverRecord ? driverRecord.active : false;
+    const schedule = scheduleMap.get(driverId);
+    if (isActive && schedule) {
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart + "T00:00:00");
+        d.setDate(d.getDate() + i);
+        const dateStr = d.toISOString().slice(0, 10);
+        if (attendanceByDate[dateStr]) continue; // already has a record
+        const key = getScheduleKey(dateStr);
+        if (schedule[key]) {
+          attendanceByDate[dateStr] = "work";
+          // no note for inferred work days
+        }
+      }
     }
 
     const name = driverRecord?.name ?? (driverRecords[0]?.driverName ?? driverId);
@@ -198,6 +230,29 @@ export async function markDayHoliday(
   revalidatePath("/dashboard/payroll");
 }
 
+// ── Remove Holiday status for all drivers on a day ───────────────────────────
+
+export async function unmarkDayHoliday(
+  date: string,
+  driverIds: string[],
+): Promise<void> {
+  const orgId = await requireOrg();
+  for (const driverId of driverIds) {
+    await db
+      .delete(attendanceLog)
+      .where(
+        and(
+          eq(attendanceLog.organizationId, orgId),
+          eq(attendanceLog.driverId, driverId),
+          eq(attendanceLog.date, date),
+          eq(attendanceLog.status, "holiday"),
+        )
+      );
+  }
+  revalidatePath("/dashboard/scheduling");
+  revalidatePath("/dashboard/payroll");
+}
+
 // ── Quick summary for dashboard payroll card ─────────────────────────────────
 
 export type PayrollCardSummary = {
@@ -225,6 +280,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
   const records = await db
     .select({
       driverId: attendanceLog.driverId,
+      date:     attendanceLog.date,
       status:   attendanceLog.status,
     })
     .from(attendanceLog)
@@ -236,19 +292,56 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
       )
     );
 
-  if (records.length === 0) {
-    return { weekStart, weekEnd, totalDrivers: 0, totalWorkDays: 0, traineeCount: 0, hasData: false };
+  // Fetch active drivers and their schedules
+  const activeDriversList = await db
+    .select({ driverId: drivers.driverId })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+
+  const schedulesList = await db
+    .select()
+    .from(driverSchedules);
+  const scheduleMap = new Map(schedulesList.map(s => [s.driverId, s]));
+
+  // Build attendance map from logged records
+  const attendanceByDriver = new Map<string, Map<string, string>>();
+  for (const r of records) {
+    if (!attendanceByDriver.has(r.driverId)) attendanceByDriver.set(r.driverId, new Map());
+    attendanceByDriver.get(r.driverId)!.set(r.date, r.status);
   }
 
-  const uniqueDriverIds = new Set(records.map((r) => r.driverId));
+  // Add inferred work days for active drivers
+  for (const { driverId } of activeDriversList) {
+    const schedule = scheduleMap.get(driverId);
+    if (!schedule) continue;
+    if (!attendanceByDriver.has(driverId)) attendanceByDriver.set(driverId, new Map());
+    const driverAttendance = attendanceByDriver.get(driverId)!;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart + "T00:00:00");
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      if (driverAttendance.has(dateStr)) continue;
+      const key = getScheduleKey(dateStr);
+      if (schedule[key]) driverAttendance.set(dateStr, "work");
+    }
+  }
+
+  // Count totals from merged data
+  const uniqueDriverIds = new Set(attendanceByDriver.keys());
   let workDays = 0;
   let traineeDays = 0;
-  for (const r of records) {
-    if (r.status === "work") workDays += 1;
-    else if (r.status === "half_day") workDays += 0.5;
-    else if (r.status === "trainee") traineeDays += 1;
+  for (const [, dayMap] of attendanceByDriver) {
+    for (const status of dayMap.values()) {
+      if (status === "work") workDays += 1;
+      else if (status === "half_day") workDays += 0.5;
+      else if (status === "trainee") traineeDays += 1;
+    }
   }
 
+  const hasData = uniqueDriverIds.size > 0;
+  if (!hasData) {
+    return { weekStart, weekEnd, totalDrivers: 0, totalWorkDays: 0, traineeCount: 0, hasData: false };
+  }
   return {
     weekStart,
     weekEnd,
