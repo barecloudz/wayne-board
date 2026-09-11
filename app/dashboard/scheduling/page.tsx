@@ -8,8 +8,9 @@ import { getAllSchedules, getAllTimeOff, getAllUpcomingOverrides, getAllOverride
 import { getVehicles } from "@/lib/actions/vehicles";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { getWorkAreas, getAllDailyAssignments } from "@/lib/actions/work-areas";
+import { getAttendanceForRange } from "@/lib/actions/attendance";
 import SchedulingClient from "./scheduling-client";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { db } from "@/lib/db";
 import { droRoutes } from "@/lib/schema";
 import { asc } from "drizzle-orm";
@@ -19,8 +20,10 @@ export { assignDriverVehicle };
 export default async function SchedulingPage() {
   const today = new Date();
   const rangeStart = format(today, "yyyy-MM-dd");
+  const rangeEnd = format(addDays(today, 14), "yyyy-MM-dd");
+  const attendanceStart = format(addDays(today, -60), "yyyy-MM-dd");
 
-  const [schedules, timeOff, upcomingOverrides, allOverrides, vehicles, workAreasList, dailyAssignments, droRoutesList] = await Promise.all([
+  const [schedules, timeOff, upcomingOverrides, allOverrides, vehicles, workAreasList, dailyAssignments, droRoutesList, attendanceRecords] = await Promise.all([
     getAllSchedules(),
     getAllTimeOff(),
     getAllUpcomingOverrides(rangeStart),
@@ -32,6 +35,7 @@ export default async function SchedulingPage() {
       workAreaName:   droRoutes.workAreaName,
       workAreaNumber: droRoutes.workAreaNumber,
     }).from(droRoutes).orderBy(asc(droRoutes.workAreaName)),
+    getAttendanceForRange(attendanceStart, rangeEnd),
   ]);
 
   return (
@@ -46,6 +50,7 @@ export default async function SchedulingPage() {
         workAreas={workAreasList as any}
         dailyAssignments={dailyAssignments as any}
         droRoutes={droRoutesList}
+        attendanceRecords={attendanceRecords}
       />
     </AppShell>
   );

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { drivers, driverSchedules, timeOffEntries, scheduleOverrides } from "@/lib/schema";
+import { drivers, driverSchedules, timeOffEntries, scheduleOverrides, attendanceLog } from "@/lib/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
@@ -77,7 +77,55 @@ export async function setDriverActive(driverId: string, active: boolean) {
 
 export async function setDriverTrainee(driverId: string, isTrainee: boolean) {
   const orgId = await requireOrg();
+
   await db.update(drivers).set({ isTrainee }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+
+  const [schedule] = await db
+    .select()
+    .from(driverSchedules)
+    .where(eq(driverSchedules.driverId, driverId))
+    .limit(1);
+
+  const [driver] = await db
+    .select({ name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)))
+    .limit(1);
+
+  if (schedule && driver) {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysSinceSat = dayOfWeek === 6 ? 0 : dayOfWeek + 1;
+    const weekSat = new Date(today);
+    weekSat.setDate(today.getDate() - daysSinceSat);
+
+    const DAY_KEYS: Array<{ key: "mon"|"tue"|"wed"|"thu"|"fri"|"sat"|"sun"; offset: number }> = [
+      { key: "sat", offset: 0 },
+      { key: "sun", offset: 1 },
+      { key: "mon", offset: 2 },
+      { key: "tue", offset: 3 },
+      { key: "wed", offset: 4 },
+      { key: "thu", offset: 5 },
+      { key: "fri", offset: 6 },
+    ];
+
+    for (const { key, offset } of DAY_KEYS) {
+      if (!schedule[key]) continue;
+      const d = new Date(weekSat);
+      d.setDate(weekSat.getDate() + offset);
+      const dateStr = d.toISOString().slice(0, 10);
+      const status = isTrainee ? ("trainee" as const) : ("work" as const);
+
+      await db
+        .insert(attendanceLog)
+        .values({ organizationId: orgId, driverId, driverName: driver.name, date: dateStr, status, note: null })
+        .onConflictDoUpdate({
+          target: [attendanceLog.organizationId, attendanceLog.driverId, attendanceLog.date],
+          set: { status, updatedAt: new Date() },
+        });
+    }
+  }
+
   revalidatePath("/dashboard/scheduling");
 }
 

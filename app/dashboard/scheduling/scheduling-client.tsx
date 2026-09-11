@@ -6,6 +6,8 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
+import { upsertAttendance } from "@/lib/actions/attendance";
+import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
@@ -101,7 +103,7 @@ type DailyAssignmentRow = {
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments, droRoutes,
+  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments, droRoutes, attendanceRecords,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
@@ -112,6 +114,7 @@ export default function SchedulingClient({
   workAreas: WorkAreaRow[];
   dailyAssignments: DailyAssignmentRow[];
   droRoutes: DroRouteRow[];
+  attendanceRecords: AttendanceRecord[];
 }) {
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history">("schedules");
   const [historyDate, setHistoryDate] = useState(() => {
@@ -120,6 +123,17 @@ export default function SchedulingClient({
     return d.toISOString().slice(0, 10);
   });
   const [isPending, startTransition] = useTransition();
+
+  // ── Attendance map ────────────────────────────────────────────────────────
+  const attendanceMap = new Map<string, { status: AttendanceStatus; note: string | null }>();
+  for (const r of attendanceRecords) {
+    attendanceMap.set(`${r.driverId}|${r.date}`, { status: r.status, note: r.note });
+  }
+
+  // ── Note modal state ──────────────────────────────────────────────────────
+  type AttendanceAction = "cut" | "call_out" | "half_day";
+  const [noteAction, setNoteAction] = useState<AttendanceAction | null>(null);
+  const [noteText, setNoteText] = useState("");
 
   // ── Schedule editing ──────────────────────────────────────────────────────
   // Local draft state per driver: driverId -> days object
@@ -249,20 +263,25 @@ export default function SchedulingClient({
     setModalWorkAreaId(dailyId?.toString() ?? "");
   }
 
-  function handleCutDay() {
-    if (!coverageModal) return;
+  function handleConfirmAttendance() {
+    if (!coverageModal || !noteAction) return;
     const { driver, dateStr } = coverageModal;
-    startTransition(async () => {
-      await addTimeOff(driver.driverId, dateStr, dateStr, "Cut");
-      setCoverageModal(null);
-    });
-  }
+    const note = noteText.trim() || undefined;
 
-  function handleCallOut() {
-    if (!coverageModal) return;
-    const { driver, dateStr } = coverageModal;
     startTransition(async () => {
-      await addTimeOff(driver.driverId, dateStr, dateStr, "Call Out");
+      if (noteAction === "cut" || noteAction === "call_out") {
+        // Keep writing to timeOffEntries so coverage display continues to work
+        const reason = noteAction === "cut" ? "Cut" : "Call Out";
+        await addTimeOff(driver.driverId, dateStr, dateStr, reason, note);
+      }
+      const status: AttendanceStatus =
+        noteAction === "half_day" ? "half_day"
+        : noteAction === "cut" ? "cut"
+        : "call_out";
+      await upsertAttendance(driver.driverId, driver.name, dateStr, status, note);
+
+      setNoteAction(null);
+      setNoteText("");
       setCoverageModal(null);
     });
   }
@@ -1039,6 +1058,8 @@ export default function SchedulingClient({
                       {working.map((d) => {
                         const isLastDay = d.lastDay === dateStr;
                         const isTrainee = d.isTrainee;
+                        const attendanceEntry = attendanceMap.get(`${d.driverId}|${dateStr}`);
+                        const isHalfDay = attendanceEntry?.status === "half_day";
                         const wa = getEffectiveWorkArea(d.driverId, d.defaultWorkAreaId, dateStr);
                         const droRoute = d.workArea
                           ? droRoutes.find(r => r.workAreaName === d.workArea)
@@ -1048,13 +1069,16 @@ export default function SchedulingClient({
                             <div className="flex items-center gap-1 w-full">
                               <button
                                 onClick={() => openCoverageModal(d, dateStr)}
-                                className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 ${
-                                  isTrainee
+                                className={`text-[11px] font-semibold px-2 py-1 rounded-md truncate text-left flex-1 min-w-0 transition-opacity hover:opacity-70 flex items-center gap-1 ${
+                                  isHalfDay
+                                    ? "text-yellow-800 bg-gradient-to-b from-yellow-200 to-white border border-yellow-300"
+                                    : isTrainee
                                     ? "text-blue-700 bg-blue-50 border border-blue-100"
                                     : isLastDay
                                     ? "text-red-700 bg-red-50 border border-red-100"
                                     : "text-slate-700 bg-emerald-50 border border-emerald-100"
                                 }`}>
+                                {isHalfDay && <span className="text-[9px] font-extrabold text-yellow-700">½</span>}
                                 {d.name}
                               </button>
                               {wa && !droRoute && (
@@ -1093,6 +1117,10 @@ export default function SchedulingClient({
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-emerald-100 border border-emerald-200 inline-block" />
               Working
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-gradient-to-b from-yellow-200 to-white border border-yellow-300 inline-block" />
+              Half Day
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-sm bg-blue-100 border border-blue-200 inline-block" />
@@ -1383,9 +1411,46 @@ export default function SchedulingClient({
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             onClick={() => setCoverageModal(null)}>
             <div
-              className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] w-full max-w-sm overflow-hidden"
+              className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.2)] w-full max-w-sm overflow-hidden relative"
               onClick={(e) => e.stopPropagation()}
             >
+              {noteAction && (
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-6 gap-4 z-10">
+                  <p className="text-[15px] font-extrabold text-slate-900 text-center">
+                    {noteAction === "cut" ? "Cut Day" : noteAction === "call_out" ? "Call Out" : "Half Day"}
+                    {" — "}{coverageModal?.driver.name}
+                  </p>
+                  <p className="text-[12px] text-slate-500 text-center">
+                    {noteAction === "cut" && "Management decision — not using this driver today."}
+                    {noteAction === "call_out" && "Driver called in and won't be coming in."}
+                    {noteAction === "half_day" && "Driver worked a partial day and left early."}
+                  </p>
+                  <textarea
+                    autoFocus
+                    placeholder="Add a note (optional)"
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    rows={3}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition resize-none"
+                  />
+                  <div className="flex gap-2 w-full">
+                    <button
+                      onClick={() => { setNoteAction(null); setNoteText(""); }}
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmAttendance}
+                      disabled={isPending}
+                      className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+                    >
+                      {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Header */}
               <div className="px-6 pt-6 pb-4 border-b border-slate-100">
                 <div className="flex items-start justify-between">
@@ -1413,28 +1478,35 @@ export default function SchedulingClient({
               </div>
 
               <div className="px-6 py-5 flex flex-col gap-5">
-                {/* Cut / Call Out */}
+                {/* Cut / Call Out / Half Day */}
                 <div className="flex flex-col gap-2">
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Not working this day?</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
-                      onClick={handleCutDay}
+                      onClick={() => { setNoteAction("cut"); setNoteText(""); }}
                       disabled={isPending}
                       className="py-3 rounded-xl text-[13px] font-bold bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
                     >
-                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                      <X className="w-3.5 h-3.5" />
                       Cut
                     </button>
                     <button
-                      onClick={handleCallOut}
+                      onClick={() => { setNoteAction("call_out"); setNoteText(""); }}
                       disabled={isPending}
                       className="py-3 rounded-xl text-[13px] font-bold bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
                     >
-                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                      <AlertTriangle className="w-3.5 h-3.5" />
                       Call Out
                     </button>
+                    <button
+                      onClick={() => { setNoteAction("half_day"); setNoteText(""); }}
+                      disabled={isPending}
+                      className="py-3 rounded-xl text-[13px] font-bold bg-yellow-500 text-white hover:bg-yellow-600 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      ½ Half Day
+                    </button>
                   </div>
-                  <p className="text-[11px] text-slate-400">Cut = management decision · Call Out = driver called in</p>
+                  <p className="text-[11px] text-slate-400">Cut = management · Call Out = driver · Half Day = left early</p>
                 </div>
 
                 {/* Assign vehicle */}
