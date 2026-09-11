@@ -521,6 +521,34 @@ export const userLocations = pgTable("user_locations", {
 }));
 
 // ── Attendance Log (backward-looking daily attendance record) ─────────────────
+// ── Task Templates ────────────────────────────────────────────────────────────
+export const taskTemplates = pgTable("task_templates", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  title:          text("title").notNull(),
+  description:    text("description"),
+  daysOfWeek:     text("days_of_week").notNull().default("1,2,3,4,5,6,0"), // comma-separated 0-6 (0=Sun)
+  dueTime:        text("due_time").notNull().default("17:00"),              // HH:MM
+  assignedRoles:  text("assigned_roles").notNull().default("bc,co_owner,owner"),
+  createdByRole:  text("created_by_role").notNull().default("owner"),
+  createdById:    text("created_by_id").notNull(),
+  active:         boolean("active").notNull().default(true),
+  sortOrder:      integer("sort_order").notNull().default(0),
+  createdAt:      timestamp("created_at").defaultNow(),
+});
+
+export const taskCompletions = pgTable("task_completions", {
+  id:              serial("id").primaryKey(),
+  organizationId:  integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  taskId:          integer("task_id").notNull().references(() => taskTemplates.id, { onDelete: "cascade" }),
+  completedById:   text("completed_by_id").notNull(),
+  completedByName: text("completed_by_name").notNull(),
+  date:            date("date").notNull(),
+  createdAt:       timestamp("created_at").defaultNow(),
+}, (t) => ({
+  orgTaskDateUserUnique: uniqueIndex("task_completions_org_task_date_user_unique").on(t.organizationId, t.taskId, t.date, t.completedById),
+}));
+
 export const attendanceLog = pgTable("attendance_log", {
   id:             serial("id").primaryKey(),
   organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),

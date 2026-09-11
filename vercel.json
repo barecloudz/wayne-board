@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/gc-sync", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/payroll-email", "schedule": "0 * * * *" }
+    { "path": "/api/cron/payroll-email", "schedule": "0 * * * *" },
+    { "path": "/api/cron/task-reminders", "schedule": "0 * * * *" }
   ]
 }
