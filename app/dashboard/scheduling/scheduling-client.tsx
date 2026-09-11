@@ -6,7 +6,7 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History,
 } from "lucide-react";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
-import { upsertAttendance, markDayHoliday } from "@/lib/actions/attendance";
+import { upsertAttendance, markDayHoliday, unmarkDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
 import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
@@ -1080,6 +1080,17 @@ export default function SchedulingClient({
                           <span className="text-[13px]">🏖</span>
                           <p className="text-[10px] font-bold text-slate-500 leading-tight">FedEx Closed</p>
                           <p className="text-[9px] text-slate-400">Holiday</p>
+                          <button
+                            onClick={() => {
+                              startTransition(async () => {
+                                await unmarkDayHoliday(dateStr, working.map(d => d.driverId));
+                              });
+                            }}
+                            disabled={isPending}
+                            className="mt-1 text-[9px] font-semibold text-red-400 hover:text-red-600 hover:bg-red-50 px-2 py-0.5 rounded transition-colors disabled:opacity-40"
+                          >
+                            Remove Holiday
+                          </button>
                         </div>
                       ) : (
                         <>
