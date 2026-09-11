@@ -116,6 +116,20 @@ export async function setDriverTrainee(driverId: string, isTrainee: boolean) {
       const dateStr = d.toISOString().slice(0, 10);
       const status = isTrainee ? ("trainee" as const) : ("work" as const);
 
+      if (!isTrainee) {
+        // Only overwrite to "work" if existing status is "trainee" (or no record exists)
+        const [existing] = await db
+          .select({ status: attendanceLog.status })
+          .from(attendanceLog)
+          .where(and(
+            eq(attendanceLog.organizationId, orgId),
+            eq(attendanceLog.driverId, driverId),
+            eq(attendanceLog.date, dateStr),
+          ))
+          .limit(1);
+        if (existing && existing.status !== "trainee") continue;
+      }
+
       await db
         .insert(attendanceLog)
         .values({ organizationId: orgId, driverId, driverName: driver.name, date: dateStr, status, note: null })
