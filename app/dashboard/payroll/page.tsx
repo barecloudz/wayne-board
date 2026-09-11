@@ -9,7 +9,7 @@ import PayrollClient from "./payroll-client";
 function getPayWeekBounds(offsetWeeks: number): { weekStart: string; weekEnd: string } {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0=Sun...6=Sat
-  const daysToFri = (dayOfWeek + 2) % 7;
+  const daysToFri = ((dayOfWeek + 2) % 7) || 7;
   const lastFriday = new Date(today);
   lastFriday.setDate(today.getDate() - daysToFri - offsetWeeks * 7);
   const weekEnd = lastFriday.toISOString().slice(0, 10);

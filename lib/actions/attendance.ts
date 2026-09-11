@@ -269,7 +269,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
 
   const today = new Date();
   const dayOfWeek = today.getDay();
-  const daysToFri = (dayOfWeek + 2) % 7;
+  const daysToFri = ((dayOfWeek + 2) % 7) || 7;
   const lastFriday = new Date(today);
   lastFriday.setDate(today.getDate() - daysToFri);
   const weekEnd = lastFriday.toISOString().slice(0, 10);
