@@ -88,6 +88,7 @@ export default function DriversPage() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [usernameTarget, setUsernameTarget] = useState<{ id: number; name: string; current: string | null } | null>(null);
   const [newUsername, setNewUsername] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [locationTarget, setLocationTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
   const [availableLocations, setAvailableLocations] = useState<{ id: number; name: string }[]>([]);
@@ -246,6 +247,7 @@ export default function DriversPage() {
         if (purgeRydeData) await purgeDriverRydeData(deleteTarget.id);
       }
       setDeleteTarget(null);
+      setDeleteConfirmText("");
       setTerminationType(null);
       setTerminationNote("");
       setPurgeRydeData(true);
@@ -744,15 +746,39 @@ export default function DriversPage() {
                 </label>
               )}
               {terminationType === "mistake" && (
-                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-[12px] text-red-700">
-                  This will permanently delete the account and all associated data. This cannot be undone.
+                <div className="flex flex-col gap-3 mt-4">
+                  <div className="rounded-xl bg-red-50 border border-red-200 p-4 flex flex-col gap-2">
+                    <p className="text-[13px] font-extrabold text-red-700">⚠ This permanently destroys:</p>
+                    <ul className="text-[12px] text-red-600 list-disc list-inside flex flex-col gap-1">
+                      <li>Driver account and login credentials</li>
+                      <li>All Ryde scores and customer reviews</li>
+                      <li>All attendance records (payroll history)</li>
+                      <li>Milestone claims</li>
+                    </ul>
+                    <p className="text-[12px] text-red-600 font-semibold mt-1">
+                      Consider using <strong>Terminate</strong> instead — it keeps the record and payroll history intact.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                      Type <span className="font-bold text-slate-800">{deleteTarget?.name}</span> to confirm
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder={deleteTarget?.name ?? "Driver name"}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-red-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition bg-red-50/30"
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
             <div className="px-6 pb-6 flex gap-2">
               <button
-                onClick={() => { setDeleteTarget(null); setTerminationType(null); setTerminationNote(""); setPurgeRydeData(true); }}
+                onClick={() => { setDeleteTarget(null); setDeleteConfirmText(""); setTerminationType(null); setTerminationNote(""); setPurgeRydeData(true); }}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
                   text-slate-500 hover:bg-slate-50 transition-colors"
               >
@@ -760,7 +786,12 @@ export default function DriversPage() {
               </button>
               <button
                 onClick={handleDeleteDriver}
-                disabled={!terminationType || (terminationType === "fired" && !terminationNote.trim()) || isPending}
+                disabled={
+                  !terminationType ||
+                  isPending ||
+                  (terminationType === "fired" && !terminationNote.trim()) ||
+                  (terminationType === "mistake" && deleteConfirmText.trim() !== deleteTarget?.name)
+                }
                 className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-40
                   flex items-center justify-center gap-2 ${
                     terminationType === "mistake"
