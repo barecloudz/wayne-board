@@ -518,3 +518,18 @@ export const userLocations = pgTable("user_locations", {
 }, (t) => ({
   userLocationUnique: uniqueIndex("user_locations_user_location_unique").on(t.userId, t.locationId),
 }));
+
+// ── Attendance Log (backward-looking daily attendance record) ─────────────────
+export const attendanceLog = pgTable("attendance_log", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  driverId:       text("driver_id").notNull(),     // plain text — NOT FK, survives driver hard-delete
+  driverName:     text("driver_name").notNull(),   // snapshot of name at time of logging
+  date:           date("date").notNull(),
+  status:         text("status").notNull(),        // "work"|"half_day"|"cut"|"call_out"|"trainee"|"day_off"
+  note:           text("note"),
+  createdAt:      timestamp("created_at").defaultNow(),
+  updatedAt:      timestamp("updated_at").defaultNow(),
+}, (t) => ({
+  orgDriverDateUnique: uniqueIndex("attendance_log_org_driver_date_unique").on(t.organizationId, t.driverId, t.date),
+}));
