@@ -24,6 +24,7 @@ import { db } from "@/lib/db";
 import { vehicles, drivers, inspections } from "@/lib/schema";
 import { count, eq, and } from "drizzle-orm";
 import { getSetting } from "@/lib/actions/settings";
+import { getPayrollCardSummary } from "@/lib/actions/attendance";
 import { getActiveLocationId } from "@/lib/active-location";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 import Link from "next/link";
@@ -41,7 +42,7 @@ export default async function Home() {
 
   const locationId = await getActiveLocationId();
 
-  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList] =
+  const [[{ vehicleCount }], [{ driverCount }], [{ completedCount }], [{ oosCount }], showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, payrollSummary] =
     await Promise.all([
       db.select({ vehicleCount: count() }).from(vehicles).where(and(eq(vehicles.active, true), locationId !== null ? eq(vehicles.locationId, locationId) : undefined)),
       db.select({ driverCount: count() }).from(drivers).where(and(eq(drivers.active, true), locationId !== null ? eq(drivers.locationId, locationId) : undefined)),
@@ -52,6 +53,7 @@ export default async function Home() {
       getSetting("clock_in_enabled", "false"),
       getSetting("show_dsw", "true"),
       getWorkAreas(),
+      getPayrollCardSummary(),
     ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -143,7 +145,7 @@ export default async function Home() {
         {/* Report cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <FleetCard vehicleCount={vehicleCount} inspectedCount={completedCount} />
-          <PayrollCard />
+          <PayrollCard summary={payrollSummary} />
           <DriversCard driverCount={driverCount} />
           <RoutesCard />
         </div>
