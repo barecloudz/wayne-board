@@ -1,10 +1,12 @@
 ﻿import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "Vehicles" };
 import { vehicles, inspections, inspectionResults } from "@/lib/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { INSPECTION_COMPONENTS } from "@/lib/inspection-components";
 import { getVehicleImage } from "@/lib/vehicle-image";
 import Image from "next/image";
@@ -15,9 +17,13 @@ import VehicleToggle from "./vehicle-toggle";
 import VehicleActions from "./vehicle-actions";
 
 export default async function VehiclesPage() {
+  const session = await getSession();
+  if (!session) redirect("/");
+  const orgId = session.organizationId;
+
   const [allVehicles, allInspections, allResults] = await Promise.all([
-    db.select().from(vehicles).orderBy(vehicles.unitNumber),
-    db.select().from(inspections).orderBy(desc(inspections.inspectionDate)),
+    db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber),
+    db.select().from(inspections).where(eq(inspections.organizationId, orgId)).orderBy(desc(inspections.inspectionDate)),
     db.select().from(inspectionResults),
   ]);
 

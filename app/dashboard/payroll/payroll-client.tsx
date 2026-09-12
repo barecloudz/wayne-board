@@ -8,7 +8,7 @@ import type { PayrollWeekData, AttendanceStatus } from "@/lib/actions/attendance
 import type { DswDayRow } from "@/lib/actions/dsw-data";
 import PayWeekModal from "./pay-week-modal";
 
-const WEEK_DAY_LABELS = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
+const DAY_ABBREVS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function formatShortDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -186,12 +186,15 @@ export default function PayrollClient({
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60">
                   <th className="text-left px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider min-w-[160px]">Driver</th>
-                  {WEEK_DAY_LABELS.map((day, i) => (
-                    <th key={day} className="px-3 py-3 text-center min-w-[56px]">
-                      <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{day}</div>
-                      <div className="text-[10px] font-normal text-slate-300 normal-case">{formatShortDate(weekDates[i])}</div>
-                    </th>
-                  ))}
+                  {weekDates.map((dateStr) => {
+                    const d = new Date(dateStr + "T00:00:00");
+                    return (
+                      <th key={dateStr} className="px-3 py-3 text-center min-w-[56px]">
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{DAY_ABBREVS[d.getDay()]}</div>
+                        <div className="text-[10px] font-normal text-slate-300 normal-case">{formatShortDate(dateStr)}</div>
+                      </th>
+                    );
+                  })}
                   <th className="px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center min-w-[60px]">Days</th>
                   <th className="px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center min-w-[60px]">Trainee</th>
                   <th className="px-5 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-left min-w-[120px]">Notes</th>
@@ -241,13 +244,14 @@ export default function PayrollClient({
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex flex-col gap-0.5">
-                            {weekDates.map((dateStr, i) => {
+                            {weekDates.map((dateStr) => {
                               const note = driver.notes[dateStr];
                               if (!note) return null;
                               const status = driver.attendance[dateStr];
+                              const d = new Date(dateStr + "T00:00:00");
                               return (
                                 <span key={dateStr} className="text-[11px] text-slate-500">
-                                  <span className="font-semibold text-slate-600 mr-1">{WEEK_DAY_LABELS[i]}:</span>
+                                  <span className="font-semibold text-slate-600 mr-1">{DAY_ABBREVS[d.getDay()]}:</span>
                                   {note}{status === "half_day" && " (half day)"}
                                 </span>
                               );
@@ -256,41 +260,34 @@ export default function PayrollClient({
                         </td>
                       </tr>
                       {driverDsw && driverDsw.size > 0 && (
-                        <tr key={driver.driverId + "-dsw"} className="border-b border-slate-100/40 last:border-0 bg-slate-50/30">
-                          <td className="px-5 py-1.5">
-                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Performance</span>
+                        <tr key={driver.driverId + "-dsw"} className="border-b border-slate-100/40 last:border-0 bg-slate-50/20">
+                          <td className="px-5 py-1">
+                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">ILS%</span>
                           </td>
                           {weekDates.map((dateStr) => {
                             const dsw = driverDsw.get(dateStr);
-                            if (!dsw) return <td key={dateStr} className="px-3 py-1.5 text-center"><span className="text-slate-200 text-[10px]">—</span></td>;
-                            const ilsColor = dsw.ilsPct == null ? "text-slate-400" : dsw.ilsPct >= 100 ? "text-emerald-600" : dsw.ilsPct >= 99 ? "text-yellow-600" : "text-red-600";
-                            const codeStr = dsw.codeBreakdown
-                              ? Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(" ")
-                              : dsw.allStatusCodePkgs ? `${dsw.allStatusCodePkgs} codes` : null;
+                            if (!dsw || dsw.ilsPct == null) return <td key={dateStr} className="px-3 py-1 text-center"><span className="text-slate-200 text-[9px]">—</span></td>;
+                            const ilsColor = dsw.ilsPct >= 100 ? "text-emerald-500" : dsw.ilsPct >= 99 ? "text-amber-500" : "text-red-500";
+                            const tooltip = dsw.codeBreakdown
+                              ? `ILS: ${dsw.ilsPct}% · Codes: ${Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(", ")}`
+                              : `ILS: ${dsw.ilsPct}%`;
                             return (
-                              <td key={dateStr} className="px-1 py-1.5 text-center">
-                                <div className="flex flex-col items-center gap-0.5">
-                                  {dsw.ilsPct != null && (
-                                    <span className={`text-[10px] font-bold ${ilsColor}`}>{dsw.ilsPct}%</span>
-                                  )}
-                                  {codeStr && (
-                                    <span className="text-[9px] text-slate-400 leading-tight" title={codeStr}>{codeStr}</span>
-                                  )}
-                                </div>
+                              <td key={dateStr} className="px-3 py-1 text-center" title={tooltip}>
+                                <span className={`text-[10px] font-bold ${ilsColor}`}>{dsw.ilsPct}%</span>
                               </td>
                             );
                           })}
-                          <td className="px-3 py-1.5 text-center">
+                          <td className="px-3 py-1 text-center">
                             {(() => {
                               const vals = weekDates.map(d => driverDsw.get(d)?.ilsPct).filter((v): v is number => v != null);
                               if (!vals.length) return null;
                               const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-                              const color = avg >= 100 ? "text-emerald-600" : avg >= 99 ? "text-yellow-600" : "text-red-600";
+                              const color = avg >= 100 ? "text-emerald-500" : avg >= 99 ? "text-amber-500" : "text-red-500";
                               return <span className={`text-[10px] font-bold ${color}`}>{avg.toFixed(1)}%</span>;
                             })()}
                           </td>
-                          <td className="px-3 py-1.5" />
-                          <td className="px-5 py-1.5" />
+                          <td className="px-3 py-1" />
+                          <td className="px-5 py-1" />
                         </tr>
                       )}
                     </>

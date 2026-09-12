@@ -8,6 +8,7 @@ import { getSession } from "@/lib/session";
 export async function POST() {
   const session = await getSession();
   if (!session?.organizationId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.role !== "owner") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const [org] = await db
     .select({ stripeSubscriptionId: organizations.stripeSubscriptionId })
