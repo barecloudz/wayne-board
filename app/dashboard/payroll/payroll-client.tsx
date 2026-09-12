@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Printer, Settings, Upload } from "lucide-react";
-import type { PayrollWeekData, AttendanceStatus } from "@/lib/actions/attendance";
+import type { PayrollWeekData, PayrollDriverRow, AttendanceStatus } from "@/lib/actions/attendance";
 import type { DswDayRow } from "@/lib/actions/dsw-data";
 import PayWeekModal from "./pay-week-modal";
+import { useLocationContext } from "@/components/location-context";
 
 const DAY_ABBREVS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -107,13 +108,16 @@ export default function PayrollClient({
   currentOffset,
   payWeekStart,
   dswRows,
+  driverLocationMap,
 }: {
   weekData: PayrollWeekData;
   currentOffset: number;
   payWeekStart: number;
   dswRows: DswDayRow[];
+  driverLocationMap: Record<string, number[]>;
 }) {
   const router = useRouter();
+  const { locations, selectedLocationIds, allSelected } = useLocationContext();
   const [showPayWeekModal, setShowPayWeekModal] = useState(false);
   const weekDates = getWeekDates(weekData.weekStart);
   const weekLabel = `${formatShortDate(weekData.weekStart)} – ${formatShortDate(weekData.weekEnd)}`;
@@ -134,8 +138,15 @@ export default function PayrollClient({
     if (driverDsw.size > 0) dswByDriverDate.set(driver.driverId, driverDsw);
   }
 
-  const activeDrivers    = weekData.drivers.filter(d => !d.isTerminated);
-  const terminatedDrivers = weekData.drivers.filter(d => d.isTerminated);
+  function matchesLocation(driver: PayrollDriverRow): boolean {
+    if (allSelected || locations.length <= 1) return true;
+    if (driver.allLocations) return true;
+    const assigned = driverLocationMap[driver.driverId] ?? [];
+    return assigned.some(id => selectedLocationIds.includes(id));
+  }
+
+  const activeDrivers    = weekData.drivers.filter(d => !d.isTerminated && matchesLocation(d));
+  const terminatedDrivers = weekData.drivers.filter(d => d.isTerminated && matchesLocation(d));
 
   return (
     <main className="flex-1 px-6 py-8 max-w-[1280px] w-full mx-auto">
@@ -205,6 +216,17 @@ export default function PayrollClient({
         <p className="text-[18px] font-extrabold">Payroll · {weekLabel}</p>
       </div>
 
+      {locations.length > 1 && !allSelected && (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Showing:</span>
+          {locations.filter(l => selectedLocationIds.includes(l.id)).map(l => (
+            <span key={l.id} className="px-2.5 py-1 rounded-full bg-white/70 text-[11px] font-semibold text-slate-600 border border-slate-200 backdrop-blur-sm">
+              {l.name}
+            </span>
+          ))}
+        </div>
+      )}
+
       {weekData.drivers.length === 0 ? (
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-16 text-center shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
           <p className="text-[15px] font-semibold text-slate-500">No attendance records for this week</p>
@@ -267,8 +289,6 @@ export default function PayrollClient({
 }
 
 // ── Payroll table sub-component ───────────────────────────────────────────────
-
-import type { PayrollDriverRow } from "@/lib/actions/attendance";
 
 function PayrollTable({
   drivers,

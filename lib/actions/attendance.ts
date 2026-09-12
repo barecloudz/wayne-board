@@ -106,6 +106,8 @@ export type PayrollDriverRow = {
   terminatedAt: Date | null;
   attendance: Record<string, AttendanceStatus>;
   notes: Record<string, string | null>;
+  allLocations: boolean;
+  locationId: number | null;
 };
 
 export type PayrollWeekData = {
@@ -152,6 +154,8 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       terminationType: drivers.terminationType,
       terminationNote: drivers.terminationNote,
       terminatedAt:    drivers.terminatedAt,
+      allLocations:    drivers.allLocations,
+      locationId:      drivers.locationId,
     })
     .from(drivers)
     .where(eq(drivers.organizationId, orgId));
@@ -213,6 +217,8 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       terminatedAt:    driverRecord?.terminatedAt ?? null,
       attendance:      attendanceByDate,
       notes:           notesByDate,
+      allLocations:    driverRecord?.allLocations ?? false,
+      locationId:      driverRecord?.locationId ?? null,
     });
   }
 

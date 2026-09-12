@@ -7,6 +7,9 @@ import { getPayrollWeek } from "@/lib/actions/attendance";
 import { getDswDataForRange } from "@/lib/actions/dsw-data";
 import { getSetting } from "@/lib/actions/settings";
 import PayrollClient from "./payroll-client";
+import { db } from "@/lib/db";
+import { driverLocations } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 function getPayWeekBounds(offsetWeeks: number, payWeekStart: number): { weekStart: string; weekEnd: string } {
   const today = new Date();
@@ -30,6 +33,8 @@ export default async function PayrollPage({ searchParams }: Props) {
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
+  const orgId = session.organizationId;
+
   const params = await searchParams;
   const offset = Math.max(0, parseInt(params.offset ?? "0", 10) || 0);
 
@@ -37,14 +42,24 @@ export default async function PayrollPage({ searchParams }: Props) {
   const payWeekStart = parseInt(payWeekStartStr, 10);
   const { weekStart, weekEnd } = getPayWeekBounds(offset, payWeekStart);
 
-  const [weekData, dswRows] = await Promise.all([
+  const [weekData, dswRows, driverLocRows] = await Promise.all([
     getPayrollWeek(weekStart, weekEnd),
     getDswDataForRange(weekStart, weekEnd),
+    db
+      .select({ driverId: driverLocations.driverId, locationId: driverLocations.locationId })
+      .from(driverLocations)
+      .where(eq(driverLocations.organizationId, orgId)),
   ]);
+
+  const driverLocationMap: Record<string, number[]> = {};
+  for (const row of driverLocRows) {
+    if (!driverLocationMap[row.driverId]) driverLocationMap[row.driverId] = [];
+    driverLocationMap[row.driverId].push(row.locationId);
+  }
 
   return (
     <AppShell>
-      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} />
+      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} driverLocationMap={driverLocationMap} />
     </AppShell>
   );
 }
