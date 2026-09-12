@@ -10,6 +10,7 @@ import {
   getDrivers, createDriver, setDriverActive, setDriverRole, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
 } from "@/lib/actions/drivers";
 import { getVehicles } from "@/lib/actions/vehicles";
+import { getLocationsForOrg, getDriverLocations, setDriverLocations } from "@/lib/actions/driver-locations";
 import { suggestDriverId } from "@/lib/driver-utils";
 
 type Driver = {
@@ -27,6 +28,8 @@ type Driver = {
   terminationType: string | null;
   terminationNote: string | null;
   terminatedAt: Date | null;
+  locationId: number | null;
+  allLocations: boolean;
 };
 
 type Vehicle = {
@@ -95,6 +98,8 @@ export default function DriversPage() {
   const [selectedLocationIds, setSelectedLocationIds] = useState<number[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
   const [newLocationId, setNewLocationId] = useState<number | undefined>(undefined);
+  const [driverAllLocations, setDriverAllLocations] = useState(false);
+  const [orgLocations, setOrgLocations] = useState<Array<{ id: number; name: string; terminalId: string | null }>>([]);
 
   async function refresh() {
     const [driverData, vehicleData] = await Promise.all([getDrivers(), getVehicles()]);
@@ -106,6 +111,7 @@ export default function DriversPage() {
   useEffect(() => {
     refresh();
     fetch("/api/me").then(r => r.json()).then(d => { if (d.role) setMyRole(d.role); }).catch(() => {});
+    getLocationsForOrg().then(setOrgLocations).catch(() => {});
   }, []);
 
   // Close menu on outside click
@@ -258,17 +264,11 @@ export default function DriversPage() {
   async function openLocationModal(driver: Driver) {
     setLocationTarget({ id: driver.id, driverId: driver.driverId, name: driver.name });
     setSelectedLocationIds([]);
-    setLocationsLoading(true);
+    setDriverAllLocations(driver.allLocations);
     setMenuOpen(null);
     setMenuPos(null);
-    const [locsRes, assignedRes] = await Promise.all([
-      fetch("/api/locations"),
-      fetch(`/api/user-locations?userId=${encodeURIComponent(driver.driverId)}`),
-    ]);
-    const locs = await locsRes.json();
-    const assigned = await assignedRes.json();
-    setAvailableLocations(locs);
-    setSelectedLocationIds(Array.isArray(assigned) ? assigned : []);
+    const assigned = await getDriverLocations(driver.driverId);
+    setSelectedLocationIds(assigned);
     setLocationsLoading(false);
   }
 
@@ -281,12 +281,10 @@ export default function DriversPage() {
   function handleSaveLocations() {
     if (!locationTarget) return;
     startTransition(async () => {
-      await fetch("/api/user-locations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: locationTarget.driverId, locationIds: selectedLocationIds }),
-      });
+      await setDriverLocations(locationTarget.driverId, selectedLocationIds, driverAllLocations);
       setLocationTarget(null);
+      const updated = await getDrivers();
+      setDrivers(updated as Driver[]);
     });
   }
 
@@ -445,6 +443,12 @@ export default function DriversPage() {
                         {driver.username && (
                           <p className="text-[11px] text-slate-400 font-mono mt-0.5">@{driver.username}</p>
                         )}
+                        {!driver.allLocations && !driver.locationId && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500 mt-0.5">
+                            <MapPin className="w-2.5 h-2.5" />
+                            No location
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-3 hidden sm:table-cell">
                         <RoleBadge role={driver.role} />
@@ -590,15 +594,13 @@ export default function DriversPage() {
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />Change Username
                 </button>
-                {driver.role === "bc" && (
-                  <button
-                    onClick={() => openLocationModal(driver)}
-                    className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
-                      hover:bg-slate-50 transition-colors flex items-center gap-2"
-                  >
-                    <MapPin className="w-3.5 h-3.5 text-amber-500" />Manage Locations
-                  </button>
-                )}
+                <button
+                  onClick={() => openLocationModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-amber-500" />Manage Locations
+                </button>
                 <button
                   onClick={() => openDeleteModal({ id: driver.id, driverId: driver.driverId, name: driver.name })}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-red-500
@@ -1033,30 +1035,48 @@ export default function DriversPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-[13px]">Loading...</span>
                 </div>
-              ) : availableLocations.length === 0 ? (
+              ) : orgLocations.length === 0 ? (
                 <p className="text-[12px] text-slate-400 italic">
                   No locations set up yet · add them in Settings
                 </p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  {availableLocations.map((loc) => (
-                    <label
-                      key={loc.id}
-                      className="flex items-center gap-3 cursor-pointer select-none px-1 py-1 rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedLocationIds.includes(loc.id)}
-                        onChange={() => toggleLocation(loc.id)}
-                        className="w-4 h-4 accent-amber-500 cursor-pointer"
-                      />
-                      <span className="text-[13px] text-slate-700 font-medium">{loc.name}</span>
-                    </label>
-                  ))}
-                </div>
+                <>
+                  {/* All Locations toggle */}
+                  <label className="flex items-center gap-3 cursor-pointer select-none px-1 py-2.5 rounded-lg hover:bg-amber-50 transition-colors border-b border-slate-100 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={driverAllLocations}
+                      onChange={(e) => setDriverAllLocations(e.target.checked)}
+                      className="w-4 h-4 accent-amber-500 cursor-pointer"
+                    />
+                    <div>
+                      <p className="text-[13px] font-bold text-slate-800">All Locations</p>
+                      <p className="text-[11px] text-slate-400">Driver appears on every location&apos;s team</p>
+                    </div>
+                  </label>
+                  {/* Dim individual checkboxes when All Locations is on */}
+                  <div className={driverAllLocations ? "opacity-40 pointer-events-none" : ""}>
+                    <div className="flex flex-col gap-2">
+                      {orgLocations.map((loc) => (
+                        <label
+                          key={loc.id}
+                          className="flex items-center gap-3 cursor-pointer select-none px-1 py-1 rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedLocationIds.includes(loc.id)}
+                            onChange={() => toggleLocation(loc.id)}
+                            className="w-4 h-4 accent-amber-500 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-slate-700 font-medium">{loc.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
               <p className="text-[11px] text-slate-400 mt-4 italic">
-                BCs only see data for their assigned locations
+                Drivers only see data for their assigned locations
               </p>
             </div>
             <div className="px-6 pb-6 flex gap-2">

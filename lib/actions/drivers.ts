@@ -50,6 +50,8 @@ export async function getDrivers() {
     terminationNote:   drivers.terminationNote,
     terminatedAt:      drivers.terminatedAt,
     username:          drivers.username,
+    locationId:        drivers.locationId,
+    allLocations:      drivers.allLocations,
   }).from(drivers).where(and(eq(drivers.organizationId, orgId), locationId !== null ? eq(drivers.locationId, locationId) : undefined)).orderBy(drivers.id);
 }
 
