@@ -11,6 +11,7 @@ import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendanc
 import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
+import { useLocationContext } from "@/components/location-context";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 const DAYS: { key: DayKey; label: string; short: string }[] = [
@@ -103,7 +104,7 @@ type DailyAssignmentRow = {
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
-  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments, droRoutes, attendanceRecords,
+  schedules, timeOff, upcomingOverrides, allOverrides, today, vehicles, workAreas, dailyAssignments, droRoutes, attendanceRecords, driverLocationMap, driverAllLocationsMap,
 }: {
   schedules: ScheduleRow[];
   timeOff: TimeOffRow[];
@@ -115,7 +116,11 @@ export default function SchedulingClient({
   dailyAssignments: DailyAssignmentRow[];
   droRoutes: DroRouteRow[];
   attendanceRecords: AttendanceRecord[];
+  driverLocationMap: Record<string, number[]>;
+  driverAllLocationsMap: Record<string, boolean>;
 }) {
+  const { locations, selectedLocationIds, allSelected } = useLocationContext();
+
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history">("schedules");
   const [historyDate, setHistoryDate] = useState(() => {
     // Default to yesterday
@@ -181,7 +186,13 @@ export default function SchedulingClient({
     startTransition(async () => { await setDriverTrainee(driverId, isTrainee); });
   }
 
-  const visibleSchedules = showInactive ? schedules : schedules.filter((s) => s.active);
+  const visibleSchedules = (showInactive ? schedules : schedules.filter((s) => s.active))
+    .filter(s => {
+      if (allSelected || locations.length <= 1) return true;
+      if (driverAllLocationsMap[s.driverId]) return true;
+      const assigned = driverLocationMap[s.driverId] ?? [];
+      return assigned.some(id => selectedLocationIds.includes(id));
+    });
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
@@ -465,6 +476,18 @@ export default function SchedulingClient({
         <p className="text-[13px] text-slate-400 mb-6">
           Pick any past date to see who was working, who was cut, who called out, and who had time off.
         </p>
+      )}
+
+      {/* ── Location filter indicator ─────────────────────────────────────── */}
+      {locations.length > 1 && !allSelected && (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Showing:</span>
+          {locations.filter(l => selectedLocationIds.includes(l.id)).map(l => (
+            <span key={l.id} className="px-2.5 py-1 rounded-full bg-slate-100 text-[11px] font-semibold text-slate-600 border border-slate-200">
+              {l.name}
+            </span>
+          ))}
+        </div>
       )}
 
       {/* ── SCHEDULES TAB ────────────────────────────────────────────────── */}
