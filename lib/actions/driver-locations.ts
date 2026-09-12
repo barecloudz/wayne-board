@@ -56,4 +56,15 @@ export async function setDriverLocations(
     .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
 
   revalidatePath("/dashboard/drivers");
+  revalidatePath("/dashboard/scheduling");
+  revalidatePath("/dashboard/payroll");
+}
+
+export async function getAssignedDriverIds(): Promise<string[]> {
+  const session = await requireSession();
+  const rows = await db
+    .selectDistinct({ driverId: driverLocations.driverId })
+    .from(driverLocations)
+    .where(eq(driverLocations.organizationId, session.organizationId));
+  return rows.map(r => r.driverId);
 }

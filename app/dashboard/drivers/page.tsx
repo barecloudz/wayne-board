@@ -10,7 +10,7 @@ import {
   getDrivers, createDriver, setDriverActive, setDriverRole, assignDriverVehicle, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
 } from "@/lib/actions/drivers";
 import { getVehicles } from "@/lib/actions/vehicles";
-import { getLocationsForOrg, getDriverLocations, setDriverLocations } from "@/lib/actions/driver-locations";
+import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds } from "@/lib/actions/driver-locations";
 import { suggestDriverId } from "@/lib/driver-utils";
 
 type Driver = {
@@ -100,11 +100,13 @@ export default function DriversPage() {
   const [newLocationId, setNewLocationId] = useState<number | undefined>(undefined);
   const [driverAllLocations, setDriverAllLocations] = useState(false);
   const [orgLocations, setOrgLocations] = useState<Array<{ id: number; name: string; terminalId: string | null }>>([]);
+  const [assignedDriverIds, setAssignedDriverIds] = useState<Set<string>>(new Set());
 
   async function refresh() {
-    const [driverData, vehicleData] = await Promise.all([getDrivers(), getVehicles()]);
+    const [driverData, vehicleData, assignedIds] = await Promise.all([getDrivers(), getVehicles(), getAssignedDriverIds()]);
     setDrivers(driverData as Driver[]);
     setVehicles(vehicleData as Vehicle[]);
+    setAssignedDriverIds(new Set(assignedIds));
     setLoading(false);
   }
 
@@ -265,6 +267,7 @@ export default function DriversPage() {
     setLocationTarget({ id: driver.id, driverId: driver.driverId, name: driver.name });
     setSelectedLocationIds([]);
     setDriverAllLocations(driver.allLocations);
+    setLocationsLoading(true);
     setMenuOpen(null);
     setMenuPos(null);
     const assigned = await getDriverLocations(driver.driverId);
@@ -443,7 +446,7 @@ export default function DriversPage() {
                         {driver.username && (
                           <p className="text-[11px] text-slate-400 font-mono mt-0.5">@{driver.username}</p>
                         )}
-                        {!driver.allLocations && !driver.locationId && (
+                        {!driver.allLocations && !assignedDriverIds.has(driver.driverId) && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-500 mt-0.5">
                             <MapPin className="w-2.5 h-2.5" />
                             No location

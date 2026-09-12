@@ -541,7 +541,7 @@ export const driverLocations = pgTable("driver_locations", {
   locationId:     integer("location_id").notNull().references(() => locations.id, { onDelete: "cascade" }),
   createdAt:      timestamp("created_at").defaultNow(),
 }, (t) => ({
-  driverLocationUnique: uniqueIndex("driver_locations_driver_location_unique").on(t.driverId, t.locationId),
+  driverLocationUnique: uniqueIndex("driver_locations_driver_location_unique").on(t.organizationId, t.driverId, t.locationId),
 }));
 
 // ── Attendance Log (backward-looking daily attendance record) ─────────────────
