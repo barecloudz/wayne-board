@@ -175,6 +175,59 @@ export async function saveDswNameMapping(
   return { success: true };
 }
 
+// ── Get distinct uploaded dates (most recent 30) ─────────────────────────────
+
+export async function getUploadedDswDates(): Promise<string[]> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .selectDistinct({ date: dswRouteDays.date })
+    .from(dswRouteDays)
+    .where(eq(dswRouteDays.organizationId, orgId))
+    .orderBy(dswRouteDays.date);
+
+  return rows.map(r => (typeof r.date === "string" ? r.date.slice(0, 10) : (r.date as Date).toISOString().slice(0, 10))).reverse().slice(0, 30);
+}
+
+// ── List all saved DSW name mappings for the org ─────────────────────────────
+
+export async function getDswNameMappings(): Promise<Array<{ id: number; dswName: string; driverId: string; driverName: string }>> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select({
+      id:         dswNameMappings.id,
+      dswName:    dswNameMappings.dswName,
+      driverId:   dswNameMappings.driverId,
+      driverName: drivers.name,
+    })
+    .from(dswNameMappings)
+    .leftJoin(drivers, eq(drivers.driverId, dswNameMappings.driverId))
+    .where(eq(dswNameMappings.organizationId, orgId));
+
+  return rows
+    .map(r => ({ id: r.id, dswName: r.dswName, driverId: r.driverId, driverName: r.driverName ?? r.driverId }))
+    .sort((a, b) => a.dswName.localeCompare(b.dswName));
+}
+
+// ── Delete a DSW name mapping ─────────────────────────────────────────────────
+
+export async function deleteDswNameMapping(id: number): Promise<void> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  await db
+    .delete(dswNameMappings)
+    .where(and(eq(dswNameMappings.id, id), eq(dswNameMappings.organizationId, orgId)));
+
+  revalidatePath("/dashboard/payroll/upload");
+}
+
 // ── Get active drivers for the org (for mapping dropdown) ────────────────────
 
 export async function getActiveDriversForOrg(): Promise<Array<{ driverId: string; name: string }>> {

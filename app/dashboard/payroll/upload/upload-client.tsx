@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadDswFile, saveDswNameMapping, getActiveDriversForOrg } from "@/lib/actions/dsw-upload";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2 } from "lucide-react";
+import { uploadDswFile, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDates } from "@/lib/actions/dsw-upload";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
+type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
 
 export default function UploadClient() {
   const [dswFile, setDswFile] = useState<File | null>(null);
@@ -12,18 +13,28 @@ export default function UploadClient() {
   const [result, setResult] = useState<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
-  const [mappings, setMappings] = useState<Record<string, string>>({}); // dswName -> driverId
+  const [mappings, setMappings] = useState<Record<string, string>>({});
   const [savingName, setSavingName] = useState<string | null>(null);
   const [savedNames, setSavedNames] = useState<Set<string>>(new Set());
+
+  // Saved mappings management
+  const [savedMappings, setSavedMappings] = useState<Mapping[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<Record<number, string>>({});
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [savingEditId, setSavingEditId] = useState<number | null>(null);
+
+  // Upload history
+  const [uploadedDates, setUploadedDates] = useState<string[]>([]);
+
   const dswRef = useRef<HTMLInputElement>(null);
   const pldRef = useRef<HTMLInputElement>(null);
 
-  // Load driver options once when unmatched names appear
   useEffect(() => {
-    if (result?.unmatchedNames && result.unmatchedNames.length > 0 && driverOptions.length === 0) {
-      getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
-    }
-  }, [result, driverOptions.length]);
+    getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
+    getDswNameMappings().then(setSavedMappings).catch(() => {});
+    getUploadedDswDates().then(setUploadedDates).catch(() => {});
+  }, []);
 
   function handleUpload() {
     if (!dswFile) return;
@@ -36,6 +47,9 @@ export default function UploadClient() {
       if (pldFile) fd.append("pld", pldFile);
       const res = await uploadDswFile(fd);
       setResult(res);
+      if (res.success) {
+        getUploadedDswDates().then(setUploadedDates).catch(() => {});
+      }
     });
   }
 
@@ -46,20 +60,43 @@ export default function UploadClient() {
     await saveDswNameMapping(dswName, driverId);
     setSavedNames((prev) => new Set([...prev, dswName]));
     setSavingName(null);
+    getDswNameMappings().then(setSavedMappings).catch(() => {});
+  }
+
+  async function handleSaveEdit(mapping: Mapping) {
+    const driverId = editValues[mapping.id];
+    if (!driverId || driverId === mapping.driverId) { setEditingId(null); return; }
+    setSavingEditId(mapping.id);
+    await saveDswNameMapping(mapping.dswName, driverId);
+    setSavingEditId(null);
+    setEditingId(null);
+    getDswNameMappings().then(setSavedMappings).catch(() => {});
+  }
+
+  async function handleDelete(id: number) {
+    setDeletingId(id);
+    await deleteDswNameMapping(id);
+    setDeletingId(null);
+    setSavedMappings(prev => prev.filter(m => m.id !== id));
   }
 
   const unmatchedNames = result?.unmatchedNames ?? [];
   const pendingUnmatched = unmatchedNames.filter((n) => !savedNames.has(n));
 
+  function formatDate(d: string) {
+    const dt = new Date(d + "T00:00:00");
+    return dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  }
+
   return (
-    <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto">
-      <div className="mb-8">
+    <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto space-y-8">
+      <div>
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
         <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">DSW Upload</h1>
         <p className="text-[14px] text-slate-400 mt-2">Upload the previous day&apos;s Daily Service Worksheet files to populate the payroll performance data.</p>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
         <p className="text-[13px] font-semibold text-amber-800 mb-1">How to get these files</p>
         <ol className="text-[12px] text-amber-700 space-y-1 list-decimal list-inside">
           <li>Log in to the FedEx DSW portal for the previous day</li>
@@ -186,6 +223,92 @@ export default function UploadClient() {
           </div>
         )}
       </div>
+
+      {/* Upload history */}
+      {uploadedDates.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-4 h-4 text-slate-500" />
+            <p className="text-[14px] font-bold text-slate-800">Upload History</p>
+            <span className="ml-auto text-[11px] text-slate-400">{uploadedDates.length} day{uploadedDates.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {uploadedDates.map(d => (
+              <span key={d} className="text-[11px] font-medium bg-slate-100 text-slate-600 rounded-lg px-2.5 py-1">
+                {formatDate(d)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Saved mappings manager */}
+      {savedMappings.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Link2 className="w-4 h-4 text-slate-500" />
+            <p className="text-[14px] font-bold text-slate-800">Saved Name Mappings</p>
+            <span className="ml-auto text-[11px] text-slate-400">{savedMappings.length} mapping{savedMappings.length !== 1 ? "s" : ""}</span>
+          </div>
+          <p className="text-[12px] text-slate-400 mb-4">DSW names linked to driver accounts. Edit or remove incorrect links.</p>
+          <div className="flex flex-col divide-y divide-slate-100">
+            {savedMappings.map(m => (
+              <div key={m.id} className="flex items-center gap-2 py-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-mono text-slate-500 truncate">{m.dswName}</p>
+                  {editingId !== m.id && (
+                    <p className="text-[13px] font-semibold text-slate-800">{m.driverName}</p>
+                  )}
+                </div>
+                {editingId === m.id ? (
+                  <>
+                    <select
+                      className="text-[12px] border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800 min-w-[160px]"
+                      value={editValues[m.id] ?? m.driverId}
+                      onChange={(e) => setEditValues(prev => ({ ...prev, [m.id]: e.target.value }))}
+                    >
+                      {driverOptions.map(d => (
+                        <option key={d.driverId} value={d.driverId}>{d.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleSaveEdit(m)}
+                      disabled={savingEditId === m.id}
+                      className="px-3 py-1.5 rounded-lg text-[12px] font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors shrink-0"
+                    >
+                      {savingEditId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => { setEditingId(m.id); setEditValues(prev => ({ ...prev, [m.id]: m.driverId })); }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+                      title="Edit mapping"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(m.id)}
+                      disabled={deletingId === m.id}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-40"
+                      title="Remove mapping"
+                    >
+                      {deletingId === m.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
