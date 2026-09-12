@@ -30,6 +30,8 @@ export async function uploadDswFile(
 
   const dswFile = formData.get("dsw") as File | null;
   const pldFile = formData.get("pld") as File | null;
+  const locationIdStr = formData.get("locationId") as string | null;
+  const locationId = locationIdStr ? (parseInt(locationIdStr, 10) || null) : null;
 
   if (!dswFile) return { success: false, error: "DSW file is required" };
 
@@ -159,6 +161,7 @@ export async function uploadDswFile(
       codeBreakdown,
       ...(pldImpactPkgs != null ? { pldImpactPkgs } : {}),
       ...(pldGhostPkgs  != null ? { pldGhostPkgs }  : {}),
+      ...(locationId    != null ? { locationId }     : {}),
     });
 
     rowsInserted++;

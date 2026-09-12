@@ -2,10 +2,12 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { uploadDswFile, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDates } from "@/lib/actions/dsw-upload";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar } from "lucide-react";
+import { getLocationsForOrg } from "@/lib/actions/driver-locations";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
+type LocationOption = { id: number; name: string; terminalId: string | null };
 
 export default function UploadClient() {
   const [dswFile, setDswFile] = useState<File | null>(null);
@@ -27,6 +29,10 @@ export default function UploadClient() {
   // Upload history
   const [uploadedDates, setUploadedDates] = useState<string[]>([]);
 
+  // Location picker (only shown when org has multiple locations)
+  const [locations, setLocations] = useState<LocationOption[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>("");
+
   const dswRef = useRef<HTMLInputElement>(null);
   const pldRef = useRef<HTMLInputElement>(null);
 
@@ -34,10 +40,15 @@ export default function UploadClient() {
     getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
     getDswNameMappings().then(setSavedMappings).catch(() => {});
     getUploadedDswDates().then(setUploadedDates).catch(() => {});
+    getLocationsForOrg().then(locs => {
+      setLocations(locs);
+      if (locs.length === 1) setSelectedLocationId(String(locs[0].id));
+    }).catch(() => {});
   }, []);
 
   function handleUpload() {
     if (!dswFile) return;
+    if (locations.length > 1 && !selectedLocationId) return;
     setResult(null);
     setSavedNames(new Set());
     setMappings({});
@@ -45,6 +56,7 @@ export default function UploadClient() {
       const fd = new FormData();
       fd.append("dsw", dswFile);
       if (pldFile) fd.append("pld", pldFile);
+      if (selectedLocationId) fd.append("locationId", selectedLocationId);
       const res = await uploadDswFile(fd);
       setResult(res);
       if (res.success) {
@@ -141,9 +153,35 @@ export default function UploadClient() {
           </div>
         </div>
 
+        {/* Location picker — only when org has multiple locations */}
+        {locations.length > 1 && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="w-4 h-4 text-slate-500" />
+              <p className="text-[14px] font-bold text-slate-800">Which location is this DSW for? <span className="text-red-500">*</span></p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {locations.map(loc => (
+                <label key={loc.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedLocationId === String(loc.id) ? "border-slate-800 bg-slate-50" : "border-slate-200 hover:border-slate-300"}`}>
+                  <input
+                    type="radio"
+                    name="locationId"
+                    value={String(loc.id)}
+                    checked={selectedLocationId === String(loc.id)}
+                    onChange={e => setSelectedLocationId(e.target.value)}
+                    className="accent-slate-900"
+                  />
+                  <span className="text-[14px] font-semibold text-slate-800">{loc.name}</span>
+                  {loc.terminalId && <span className="text-[11px] text-slate-400 font-mono">{loc.terminalId}</span>}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleUpload}
-          disabled={!dswFile || isPending}
+          disabled={!dswFile || isPending || (locations.length > 1 && !selectedLocationId)}
           className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[14px] font-bold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}

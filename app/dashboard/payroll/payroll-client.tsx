@@ -126,17 +126,36 @@ export default function PayrollClient({
     router.push(`/dashboard/payroll?offset=${newOffset}`);
   }
 
+  // Filter DSW rows by selected location (null = legacy/untagged, always shown)
+  const filteredDswRows = (allSelected || locations.length <= 1)
+    ? dswRows
+    : dswRows.filter(r => r.locationId == null || selectedLocationIds.includes(r.locationId));
+
   // Build DSW map: driverId -> Map<date, DswDayRow>
   const dswByDriverDate = new Map<string, Map<string, DswDayRow>>();
   for (const driver of weekData.drivers) {
     const driverDsw = new Map<string, DswDayRow>();
-    for (const row of dswRows) {
+    for (const row of filteredDswRows) {
       if (matchDswName(driver.name, row.driverNameRaw)) {
         driverDsw.set(row.date, row);
       }
     }
     if (driverDsw.size > 0) dswByDriverDate.set(driver.driverId, driverDsw);
   }
+
+  // Compute per-day team ILS% from filtered DSW rows (weighted by actDelStps)
+  const teamIlsByDate = new Map<string, { pct: number; passes: boolean }>();
+  for (const date of weekDates) {
+    const dayRows = filteredDswRows.filter(r => r.date === date && r.ilsPct != null);
+    if (dayRows.length === 0) continue;
+    const totalStops = dayRows.reduce((s, r) => s + (r.actDelStps ?? 0), 0);
+    const teamPct = totalStops > 0
+      ? dayRows.reduce((s, r) => s + (r.ilsPct ?? 0) * (r.actDelStps ?? 0), 0) / totalStops
+      : dayRows.reduce((s, r) => s + (r.ilsPct ?? 0), 0) / dayRows.length;
+    teamIlsByDate.set(date, { pct: teamPct, passes: teamPct >= 99 });
+  }
+  const daysWithData = teamIlsByDate.size;
+  const daysPassed = [...teamIlsByDate.values()].filter(v => v.passes).length;
 
   function matchesLocation(driver: PayrollDriverRow): boolean {
     if (allSelected || locations.length <= 1) return true;
@@ -224,6 +243,47 @@ export default function PayrollClient({
               {l.name}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* ── Weekly Service Summary ── */}
+      {daysWithData > 0 && (
+        <div className="mb-5 bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Team Service — {weekLabel}</p>
+            <span className={`text-[12px] font-black px-3 py-1 rounded-full ${
+              daysPassed === daysWithData ? "bg-emerald-100 text-emerald-700" :
+              daysPassed >= daysWithData * 0.8 ? "bg-amber-100 text-amber-700" :
+              "bg-red-100 text-red-700"
+            }`}>
+              {daysPassed === daysWithData
+                ? `${daysPassed}/${daysWithData} ✓ Perfect week`
+                : `${daysPassed}/${daysWithData} days ≥99%`}
+            </span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {weekDates.map(date => {
+              const d = new Date(date + "T00:00:00");
+              const entry = teamIlsByDate.get(date);
+              if (!entry) return (
+                <div key={date} className="flex flex-col items-center gap-1 min-w-[52px]">
+                  <div className="text-[10px] font-bold text-slate-300 uppercase">{DAY_ABBREVS[d.getDay()]}</div>
+                  <div className="text-[10px] text-slate-200">—</div>
+                </div>
+              );
+              const color = entry.pct >= 100 ? "text-emerald-600 bg-emerald-50 border-emerald-200"
+                : entry.pct >= 99 ? "text-amber-600 bg-amber-50 border-amber-200"
+                : "text-red-600 bg-red-50 border-red-200";
+              return (
+                <div key={date} className="flex flex-col items-center gap-1 min-w-[52px]">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{DAY_ABBREVS[d.getDay()]}</div>
+                  <div className={`text-[11px] font-black px-2 py-0.5 rounded-lg border ${color}`}>
+                    {entry.pct.toFixed(1)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

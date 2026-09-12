@@ -90,6 +90,12 @@ export async function getTasksForToday(): Promise<TaskWithCompletion[]> {
   return result;
 }
 
+export async function getTodayTasksAndUser(): Promise<{ tasks: TaskWithCompletion[]; userId: string; role: string }> {
+  const session = await requireOrg();
+  const tasks = await getTasksForToday();
+  return { tasks, userId: session.driverId, role: session.role };
+}
+
 export async function getAllTaskTemplates(): Promise<TaskTemplate[]> {
   const session = await requireOrg();
   const orgId = session.organizationId;

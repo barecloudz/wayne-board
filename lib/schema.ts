@@ -453,6 +453,7 @@ export const dswRouteDays = pgTable("dsw_route_days", {
   codeBreakdown:     text("code_breakdown"),
   pldImpactPkgs:     integer("pld_impact_pkgs"),   // PLD-computed: effective code=27 OR VSA=0&STAR=0
   pldGhostPkgs:      integer("pld_ghost_pkgs"),    // PLD-computed: VSA=0 & STAR=0 (never scanned)
+  locationId:        integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   syncedAt:          timestamp("synced_at").defaultNow(),
 });
 

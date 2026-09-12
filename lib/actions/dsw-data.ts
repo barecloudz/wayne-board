@@ -20,6 +20,7 @@ export type DswDayRow = {
   codeBreakdown: Record<string, number> | null;
   pldImpactPkgs: number | null;  // PLD-computed: code 27 + ghost (0/0) packages
   pldGhostPkgs: number | null;   // PLD-computed: VSA=0 & STAR=0 (never scanned)
+  locationId: number | null;
 };
 
 export async function getDswDataForRange(startDate: string, endDate: string): Promise<DswDayRow[]> {
@@ -43,6 +44,7 @@ export async function getDswDataForRange(startDate: string, endDate: string): Pr
       codeBreakdown: dswRouteDays.codeBreakdown,
       pldImpactPkgs: dswRouteDays.pldImpactPkgs,
       pldGhostPkgs: dswRouteDays.pldGhostPkgs,
+      locationId: dswRouteDays.locationId,
     })
     .from(dswRouteDays)
     .where(
@@ -61,5 +63,6 @@ export async function getDswDataForRange(startDate: string, endDate: string): Pr
       : null,
     pldImpactPkgs: r.pldImpactPkgs ?? null,
     pldGhostPkgs: r.pldGhostPkgs ?? null,
+    locationId: r.locationId ?? null,
   }));
 }
