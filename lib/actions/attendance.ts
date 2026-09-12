@@ -315,9 +315,11 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
     .from(drivers)
     .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
 
-  const schedulesList = await db
-    .select()
-    .from(driverSchedules);
+  // Fetch schedules — scoped to this org's drivers only
+  const orgDriverIds = activeDriversList.map(d => d.driverId);
+  const schedulesList = orgDriverIds.length > 0
+    ? await db.select().from(driverSchedules).where(inArray(driverSchedules.driverId, orgDriverIds))
+    : [];
   const scheduleMap = new Map(schedulesList.map(s => [s.driverId, s]));
 
   // Build attendance map from logged records
