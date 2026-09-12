@@ -56,6 +56,7 @@ export const drivers = pgTable("drivers", {
   defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),
   active:            boolean("active").notNull().default(true),
   locationId:        integer("location_id").references(() => locations.id, { onDelete: "set null" }),
+  allLocations:      boolean("all_locations").notNull().default(false),
   loginDisabled:     boolean("login_disabled").notNull().default(false),
   isTrainee:         boolean("is_trainee").notNull().default(false),
   noticeDate:        date("notice_date"),
@@ -531,6 +532,16 @@ export const userLocations = pgTable("user_locations", {
   createdAt:      timestamp("created_at").defaultNow(),
 }, (t) => ({
   userLocationUnique: uniqueIndex("user_locations_user_location_unique").on(t.userId, t.locationId),
+}));
+
+export const driverLocations = pgTable("driver_locations", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  driverId:       text("driver_id").notNull(),
+  locationId:     integer("location_id").notNull().references(() => locations.id, { onDelete: "cascade" }),
+  createdAt:      timestamp("created_at").defaultNow(),
+}, (t) => ({
+  driverLocationUnique: uniqueIndex("driver_locations_driver_location_unique").on(t.driverId, t.locationId),
 }));
 
 // ── Attendance Log (backward-looking daily attendance record) ─────────────────
