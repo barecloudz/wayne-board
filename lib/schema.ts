@@ -450,6 +450,8 @@ export const dswRouteDays = pgTable("dsw_route_days", {
   vscanPkgs:         integer("vscan_pkgs"),
   delStpsPlanned:    integer("del_stps_planned"),
   codeBreakdown:     text("code_breakdown"),
+  pldImpactPkgs:     integer("pld_impact_pkgs"),   // PLD-computed: effective code=27 OR VSA=0&STAR=0
+  pldGhostPkgs:      integer("pld_ghost_pkgs"),    // PLD-computed: VSA=0 & STAR=0 (never scanned)
   syncedAt:          timestamp("synced_at").defaultNow(),
 });
 

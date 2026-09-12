@@ -372,7 +372,7 @@ function PayrollTable({
                     </td>
                   </tr>
 
-                  {/* DSW ILS% sub-row */}
+                  {/* DSW sub-row: ILS% + impact packages */}
                   {hasDsw && (
                     <tr className="bg-slate-50/40">
                       <td className="px-5 py-1 pl-6">
@@ -384,12 +384,22 @@ function PayrollTable({
                           return <td key={dateStr} className="px-2 py-1 text-center"><span className="text-slate-200 text-[9px]">—</span></td>;
                         }
                         const color = dsw.ilsPct >= 100 ? "text-emerald-500" : dsw.ilsPct >= 99 ? "text-amber-500" : "text-red-500";
-                        const tip = dsw.codeBreakdown
-                          ? `ILS: ${dsw.ilsPct}% · ${Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(", ")}`
-                          : `ILS: ${dsw.ilsPct}%`;
+                        const impact = dsw.pldImpactPkgs ?? 0;
+                        const ghost  = dsw.pldGhostPkgs  ?? 0;
+                        const tipParts = [`ILS: ${dsw.ilsPct}%`];
+                        if (impact > 0) tipParts.push(`${impact} impact pkg${impact !== 1 ? "s" : ""}`);
+                        if (ghost > 0)  tipParts.push(`${ghost} never scanned`);
+                        if (dsw.codeBreakdown) tipParts.push(Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(", "));
                         return (
-                          <td key={dateStr} className="px-2 py-1 text-center" title={tip}>
-                            <span className={`text-[10px] font-bold ${color}`}>{dsw.ilsPct}%</span>
+                          <td key={dateStr} className="px-2 py-1 text-center" title={tipParts.join(" · ")}>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className={`text-[10px] font-bold ${color}`}>{dsw.ilsPct}%</span>
+                              {impact > 0 && (
+                                <span className="text-[8px] font-bold text-red-400 leading-none">
+                                  {impact}pkg{ghost > 0 ? ` (${ghost}👻)` : ""}
+                                </span>
+                              )}
+                            </div>
                           </td>
                         );
                       })}
@@ -398,8 +408,14 @@ function PayrollTable({
                           const vals = weekDates.map(d => driverDsw.get(d)?.ilsPct).filter((v): v is number => v != null);
                           if (!vals.length) return null;
                           const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                          const totalImpact = weekDates.reduce((s, d) => s + (driverDsw.get(d)?.pldImpactPkgs ?? 0), 0);
                           const color = avg >= 100 ? "text-emerald-500" : avg >= 99 ? "text-amber-500" : "text-red-500";
-                          return <span className={`text-[10px] font-bold ${color}`}>{avg.toFixed(1)}%</span>;
+                          return (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className={`text-[10px] font-bold ${color}`}>{avg.toFixed(1)}%</span>
+                              {totalImpact > 0 && <span className="text-[8px] font-bold text-red-400 leading-none">{totalImpact}pkg</span>}
+                            </div>
+                          );
                         })()}
                       </td>
                       <td /><td />

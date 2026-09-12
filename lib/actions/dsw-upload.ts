@@ -43,24 +43,46 @@ export async function uploadDswFile(
   const date = parseDateFromTitle(titleRow);
   if (!date) return { success: false, error: "Could not parse date from DSW file title: " + titleRow };
 
-  // --- Parse PLD (optional) — build code breakdown map by WA# ---
-  const codeMap = new Map<string, Record<string, number>>();
+  // --- Parse PLD (optional) — build per-WA# breakdown, impact, and ghost counts ---
+  // Columns (0-indexed): 0=PkgCnt, 1=AddlInfo, 2=WAName, 3=WA#, 4=PSA, 5=ServiceProvider,
+  //   6=VisionLabel, 7=TrackingID, 8=DestAddr, 9=Vehicle#, 10=VSACode, 11=STARCode, 12=STARScanTime
+  //
+  // ILS impact logic (confirmed by Blake):
+  //   effectiveCode = VSA if VSA≠0, else STAR
+  //   counts against ILS if: effectiveCode===27 OR (VSA===0 AND STAR===0) [ghost/Code85]
+
+  const codeMap    = new Map<string, Record<string, number>>(); // WA# -> {code: count}
+  const impactMap  = new Map<string, number>(); // WA# -> impact pkg count
+  const ghostMap   = new Map<string, number>(); // WA# -> ghost (0/0) pkg count
 
   if (pldFile) {
     const pldBuffer = await pldFile.arrayBuffer();
     const pldWb = XLSX.read(new Uint8Array(pldBuffer), { type: "array" });
     const pldWs = pldWb.Sheets[pldWb.SheetNames[0]];
     const pldRows = XLSX.utils.sheet_to_json(pldWs, { header: 1, defval: "" }) as unknown[][];
-    // Row 2 = headers, row 3+ = data
+    // Row 0 = title, Row 1 = blank, Row 2 = headers, Row 3+ = data
     for (let r = 3; r < pldRows.length; r++) {
       const row = pldRows[r];
-      const wa = String(row[2] ?? "").trim().replace(/^0+/, ""); // strip leading zeros
-      const starCode = String(row[10] ?? "").trim();
-      if (!wa || !starCode || starCode === "0" || starCode === "") continue;
+      const waRaw = String(row[3] ?? "").trim(); // WA# is col index 3
+      const wa = waRaw.replace(/^0+/, ""); // strip leading zeros for key
+      if (!wa) continue;
+
+      const vsaCode  = parseInt(String(row[10] ?? "0").trim(), 10) || 0;
+      const starCode = parseInt(String(row[11] ?? "0").trim(), 10) || 0;
+
+      // Build code breakdown (effective code for display)
+      const effectiveCode = vsaCode !== 0 ? vsaCode : starCode;
       if (!codeMap.has(wa)) codeMap.set(wa, {});
       const codes = codeMap.get(wa)!;
-      const codeStr = starCode.padStart(2, "0");
+      const codeStr = String(effectiveCode).padStart(2, "0");
       codes[codeStr] = (codes[codeStr] ?? 0) + 1;
+
+      // Determine if this package counts against ILS
+      const isGhost  = vsaCode === 0 && starCode === 0;
+      const isImpact = effectiveCode === 27 || isGhost;
+
+      if (isImpact) impactMap.set(wa, (impactMap.get(wa) ?? 0) + 1);
+      if (isGhost)  ghostMap.set(wa,  (ghostMap.get(wa)  ?? 0) + 1);
     }
   }
 
@@ -101,10 +123,12 @@ export async function uploadDswFile(
     const onRoadHours = String(row[25] ?? "").trim() || null;
     const onDutyHours = String(row[26] ?? "").trim() || null;
 
-    // Get code breakdown from PLD for this WA#
+    // Get PLD data for this WA#
     const waKey = waNumber.replace(/^0+/, "");
     const breakdown = codeMap.get(waKey) ?? null;
     const codeBreakdown = breakdown ? JSON.stringify(breakdown) : null;
+    const pldImpactPkgs = impactMap.get(waKey) ?? null;
+    const pldGhostPkgs  = ghostMap.get(waKey)  ?? null;
 
     // Resolve driverId from saved mappings
     const resolvedDriverId = mappingLookup.get(driverNameRaw) ?? null;
@@ -133,6 +157,8 @@ export async function uploadDswFile(
       ...(onRoadHours != null ? { onRoadHours } : {}),
       ...(onDutyHours != null ? { onDutyHours } : {}),
       codeBreakdown,
+      ...(pldImpactPkgs != null ? { pldImpactPkgs } : {}),
+      ...(pldGhostPkgs  != null ? { pldGhostPkgs }  : {}),
     });
 
     rowsInserted++;

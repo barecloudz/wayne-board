@@ -10,6 +10,7 @@ export type DswDayRow = {
   waNumber: string;
   waName: string;
   driverNameRaw: string;
+  driverId: string | null;
   ilsPct: number | null;
   actDelStps: number | null;
   ilsImpactPkgs: number | null;
@@ -17,6 +18,8 @@ export type DswDayRow = {
   allStatusCodePkgs: number | null;
   dna: number | null;
   codeBreakdown: Record<string, number> | null;
+  pldImpactPkgs: number | null;  // PLD-computed: code 27 + ghost (0/0) packages
+  pldGhostPkgs: number | null;   // PLD-computed: VSA=0 & STAR=0 (never scanned)
 };
 
 export async function getDswDataForRange(startDate: string, endDate: string): Promise<DswDayRow[]> {
@@ -30,6 +33,7 @@ export async function getDswDataForRange(startDate: string, endDate: string): Pr
       waNumber: dswRouteDays.waNumber,
       waName: dswRouteDays.waName,
       driverNameRaw: dswRouteDays.driverNameRaw,
+      driverId: dswRouteDays.driverId,
       ilsPct: dswRouteDays.ilsPct,
       actDelStps: dswRouteDays.actDelStps,
       ilsImpactPkgs: dswRouteDays.ilsImpactPkgs,
@@ -37,6 +41,8 @@ export async function getDswDataForRange(startDate: string, endDate: string): Pr
       allStatusCodePkgs: dswRouteDays.allStatusCodePkgs,
       dna: dswRouteDays.dna,
       codeBreakdown: dswRouteDays.codeBreakdown,
+      pldImpactPkgs: dswRouteDays.pldImpactPkgs,
+      pldGhostPkgs: dswRouteDays.pldGhostPkgs,
     })
     .from(dswRouteDays)
     .where(
@@ -53,5 +59,7 @@ export async function getDswDataForRange(startDate: string, endDate: string): Pr
     codeBreakdown: r.codeBreakdown
       ? (() => { try { return JSON.parse(r.codeBreakdown!); } catch { return null; } })()
       : null,
+    pldImpactPkgs: r.pldImpactPkgs ?? null,
+    pldGhostPkgs: r.pldGhostPkgs ?? null,
   }));
 }
