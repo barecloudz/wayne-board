@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { attendanceLog, drivers, settings, driverSchedules } from "@/lib/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getSetting } from "@/lib/actions/settings";
@@ -156,10 +156,11 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     .from(drivers)
     .where(eq(drivers.organizationId, orgId));
 
-  // Fetch schedules for all drivers
-  const schedules = await db
-    .select()
-    .from(driverSchedules);
+  // Fetch schedules — scoped to this org's drivers only
+  const orgDriverIds = allDrivers.map(d => d.driverId);
+  const schedules = orgDriverIds.length > 0
+    ? await db.select().from(driverSchedules).where(inArray(driverSchedules.driverId, orgDriverIds))
+    : [];
   const scheduleMap = new Map(schedules.map(s => [s.driverId, s]));
 
   const driverMap = new Map(allDrivers.map((d) => [d.driverId, d]));

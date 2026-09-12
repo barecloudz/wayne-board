@@ -315,7 +315,7 @@ function PayrollTable({
               const hasDsw = driverDsw && driverDsw.size > 0;
 
               return (
-                <tbody key={driver.driverId} className="group">
+                <>
                   {/* Main attendance row */}
                   <tr className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-5 py-3">
@@ -405,7 +405,7 @@ function PayrollTable({
                       <td /><td />
                     </tr>
                   )}
-                </tbody>
+                </>
               );
             })}
           </tbody>
