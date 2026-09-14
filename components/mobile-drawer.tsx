@@ -9,21 +9,24 @@ import {
   ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
   CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
   Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
-  ChevronDown, ChevronUp, PenLine,
+  ChevronDown, ChevronUp, PenLine, Upload,
 } from "lucide-react";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
 const adminItems = [
-  { icon: UserCog,       label: "Accounts", href: "/dashboard/drivers",      exact: true },
-  { icon: CalendarDays,  label: "Scheduling",       href: "/dashboard/scheduling",   exact: true },
-  { icon: Gauge,         label: "Fleet Status",     href: "/dashboard/fleet-status", exact: true },
-  { icon: WrenchIcon,    label: "Maintenance",      href: "/dashboard/maintenance",  exact: true },
-  { icon: TrendingUp,    label: "Performance",      href: "/dashboard/performance",  exact: true },
-  { icon: Star,          label: "Ryde Scores",      href: "/dashboard/ryde",         exact: true },
-  { icon: Trophy,        label: "Milestones",       href: "/dashboard/milestones",   exact: true },
-  { icon: GraduationCap, label: "Trainee Days",     href: "/dashboard/trainees",     exact: true },
-  { icon: Settings,      label: "Settings",         href: "/dashboard/settings",     exact: true },
+  { icon: UserCog,       label: "Drivers",      href: "/dashboard/drivers",        exact: true },
+  { icon: CalendarDays,  label: "Scheduling",   href: "/dashboard/scheduling",     exact: true },
+  { icon: DollarSign,    label: "Payroll",      href: "/dashboard/payroll",        exact: true },
+  { icon: Upload,        label: "DSW Upload",   href: "/dashboard/payroll/upload", exact: true },
+  { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
+  { icon: Gauge,         label: "Fleet Status", href: "/dashboard/fleet-status",   exact: true },
+  { icon: WrenchIcon,    label: "Maintenance",  href: "/dashboard/maintenance",    exact: true },
+  { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
+  { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
+  { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
+  { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
+  { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
 ];
 
 const automationItems = [
@@ -176,14 +179,14 @@ export default function MobileDrawer() {
 
         {/* Driver Portal link */}
         <div className="px-3 pb-2">
-          <Link
+          <a
             href="/driver"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all duration-150 w-full"
           >
             <Truck className="w-4 h-4 text-slate-400 shrink-0" />
             My Driver Portal
-          </Link>
+          </a>
         </div>
 
         {/* Bottom user strip */}

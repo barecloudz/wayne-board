@@ -195,11 +195,11 @@ export default function PayrollClient({
             <Settings className="w-3.5 h-3.5" /> Pay Week
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => { window.location.href = `/api/payroll-pdf?offset=${currentOffset}`; }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
               bg-slate-900 text-white hover:bg-slate-700 shadow-sm transition-all"
           >
-            <Printer className="w-3.5 h-3.5" /> Print
+            <Printer className="w-3.5 h-3.5" /> Download PDF
           </button>
         </div>
       </div>
@@ -342,6 +342,11 @@ export default function PayrollClient({
           .print\\:block { display: block !important; }
           body { font-size: 11px; }
           tr { page-break-inside: avoid; }
+          /* Unclip AppShell scroll containers so the full table prints */
+          html, body { overflow: visible !important; height: auto !important; }
+          .flex.h-screen { height: auto !important; overflow: visible !important; }
+          .overflow-y-auto { overflow: visible !important; height: auto !important; }
+          aside { display: none !important; }
         }
       `}</style>
     </main>
