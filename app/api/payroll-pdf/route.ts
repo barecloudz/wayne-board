@@ -151,8 +151,13 @@ function buildDriverRows(
           const dsw = driverDsw.get(date);
           if (!dsw || dsw.ilsPct == null) return `<td class="td-day"><span class="dsw-dash">&mdash;</span></td>`;
           const cls = dsw.ilsPct >= 100 ? "dsw-green" : dsw.ilsPct >= 99 ? "dsw-amber" : "dsw-red";
-          const impact = dsw.pldImpactPkgs ?? 0;
-          return `<td class="td-day"><div class="dsw-cell"><span class="${cls}">${dsw.ilsPct}%</span>${impact > 0 ? `<span class="dsw-impact">${impact}pkg</span>` : ""}</div></td>`;
+          const breakdown = (dsw.codeBreakdown ?? {}) as Record<string, number>;
+          const code27 = breakdown["27"] ?? 0;
+          const otherIls = (["2","3","12"] as const).reduce((s, k) => s + (breakdown[k] ?? 0), 0);
+          const impactParts: string[] = [];
+          if (code27 > 0) impactParts.push(`<span class="dsw-code27">${code27}&times;27</span>`);
+          if (otherIls > 0) impactParts.push(`<span class="dsw-impact">${otherIls}pkg</span>`);
+          return `<td class="td-day${dsw.ilsPct >= 100 ? " bg-green-cell" : ""}"><div class="dsw-cell"><span class="${cls}">${dsw.ilsPct}%</span>${impactParts.join("")}</div></td>`;
         }).join("")}
         <td class="td-total">${(() => {
           const vals = weekDates.map(d => driverDsw.get(d)?.ilsPct).filter((v): v is number => v != null);
@@ -236,7 +241,9 @@ function generateHTML(data: {
   .dsw-green  { font-size: 8.5px; font-weight: 800; color: #16a34a; }
   .dsw-amber  { font-size: 8.5px; font-weight: 800; color: #d97706; }
   .dsw-red    { font-size: 8.5px; font-weight: 800; color: #dc2626; }
-  .dsw-impact { font-size: 7px; font-weight: 700; color: #dc2626; }
+  .dsw-impact  { font-size: 7px; font-weight: 700; color: #dc2626; }
+  .dsw-code27  { font-size: 7.5px; font-weight: 800; color: #dc2626; letter-spacing: -0.2px; }
+  .bg-green-cell { background: #f0fdf4 !important; }
   .dsw-dash   { color: #e2e8f0; }
   .section-sep td { padding: 5px 12px; background: #f8fafc; border-top: 2px solid #e2e8f0; }
   .section-label { font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; }
