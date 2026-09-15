@@ -45,6 +45,9 @@ export async function uploadDswFile(
   const date = parseDateFromTitle(titleRow);
   if (!date) return { success: false, error: "Could not parse date from DSW file title: " + titleRow };
 
+  // Wipe existing rows for this date+org so re-uploads replace rather than duplicate
+  await db.delete(dswRouteDays).where(and(eq(dswRouteDays.organizationId, orgId), eq(dswRouteDays.date, date)));
+
   // --- Parse PLD (optional) — build per-WA# breakdown, impact, and ghost counts ---
   // Columns (0-indexed): 0=PkgCnt, 1=AddlInfo, 2=WAName, 3=WA#, 4=PSA, 5=ServiceProvider,
   //   6=VisionLabel, 7=TrackingID, 8=DestAddr, 9=Vehicle#, 10=VSACode, 11=STARCode, 12=STARScanTime

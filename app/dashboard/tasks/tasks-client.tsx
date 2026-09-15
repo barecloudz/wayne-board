@@ -44,7 +44,7 @@ export default function TasksClient({
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
-        {["owner", "co_owner"].includes(currentUserRole) && (
+        {["owner", "co_owner", "bc", "developer"].includes(currentUserRole) && (
           <Link
             href="/dashboard/settings#tasks"
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
@@ -74,7 +74,7 @@ export default function TasksClient({
       {tasks.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
           <p className="text-[15px] font-semibold text-slate-500">No tasks scheduled for today</p>
-          {["owner", "co_owner"].includes(currentUserRole) && (
+          {["owner", "co_owner", "bc", "developer"].includes(currentUserRole) && (
             <p className="text-[13px] text-slate-400 mt-1">
               <Link href="/dashboard/settings#tasks" className="underline">Create tasks</Link> in Settings to get started.
             </p>
