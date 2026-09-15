@@ -41,7 +41,6 @@ export async function getDrivers() {
     role:              drivers.role,
     isAdmin:           drivers.isAdmin,
     avatarUrl:         drivers.avatarUrl,
-    assignedVehicleId: drivers.assignedVehicleId,
     active:            drivers.active,
     loginDisabled:     drivers.loginDisabled,
     firstLoginAt:      drivers.firstLoginAt,
@@ -133,10 +132,6 @@ export async function setDriverRole(id: number, newRole: AssignableRole) {
     .where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
-export async function assignDriverVehicle(id: number, vehicleId: number | null) {
-  const orgId = await requireOrg();
-  await db.update(drivers).set({ assignedVehicleId: vehicleId }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
-}
 
 export async function resetDriverPassword(id: number, newPassword: string) {
   const orgId = await requireOrg();

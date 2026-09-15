@@ -51,7 +51,6 @@ export const drivers = pgTable("drivers", {
   role:              text("role").notNull().default("driver"),  // "driver"|"bc"|"co_owner"|"developer"|"owner"
   isAdmin:           boolean("is_admin").notNull().default(false),
   avatarUrl:         text("avatar_url"),
-  assignedVehicleId: integer("assigned_vehicle_id"),
   workArea:          text("work_area"),
   defaultWorkAreaId: integer("default_work_area_id").references(() => workAreas.id),
   active:            boolean("active").notNull().default(true),
@@ -85,6 +84,7 @@ export const vehicles = pgTable("vehicles", {
   mmrDue:               date("mmr_due"),
   federalInspectionDue: date("federal_inspection_due"),
   registrationExpiry:   date("registration_expiry"),
+  licensePlate:         text("license_plate"),
   active:               boolean("active").notNull().default(true),
   locationId:           integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   createdAt:            timestamp("created_at").defaultNow(),
@@ -425,6 +425,7 @@ export const dailyWorkAreaAssignments = pgTable("daily_work_area_assignments", {
   driverId:   text("driver_id").notNull(),
   date:       date("date").notNull(),
   workAreaId: integer("work_area_id").notNull().references(() => workAreas.id, { onDelete: "cascade" }),
+  vehicleId:  integer("vehicle_id").references(() => vehicles.id, { onDelete: "set null" }),
   createdAt:  timestamp("created_at").defaultNow(),
 });
 

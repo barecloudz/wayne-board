@@ -6,7 +6,6 @@ import AppShell from "@/components/app-shell";
 export const metadata: Metadata = { title: "Scheduling" };
 import { getAllSchedules, getAllTimeOff, getAllUpcomingOverrides, getAllOverrides } from "@/lib/actions/scheduling";
 import { getVehicles } from "@/lib/actions/vehicles";
-import { assignDriverVehicle } from "@/lib/actions/drivers";
 import { getWorkAreas, getAllDailyAssignments } from "@/lib/actions/work-areas";
 import { getAttendanceForRange } from "@/lib/actions/attendance";
 import SchedulingClient from "./scheduling-client";
@@ -16,7 +15,6 @@ import { droRoutes, driverLocations, drivers as driversTable } from "@/lib/schem
 import { asc, eq } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 
-export { assignDriverVehicle };
 
 export default async function SchedulingPage() {
   const today = new Date();

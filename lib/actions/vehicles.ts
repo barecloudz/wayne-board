@@ -23,21 +23,23 @@ export async function createVehicle(data: {
   type?: string;
   ownership?: string;
   locationId?: number;
+  licensePlate?: string;
 }): Promise<{ id: number } | { error: string }> {
   const orgId = await requireOrg();
   try {
     const [vehicle] = await db.insert(vehicles).values({
       organizationId: orgId,
-      unitNumber: data.unitNumber,
-      make:       data.make,
-      model:      data.model,
-      year:       data.year,
-      mileage:    data.mileage,
-      vin:        data.vin ?? "",
-      type:       data.type ?? "van",
-      ownership:  data.ownership ?? "owned",
-      active:     true,
-      locationId: data.locationId ?? null,
+      unitNumber:   data.unitNumber,
+      make:         data.make,
+      model:        data.model,
+      year:         data.year,
+      mileage:      data.mileage,
+      vin:          data.vin ?? "",
+      type:         data.type ?? "van",
+      ownership:    data.ownership ?? "owned",
+      active:       true,
+      locationId:   data.locationId ?? null,
+      licensePlate: data.licensePlate?.trim() || null,
     }).returning({ id: vehicles.id });
     revalidatePath("/vehicles");
     revalidatePath("/fleet");
@@ -114,10 +116,11 @@ export async function updateVehicle(
     ownership: string;
     active: boolean;
     locationId?: number | null;
+    licensePlate?: string | null;
   }
 ) {
   const orgId = await requireOrg();
-  await db.update(vehicles).set(data).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  await db.update(vehicles).set({ ...data, licensePlate: data.licensePlate?.trim() || null }).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
   revalidatePath("/vehicles");
   revalidatePath("/fleet");
   revalidatePath("/dashboard/fleet-status");

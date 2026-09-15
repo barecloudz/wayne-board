@@ -34,7 +34,6 @@ export async function getAllSchedules() {
       isTrainee:         drivers.isTrainee,
       noticeDate:        drivers.noticeDate,
       lastDay:           drivers.lastDay,
-      assignedVehicleId: drivers.assignedVehicleId,
       schedule:          driverSchedules,
     })
     .from(drivers)

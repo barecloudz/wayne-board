@@ -8,7 +8,7 @@ import {
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
 import { upsertAttendance, markDayHoliday, unmarkDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
-import { assignDriverVehicle } from "@/lib/actions/drivers";
+import { setDailyVehicle } from "@/lib/actions/work-areas";
 import { setDailyWorkArea, setDriverDefaultWorkArea } from "@/lib/actions/work-areas";
 import { addDays, format, parseISO, isWithinInterval } from "date-fns";
 import { useLocationContext } from "@/components/location-context";
@@ -39,7 +39,6 @@ type ScheduleRow = {
   isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
-  assignedVehicleId: number | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -99,6 +98,7 @@ type DailyAssignmentRow = {
   driverId: string;
   date: string;
   workAreaId: number;
+  vehicleId: number | null;
 };
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
@@ -267,11 +267,11 @@ export default function SchedulingClient({
 
   function openCoverageModal(driver: ScheduleRow, dateStr: string) {
     setCoverageModal({ driver, dateStr });
-    setModalVehicleId(driver.assignedVehicleId?.toString() ?? "");
-    const dailyId = dailyAssignments.find(
+    const daily = dailyAssignments.find(
       (a) => a.driverId === driver.driverId && a.date === dateStr
-    )?.workAreaId;
-    setModalWorkAreaId(dailyId?.toString() ?? "");
+    );
+    setModalVehicleId(daily?.vehicleId?.toString() ?? "");
+    setModalWorkAreaId(daily?.workAreaId?.toString() ?? "");
   }
 
   function handleConfirmAttendance() {
@@ -302,7 +302,7 @@ export default function SchedulingClient({
     if (!coverageModal) return;
     const vid = modalVehicleId ? parseInt(modalVehicleId) : null;
     startTransition(async () => {
-      await assignDriverVehicle(coverageModal.driver.id, vid);
+      await setDailyVehicle(coverageModal.driver.driverId, coverageModal.dateStr, vid);
       setCoverageModal(null);
     });
   }
@@ -1478,7 +1478,8 @@ export default function SchedulingClient({
 
       {coverageModal && (() => {
         const { driver, dateStr } = coverageModal;
-        const assignedVehicle = vehicles.find(v => v.id === driver.assignedVehicleId);
+        const dailyVehicleId = dailyAssignments.find(a => a.driverId === driver.driverId && a.date === dateStr)?.vehicleId;
+        const assignedVehicle = dailyVehicleId ? vehicles.find(v => v.id === dailyVehicleId) : undefined;
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             onClick={() => setCoverageModal(null)}>
@@ -1600,7 +1601,7 @@ export default function SchedulingClient({
                     </p>
                   )}
                   <select
-                    value={modalVehicleId || (driver.assignedVehicleId?.toString() ?? "")}
+                    value={modalVehicleId}
                     onChange={(e) => setModalVehicleId(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
                   >

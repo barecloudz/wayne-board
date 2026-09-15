@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { vehicles, drivers, vehicleConditions } from "@/lib/schema";
+import { vehicles, drivers, vehicleConditions, dailyWorkAreaAssignments } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
@@ -505,17 +505,18 @@ export async function GET() {
   soonDate.setDate(soonDate.getDate() + 30);
   const soon = soonDate.toISOString().slice(0, 10);
 
-  const [allVehicles, allDrivers, allConditions] = await Promise.all([
+  const [allVehicles, allDriversBase, todayAssignments, allConditions] = await Promise.all([
     db.select().from(vehicles).orderBy(vehicles.unitNumber),
-    db.select({ id: drivers.id, name: drivers.name, assignedVehicleId: drivers.assignedVehicleId })
-      .from(drivers),
+    db.select({ driverId: drivers.driverId, name: drivers.name }).from(drivers),
+    db.select({ driverId: dailyWorkAreaAssignments.driverId, vehicleId: dailyWorkAreaAssignments.vehicleId }).from(dailyWorkAreaAssignments).where(eq(dailyWorkAreaAssignments.date, today)),
     db.select().from(vehicleConditions)
       .where(eq(vehicleConditions.status, "open"))
       .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity),
   ]);
 
+  const driverNameById = new Map(allDriversBase.map((d) => [d.driverId, d.name]));
   const driverMap = new Map<number, string>(
-    allDrivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d.name])
+    todayAssignments.filter((a) => a.vehicleId).map((a) => [a.vehicleId!, driverNameById.get(a.driverId) ?? ""])
   );
 
   // Group conditions by vehicleId

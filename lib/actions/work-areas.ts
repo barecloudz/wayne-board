@@ -38,12 +38,19 @@ export async function setDriverDefaultWorkArea(driverId: string, workAreaId: num
   revalidatePath("/dashboard/scheduling");
 }
 
-export async function setDailyWorkArea(driverId: string, date: string, workAreaId: number | null) {
+export async function setDailyWorkArea(driverId: string, date: string, workAreaId: number | null, vehicleId?: number | null) {
   await db.delete(dailyWorkAreaAssignments)
     .where(and(eq(dailyWorkAreaAssignments.driverId, driverId), eq(dailyWorkAreaAssignments.date, date)));
   if (workAreaId !== null) {
-    await db.insert(dailyWorkAreaAssignments).values({ driverId, date, workAreaId });
+    await db.insert(dailyWorkAreaAssignments).values({ driverId, date, workAreaId, vehicleId: vehicleId ?? null });
   }
+  revalidatePath("/dashboard/scheduling");
+}
+
+export async function setDailyVehicle(driverId: string, date: string, vehicleId: number | null) {
+  await db.update(dailyWorkAreaAssignments)
+    .set({ vehicleId })
+    .where(and(eq(dailyWorkAreaAssignments.driverId, driverId), eq(dailyWorkAreaAssignments.date, date)));
   revalidatePath("/dashboard/scheduling");
 }
 

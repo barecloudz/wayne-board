@@ -1,7 +1,7 @@
 ﻿"use server";
 
 import { db } from "@/lib/db";
-import { vehicles, vehicleConditions, drivers } from "@/lib/schema";
+import { vehicles, vehicleConditions, drivers, dailyWorkAreaAssignments } from "@/lib/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
@@ -95,13 +95,19 @@ export async function getAllVehiclesWithConditions() {
     .where(eq(vehicleConditions.status, "open"))
     .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity);
 
-  // Attach assigned driver name
-  const allDrivers = await db
-    .select({ assignedVehicleId: drivers.assignedVehicleId, name: drivers.name })
+  // Attach today's assigned driver name via dailyWorkAreaAssignments
+  const today = new Date().toISOString().slice(0, 10);
+  const todayAssignments = await db
+    .select({ vehicleId: dailyWorkAreaAssignments.vehicleId, driverId: dailyWorkAreaAssignments.driverId })
+    .from(dailyWorkAreaAssignments)
+    .where(eq(dailyWorkAreaAssignments.date, today));
+  const driverRows = await db
+    .select({ driverId: drivers.driverId, name: drivers.name })
     .from(drivers)
     .where(eq(drivers.organizationId, orgId));
+  const driverNameById = new Map(driverRows.map((d) => [d.driverId, d.name]));
   const driverByVehicle = new Map(
-    allDrivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d.name])
+    todayAssignments.filter((a) => a.vehicleId).map((a) => [a.vehicleId!, driverNameById.get(a.driverId) ?? null])
   );
 
   return allVehicles.map((v) => ({

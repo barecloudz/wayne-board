@@ -23,6 +23,7 @@ export default function VehiclesHeader() {
   const [vinLoading, setVinLoading] = useState(false);
   const [vinDecoded, setVinDecoded] = useState(false);
   const [ownership, setOwnership] = useState<"owned" | "rental">("owned");
+  const [licensePlate, setLicensePlate] = useState("");
   const [error, setError] = useState("");
   const [locations, setLocations] = useState<{ id: number; name: string }[]>([]);
   const [locationId, setLocationId] = useState<number | undefined>(undefined);
@@ -68,7 +69,7 @@ export default function VehiclesHeader() {
 
   function openModal() {
     setUnitNumber(""); setMake(""); setModel(""); setYear("");
-    setMileage("0"); setVin(""); setOwnership("owned"); setError("");
+    setMileage("0"); setVin(""); setOwnership("owned"); setLicensePlate(""); setError("");
     setLocationId(undefined);
     setShowModal(true);
   }
@@ -95,6 +96,7 @@ export default function VehiclesHeader() {
         type: "van",
         ownership,
         locationId,
+        licensePlate: licensePlate.trim() || undefined,
       });
       if ("error" in result) {
         setError(result.error);
@@ -186,6 +188,17 @@ export default function VehiclesHeader() {
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
                   placeholder="e.g. Rental 01"
+                  className={INPUT}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">License Plate</label>
+                <input
+                  type="text"
+                  value={licensePlate}
+                  onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABC1234"
                   className={INPUT}
                 />
               </div>

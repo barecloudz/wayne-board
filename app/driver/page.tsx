@@ -73,7 +73,7 @@ export default async function DriverDashboard() {
     getLeaderboard(),
     getCompanyRating(),
     getRydeGoalMessage(),
-    db.select({ assignedVehicleId: drivers.assignedVehicleId, defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
+    db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
@@ -122,8 +122,13 @@ export default async function DriverDashboard() {
 
   const upcomingTimeOff = allTimeOff.filter((t) => t.endDate >= today);
 
-  const assignedVehicle = driverRow?.assignedVehicleId
-    ? await db.select().from(vehicles).where(eq(vehicles.id, driverRow.assignedVehicleId)).limit(1).then((r) => r[0] ?? null)
+  const [todayVehicleAssignment] = await db
+    .select({ vehicleId: dailyWorkAreaAssignments.vehicleId })
+    .from(dailyWorkAreaAssignments)
+    .where(and(eq(dailyWorkAreaAssignments.driverId, session.driverId), eq(dailyWorkAreaAssignments.date, today)))
+    .limit(1);
+  const assignedVehicle = todayVehicleAssignment?.vehicleId
+    ? await db.select().from(vehicles).where(eq(vehicles.id, todayVehicleAssignment.vehicleId)).limit(1).then((r) => r[0] ?? null)
     : null;
 
   const streakDays = streaks.find((s) => s.driverId === session.driverId)?.streakDays ?? 0;

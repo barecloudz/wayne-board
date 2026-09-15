@@ -17,6 +17,7 @@ type Vehicle = {
   ownership: string;
   active: boolean;
   locationId?: number | null;
+  licensePlate?: string | null;
 };
 
 const INPUT =
@@ -51,6 +52,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
   const [type, setType]             = useState(vehicle.type);
   const [active, setActive]         = useState(vehicle.active);
   const [locationId, setLocationId] = useState<number | null | undefined>(vehicle.locationId ?? null);
+  const [licensePlate, setLicensePlate] = useState(vehicle.licensePlate ?? "");
   const [locations, setLocations]   = useState<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
     setType(vehicle.type);
     setActive(vehicle.active);
     setLocationId(vehicle.locationId ?? null);
+    setLicensePlate(vehicle.licensePlate ?? "");
     setError("");
     setOpen(true);
   }
@@ -94,6 +97,7 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
           ownership: vehicle.ownership,
           active,
           locationId: locationId ?? null,
+          licensePlate: licensePlate.trim() || null,
         });
         setOpen(false);
         router.refresh();
@@ -199,6 +203,16 @@ export default function VehicleEditModal({ vehicle }: { vehicle: Vehicle }) {
                   placeholder="17-character VIN"
                   maxLength={17}
                   className={`${INPUT} font-mono tracking-wider`}
+                />
+              </Field>
+
+              <Field label="License Plate">
+                <input
+                  type="text"
+                  value={licensePlate}
+                  onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABC1234"
+                  className={INPUT}
                 />
               </Field>
 
