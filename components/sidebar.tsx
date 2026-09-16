@@ -9,7 +9,7 @@ import {
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
   Zap, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
-  Building2, Upload,
+  Building2, Upload, UserSearch,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocationContext } from "@/components/location-context";
@@ -28,6 +28,7 @@ const adminItems = [
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
+  { icon: UserSearch,   label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
   { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
 ];
 

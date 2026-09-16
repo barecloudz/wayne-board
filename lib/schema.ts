@@ -588,3 +588,24 @@ export const attendanceLog = pgTable("attendance_log", {
 }, (t) => ({
   orgDriverDateUnique: uniqueIndex("attendance_log_org_driver_date_unique").on(t.organizationId, t.driverId, t.date),
 }));
+
+// ── Recruiting Prospects ──────────────────────────────────────────────────────
+export const prospects = pgTable("prospects", {
+  id:                    serial("id").primaryKey(),
+  organizationId:        integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  name:                  text("name").notNull(),
+  phone:                 text("phone"),
+  email:                 text("email"),
+  status:                text("status").notNull().default("prospect"), // prospect|interviewing|offered|onboarding|hired|rejected
+  notes:                 text("notes"),
+  // Checklist items: "pending" | "passed" | "failed"
+  applicationDone:       text("application_done").notNull().default("pending"),
+  interviewDone:         text("interview_done").notNull().default("pending"),
+  drugTestPassed:        text("drug_test_passed").notNull().default("pending"),
+  backgroundCheckPassed: text("background_check_passed").notNull().default("pending"),
+  roadTestPassed:        text("road_test_passed").notNull().default("pending"),
+  orientationDone:       text("orientation_done").notNull().default("pending"),
+  fedexIdAssigned:       text("fedex_id_assigned").notNull().default("pending"),
+  createdAt:             timestamp("created_at").defaultNow(),
+  updatedAt:             timestamp("updated_at").defaultNow(),
+});
