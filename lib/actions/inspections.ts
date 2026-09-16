@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { inspections, inspectionResults } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 
 async function requireOrg() {
@@ -75,8 +75,9 @@ export async function saveInspection(data: {
 }
 
 export async function deleteInspection(inspectionId: number) {
+  const orgId = await requireOrg();
   await db.delete(inspectionResults).where(eq(inspectionResults.inspectionId, inspectionId));
-  await db.delete(inspections).where(eq(inspections.id, inspectionId));
+  await db.delete(inspections).where(and(eq(inspections.id, inspectionId), eq(inspections.organizationId, orgId)));
 }
 
 export async function updateRepairDetails(
@@ -84,6 +85,13 @@ export async function updateRepairDetails(
   repairInstructions: string | null,
   repairCost: number | null
 ) {
+  const orgId = await requireOrg();
+  const [result] = await db.select({ inspectionId: inspectionResults.inspectionId })
+    .from(inspectionResults).where(eq(inspectionResults.id, resultId)).limit(1);
+  if (!result) throw new Error("Not found");
+  const [insp] = await db.select({ id: inspections.id }).from(inspections)
+    .where(and(eq(inspections.id, result.inspectionId), eq(inspections.organizationId, orgId))).limit(1);
+  if (!insp) throw new Error("Not found");
   await db
     .update(inspectionResults)
     .set({ repairInstructions, repairCost })
@@ -101,5 +109,6 @@ export async function updateInspectionStatus(
     status?: string;
   }
 ) {
-  await db.update(inspections).set(patch).where(eq(inspections.id, inspectionId));
+  const orgId = await requireOrg();
+  await db.update(inspections).set(patch).where(and(eq(inspections.id, inspectionId), eq(inspections.organizationId, orgId)));
 }

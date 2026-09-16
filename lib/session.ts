@@ -1,9 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET ?? "changeme-set-SESSION_SECRET-in-env"
-);
+if (!process.env.SESSION_SECRET) throw new Error("SESSION_SECRET environment variable is not set");
+const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
 const COOKIE = "driver_session";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { workAreas, dailyWorkAreaAssignments, drivers } from "@/lib/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 
@@ -39,6 +39,10 @@ export async function setDriverDefaultWorkArea(driverId: string, workAreaId: num
 }
 
 export async function setDailyWorkArea(driverId: string, date: string, workAreaId: number | null, vehicleId?: number | null) {
+  const orgId = await requireOrg();
+  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId))).limit(1);
+  if (!driver) throw new Error("Driver not found");
   await db.delete(dailyWorkAreaAssignments)
     .where(and(eq(dailyWorkAreaAssignments.driverId, driverId), eq(dailyWorkAreaAssignments.date, date)));
   if (workAreaId !== null) {
@@ -48,6 +52,10 @@ export async function setDailyWorkArea(driverId: string, date: string, workAreaI
 }
 
 export async function setDailyVehicle(driverId: string, date: string, vehicleId: number | null) {
+  const orgId = await requireOrg();
+  const [driver] = await db.select({ driverId: drivers.driverId }).from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId))).limit(1);
+  if (!driver) throw new Error("Driver not found");
   await db.update(dailyWorkAreaAssignments)
     .set({ vehicleId })
     .where(and(eq(dailyWorkAreaAssignments.driverId, driverId), eq(dailyWorkAreaAssignments.date, date)));
@@ -55,5 +63,11 @@ export async function setDailyVehicle(driverId: string, date: string, vehicleId:
 }
 
 export async function getAllDailyAssignments() {
-  return db.select().from(dailyWorkAreaAssignments);
+  const orgId = await requireOrg();
+  const orgDrivers = await db.select({ driverId: drivers.driverId }).from(drivers)
+    .where(eq(drivers.organizationId, orgId));
+  const driverIds = orgDrivers.map((d) => d.driverId);
+  if (driverIds.length === 0) return [];
+  return db.select().from(dailyWorkAreaAssignments)
+    .where(inArray(dailyWorkAreaAssignments.driverId, driverIds));
 }

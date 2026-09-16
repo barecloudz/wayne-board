@@ -61,11 +61,17 @@ export async function createProspect(data: {
   return row as Prospect;
 }
 
+const VALID_FIELDS = [
+  "applicationDone", "interviewDone", "drugTestPassed",
+  "backgroundCheckPassed", "roadTestPassed", "orientationDone", "fedexIdAssigned",
+];
+
 export async function updateProspectChecklist(
   id: number,
   field: string,
   status: ChecklistStatus,
 ): Promise<void> {
+  if (!VALID_FIELDS.includes(field)) throw new Error("Invalid field");
   const orgId = await requireOrg();
   await db
     .update(prospects)

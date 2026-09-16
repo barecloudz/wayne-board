@@ -12,11 +12,20 @@ async function requireOrg() {
   return session.organizationId;
 }
 
+async function requireOrgVehicle(orgId: number, vehicleId: number) {
+  const [v] = await db.select({ id: vehicles.id }).from(vehicles)
+    .where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)))
+    .limit(1);
+  if (!v) throw new Error("Vehicle not found");
+}
+
 export type Severity   = "critical" | "high" | "medium" | "low";
 export type CondStatus = "open" | "in_progress" | "resolved";
 export type RouteStatus = "in_use" | "not_in_use" | "confirm";
 
 export async function getVehicleConditions(vehicleId: number) {
+  const orgId = await requireOrg();
+  await requireOrgVehicle(orgId, vehicleId);
   return db
     .select()
     .from(vehicleConditions)
@@ -32,6 +41,8 @@ export async function addCondition(data: {
   repairEstimate?: number | null;
   note?: string;
 }) {
+  const orgId = await requireOrg();
+  await requireOrgVehicle(orgId, data.vehicleId);
   await db.insert(vehicleConditions).values({
     vehicleId:      data.vehicleId,
     description:    data.description,
@@ -52,6 +63,8 @@ export async function updateCondition(id: number, vehicleId: number, data: {
   repairEstimate?: number | null;
   note?: string;
 }) {
+  const orgId = await requireOrg();
+  await requireOrgVehicle(orgId, vehicleId);
   await db.update(vehicleConditions).set({
     description:    data.description,
     severity:       data.severity,
@@ -65,6 +78,8 @@ export async function updateCondition(id: number, vehicleId: number, data: {
 }
 
 export async function deleteCondition(id: number, vehicleId: number) {
+  const orgId = await requireOrg();
+  await requireOrgVehicle(orgId, vehicleId);
   await db.delete(vehicleConditions).where(eq(vehicleConditions.id, id));
   revalidatePath(`/fleet/${vehicleId}`);
 }

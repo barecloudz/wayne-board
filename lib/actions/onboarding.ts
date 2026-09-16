@@ -51,8 +51,11 @@ export async function saveOnboardingVehicles(
         ownership: "owned",
         active: true,
       });
-    } catch {
-      // Skip duplicates silently
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      const msg = (err as { message?: string })?.message ?? "";
+      if (code === "23505" || msg.includes("unique")) continue;
+      throw err;
     }
   }
 }

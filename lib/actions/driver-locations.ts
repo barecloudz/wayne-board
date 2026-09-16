@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { driverLocations, locations, drivers } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
@@ -40,6 +40,12 @@ export async function setDriverLocations(
 ): Promise<void> {
   const session = await requireSession();
   const orgId = session.organizationId;
+
+  if (locationIds.length > 0) {
+    const validLocs = await db.select({ id: locations.id }).from(locations)
+      .where(and(eq(locations.organizationId, orgId), inArray(locations.id, locationIds)));
+    if (validLocs.length !== locationIds.length) throw new Error("Invalid locationId");
+  }
 
   await db.delete(driverLocations).where(
     and(eq(driverLocations.organizationId, orgId), eq(driverLocations.driverId, driverId))
