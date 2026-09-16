@@ -1378,6 +1378,7 @@ export default function SchedulingClient({
 
         type HistoryEntry = { driver: ScheduleRow; reason: string; note: string | null };
         const working: ScheduleRow[] = [];
+        const holidays: ScheduleRow[] = [];
         const cuts: HistoryEntry[] = [];
         const callOuts: HistoryEntry[] = [];
         const timeOffList: HistoryEntry[] = [];
@@ -1388,8 +1389,16 @@ export default function SchedulingClient({
           const hasOverride = dayOverrideIds.has(driver.driverId);
           if (!scheduled && !hasOverride) continue;
 
+          const attendanceEntry = attendanceMap.get(`${driver.driverId}|${historyDate}`);
+
           if (!offDriverIds.has(driver.driverId)) {
-            if (driver.active) working.push(driver);
+            if (driver.active) {
+              if (attendanceEntry?.status === "holiday") {
+                holidays.push(driver);
+              } else {
+                working.push(driver);
+              }
+            }
           } else {
             const entries = dayEntries.filter((to) => to.driverId === driver.driverId);
             for (const e of entries) {
@@ -1445,6 +1454,12 @@ export default function SchedulingClient({
                   emptyText: "No drivers scheduled",
                 },
                 {
+                  title: "Holiday", color: "text-violet-600",
+                  bg: "bg-violet-50 border-violet-200/60",
+                  items: holidays.map((d) => ({ name: d.name, driverId: d.driverId })),
+                  emptyText: "No holiday",
+                },
+                {
                   title: "Cut", color: "text-red-500",
                   bg: "bg-red-50 border-red-200/60",
                   items: cuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
@@ -1469,7 +1484,7 @@ export default function SchedulingClient({
               ))}
             </div>
 
-            {working.length === 0 && cuts.length === 0 && callOuts.length === 0 && timeOffList.length === 0 && (
+            {working.length === 0 && holidays.length === 0 && cuts.length === 0 && callOuts.length === 0 && timeOffList.length === 0 && (
               <p className="text-[13px] text-slate-400 text-center py-6">No drivers were scheduled on this day.</p>
             )}
           </div>
