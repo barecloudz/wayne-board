@@ -326,7 +326,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
 
   // Fetch active drivers and their schedules
   const activeDriversList = await db
-    .select({ driverId: drivers.driverId })
+    .select({ driverId: drivers.driverId, createdAt: drivers.createdAt })
     .from(drivers)
     .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
 
@@ -344,10 +344,13 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
     attendanceByDriver.get(r.driverId)!.set(normalizeDate(r.date), r.status);
   }
 
-  // Add inferred work days for active drivers
-  for (const { driverId } of activeDriversList) {
+  // Add inferred work days for active drivers (only on/after their createdAt date)
+  for (const { driverId, createdAt } of activeDriversList) {
     const schedule = scheduleMap.get(driverId);
     if (!schedule) continue;
+    const createdDateStr = createdAt
+      ? (typeof createdAt === "string" ? createdAt.slice(0, 10) : (createdAt as Date).toISOString().slice(0, 10))
+      : null;
     if (!attendanceByDriver.has(driverId)) attendanceByDriver.set(driverId, new Map());
     const driverAttendance = attendanceByDriver.get(driverId)!;
     for (let i = 0; i < 7; i++) {
@@ -355,6 +358,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
       d.setDate(d.getDate() + i);
       const dateStr = normalizeDate(d.toISOString().slice(0, 10));
       if (driverAttendance.has(dateStr)) continue;
+      if (createdDateStr && dateStr < createdDateStr) continue;
       const key = getScheduleKey(dateStr);
       if (schedule[key]) driverAttendance.set(dateStr, "work");
     }
