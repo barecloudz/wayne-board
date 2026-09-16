@@ -185,14 +185,26 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
 
+type FilterTab = "all" | "in_progress" | "ready";
+
 export default function RecruitingClient({ prospects: initial }: { prospects: Prospect[] }) {
   const [prospects, setProspects] = useState<Prospect[]>(initial);
+  const [filter, setFilter] = useState<FilterTab>("all");
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  const filtered = prospects
+    .filter(p => {
+      const prog = getProgress(p);
+      if (filter === "in_progress") return prog > 0 && prog < TOTAL_STEPS;
+      if (filter === "ready") return prog === TOTAL_STEPS;
+      return true;
+    })
+    .sort((a, b) => getProgress(b) - getProgress(a));
 
   function handleAdd() {
     if (!name.trim()) return;
@@ -224,18 +236,22 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
         </button>
       </div>
 
-      {/* Summary bar */}
+      {/* Summary bar — clickable filter tabs */}
       {prospects.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: "Total",         value: prospects.length,                                                          color: "text-slate-800" },
-            { label: "In Progress",   value: prospects.filter(p => getProgress(p) > 0 && getProgress(p) < TOTAL_STEPS).length, color: "text-amber-600" },
-            { label: "Ready to Hire", value: prospects.filter(p => getProgress(p) === TOTAL_STEPS).length,             color: "text-emerald-600" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white rounded-xl border border-slate-200/80 px-4 py-3 text-center">
+          {([
+            { key: "all",         label: "Total",         value: prospects.length,                                                                    color: "text-slate-800",   ring: "ring-slate-300" },
+            { key: "in_progress", label: "In Progress",   value: prospects.filter(p => getProgress(p) > 0 && getProgress(p) < TOTAL_STEPS).length,   color: "text-amber-600",   ring: "ring-amber-300" },
+            { key: "ready",       label: "Ready to Hire", value: prospects.filter(p => getProgress(p) === TOTAL_STEPS).length,                        color: "text-emerald-600", ring: "ring-emerald-300" },
+          ] as { key: FilterTab; label: string; value: number; color: string; ring: string }[]).map(({ key, label, value, color, ring }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(f => f === key ? "all" : key)}
+              className={`bg-white rounded-xl border px-4 py-3 text-center transition-all ${filter === key ? `border-transparent ring-2 ${ring}` : "border-slate-200/80 hover:border-slate-300"}`}
+            >
               <p className={`text-[22px] font-extrabold ${color}`}>{value}</p>
               <p className="text-[11px] text-slate-400 font-semibold">{label}</p>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -274,9 +290,13 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
           <p className="text-[15px] font-semibold text-slate-500">No prospects yet</p>
           <p className="text-[13px] text-slate-400 mt-1">Click "Add Prospect" to start tracking candidates.</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
+          <p className="text-[14px] font-semibold text-slate-400">No prospects in this category</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {prospects.map((p) => (
+          {filtered.map((p) => (
             <ProspectCard
               key={p.id}
               prospect={p}
