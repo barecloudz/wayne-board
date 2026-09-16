@@ -48,16 +48,17 @@ export async function createProspect(data: {
   phone?: string;
   email?: string;
   notes?: string;
-}): Promise<void> {
+}): Promise<Prospect> {
   const orgId = await requireOrg();
-  await db.insert(prospects).values({
+  const [row] = await db.insert(prospects).values({
     organizationId: orgId,
     name: data.name.trim(),
     phone: data.phone?.trim() || null,
     email: data.email?.trim() || null,
     notes: data.notes?.trim() || null,
-  });
+  }).returning();
   revalidatePath("/dashboard/recruiting");
+  return row as Prospect;
 }
 
 export async function updateProspectChecklist(

@@ -197,10 +197,10 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
   function handleAdd() {
     if (!name.trim()) return;
     startTransition(async () => {
-      await createProspect({ name, phone, email, notes });
+      const created = await createProspect({ name, phone, email, notes });
       setName(""); setPhone(""); setEmail(""); setNotes("");
       setShowAdd(false);
-      window.location.reload();
+      setProspects(prev => [...prev, created]);
     });
   }
 
