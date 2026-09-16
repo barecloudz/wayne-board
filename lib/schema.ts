@@ -1,6 +1,6 @@
 ﻿import {
   pgTable, serial, text, real, integer,
-  timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex,
+  timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex, index,
 } from "drizzle-orm/pg-core";
 
 // ── Organizations (one row per contractor / ISP) ──────────────────────────────
@@ -109,7 +109,9 @@ export const inspections = pgTable("inspections", {
   agreedRepairDate: date("agreed_repair_date"),
   status:           text("status").notNull().default("Draft"),
   createdAt:        timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("inspections_org_vehicle_idx").on(t.organizationId, t.vehicleId),
+]);
 
 // ── Inspection Item Results ───────────────────────────────────────────────────
 export const inspectionResults = pgTable("inspection_results", {
@@ -133,7 +135,9 @@ export const rydeScores = pgTable("ryde_scores", {
   deliveries:      integer("deliveries").notNull().default(0),
   positiveReviews: integer("positive_reviews").notNull().default(0),
   createdAt:       timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("ryde_scores_org_week_idx").on(t.organizationId, t.week),
+]);
 
 // ── Ryde Reviews ──────────────────────────────────────────────────────────────
 export const rydeReviews = pgTable("ryde_reviews", {
@@ -199,7 +203,9 @@ export const vehicleConditions = pgTable("vehicle_conditions", {
   note:           text("note"),
   reportedAt:     timestamp("reported_at").defaultNow(),
   resolvedAt:     timestamp("resolved_at"),
-});
+}, (t) => [
+  index("vehicle_conditions_org_vehicle_idx").on(t.vehicleId),
+]);
 
 // ── Driver Schedules ─────────────────────────────────────────────────────────
 export const driverSchedules = pgTable("driver_schedules", {
@@ -456,7 +462,9 @@ export const dswRouteDays = pgTable("dsw_route_days", {
   pldGhostPkgs:      integer("pld_ghost_pkgs"),    // PLD-computed: VSA=0 & STAR=0 (never scanned)
   locationId:        integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   syncedAt:          timestamp("synced_at").defaultNow(),
-});
+}, (t) => [
+  index("dsw_route_days_org_date_idx").on(t.organizationId, t.date),
+]);
 
 // ── GroundCloud Route Days ────────────────────────────────────────────────────
 export const gcRouteDays = pgTable("gc_route_days", {
@@ -542,9 +550,10 @@ export const driverLocations = pgTable("driver_locations", {
   driverId:       text("driver_id").notNull(),
   locationId:     integer("location_id").notNull().references(() => locations.id, { onDelete: "cascade" }),
   createdAt:      timestamp("created_at").defaultNow(),
-}, (t) => ({
-  driverLocationUnique: uniqueIndex("driver_locations_driver_location_unique").on(t.organizationId, t.driverId, t.locationId),
-}));
+}, (t) => [
+  uniqueIndex("driver_locations_driver_location_unique").on(t.organizationId, t.driverId, t.locationId),
+  index("driver_locations_org_driver_idx").on(t.organizationId, t.driverId),
+]);
 
 // ── Attendance Log (backward-looking daily attendance record) ─────────────────
 // ── Task Templates ────────────────────────────────────────────────────────────
@@ -585,9 +594,10 @@ export const attendanceLog = pgTable("attendance_log", {
   note:           text("note"),
   createdAt:      timestamp("created_at").defaultNow(),
   updatedAt:      timestamp("updated_at").defaultNow(),
-}, (t) => ({
-  orgDriverDateUnique: uniqueIndex("attendance_log_org_driver_date_unique").on(t.organizationId, t.driverId, t.date),
-}));
+}, (t) => [
+  uniqueIndex("attendance_log_org_driver_date_unique").on(t.organizationId, t.driverId, t.date),
+  index("attendance_log_org_driver_date_idx").on(t.organizationId, t.driverId, t.date),
+]);
 
 // ── Recruiting Prospects ──────────────────────────────────────────────────────
 export const prospects = pgTable("prospects", {
