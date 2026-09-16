@@ -67,6 +67,7 @@ export const drivers = pgTable("drivers", {
   createdAt:         timestamp("created_at").defaultNow(),
 }, (t) => ({
   orgDriverUnique: uniqueIndex("drivers_org_driver_unique").on(t.organizationId, t.driverId),
+  orgUsernameUnique: uniqueIndex("drivers_org_username_unique").on(t.organizationId, t.username),
 }));
 
 // ── Vehicles ─────────────────────────────────────────────────────────────────

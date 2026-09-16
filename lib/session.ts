@@ -1,5 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { db } from "@/lib/db";
+import { drivers } from "@/lib/schema";
+import { eq, and } from "drizzle-orm";
 
 if (!process.env.SESSION_SECRET) throw new Error("SESSION_SECRET environment variable is not set");
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET);
@@ -41,7 +44,15 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, SECRET);
-    return payload as unknown as SessionPayload;
+    const session = payload as unknown as SessionPayload;
+    // Live DB check: reject sessions for disabled drivers
+    const [driver] = await db
+      .select({ loginDisabled: drivers.loginDisabled })
+      .from(drivers)
+      .where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId)))
+      .limit(1);
+    if (!driver || driver.loginDisabled) return null;
+    return session;
   } catch {
     return null;
   }

@@ -240,8 +240,15 @@ export async function changeMyUsername(driverId: string, newUsername: string) {
     .where(eq(drivers.username, trimmed))
     .limit(1);
   if (existing) return { error: "That username is already taken." };
-  await db.update(drivers).set({ username: trimmed }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
-  return { ok: true };
+  try {
+    await db.update(drivers).set({ username: trimmed }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+    return { ok: true };
+  } catch (err: unknown) {
+    if (err instanceof Error && (err as any).code === "23505") {
+      return { error: "Username already taken." };
+    }
+    throw err;
+  }
 }
 
 export async function clearPasswordForceChange() {
