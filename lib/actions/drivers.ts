@@ -1,7 +1,7 @@
 ﻿"use server";
 
 import { db } from "@/lib/db";
-import { drivers, rydeScores, rydeReviews, driverMilestoneClaims } from "@/lib/schema";
+import { drivers, rydeScores, rydeReviews, driverMilestoneClaims, driverLocations } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { getSession, createSession } from "@/lib/session";
@@ -86,6 +86,11 @@ export async function createDriver(
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
   await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role, isAdmin: role !== "driver", locationId: locationId ?? null });
+
+  // Also populate the driverLocations join table (the source of truth for all filtering/display)
+  if (locationId) {
+    await db.insert(driverLocations).values({ organizationId: orgId, driverId, locationId });
+  }
 
   return { driverId, tempPassword };
 }

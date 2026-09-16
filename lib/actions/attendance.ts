@@ -156,6 +156,7 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       terminatedAt:    drivers.terminatedAt,
       allLocations:    drivers.allLocations,
       locationId:      drivers.locationId,
+      createdAt:       drivers.createdAt,
     })
     .from(drivers)
     .where(eq(drivers.organizationId, orgId));
@@ -187,14 +188,22 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     }
 
     // Infer "work" for scheduled days with no attendance record (active drivers only)
+    // Only infer for days on or after the driver was created — prevents new accounts
+    // from appearing to have worked weeks before they existed.
     const isActive = driverRecord ? driverRecord.active : false;
     const schedule = scheduleMap.get(driverId);
+    const createdDateStr = driverRecord?.createdAt
+      ? (typeof driverRecord.createdAt === "string"
+          ? driverRecord.createdAt.slice(0, 10)
+          : (driverRecord.createdAt as Date).toISOString().slice(0, 10))
+      : null;
     if (isActive && schedule) {
       for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart + "T00:00:00");
         d.setDate(d.getDate() + i);
         const dateStr = normalizeDate(d.toISOString().slice(0, 10));
         if (attendanceByDate[dateStr]) continue; // already has a record
+        if (createdDateStr && dateStr < createdDateStr) continue; // before account existed
         const key = getScheduleKey(dateStr);
         if (schedule[key]) {
           attendanceByDate[dateStr] = "work";
