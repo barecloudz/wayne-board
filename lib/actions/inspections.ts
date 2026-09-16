@@ -98,6 +98,9 @@ export async function updateRepairDetails(
     .where(eq(inspectionResults.id, resultId));
 }
 
+const VALID_INSPECTION_STATUSES = ["Draft", "Complete", "Defects Pending Repair", "Out of Service"] as const;
+export type InspectionStatus = typeof VALID_INSPECTION_STATUSES[number];
+
 export async function updateInspectionStatus(
   inspectionId: number,
   patch: {
@@ -109,6 +112,9 @@ export async function updateInspectionStatus(
     status?: string;
   }
 ) {
+  if (patch.status !== undefined && !(VALID_INSPECTION_STATUSES as readonly string[]).includes(patch.status)) {
+    throw new Error("Invalid status");
+  }
   const orgId = await requireOrg();
   await db.update(inspections).set(patch).where(and(eq(inspections.id, inspectionId), eq(inspections.organizationId, orgId)));
 }

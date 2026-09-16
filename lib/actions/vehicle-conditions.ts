@@ -41,6 +41,8 @@ export async function addCondition(data: {
   repairEstimate?: number | null;
   note?: string;
 }) {
+  const VALID_SEVERITY: Severity[] = ["low", "medium", "high", "critical"];
+  if (!VALID_SEVERITY.includes(data.severity)) throw new Error("Invalid severity");
   const orgId = await requireOrg();
   await requireOrgVehicle(orgId, data.vehicleId);
   await db.insert(vehicleConditions).values({
@@ -63,6 +65,10 @@ export async function updateCondition(id: number, vehicleId: number, data: {
   repairEstimate?: number | null;
   note?: string;
 }) {
+  const VALID_SEVERITY: Severity[] = ["low", "medium", "high", "critical"];
+  if (!VALID_SEVERITY.includes(data.severity)) throw new Error("Invalid severity");
+  const VALID_STATUS: CondStatus[] = ["open", "in_progress", "resolved"];
+  if (!VALID_STATUS.includes(data.status)) throw new Error("Invalid status");
   const orgId = await requireOrg();
   await requireOrgVehicle(orgId, vehicleId);
   await db.update(vehicleConditions).set({
@@ -103,31 +109,48 @@ export async function getAllResolvedConditions() {
 // Used by the Fleet Status Report PDF · returns all vehicles with their open conditions
 export async function getAllVehiclesWithConditions() {
   const orgId = await requireOrg();
-  const allVehicles = await db.select().from(vehicles).where(eq(vehicles.organizationId, orgId)).orderBy(vehicles.unitNumber);
-  const allConditions = await db
-    .select()
-    .from(vehicleConditions)
-    .where(eq(vehicleConditions.status, "open"))
-    .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity);
-
-  // Attach today's assigned driver name via dailyWorkAreaAssignments
   const today = new Date().toISOString().slice(0, 10);
-  const todayAssignments = await db
-    .select({ vehicleId: dailyWorkAreaAssignments.vehicleId, driverId: dailyWorkAreaAssignments.driverId })
-    .from(dailyWorkAreaAssignments)
-    .where(eq(dailyWorkAreaAssignments.date, today));
-  const driverRows = await db
-    .select({ driverId: drivers.driverId, name: drivers.name })
-    .from(drivers)
-    .where(eq(drivers.organizationId, orgId));
-  const driverNameById = new Map(driverRows.map((d) => [d.driverId, d.name]));
-  const driverByVehicle = new Map(
-    todayAssignments.filter((a) => a.vehicleId).map((a) => [a.vehicleId!, driverNameById.get(a.driverId) ?? null])
-  );
 
-  return allVehicles.map((v) => ({
-    ...v,
-    driverName:  driverByVehicle.get(v.id) ?? null,
-    conditions:  allConditions.filter((c) => c.vehicleId === v.id),
+  // Two parallel SQL JOIN queries instead of four sequential ones:
+  // 1. Vehicles LEFT JOIN assignments LEFT JOIN drivers — resolves driverName per vehicle
+  // 2. Open conditions (already filtered to org vehicles via the outer join result)
+  const [vehicleDriverRows, allConditions] = await Promise.all([
+    db
+      .select({
+        vehicle: vehicles,
+        driverName: drivers.name,
+      })
+      .from(vehicles)
+      .leftJoin(
+        dailyWorkAreaAssignments,
+        and(
+          eq(dailyWorkAreaAssignments.vehicleId, vehicles.id),
+          eq(dailyWorkAreaAssignments.date, today)
+        )
+      )
+      .leftJoin(drivers, eq(drivers.driverId, dailyWorkAreaAssignments.driverId))
+      .where(eq(vehicles.organizationId, orgId))
+      .orderBy(vehicles.unitNumber),
+    db
+      .select()
+      .from(vehicleConditions)
+      .leftJoin(vehicles, eq(vehicleConditions.vehicleId, vehicles.id))
+      .where(and(eq(vehicleConditions.status, "open"), eq(vehicles.organizationId, orgId)))
+      .orderBy(vehicleConditions.vehicleId, vehicleConditions.severity),
+  ]);
+
+  // Group conditions by vehicleId
+  const conditionsByVehicle = new Map<number, (typeof allConditions)[number]["vehicle_conditions"][]>();
+  for (const row of allConditions) {
+    const cond = row.vehicle_conditions;
+    const list = conditionsByVehicle.get(cond.vehicleId) ?? [];
+    list.push(cond);
+    conditionsByVehicle.set(cond.vehicleId, list);
+  }
+
+  return vehicleDriverRows.map((row) => ({
+    ...row.vehicle,
+    driverName: row.driverName ?? null,
+    conditions: conditionsByVehicle.get(row.vehicle.id) ?? [],
   }));
 }
