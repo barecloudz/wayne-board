@@ -46,13 +46,27 @@ const reportItems = [
   { icon: Map,        label: "Routes",  href: "/reports/routes",  exact: true },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner", co_owner: "Co-Owner", developer: "Developer", bc: "Business Contact", driver: "Driver",
+};
+
 export default function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const [userRole, setUserRole] = useState("driver");
+  const [userName, setUserName] = useState("");
+  const [userInitials, setUserInitials] = useState("?");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
-    fetch("/api/me").then(r => r.json()).then(d => { if (d.role) setUserRole(d.role); }).catch(() => {});
+    fetch("/api/me").then(r => r.json()).then(d => {
+      if (d.role) setUserRole(d.role);
+      if (d.avatarUrl) setUserAvatar(d.avatarUrl);
+      if (d.name) {
+        setUserName(d.name);
+        setUserInitials(d.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase());
+      }
+    }).catch(() => {});
   }, []);
   const automationActive = automationItems.some(i => pathname === i.href);
   const [autoOpen, setAutoOpen] = useState(automationActive);
@@ -192,12 +206,14 @@ export default function MobileDrawer() {
 
         {/* Bottom user strip */}
         <div className="p-4 border-t border-slate-100 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-bold text-slate-900">BN</span>
+          <div className="w-8 h-8 rounded-full bg-amber-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+            {userAvatar
+              ? <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
+              : <span className="text-[11px] font-bold text-amber-700">{userInitials}</span>}
           </div>
           <div className="flex flex-col leading-none min-w-0">
-            <span className="text-[12px] font-semibold text-slate-800 truncate">Blake Nardoni</span>
-            <span className="text-[11px] text-slate-400 mt-0.5">Operations Mgr</span>
+            <span className="text-[12px] font-semibold text-slate-800 truncate">{userName || "-"}</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</span>
           </div>
           <span className="ml-auto w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
         </div>
