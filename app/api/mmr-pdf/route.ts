@@ -304,9 +304,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Month out of range" }, { status: 400 });
   }
 
-  // Look up station
+  // Station: prefer query param (sent by client), fall back to hardcoded lookup
+  const stationParam = searchParams.get("station");
   const config = UNIT_CONFIGS.find((c) => c.unit === unit);
-  const station = config?.station ?? "";
+  const station = stationParam ?? config?.station ?? "";
 
   // Look up mileage
   const mileage = mileageOverride ?? getMileage(unit, month);

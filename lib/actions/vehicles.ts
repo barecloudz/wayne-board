@@ -80,8 +80,11 @@ export async function deleteVehicle(vehicleId: number) {
 }
 
 export async function getVehicles() {
-  const orgId = await requireOrg();
-  const locationId = await getActiveLocationId();
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  // Admin roles see all locations regardless of the location switcher
+  const locationId = session.role === "driver" ? await getActiveLocationId() : null;
   return db.select().from(vehicles).where(and(eq(vehicles.organizationId, orgId), locationId !== null ? eq(vehicles.locationId, locationId) : undefined)).orderBy(vehicles.unitNumber);
 }
 
@@ -146,4 +149,13 @@ export async function updateVehicleCompliance(
   const orgId = await requireOrg();
   await db.update(vehicles).set(data).where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
   revalidatePath("/dashboard/fleet-status");
+}
+
+export async function getActiveVehiclesForMmr(): Promise<Array<{ unitNumber: string; mileage: number }>> {
+  const orgId = await requireOrg();
+  const rows = await db
+    .select({ unitNumber: vehicles.unitNumber, mileage: vehicles.mileage })
+    .from(vehicles)
+    .where(and(eq(vehicles.organizationId, orgId), eq(vehicles.active, true)));
+  return rows.sort((a, b) => a.unitNumber.localeCompare(b.unitNumber));
 }

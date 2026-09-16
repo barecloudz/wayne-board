@@ -1,28 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Loader2, FileDown } from "lucide-react";
 
-const UNITS = [
-  "206127",
-  "206129",
-  "206543",
-  "473141",
-  "479036",
-  "479632",
-  "504191",
-  "532095",
-  "532096",
-  "537362",
-  "537366",
-  "537367",
-  "537369",
-  "537372",
-  "538564",
-  "538565",
-  "538566",
-];
-
+// Station lookup by FedEx unit number — update when vehicles get location assignments in DB
 const STATION_LOOKUP: Record<string, string> = {
   "206127": "0259",
   "206129": "0259",
@@ -43,25 +24,10 @@ const STATION_LOOKUP: Record<string, string> = {
   "538566": "0259",
 };
 
-const MILEAGE_LOOKUP: Record<string, string> = {
-  "206127-2026-07": "52,822",
-  "206129-2026-07": "62,681",
-  "206543-2026-07": "18,724",
-  "473141-2026-07": "69,992",
-  "479036-2026-07": "62,852",
-  "479632-2026-07": "103,310",
-  "504191-2026-07": "41,055",
-  "532095-2026-07": "43,028",
-  "532096-2026-07": "37,738",
-  "537362-2026-07": "22,507",
-  "537366-2026-07": "26,567",
-  "537367-2026-07": "20,294",
-  "537369-2026-07": "18,810",
-  "537372-2026-07": "18,713",
-  "538564-2026-07": "",
-  "538565-2026-07": "20,725",
-  "538566-2026-07": "18,908",
-};
+function formatMileage(n: number): string {
+  if (!n) return "";
+  return n.toLocaleString("en-US");
+}
 
 function getCurrentYearMonth(): string {
   const d = new Date();
@@ -70,34 +36,40 @@ function getCurrentYearMonth(): string {
   return `${y}-${m}`;
 }
 
-function getMileage(unit: string, month: string): string {
-  return MILEAGE_LOOKUP[`${unit}-${month}`] ?? "";
-}
-
 const INPUT =
   "w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
 
 const SELECT =
   "w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white appearance-none cursor-pointer";
 
-export default function MmrClient() {
-  const [unit, setUnit] = useState(UNITS[0]);
+export default function MmrClient({
+  vehicleList,
+}: {
+  vehicleList: { unitNumber: string; mileage: number }[];
+}) {
+  const firstUnit = vehicleList[0]?.unitNumber ?? "";
+  const [unit, setUnit] = useState(firstUnit);
   const [month, setMonth] = useState(getCurrentYearMonth());
-  const [mileage, setMileage] = useState(() => getMileage(UNITS[0], getCurrentYearMonth()));
+  const [mileage, setMileage] = useState(() => {
+    const v = vehicleList[0];
+    return v ? formatMileage(v.mileage) : "";
+  });
   const [loading, setLoading] = useState(false);
 
-  // Auto-populate mileage when unit or month changes
+  // Auto-populate mileage from DB when unit changes
   useEffect(() => {
-    setMileage(getMileage(unit, month));
-  }, [unit, month]);
+    const v = vehicleList.find((v) => v.unitNumber === unit);
+    setMileage(v ? formatMileage(v.mileage) : "");
+  }, [unit, vehicleList]);
 
   function handleGenerate() {
     setLoading(true);
+    const station = STATION_LOOKUP[unit] ?? "";
     const params = new URLSearchParams({ unit, month });
+    if (station) params.set("station", station);
     if (mileage) params.set("mileage", mileage);
     const url = `/api/mmr-pdf?${params.toString()}`;
     const win = window.open(url, "_blank");
-    // Reset loading after a short delay since we can't detect when the PDF loads in a new tab
     if (win) {
       setTimeout(() => setLoading(false), 2000);
     } else {
@@ -106,6 +78,14 @@ export default function MmrClient() {
   }
 
   const station = STATION_LOOKUP[unit] ?? "";
+
+  if (vehicleList.length === 0) {
+    return (
+      <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto">
+        <p className="text-[14px] text-slate-500">No active vehicles found. Add vehicles in Fleet settings.</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto">
@@ -138,9 +118,9 @@ export default function MmrClient() {
                 onChange={(e) => setUnit(e.target.value)}
                 className={SELECT}
               >
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
+                {vehicleList.map((v) => (
+                  <option key={v.unitNumber} value={v.unitNumber}>
+                    {v.unitNumber}
                   </option>
                 ))}
               </select>
@@ -181,7 +161,7 @@ export default function MmrClient() {
               className={INPUT}
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              Auto-filled from lookup. Edit to override, or leave blank.
+              Auto-filled from vehicle profile. Edit to override, or leave blank.
             </p>
           </div>
 

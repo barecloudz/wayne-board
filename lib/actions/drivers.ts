@@ -32,8 +32,11 @@ export async function isDriverIdTaken(driverId: string) {
 }
 
 export async function getDrivers() {
-  const orgId = await requireOrg();
-  const locationId = await getActiveLocationId();
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  // Non-driver admin roles (owner, co_owner, bc, developer) always see all locations
+  const locationId = session.role === "driver" ? await getActiveLocationId() : null;
   return db.select({
     id:                drivers.id,
     driverId:          drivers.driverId,

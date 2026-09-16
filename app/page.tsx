@@ -120,8 +120,7 @@ export default function HomePage() {
           borderBottom: "1px solid #E5E7EB",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-full.png" alt="MyGroundOps" width={160} height={40} className="object-contain" />
+        <Image src="/logo-full.png" alt="MyGroundOps" width={160} height={40} className="object-contain" priority />
         <div className="flex items-center gap-2">
           <Link
             href="/sign-in"
@@ -139,6 +138,9 @@ export default function HomePage() {
           </Link>
         </div>
       </nav>
+
+      {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
+      <main>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section className="px-6 md:px-12 pt-16 pb-0 max-w-6xl mx-auto w-full">
@@ -197,13 +199,13 @@ export default function HomePage() {
                   borderRight:  "none",
                 }}
               >
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#9CA3AF" }}>
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#6B7280" }}>
                   {m.label}
                 </span>
                 <span className="text-[26px] md:text-[28px] font-black leading-none tabular-nums" style={{ color: "#0A1A0E" }}>
                   {m.value}
                 </span>
-                <span className="text-[11px]" style={{ color: "#9CA3AF" }}>{m.sub}</span>
+                <span className="text-[11px]" style={{ color: "#6B7280" }}>{m.sub}</span>
               </div>
             ))}
           </div>
@@ -334,7 +336,7 @@ export default function HomePage() {
                   {plan.period && (
                     <span
                       className="text-[14px] mb-1"
-                      style={{ color: plan.highlight ? "#6EE7B7" : "#9CA3AF" }}
+                      style={{ color: plan.highlight ? "#6EE7B7" : "#6B7280" }}
                     >
                       {plan.period}
                     </span>
@@ -408,14 +410,15 @@ export default function HomePage() {
         </div>
       </section>
 
+      </main>
+
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
       <footer
         className="px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px]"
-        style={{ background: "#FAFBF8", borderTop: "1px solid #E5E7EB", color: "#9CA3AF" }}
+        style={{ background: "#FAFBF8", borderTop: "1px solid #E5E7EB", color: "#6B7280" }}
       >
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-full.png" alt="MyGroundOps" width={130} height={34} className="object-contain" />
+          <Image src="/logo-full.png" alt="MyGroundOps" width={130} height={34} className="object-contain" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-5">
           <Link href="/sign-in" className="hover:text-slate-600 transition-colors">Driver Login</Link>

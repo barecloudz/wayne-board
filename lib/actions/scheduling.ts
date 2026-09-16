@@ -21,8 +21,8 @@ export async function getAllSchedules() {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   const orgId = session.organizationId;
-  // BC role sees all locations regardless of the location switcher
-  const locationId = session.role === "bc" ? null : await getActiveLocationId();
+  // Admin roles (owner, co_owner, bc, developer) see all locations regardless of the location switcher
+  const locationId = session.role === "driver" ? await getActiveLocationId() : null;
   const rows = await db
     .select({
       id:                drivers.id,

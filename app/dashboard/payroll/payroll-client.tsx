@@ -347,6 +347,8 @@ export default function PayrollClient({
           .flex.h-screen { height: auto !important; overflow: visible !important; }
           .overflow-y-auto { overflow: visible !important; height: auto !important; }
           aside { display: none !important; }
+          /* Force background colors on code breakdown badges */
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
     </main>
@@ -475,14 +477,24 @@ function PayrollTable({
                         if (impact > 0) tipParts.push(`${impact} impact pkg${impact !== 1 ? "s" : ""}`);
                         if (ghost > 0)  tipParts.push(`${ghost} never scanned`);
                         if (dsw.codeBreakdown) tipParts.push(Object.entries(dsw.codeBreakdown).map(([k, v]) => `${v}×${k}`).join(", "));
+                        const breakdown = dsw.codeBreakdown ? Object.entries(dsw.codeBreakdown) : [];
                         return (
-                          <td key={dateStr} className="px-2 py-1 text-center" title={tipParts.join(" · ")}>
+                          <td key={dateStr} className="px-2 py-1 text-center">
                             <div className="flex flex-col items-center gap-0.5">
                               <span className={`text-[10px] font-bold ${color}`}>{dsw.ilsPct}%</span>
                               {impact > 0 && (
                                 <span className="text-[8px] font-bold text-red-400 leading-none">
-                                  {impact}pkg{ghost > 0 ? ` (${ghost}👻)` : ""}
+                                  {impact}pkg{ghost > 0 ? ` +${ghost}👻` : ""}
                                 </span>
+                              )}
+                              {breakdown.length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-0.5 mt-0.5">
+                                  {breakdown.map(([code, count]) => (
+                                    <span key={code} className="text-[8px] font-black text-red-500 bg-red-50 border border-red-200 rounded px-0.5 leading-tight">
+                                      {count}×{code}
+                                    </span>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           </td>
