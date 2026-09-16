@@ -193,9 +193,7 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     const isActive = driverRecord ? driverRecord.active : false;
     const schedule = scheduleMap.get(driverId);
     const createdDateStr = driverRecord?.createdAt
-      ? (typeof driverRecord.createdAt === "string"
-          ? driverRecord.createdAt.slice(0, 10)
-          : (driverRecord.createdAt as Date).toISOString().slice(0, 10))
+      ? (driverRecord.createdAt as Date).toISOString().slice(0, 10)
       : null;
     if (isActive && schedule) {
       for (let i = 0; i < 7; i++) {
@@ -349,7 +347,7 @@ export async function getPayrollCardSummary(): Promise<PayrollCardSummary> {
     const schedule = scheduleMap.get(driverId);
     if (!schedule) continue;
     const createdDateStr = createdAt
-      ? (typeof createdAt === "string" ? createdAt.slice(0, 10) : (createdAt as Date).toISOString().slice(0, 10))
+      ? (createdAt as Date).toISOString().slice(0, 10)
       : null;
     if (!attendanceByDriver.has(driverId)) attendanceByDriver.set(driverId, new Map());
     const driverAttendance = attendanceByDriver.get(driverId)!;
