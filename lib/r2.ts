@@ -1,4 +1,4 @@
-﻿import { S3Client } from "@aws-sdk/client-s3";
+﻿import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import https from "https";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
@@ -17,3 +17,21 @@ export const r2 = new S3Client({
 
 export const R2_BUCKET = process.env.R2_BUCKET_NAME!;
 export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;
+
+export async function uploadToR2(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<string> {
+  await r2.send(new PutObjectCommand({
+    Bucket: R2_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  }));
+  return `${R2_PUBLIC_URL}/${key}`;
+}
+
+export async function deleteFromR2(key: string): Promise<void> {
+  await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+}
