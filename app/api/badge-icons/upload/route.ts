@@ -11,6 +11,7 @@ const MAX_BYTES = 512 * 1024;
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.role === "driver") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const formData = await req.formData();
   const file        = formData.get("file") as File | null;

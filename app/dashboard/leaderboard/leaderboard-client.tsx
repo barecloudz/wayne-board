@@ -89,7 +89,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   const [tab, setTab] = useState<"award" | "setup" | "history">("award");
 
   const [badgeTypes, setBadgeTypes] = useState(initialBadgeTypes);
-  const [history]                   = useState(initialHistory);
+  const history = initialHistory;
 
   // suppress unused warning — setBadgeTypes used indirectly via router.refresh()
   void setBadgeTypes;
