@@ -1,10 +1,11 @@
 ﻿"use client";
 
 import { useState, useEffect, useTransition, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User,
 } from "lucide-react";
 import {
   getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
@@ -28,6 +29,7 @@ type Driver = {
   terminatedAt: Date | null;
   locationId: number | null;
   allLocations: boolean;
+  avatarUrl: string | null;
 };
 
 const INPUT_CLS = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
@@ -52,6 +54,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default function DriversPage() {
+  const router = useRouter();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -88,6 +91,8 @@ export default function DriversPage() {
   const [orgLocations, setOrgLocations] = useState<Array<{ id: number; name: string; terminalId: string | null }>>([]);
   const [assignedDriverIds, setAssignedDriverIds] = useState<Set<string>>(new Set());
   const [showTerminated, setShowTerminated] = useState(false);
+  const [profileTarget, setProfileTarget] = useState<Driver | null>(null);
+  const [removingAvatar, setRemovingAvatar] = useState(false);
 
   async function refresh() {
     const [driverData, assignedIds] = await Promise.all([getDrivers(), getAssignedDriverIds()]);
@@ -283,6 +288,28 @@ export default function DriversPage() {
     navigator.clipboard.writeText(text);
     setCopied(key);
     setTimeout(() => setCopied(null), 2000);
+  }
+
+  function openProfileModal(driver: Driver) {
+    setProfileTarget(driver);
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  async function handleRemoveAvatar() {
+    if (!profileTarget) return;
+    setRemovingAvatar(true);
+    try {
+      await fetch("/api/avatar/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ driverId: profileTarget.driverId }),
+      });
+      setProfileTarget(null);
+      router.refresh();
+    } finally {
+      setRemovingAvatar(false);
+    }
   }
 
   const active   = drivers.filter((d) => !d.loginDisabled).length;
@@ -570,6 +597,13 @@ export default function DriversPage() {
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />Change Username
+                </button>
+                <button
+                  onClick={() => openProfileModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <User className="w-3.5 h-3.5 text-slate-400" />View Profile
                 </button>
                 <button
                   onClick={() => openLocationModal(driver)}
@@ -1023,6 +1057,77 @@ export default function DriversPage() {
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Driver Profile Modal */}
+      {profileTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Driver Profile</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                {profileTarget.name} · {profileTarget.driverId}
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              {/* Avatar Display */}
+              <div className="mb-5 flex justify-center">
+                <div className="w-24 h-24 rounded-2xl bg-amber-100 border border-slate-200 overflow-hidden flex items-center justify-center">
+                  {profileTarget.avatarUrl ? (
+                    <img src={profileTarget.avatarUrl} alt={profileTarget.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-10 h-10 text-amber-400" />
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Info */}
+              <div className="space-y-3 mb-5">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Name</p>
+                  <p className="text-[13px] font-semibold text-slate-800">{profileTarget.name}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Driver ID</p>
+                  <p className="text-[13px] font-mono text-slate-800">{profileTarget.driverId}</p>
+                </div>
+                {profileTarget.username && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Username</p>
+                    <p className="text-[13px] text-slate-800">@{profileTarget.username}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Role</p>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border inline-block ${ROLE_COLORS[profileTarget.role] ?? ROLE_COLORS.driver}`}>
+                    {ROLE_LABELS[profileTarget.role] ?? profileTarget.role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Remove Image Button */}
+              {profileTarget.avatarUrl && (
+                <button
+                  onClick={handleRemoveAvatar}
+                  disabled={removingAvatar}
+                  className="w-full text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 px-3 py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                >
+                  {removingAvatar && <Loader2 className="w-3 h-3 animate-spin" />}
+                  Remove Image
+                </button>
+              )}
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setProfileTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
