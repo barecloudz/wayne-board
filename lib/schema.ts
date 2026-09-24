@@ -2,6 +2,7 @@
   pgTable, serial, text, real, integer,
   timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex, index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ── Organizations (one row per contractor / ISP) ──────────────────────────────
 export const organizations = pgTable("organizations", {
@@ -620,3 +621,32 @@ export const prospects = pgTable("prospects", {
   createdAt:             timestamp("created_at").defaultNow(),
   updatedAt:             timestamp("updated_at").defaultNow(),
 });
+
+// ── Badge Types ──────────────────────────────────────────────────────────────
+export const badgeTypes = pgTable("badgeTypes", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organizationId").notNull().references(() => organizations.id),
+  rank:           integer("rank"),                       // 1,2,3 for weekly; null for special
+  name:           text("name").notNull(),
+  iconUrl:        text("iconUrl"),                       // null = default trophy SVG
+  shine:          boolean("shine").notNull().default(false),
+  category:       text("category").notNull(),            // "weekly" | "special"
+  createdAt:      timestamp("createdAt").notNull().defaultNow(),
+}, (t) => ({
+  orgRankUniq: uniqueIndex("badgeTypes_orgId_rank_uniq")
+    .on(t.organizationId, t.rank)
+    .where(sql`${t.rank} IS NOT NULL`),
+}));
+
+// ── Driver Badges (award log, never deleted) ─────────────────────────────────
+export const driverBadges = pgTable("driverBadges", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organizationId").notNull().references(() => organizations.id),
+  driverId:       text("driverId").notNull().references(() => drivers.driverId),
+  badgeTypeId:    integer("badgeTypeId").notNull().references(() => badgeTypes.id),
+  weekStart:      date("weekStart").notNull(),
+  awardedAt:      timestamp("awardedAt").notNull().defaultNow(),
+}, (t) => ({
+  orgBadgeWeekUniq: uniqueIndex("driverBadges_org_badgeType_week_uniq")
+    .on(t.organizationId, t.badgeTypeId, t.weekStart),
+}));
