@@ -25,6 +25,7 @@ const adminItems = [
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
+  { icon: Trophy,        label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
   { icon: UserSearch,   label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
   { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
