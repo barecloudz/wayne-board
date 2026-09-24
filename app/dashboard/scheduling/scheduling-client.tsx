@@ -474,7 +474,7 @@ export default function SchedulingClient({
       )}
       {tab === "history" && (
         <p className="text-[13px] text-slate-400 mb-6">
-          Pick any past date to see who was working, who was cut, who called out, and who had time off.
+          Pick any past date to see who was working, who was cut, who called out, and who had time off. Click any name in <span className="text-emerald-600 font-semibold">Working</span> to correct their attendance.
         </p>
       )}
 
@@ -1409,8 +1409,9 @@ export default function SchedulingClient({
           }
         }
 
-        const Section = ({ title, color, items, emptyText }: {
+        const Section = ({ title, color, items, emptyText, onClickItem }: {
           title: string; color: string; items: { name: string; driverId: string; note?: string | null }[]; emptyText: string;
+          onClickItem?: (driverId: string) => void;
         }) => (
           <div>
             <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${color}`}>{title} <span className="text-slate-400 font-normal">({items.length})</span></p>
@@ -1419,7 +1420,16 @@ export default function SchedulingClient({
               : <div className="flex flex-col gap-1">
                   {items.map((item) => (
                     <div key={item.driverId} className="flex items-center gap-2">
-                      <span className="text-[13px] font-semibold text-slate-800">{item.name}</span>
+                      {onClickItem ? (
+                        <button
+                          onClick={() => onClickItem(item.driverId)}
+                          className="text-[13px] font-semibold text-slate-800 hover:text-slate-500 hover:underline text-left transition-colors"
+                        >
+                          {item.name}
+                        </button>
+                      ) : (
+                        <span className="text-[13px] font-semibold text-slate-800">{item.name}</span>
+                      )}
                       {item.note && <span className="text-[11px] text-slate-400 italic">{item.note}</span>}
                     </div>
                   ))}
@@ -1452,6 +1462,10 @@ export default function SchedulingClient({
                   bg: "bg-emerald-50 border-emerald-200/60",
                   items: working.map((d) => ({ name: d.name, driverId: d.driverId })),
                   emptyText: "No drivers scheduled",
+                  onClickItem: (driverId: string) => {
+                    const driver = working.find((d) => d.driverId === driverId);
+                    if (driver) openCoverageModal(driver, historyDate);
+                  },
                 },
                 {
                   title: "Holiday", color: "text-violet-600",
@@ -1477,9 +1491,9 @@ export default function SchedulingClient({
                   items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" · ") })),
                   emptyText: "No time off",
                 },
-              ].map(({ title, color, bg, items, emptyText }) => (
+              ].map(({ title, color, bg, items, emptyText, onClickItem }) => (
                 <div key={title} className={`rounded-2xl border p-5 ${bg}`}>
-                  <Section title={title} color={color} items={items} emptyText={emptyText} />
+                  <Section title={title} color={color} items={items} emptyText={emptyText} onClickItem={onClickItem} />
                 </div>
               ))}
             </div>

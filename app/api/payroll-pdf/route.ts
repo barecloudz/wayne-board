@@ -93,6 +93,7 @@ function statusCell(status: AttendanceStatus | undefined): string {
 }
 
 function dayCellBg(status: AttendanceStatus | undefined): string {
+  if (status === "work")     return " bg-green-cell";
   if (status === "call_out") return " bg-out";
   if (status === "half_day") return " bg-half";
   if (status === "cut")      return " bg-cut";
@@ -130,7 +131,7 @@ function buildDriverRows(
     let rows = `
       <tr class="driver-row${dimClass}">
         <td class="td-name">
-          ${driver.name}
+          ${driver.name}${driver.isTrainee ? ' <span class="trainee-label">Trainee</span>' : ""}
           ${showDeduction ? `<div class="deduction">&minus;$${deductionAmount} &middot; No Notice</div>` : ""}
           ${driver.terminationNote ? `<div class="term-note">${driver.terminationNote}</div>` : ""}
         </td>
@@ -237,6 +238,7 @@ function generateHTML(data: {
   .bg-hol  { background: #faf5ff !important; }
   .bg-t    { background: #eff6ff !important; }
   .trainee-total { color: #3b82f6; font-weight: 800; }
+  .trainee-label { display: inline-block; font-size: 7px; font-weight: 800; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; vertical-align: middle; margin-left: 3px; }
   .dsw-cell   { display: flex; flex-direction: column; align-items: center; gap: 1px; }
   .dsw-green  { font-size: 8.5px; font-weight: 800; color: #16a34a; }
   .dsw-amber  { font-size: 8.5px; font-weight: 800; color: #d97706; }

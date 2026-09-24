@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { drivers, rydeScores, rydeReviews, driverMilestoneClaims, driverLocations } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { getSession, createSession } from "@/lib/session";
 import { getActiveLocationId } from "@/lib/active-location";
@@ -249,6 +250,16 @@ export async function changeMyUsername(driverId: string, newUsername: string) {
     }
     throw err;
   }
+}
+
+export async function setDriverTrainee(driverId: string, isTrainee: boolean): Promise<void> {
+  const orgId = await requireOrg();
+  await db
+    .update(drivers)
+    .set({ isTrainee })
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/payroll");
+  revalidatePath("/dashboard/scheduling");
 }
 
 export async function clearPasswordForceChange() {

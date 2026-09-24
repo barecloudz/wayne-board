@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Printer, Settings, Upload } from "lucide-rea
 import type { PayrollWeekData, PayrollDriverRow, AttendanceStatus } from "@/lib/actions/attendance";
 import type { DswDayRow } from "@/lib/actions/dsw-data";
 import PayWeekModal from "./pay-week-modal";
+import PayrollEditModal, { type PayrollEditTarget } from "./payroll-edit-modal";
 import { useLocationContext } from "@/components/location-context";
 
 const DAY_ABBREVS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -119,6 +120,7 @@ export default function PayrollClient({
   const router = useRouter();
   const { locations, selectedLocationIds, allSelected } = useLocationContext();
   const [showPayWeekModal, setShowPayWeekModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<PayrollEditTarget | null>(null);
   const weekDates = getWeekDates(weekData.weekStart);
   const weekLabel = `${formatShortDate(weekData.weekStart)} – ${formatShortDate(weekData.weekEnd)}`;
 
@@ -206,6 +208,14 @@ export default function PayrollClient({
 
       {showPayWeekModal && (
         <PayWeekModal initialDay={payWeekStart} onClose={() => setShowPayWeekModal(false)} />
+      )}
+
+      {editTarget && (
+        <PayrollEditModal
+          target={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSaved={() => { setEditTarget(null); router.refresh(); }}
+        />
       )}
 
       {/* ── Week nav ── */}
@@ -299,6 +309,7 @@ export default function PayrollClient({
             weekDates={weekDates}
             dswByDriverDate={dswByDriverDate}
             deductionAmount={weekData.deductionAmount}
+            onCellClick={setEditTarget}
           />
           {terminatedDrivers.length > 0 && (
             <>
@@ -308,6 +319,7 @@ export default function PayrollClient({
                 weekDates={weekDates}
                 dswByDriverDate={dswByDriverDate}
                 deductionAmount={weekData.deductionAmount}
+                onCellClick={setEditTarget}
                 dimmed
               />
             </>
@@ -363,12 +375,14 @@ function PayrollTable({
   dswByDriverDate,
   deductionAmount,
   dimmed = false,
+  onCellClick,
 }: {
   drivers: PayrollDriverRow[];
   weekDates: string[];
   dswByDriverDate: Map<string, Map<string, DswDayRow>>;
   deductionAmount: number;
   dimmed?: boolean;
+  onCellClick?: (target: import("./payroll-edit-modal").PayrollEditTarget) => void;
 }) {
   if (drivers.length === 0) return null;
 
@@ -426,7 +440,19 @@ function PayrollTable({
                         : status === "trainee" ? "bg-sky-50/60"
                         : "";
                       return (
-                        <td key={dateStr} className={`px-2 py-3 text-center ${bg}`}>
+                        <td
+                          key={dateStr}
+                          className={`px-2 py-3 text-center ${bg} ${onCellClick ? "cursor-pointer hover:ring-2 hover:ring-inset hover:ring-slate-300 hover:bg-slate-50/80 transition-all" : ""}`}
+                          onClick={() => onCellClick?.({
+                            driverId: driver.driverId,
+                            driverName: driver.name,
+                            date: dateStr,
+                            currentStatus: status,
+                            currentNote: driver.notes[dateStr],
+                            isInferred: driver.inferredDates.includes(dateStr),
+                            isDriverTrainee: driver.isTrainee,
+                          })}
+                        >
                           <StatusCell status={status} note={driver.notes[dateStr]} />
                         </td>
                       );

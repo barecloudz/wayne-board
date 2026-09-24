@@ -101,11 +101,13 @@ export type PayrollDriverRow = {
   driverId: string;
   name: string;
   isTerminated: boolean;
+  isTrainee: boolean;
   terminationType: string | null;
   terminationNote: string | null;
   terminatedAt: Date | null;
   attendance: Record<string, AttendanceStatus>;
   notes: Record<string, string | null>;
+  inferredDates: string[];
   allLocations: boolean;
   locationId: number | null;
 };
@@ -151,6 +153,7 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       driverId:        drivers.driverId,
       name:            drivers.name,
       active:          drivers.active,
+      isTrainee:       drivers.isTrainee,
       terminationType: drivers.terminationType,
       terminationNote: drivers.terminationNote,
       terminatedAt:    drivers.terminatedAt,
@@ -195,6 +198,7 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
     const createdDateStr = driverRecord?.createdAt
       ? (driverRecord.createdAt as Date).toISOString().slice(0, 10)
       : null;
+    const inferredDates: string[] = [];
     if (isActive && schedule) {
       for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart + "T00:00:00");
@@ -204,7 +208,8 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
         if (createdDateStr && dateStr < createdDateStr) continue; // before account existed
         const key = getScheduleKey(dateStr);
         if (schedule[key]) {
-          attendanceByDate[dateStr] = "work";
+          attendanceByDate[dateStr] = driverRecord?.isTrainee ? "trainee" : "work";
+          inferredDates.push(dateStr);
           // no note for inferred work days
         }
       }
@@ -219,11 +224,13 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       driverId,
       name,
       isTerminated: driverRecord ? !driverRecord.active : true,
+      isTrainee:    driverRecord?.isTrainee ?? false,
       terminationType: driverRecord?.terminationType ?? null,
       terminationNote: driverRecord?.terminationNote ?? null,
       terminatedAt:    driverRecord?.terminatedAt ?? null,
       attendance:      attendanceByDate,
       notes:           notesByDate,
+      inferredDates,
       allLocations:    driverRecord?.allLocations ?? false,
       locationId:      driverRecord?.locationId ?? null,
     });
@@ -235,6 +242,23 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
   });
 
   return { weekStart, weekEnd, drivers: payrollDrivers, deductionAmount };
+}
+
+// ── Delete a single attendance record (revert to schedule inference) ──────────
+
+export async function deleteAttendance(driverId: string, date: string): Promise<void> {
+  const orgId = await requireOrg();
+  await db
+    .delete(attendanceLog)
+    .where(
+      and(
+        eq(attendanceLog.organizationId, orgId),
+        eq(attendanceLog.driverId, driverId),
+        eq(attendanceLog.date, date),
+      )
+    );
+  revalidatePath("/dashboard/scheduling");
+  revalidatePath("/dashboard/payroll");
 }
 
 // ── Mark all drivers on a day as Holiday ─────────────────────────────────────
