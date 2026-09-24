@@ -1,8 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Trophy, MessageSquare, BarChart2 } from "lucide-react";
+import { Star, Trophy, MessageSquare, BarChart2, X } from "lucide-react";
 import ServiceTab, { type DswRow } from "./service-tab";
+import { getDriverBadges } from "@/lib/actions/badges";
+import type { DriverBadgeRow } from "@/lib/actions/badges";
+
+// ── Shine CSS ─────────────────────────────────────────────────────────────────
+const shineStyle = `
+  @keyframes shine-sweep {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .badge-shine {
+    position: relative;
+    display: inline-block;
+  }
+  .badge-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,215,0,0.55) 50%, transparent 60%);
+    background-size: 200% 100%;
+    animation: shine-sweep 2s linear infinite;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+`;
 
 export type ScorePanelProps = {
   rydeAvg: number | null;
@@ -25,6 +49,9 @@ export type ScorePanelProps = {
   myDswHistory: DswRow[];
   showDsw: boolean;
   accent?: string;
+  myBadges?: DriverBadgeRow[];
+  badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
+  driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
 };
 
 type ScoreSection = "score" | "leaderboard" | "reviews" | "service";
@@ -49,19 +76,46 @@ export default function ScorePanel({
   myDswHistory,
   showDsw,
   accent = "#FF6200",
+  myBadges = [],
+  badgeCounts = [],
+  driverAvatarMap = {},
 }: ScorePanelProps) {
   const [section, setSection] = useState<ScoreSection>("score");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
+  const [showAllBadges, setShowAllBadges] = useState(false);
+
+  // Badge popover state
+  const [popoverDriver, setPopoverDriver] = useState<string | null>(null);
+  const [popoverDriverName, setPopoverDriverName] = useState<string>("");
+  const [popoverBadges, setPopoverBadges] = useState<DriverBadgeRow[]>([]);
+  const [popoverLoading, setPopoverLoading] = useState(false);
+
+  async function openBadgePopover(driverId: string, driverName: string) {
+    setPopoverDriver(driverId);
+    setPopoverDriverName(driverName);
+    setPopoverBadges([]);
+    setPopoverLoading(true);
+    try {
+      const badges = await getDriverBadges(driverId);
+      setPopoverBadges(badges);
+    } catch {
+      setPopoverBadges([]);
+    } finally {
+      setPopoverLoading(false);
+    }
+  }
 
   const filteredReviews =
     ratingFilter === "All"
       ? reviews
       : reviews.filter((r) => r.rating === parseInt(ratingFilter));
 
-  const myLeaderboardEntry = leaderboard.find((e) => e.driverId === currentDriverId);
+  const badgeCountMap = new Map(badgeCounts.map((b) => [b.driverId, b.badgeCount]));
 
   return (
     <div className="flex flex-col">
+      <style>{shineStyle}</style>
+
       {/* Sub-nav pills */}
       <div className="flex gap-2 px-4 pt-4 pb-3 overflow-x-auto no-scrollbar">
         {SCORE_SECTIONS.filter(
@@ -86,6 +140,36 @@ export default function ScorePanel({
       {/* Score section */}
       {section === "score" && (
         <div className="px-4 pb-6 flex flex-col gap-4">
+          {/* Badge shelf */}
+          {myBadges.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Your Badges</p>
+              <div className="flex gap-3 flex-wrap">
+                {(showAllBadges ? myBadges : myBadges.slice(0, 8)).map((b) => (
+                  <div key={b.id} className="flex flex-col items-center gap-1">
+                    <span className={b.shine ? "badge-shine" : ""} style={{ display: "inline-block" }}>
+                      {b.iconUrl
+                        ? <img src={b.iconUrl} alt={b.badgeName} className="w-8 h-8 object-contain" />
+                        : <Trophy className="w-7 h-7 text-amber-500" />
+                      }
+                    </span>
+                    <span className="text-[9px] text-slate-400 text-center max-w-[52px] leading-tight">
+                      {b.weekStart.slice(0, 7)}
+                    </span>
+                  </div>
+                ))}
+                {myBadges.length > 8 && (
+                  <button
+                    onClick={() => setShowAllBadges((v) => !v)}
+                    className="text-xs text-slate-400 hover:text-slate-700 self-center transition-colors"
+                  >
+                    {showAllBadges ? "Show less" : `+${myBadges.length - 8} more`}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {rydeAvg !== null ? (
             <div className="bg-white rounded-2xl border border-slate-200/80 p-6 flex flex-col items-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
               {/* Score ring */}
@@ -141,6 +225,10 @@ export default function ScorePanel({
           ) : (
             leaderboard.map((entry, idx) => {
               const isMe = entry.driverId === currentDriverId;
+              const badgeCount = badgeCountMap.get(entry.driverId) ?? 0;
+              const driverInfo = driverAvatarMap[entry.driverId];
+              const avatarUrl = driverInfo?.avatarUrl ?? null;
+              const displayName = entry.name;
               return (
                 <div
                   key={entry.driverId}
@@ -158,16 +246,40 @@ export default function ScorePanel({
                   >
                     {idx + 1}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-[14px] font-bold truncate ${isMe ? "text-white" : "text-slate-800"}`}>
-                      {entry.name}
-                      {isMe && (
-                        <span className="ml-2 text-[11px] font-semibold opacity-80">You</span>
-                      )}
-                    </p>
-                    <p className={`text-[12px] ${isMe ? "text-white/70" : "text-slate-400"}`}>
-                      {entry.reviewCount} {entry.reviewCount === 1 ? "review" : "reviews"}
-                    </p>
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    {/* Circular avatar or initials */}
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 flex-shrink-0 flex items-center justify-center">
+                      {avatarUrl
+                        ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                        : <span className={`text-xs font-bold ${isMe ? "text-white/80" : "text-slate-500"}`}
+                            style={isMe ? { color: "var(--brand)" } : {}}
+                          >
+                            {displayName?.[0]?.toUpperCase() ?? "?"}
+                          </span>
+                      }
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className={`text-[14px] font-bold truncate ${isMe ? "text-white" : "text-slate-800"}`}>
+                          {displayName}
+                          {isMe && (
+                            <span className="ml-2 text-[11px] font-semibold opacity-80">You</span>
+                          )}
+                        </p>
+                        {/* Badge count chip */}
+                        {badgeCount > 0 && (
+                          <button
+                            onClick={() => openBadgePopover(entry.driverId, displayName)}
+                            className="flex items-center gap-0.5 bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[11px] font-bold hover:bg-amber-200 transition-colors shrink-0"
+                          >
+                            🏆 ×{badgeCount}
+                          </button>
+                        )}
+                      </div>
+                      <p className={`text-[12px] ${isMe ? "text-white/70" : "text-slate-400"}`}>
+                        {entry.reviewCount} {entry.reviewCount === 1 ? "review" : "reviews"}
+                      </p>
+                    </div>
                   </div>
                   <span className={`text-[16px] font-extrabold shrink-0 ${isMe ? "text-white" : "text-slate-900"}`}>
                     {entry.avg.toFixed(1)}
@@ -239,6 +351,51 @@ export default function ScorePanel({
       {section === "service" && showDsw && (
         <div className="px-4 pb-6">
           <ServiceTab rows={serviceRows} myDriverId={currentDriverId} myHistory={myDswHistory} accent={accent} />
+        </div>
+      )}
+
+      {/* Badge history popover */}
+      {popoverDriver && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30"
+          onClick={() => setPopoverDriver(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5 flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <p className="font-bold text-slate-800">
+                {popoverDriverName ? `${popoverDriverName} — Badges` : "Badge History"}
+              </p>
+              <button
+                onClick={() => setPopoverDriver(null)}
+                className="text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {popoverLoading ? (
+              <p className="text-sm text-slate-400">Loading…</p>
+            ) : popoverBadges.length === 0 ? (
+              <p className="text-sm text-slate-400">No badges yet.</p>
+            ) : (
+              popoverBadges.map((b) => (
+                <div key={b.id} className="flex items-center gap-3">
+                  <span className={b.shine ? "badge-shine" : ""} style={{ display: "inline-block" }}>
+                    {b.iconUrl
+                      ? <img src={b.iconUrl} alt={b.badgeName} className="w-7 h-7 object-contain" />
+                      : <Trophy className="w-6 h-6 text-amber-500" />
+                    }
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700">{b.badgeName}</p>
+                    <p className="text-xs text-slate-400">{b.weekStart}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

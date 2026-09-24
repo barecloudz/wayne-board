@@ -26,6 +26,8 @@ import { eq, desc, and, gte } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
 import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
+import { getDriverBadges, getDriverBadgeCounts } from "@/lib/actions/badges";
+import { getDrivers } from "@/lib/actions/drivers";
 import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes, getGateAreas } from "@/lib/actions/gate-codes";
 import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
@@ -65,7 +67,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow]] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers] = await Promise.all([
     db.select().from(rydeReviews).where(and(eq(rydeReviews.driverId, session.driverId), eq(rydeReviews.organizationId, session.organizationId))).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -93,6 +95,9 @@ export default async function DriverDashboard() {
         .catch(() => []);
     })(),
     db.select({ name: organizations.name, logoUrl: organizations.logoUrl, accentColor: organizations.accentColor, slug: organizations.slug }).from(organizations).where(eq(organizations.id, session.organizationId)).limit(1),
+    getDriverBadges(session.driverId),
+    getDriverBadgeCounts(),
+    getDrivers(),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -245,6 +250,9 @@ export default async function DriverDashboard() {
           accentColor={orgRow?.accentColor ?? "#FF6200"}
           currentUsername={driverRow?.username ?? null}
           mustChangePassword={session.mustChangePassword ?? false}
+          myBadges={myBadges}
+          badgeCounts={badgeCounts}
+          driverAvatarMap={Object.fromEntries(allDrivers.map(d => [d.driverId, { name: d.name, avatarUrl: d.avatarUrl ?? null }]))}
         />
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
 import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
+import type { DriverBadgeRow } from "@/lib/actions/badges";
 import type { DswRow } from "./service-tab";
 import HomeTab from "./home-tab";
 import ScorePanel from "./score-panel";
@@ -31,7 +32,7 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {},
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -59,6 +60,9 @@ export default function DriverTabs({
   accentColor?: string;
   currentUsername?: string | null;
   mustChangePassword?: boolean;
+  myBadges?: DriverBadgeRow[];
+  badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
+  driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
 }) {
   const [tab, setTab] = useState<DriverTab>("home");
 
@@ -486,6 +490,9 @@ export default function DriverTabs({
             myDswHistory={myDswHistory}
             showDsw={showDsw}
             accent={accentColor}
+            myBadges={myBadges}
+            badgeCounts={badgeCounts}
+            driverAvatarMap={driverAvatarMap}
           />
         )}
 
