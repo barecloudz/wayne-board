@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Trophy, Gift, Wrench, User, ChevronRight, CheckCircle2, Lock } from "lucide-react";
+import { useState, useRef } from "react";
+import { Trophy, Gift, Wrench, User, ChevronRight, CheckCircle2, Lock, Camera, Loader2 } from "lucide-react";
 import MaintenanceTab from "./maintenance-tab";
 
 export type MePanelProps = {
@@ -29,6 +29,7 @@ export type MePanelProps = {
   driverId: string;
   vehicles: Array<{ id: number; unitNumber: string }>;
   maintenanceRequests: any[];
+  avatarUrl?: string | null;
 };
 
 type MeSection = "milestones" | "maintenance" | "account";
@@ -44,9 +45,25 @@ export default function MePanel({
   driverId,
   vehicles,
   maintenanceRequests,
+  avatarUrl,
 }: MePanelProps) {
   const defaultSection: MeSection = showMilestones ? "milestones" : "maintenance";
   const [section, setSection] = useState<MeSection>(defaultSection);
+
+  // Avatar upload state
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(avatarUrl ?? null);
+
+  async function handleAvatarChange(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/avatar/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.url) setLocalAvatar(data.url);
+    setUploading(false);
+  }
 
   // Account form state
   const [newUsername, setNewUsername] = useState("");
@@ -232,11 +249,38 @@ export default function MePanel({
         <div className="px-4 pb-6 flex flex-col gap-5">
           {/* Info */}
           <div className="bg-white rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
-              Signed in as
-            </p>
-            <p className="text-[18px] font-extrabold text-slate-900">{driverName}</p>
-            <p className="text-[13px] text-slate-500 mt-0.5">@{driverUsername}</p>
+            <div className="flex items-center gap-4 mb-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="relative w-20 h-20 rounded-full overflow-hidden bg-slate-200 flex items-center justify-center group shrink-0"
+                title="Tap to change photo"
+              >
+                {localAvatar
+                  ? <img src={localAvatar} alt="avatar" className="w-full h-full object-cover" />
+                  : <span className="text-2xl font-bold text-slate-500">{driverName?.[0] ?? "?"}</span>
+                }
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {uploading
+                    ? <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    : <Camera className="w-6 h-6 text-white" />
+                  }
+                </div>
+              </button>
+              <div>
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                  Signed in as
+                </p>
+                <p className="text-[18px] font-extrabold text-slate-900">{driverName}</p>
+                <p className="text-[13px] text-slate-500 mt-0.5">@{driverUsername}</p>
+              </div>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarChange(f); }}
+            />
           </div>
 
           {/* Change username */}
