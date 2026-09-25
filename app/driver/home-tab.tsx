@@ -76,18 +76,6 @@ export default function HomeTab({
         <ChevronRight className="w-5 h-5 opacity-50 shrink-0" />
       </button>
 
-      {/* Streak */}
-      {streakDays > 0 && (
-        <div className="flex items-center gap-3 bg-orange-50 rounded-2xl px-5 py-4">
-          <Flame className="w-7 h-7 text-orange-500 shrink-0" />
-          <div>
-            <p className="text-[15px] font-bold text-orange-800 leading-tight">
-              🔥 Clean Streak — {streakDays} days
-            </p>
-            <p className="text-[12px] text-orange-600 mt-0.5">Days without an at-fault review</p>
-          </div>
-        </div>
-      )}
 
       {/* Ryde tiles */}
       {showRyde && (rydeAvg !== null || leaderboardRank !== null) && (
