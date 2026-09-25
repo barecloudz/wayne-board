@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Lock, Eye, EyeOff, Loader2, RefreshCw,
   CalendarDays, CalendarOff, Key,
-  Home as HomeIcon, Star, User,
+  Home as HomeIcon, Star, User, Trophy,
 } from "lucide-react";
 import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
@@ -17,8 +17,9 @@ import HomeTab from "./home-tab";
 import ScorePanel from "./score-panel";
 import MePanel from "./me-panel";
 import BadgeCelebrationOverlay from "./badge-celebration";
+import BadgeShelfTab from "./badge-shelf-tab";
 
-type DriverTab = "home" | "schedule" | "codes" | "score" | "me";
+type DriverTab = "home" | "schedule" | "codes" | "score" | "me" | "awards";
 
 type Review  = {
   id: number; type: string; stars: number | null;
@@ -231,6 +232,7 @@ export default function DriverTabs({
     { key: "schedule", label: "Schedule", icon: CalendarDays },
     { key: "codes",    label: "Codes",    icon: Key         },
     ...(showRyde ? [{ key: "score" as DriverTab, label: "Score", icon: Star }] : []),
+    ...(myBadges.length > 0 ? [{ key: "awards" as DriverTab, label: "Awards", icon: Trophy }] : []),
     { key: "me",       label: "Me",       icon: User        },
   ];
 
@@ -509,6 +511,11 @@ export default function DriverTabs({
             driverAvatarMap={driverAvatarMap}
             newBadgeIds={claimedBadgeIds}
           />
+        )}
+
+        {/* ── Awards tab ───────────────────────────────── */}
+        {tab === "awards" && (
+          <BadgeShelfTab badges={myBadges} />
         )}
 
         {/* ── Me tab ────────────────────────────────────── */}
