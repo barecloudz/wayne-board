@@ -646,6 +646,7 @@ export const driverBadges = pgTable("driverBadges", {
   badgeTypeId:    integer("badgeTypeId").notNull().references(() => badgeTypes.id),
   weekStart:      date("weekStart").notNull(),
   awardedAt:      timestamp("awardedAt").notNull().defaultNow(),
+  seenAt:         timestamp("seenAt"),
 }, (t) => ({
   orgBadgeWeekUniq: uniqueIndex("driverBadges_org_badgeType_week_uniq")
     .on(t.organizationId, t.badgeTypeId, t.weekStart),

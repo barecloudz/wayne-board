@@ -1,0 +1,1 @@
+ALTER TABLE "driverBadges" ADD COLUMN "seenAt" timestamp;
