@@ -164,7 +164,7 @@ export default function DriverTabs({
       leaderboard: "score",
     };
     const resolved = (legacyMap[t] ?? t) as DriverTab;
-    if (["home", "schedule", "codes", "score", "me"].includes(resolved)) {
+    if (["home", "schedule", "codes", "score", "me", "awards"].includes(resolved)) {
       setTab(resolved);
       if (resolved === "me") {
         const nonPending = maintenanceRequests.filter((r: any) => r.status !== "pending").length;
@@ -232,7 +232,7 @@ export default function DriverTabs({
     { key: "schedule", label: "Schedule", icon: CalendarDays },
     { key: "codes",    label: "Codes",    icon: Key         },
     ...(showRyde ? [{ key: "score" as DriverTab, label: "Score", icon: Star }] : []),
-    ...(myBadges.length > 0 ? [{ key: "awards" as DriverTab, label: "Awards", icon: Trophy }] : []),
+    { key: "awards" as DriverTab, label: "Awards", icon: Trophy },
     { key: "me",       label: "Me",       icon: User        },
   ];
 
