@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { badgeTypes, driverBadges, drivers, dswRouteDays } from "@/lib/schema";
-import { eq, and, gte, lte, isNotNull, sql, desc, count } from "drizzle-orm";
+import { eq, and, gte, lte, isNotNull, isNull, inArray, sql, desc, count } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 
@@ -333,4 +333,44 @@ export async function getDriverBadgeCounts(): Promise<
     driverId:   r.driverId,
     badgeCount: Number(r.badgeCount),
   }));
+}
+
+export async function getUnseenBadges(driverId: string): Promise<DriverBadgeRow[]> {
+  const orgId = await requireOrg();
+  const rows = await db
+    .select({
+      id:        driverBadges.id,
+      weekStart: driverBadges.weekStart,
+      badgeName: badgeTypes.name,
+      iconUrl:   badgeTypes.iconUrl,
+      shine:     badgeTypes.shine,
+      category:  badgeTypes.category,
+      awardedAt: driverBadges.awardedAt,
+    })
+    .from(driverBadges)
+    .innerJoin(badgeTypes, and(eq(badgeTypes.id, driverBadges.badgeTypeId), eq(badgeTypes.organizationId, orgId)))
+    .where(
+      and(
+        eq(driverBadges.organizationId, orgId),
+        eq(driverBadges.driverId, driverId),
+        isNull(driverBadges.seenAt),
+      )
+    )
+    .orderBy(desc(driverBadges.awardedAt));
+  return rows.map(r => ({ ...r, weekStart: String(r.weekStart).slice(0, 10) }));
+}
+
+export async function markBadgesSeen(badgeIds: number[]): Promise<void> {
+  if (badgeIds.length === 0) return;
+  const orgId = await requireOrg();
+  await db
+    .update(driverBadges)
+    .set({ seenAt: new Date() })
+    .where(
+      and(
+        eq(driverBadges.organizationId, orgId),
+        inArray(driverBadges.id, badgeIds),
+      )
+    );
+  revalidatePath("/driver");
 }
