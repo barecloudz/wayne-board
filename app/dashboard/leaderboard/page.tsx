@@ -22,7 +22,7 @@ export default async function LeaderboardPage() {
       <LeaderboardClient
         initialBadgeTypes={badgeTypes}
         initialHistory={history}
-        allDrivers={allDrivers}
+        allDrivers={allDrivers.sort((a, b) => a.name.localeCompare(b.name))}
       />
     </AppShell>
   );
