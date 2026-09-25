@@ -362,13 +362,15 @@ export async function getUnseenBadges(driverId: string): Promise<DriverBadgeRow[
 
 export async function markBadgesSeen(badgeIds: number[]): Promise<void> {
   if (badgeIds.length === 0) return;
-  const orgId = await requireOrg();
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
   await db
     .update(driverBadges)
     .set({ seenAt: new Date() })
     .where(
       and(
-        eq(driverBadges.organizationId, orgId),
+        eq(driverBadges.organizationId, session.organizationId),
+        eq(driverBadges.driverId, session.driverId),
         inArray(driverBadges.id, badgeIds),
       )
     );
