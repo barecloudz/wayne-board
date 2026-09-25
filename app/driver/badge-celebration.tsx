@@ -18,23 +18,46 @@ function randomBetween(min: number, max: number) {
 
 const celebrationStyles = `
   @keyframes confetti-fall {
-    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(420px) rotate(720deg); opacity: 0; }
+    0%   { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(900deg); opacity: 0; }
   }
   @keyframes badge-pop {
-    0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
-    70%  { transform: scale(1.15) rotate(2deg); opacity: 1; }
+    0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+    60%  { transform: scale(1.12) rotate(3deg); opacity: 1; }
+    80%  { transform: scale(0.96) rotate(-1deg); }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
   }
+  @keyframes badge-shine {
+    0%   { background-position: -300% center; }
+    100% { background-position: 300% center; }
+  }
+  @keyframes title-drop {
+    0%   { transform: translateY(-30px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
   @keyframes btn-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
-    50%       { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    50%       { box-shadow: 0 0 0 16px rgba(245, 158, 11, 0); }
   }
   @keyframes overlay-out {
-    to { opacity: 0; transform: scale(0.95); }
+    to { opacity: 0; transform: scale(1.04); }
   }
   .celebration-overlay-exit {
     animation: overlay-out 300ms ease-out forwards;
+  }
+  .badge-shine-sweep {
+    position: relative;
+    display: inline-block;
+  }
+  .badge-shine-sweep::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.7) 50%, transparent 70%);
+    background-size: 300% 100%;
+    animation: badge-shine 2s linear infinite;
+    pointer-events: none;
+    border-radius: 12px;
   }
 `;
 
@@ -70,72 +93,74 @@ export default function BadgeCelebrationOverlay({ badges, onClaim }: Props) {
   return (
     <>
       <style>{celebrationStyles}</style>
-      <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
-        <div className={`relative bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden px-6 py-8 flex flex-col items-center gap-6 ${dismissing ? "celebration-overlay-exit" : ""}`}>
+      <div className={`fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-between py-12 px-6 ${dismissing ? "celebration-overlay-exit" : ""}`}>
 
-          {/* Confetti layer */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {particles.map(p => (
-              <div
-                key={p.id}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: p.left,
-                  width: p.size,
-                  height: p.size,
-                  backgroundColor: p.color,
-                  borderRadius: p.borderRadius,
-                  animationName: "confetti-fall",
-                  animationDuration: p.duration,
-                  animationDelay: p.delay,
-                  animationTimingFunction: "linear",
-                  animationFillMode: "forwards",
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Heading */}
-          <div className="text-center relative z-10">
-            <p className="text-3xl mb-1">🏆</p>
-            <p className="text-[22px] font-extrabold text-white leading-tight">{heading}</p>
-          </div>
-
-          {/* Badge cards — staggered pop */}
-          <div className="flex flex-row flex-wrap justify-center gap-4 relative z-10 w-full">
-            {badges.map((badge, i) => (
-              <div
-                key={badge.id}
-                style={{
-                  animationName: "badge-pop",
-                  animationDuration: "500ms",
-                  animationDelay: `${i * 150}ms`,
-                  animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                  animationFillMode: "both",
-                }}
-                className="flex flex-col items-center gap-3 bg-white/10 rounded-2xl px-5 py-5 flex-1"
-              >
-                {badge.iconUrl
-                  ? <img src={badge.iconUrl} alt={badge.badgeName} className="w-40 h-40 object-contain drop-shadow-2xl" />
-                  : <Trophy className="w-40 h-40 text-amber-400 drop-shadow-2xl" />
-                }
-                <p className="text-white font-bold text-[15px] text-center leading-tight">{badge.badgeName}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Claim button */}
-          <button
-            onClick={handleClaim}
-            disabled={dismissing}
-            style={{ animationName: "btn-pulse", animationDuration: "2s", animationIterationCount: "infinite" }}
-            className="relative z-10 w-full py-3.5 rounded-2xl bg-amber-500 text-white font-extrabold text-[15px] hover:bg-amber-400 transition-colors disabled:opacity-60"
-          >
-            Claim your badge!
-          </button>
-
+        {/* Full-screen confetti */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {particles.map(p => (
+            <div
+              key={p.id}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: p.left,
+                width: p.size,
+                height: p.size,
+                backgroundColor: p.color,
+                borderRadius: p.borderRadius,
+                animationName: "confetti-fall",
+                animationDuration: p.duration,
+                animationDelay: p.delay,
+                animationTimingFunction: "linear",
+                animationIterationCount: "infinite",
+              }}
+            />
+          ))}
         </div>
+
+        {/* Title */}
+        <p
+          className="relative z-10 text-white font-extrabold text-3xl tracking-tight text-center"
+          style={{ animation: "title-drop 600ms cubic-bezier(0.34,1.56,0.64,1) both" }}
+        >
+          {heading}
+        </p>
+
+        {/* Badge(s) — huge, centered */}
+        <div className="relative z-10 flex flex-row flex-wrap justify-center gap-6">
+          {badges.map((badge, i) => (
+            <div
+              key={badge.id}
+              style={{
+                animationName: "badge-pop",
+                animationDuration: "700ms",
+                animationDelay: `${i * 200}ms`,
+                animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                animationFillMode: "both",
+              }}
+              className="flex flex-col items-center gap-4"
+            >
+              <span className="badge-shine-sweep" style={{ display: "inline-block" }}>
+                {badge.iconUrl
+                  ? <img src={badge.iconUrl} alt={badge.badgeName} className="w-56 h-56 object-contain drop-shadow-[0_0_40px_rgba(245,158,11,0.6)]" />
+                  : <Trophy className="w-56 h-56 text-amber-400 drop-shadow-[0_0_40px_rgba(245,158,11,0.6)]" />
+                }
+              </span>
+              <p className="text-white font-extrabold text-xl text-center">{badge.badgeName}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Claim button */}
+        <button
+          onClick={handleClaim}
+          disabled={dismissing}
+          style={{ animationName: "btn-pulse", animationDuration: "1.5s", animationIterationCount: "infinite" }}
+          className="relative z-10 w-full max-w-xs py-4 rounded-2xl bg-amber-500 text-white font-extrabold text-lg hover:bg-amber-400 transition-colors disabled:opacity-60"
+        >
+          Claim your badge!
+        </button>
+
       </div>
     </>
   );

@@ -103,7 +103,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   const [loadingWeek, startLoadWeek] = useTransition();
   const [awarding, startAward] = useTransition();
 
-  const [specialDriverId, setSpecialDriverId] = useState("");
+  const [specialDriverIds, setSpecialDriverIds] = useState<string[]>([]);
   const [specialBadgeTypeId, setSpecialBadgeTypeId] = useState("");
   const [specialAwarding, startSpecialAward] = useTransition();
 
@@ -131,10 +131,12 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   }
 
   function handleSpecialAward() {
-    if (!specialDriverId || !specialBadgeTypeId) return;
+    if (specialDriverIds.length === 0 || !specialBadgeTypeId) return;
     startSpecialAward(async () => {
-      await awardSpecialBadge(specialDriverId, Number(specialBadgeTypeId), weekStart);
-      setSpecialDriverId("");
+      await Promise.all(
+        specialDriverIds.map(driverId => awardSpecialBadge(driverId, Number(specialBadgeTypeId), weekStart))
+      );
+      setSpecialDriverIds([]);
       setSpecialBadgeTypeId("");
       router.refresh();
     });
@@ -389,32 +391,47 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
 
             {/* Special badge award */}
             {specialBadges.length > 0 && (
-              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col gap-3">
+              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex flex-col gap-4">
                 <p className="text-sm font-bold text-slate-700">Award Special Badge</p>
-                <div className="flex gap-2 flex-wrap">
-                  <select
-                    value={specialDriverId}
-                    onChange={e => setSpecialDriverId(e.target.value)}
-                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[160px]"
-                  >
-                    <option value="">Select driver…</option>
-                    {allDrivers.map(d => <option key={d.driverId} value={d.driverId}>{d.name}</option>)}
-                  </select>
-                  <select
-                    value={specialBadgeTypeId}
-                    onChange={e => setSpecialBadgeTypeId(e.target.value)}
-                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[160px]"
-                  >
-                    <option value="">Select badge…</option>
-                    {specialBadges.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
+
+                {/* Badge picker */}
+                <select
+                  value={specialBadgeTypeId}
+                  onChange={e => setSpecialBadgeTypeId(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                >
+                  <option value="">Select badge…</option>
+                  {specialBadges.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+
+                {/* Driver checkbox list */}
+                <div className="flex flex-col gap-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-lg p-2">
+                  {allDrivers.map(d => (
+                    <label key={d.driverId} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={specialDriverIds.includes(d.driverId)}
+                        onChange={e => setSpecialDriverIds(prev =>
+                          e.target.checked ? [...prev, d.driverId] : prev.filter(id => id !== d.driverId)
+                        )}
+                        className="rounded"
+                      />
+                      <span className="text-sm text-slate-700">{d.name}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">
+                    {specialDriverIds.length === 0 ? "Select drivers above" : `${specialDriverIds.length} driver${specialDriverIds.length !== 1 ? "s" : ""} selected`}
+                  </span>
                   <button
                     onClick={handleSpecialAward}
-                    disabled={specialAwarding || !specialDriverId || !specialBadgeTypeId}
+                    disabled={specialAwarding || specialDriverIds.length === 0 || !specialBadgeTypeId}
                     className="px-4 py-1.5 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
                   >
                     {specialAwarding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Award
+                    Award to {specialDriverIds.length > 0 ? specialDriverIds.length : ""} Driver{specialDriverIds.length !== 1 ? "s" : ""}
                   </button>
                 </div>
               </div>
