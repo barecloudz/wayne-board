@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
 
 const ALLOWED_TYPES = ["image/png", "image/svg+xml", "image/gif", "image/webp"];
-const MAX_BYTES = 512 * 1024;
+const MAX_BYTES = 2 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
