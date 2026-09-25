@@ -103,7 +103,7 @@ export default function BadgeCelebrationOverlay({ badges, onClaim }: Props) {
           </div>
 
           {/* Badge cards — staggered pop */}
-          <div className="flex flex-row flex-wrap justify-center gap-4 relative z-10">
+          <div className="flex flex-row flex-wrap justify-center gap-4 relative z-10 w-full">
             {badges.map((badge, i) => (
               <div
                 key={badge.id}
@@ -114,14 +114,13 @@ export default function BadgeCelebrationOverlay({ badges, onClaim }: Props) {
                   animationTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
                   animationFillMode: "both",
                 }}
-                className="flex flex-col items-center gap-2 bg-white/10 rounded-2xl px-4 py-4 min-w-[88px]"
+                className="flex flex-col items-center gap-3 bg-white/10 rounded-2xl px-5 py-5 flex-1"
               >
                 {badge.iconUrl
-                  ? <img src={badge.iconUrl} alt={badge.badgeName} className="w-12 h-12 object-contain" />
-                  : <Trophy className="w-12 h-12 text-amber-400" />
+                  ? <img src={badge.iconUrl} alt={badge.badgeName} className="w-40 h-40 object-contain drop-shadow-2xl" />
+                  : <Trophy className="w-40 h-40 text-amber-400 drop-shadow-2xl" />
                 }
-                <p className="text-white font-bold text-[12px] text-center leading-tight">{badge.badgeName}</p>
-                <p className="text-slate-400 text-[10px]">{badge.weekStart.slice(0, 7)}</p>
+                <p className="text-white font-bold text-[15px] text-center leading-tight">{badge.badgeName}</p>
               </div>
             ))}
           </div>
