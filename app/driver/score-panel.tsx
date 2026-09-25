@@ -156,16 +156,14 @@ export default function ScorePanel({
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Your Badges</p>
               <div className="flex gap-3 flex-wrap">
                 {(showAllBadges ? myBadges : myBadges.slice(0, 8)).map((b) => (
-                  <div key={b.id} className={`flex flex-col items-center gap-1 ${newBadgeIds.includes(b.id) ? "badge-new-glow" : ""}`}>
+                  <div key={b.id} className={`flex flex-col items-center gap-1.5 ${newBadgeIds.includes(b.id) ? "badge-new-glow" : ""}`}>
                     <span className={b.shine ? "badge-shine" : ""} style={{ display: "inline-block" }}>
                       {b.iconUrl
-                        ? <img src={b.iconUrl} alt={b.badgeName} className="w-8 h-8 object-contain" />
-                        : <Trophy className="w-7 h-7 text-amber-500" />
+                        ? <img src={b.iconUrl} alt={b.badgeName} className="w-20 h-20 object-contain" />
+                        : <Trophy className="w-16 h-16 text-amber-500" />
                       }
                     </span>
-                    <span className="text-[9px] text-slate-400 text-center max-w-[52px] leading-tight">
-                      {b.weekStart.slice(0, 7)}
-                    </span>
+                    <span className="text-[10px] font-semibold text-slate-600 text-center max-w-[80px] leading-tight">{b.badgeName}</span>
                   </div>
                 ))}
                 {myBadges.length > 8 && (
