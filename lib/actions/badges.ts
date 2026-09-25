@@ -78,27 +78,47 @@ export async function upsertBadgeType(data: {
   iconUrl?: string | null;
   shine: boolean;
   category: string;
-}): Promise<void> {
+}): Promise<{ id: number }> {
   const orgId = await requireOrg();
   if (data.id) {
     await db
       .update(badgeTypes)
-      .set({
-        name:    data.name,
-        iconUrl: data.iconUrl ?? null,
-        shine:   data.shine,
-      })
+      .set({ name: data.name, iconUrl: data.iconUrl ?? null, shine: data.shine })
       .where(and(eq(badgeTypes.id, data.id), eq(badgeTypes.organizationId, orgId)));
-  } else {
-    await db.insert(badgeTypes).values({
+    revalidatePath("/dashboard/leaderboard");
+    return { id: data.id };
+  }
+  try {
+    const [row] = await db.insert(badgeTypes).values({
       organizationId: orgId,
       rank:           data.rank ?? null,
       name:           data.name,
       iconUrl:        data.iconUrl ?? null,
       shine:          data.shine,
       category:       data.category,
-    });
+    }).returning({ id: badgeTypes.id });
+    revalidatePath("/dashboard/leaderboard");
+    return { id: row.id };
+  } catch (e: unknown) {
+    // Unique constraint on (organizationId, rank) — row already exists, return its id
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("duplicate key") && data.rank) {
+      const [existing] = await db
+        .select({ id: badgeTypes.id })
+        .from(badgeTypes)
+        .where(and(eq(badgeTypes.organizationId, orgId), eq(badgeTypes.rank, data.rank)))
+        .limit(1);
+      if (existing) { revalidatePath("/dashboard/leaderboard"); return { id: existing.id }; }
+    }
+    throw e;
   }
+}
+
+export async function revokeBadge(driverBadgeId: number): Promise<void> {
+  const orgId = await requireOrg();
+  await db
+    .delete(driverBadges)
+    .where(and(eq(driverBadges.id, driverBadgeId), eq(driverBadges.organizationId, orgId)));
   revalidatePath("/dashboard/leaderboard");
 }
 
