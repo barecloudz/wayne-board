@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { Trophy, Settings, Clock, Loader2, Upload, X } from "lucide-react";
+import { useState, useTransition, useRef, useEffect } from "react";
+import { Trophy, Settings, Clock, Loader2, X, Camera } from "lucide-react";
 import {
   computeTopDrivers, awardBadgesForWeek, awardSpecialBadge,
-  upsertBadgeType, deleteBadgeType, isWeekAwarded,
+  upsertBadgeType, deleteBadgeType, isWeekAwarded, revokeBadge,
 } from "@/lib/actions/badges";
 import type { BadgeTypeRow, TopDriverRow, BadgeHistoryRow } from "@/lib/actions/badges";
 import { useRouter } from "next/navigation";
@@ -85,19 +85,16 @@ type Props = {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function LeaderboardClient({ initialBadgeTypes, initialHistory, allDrivers }: Props) {
-  const router   = useRouter();
+  const router = useRouter();
   const [tab, setTab] = useState<"award" | "setup" | "history">("award");
-
-  const [badgeTypes, setBadgeTypes] = useState(initialBadgeTypes);
   const history = initialHistory;
 
-  // suppress unused warning — setBadgeTypes used indirectly via router.refresh()
-  void setBadgeTypes;
+  const weeklyBadges = initialBadgeTypes
+    .filter(b => b.category === "weekly")
+    .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
+  const specialBadges = initialBadgeTypes.filter(b => b.category === "special");
 
   // ── Award Tab State ──────────────────────────────────────────────────────
-  const weeklyBadges = badgeTypes.filter(b => b.category === "weekly").sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
-  const specialBadges = badgeTypes.filter(b => b.category === "special");
-
   const [weekStart, setWeekStart] = useState(() => toDateStr(prevMonday()));
   const weekEnd = toDateStr(getSundayOf(new Date(weekStart + "T00:00:00")));
 
@@ -143,50 +140,123 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
     });
   }
 
-  // ── Badge Setup Tab State ────────────────────────────────────────────────
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName]   = useState("");
-  const [editShine, setEditShine] = useState(false);
-  const [saving, startSave]       = useTransition();
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  function startEdit(bt: BadgeTypeRow) {
-    setEditingId(bt.id);
-    setEditName(bt.name);
-    setEditShine(bt.shine);
+  // ── Badge Setup Tab — Rank cards (always editable, no toggle) ───────────
+  function defaultRankName(rank: number) {
+    return rank === 1 ? "Gold" : rank === 2 ? "Silver" : "Bronze";
   }
 
-  function handleSaveBadgeType(bt: BadgeTypeRow) {
-    startSave(async () => {
-      await upsertBadgeType({ id: bt.id, rank: bt.rank, name: editName, iconUrl: bt.iconUrl, shine: editShine, category: bt.category });
-      setEditingId(null);
-      router.refresh();
+  const weeklyKey = weeklyBadges.map(b => `${b.id}:${b.name}:${b.shine}`).join(",");
+
+  const [rankEdits, setRankEdits] = useState<Record<number, { name: string; shine: boolean }>>(() => {
+    const init: Record<number, { name: string; shine: boolean }> = {};
+    for (const r of [1, 2, 3]) {
+      const bt = weeklyBadges.find(b => b.rank === r);
+      init[r] = bt ? { name: bt.name, shine: bt.shine } : { name: defaultRankName(r), shine: false };
+    }
+    return init;
+  });
+
+  useEffect(() => {
+    setRankEdits(prev => {
+      const next = { ...prev };
+      for (const r of [1, 2, 3]) {
+        const bt = weeklyBadges.find(b => b.rank === r);
+        if (bt) next[r] = { name: bt.name, shine: bt.shine };
+      }
+      return next;
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weeklyKey]);
+
+  const [rankSaving, setRankSaving]           = useState<Record<number, boolean>>({});
+  const [rankUploading, setRankUploading]     = useState<Record<number, boolean>>({});
+  const [rankPendingFile, setRankPendingFile] = useState<Record<number, File | null>>({});
+  const [rankPendingPreview, setRankPendingPreview] = useState<Record<number, string | null>>({});
+
+  const rankRef1 = useRef<HTMLInputElement>(null);
+  const rankRef2 = useRef<HTMLInputElement>(null);
+  const rankRef3 = useRef<HTMLInputElement>(null);
+  const rankRefs: Record<number, React.RefObject<HTMLInputElement | null>> = {
+    1: rankRef1, 2: rankRef2, 3: rankRef3,
+  };
+
+  function handleRankFileSelect(rank: number, file: File) {
+    const existingBt = weeklyBadges.find(b => b.rank === rank);
+    if (existingBt) {
+      // Badge exists — upload immediately
+      setRankUploading(prev => ({ ...prev, [rank]: true }));
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("badgeTypeId", String(existingBt.id));
+      fetch("/api/badge-icons/upload", { method: "POST", body: fd })
+        .then(r => r.json())
+        .then(data => {
+          setRankUploading(prev => ({ ...prev, [rank]: false }));
+          if (data.url) router.refresh();
+        })
+        .catch(() => setRankUploading(prev => ({ ...prev, [rank]: false })));
+    } else {
+      // Badge not yet created — store pending, upload on Save
+      setRankPendingFile(prev => ({ ...prev, [rank]: file }));
+      setRankPendingPreview(prev => ({ ...prev, [rank]: URL.createObjectURL(file) }));
+    }
   }
 
-  async function handleIconUpload(badgeTypeId: number, file: File) {
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("badgeTypeId", String(badgeTypeId));
-    const res  = await fetch("/api/badge-icons/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    setUploading(false);
-    if (data.url) router.refresh();
+  async function handleSaveRank(rank: number) {
+    setRankSaving(prev => ({ ...prev, [rank]: true }));
+    try {
+      const edit = rankEdits[rank] ?? { name: defaultRankName(rank), shine: false };
+      const existingBt = weeklyBadges.find(b => b.rank === rank);
+      const { id: badgeId } = await upsertBadgeType({
+        id:       existingBt?.id,
+        rank,
+        name:     edit.name,
+        shine:    edit.shine,
+        iconUrl:  existingBt?.iconUrl,
+        category: "weekly",
+      });
+      const pendingFile = rankPendingFile[rank];
+      if (pendingFile) {
+        const fd = new FormData();
+        fd.append("file", pendingFile);
+        fd.append("badgeTypeId", String(badgeId));
+        await fetch("/api/badge-icons/upload", { method: "POST", body: fd });
+        setRankPendingFile(prev => ({ ...prev, [rank]: null }));
+        setRankPendingPreview(prev => ({ ...prev, [rank]: null }));
+      }
+      router.refresh();
+    } finally {
+      setRankSaving(prev => ({ ...prev, [rank]: false }));
+    }
   }
 
+  // ── Special Badges ───────────────────────────────────────────────────────
   const [newSpecialName, setNewSpecialName]   = useState("");
   const [newSpecialShine, setNewSpecialShine] = useState(false);
+  const [newSpecialFile, setNewSpecialFile]   = useState<File | null>(null);
+  const [newSpecialPreview, setNewSpecialPreview] = useState<string | null>(null);
   const [addingSpecial, startAddSpecial]      = useTransition();
   const [deleting, startDelete]               = useTransition();
+  const newSpecialRef = useRef<HTMLInputElement>(null);
 
   function handleAddSpecial() {
     if (!newSpecialName.trim()) return;
     startAddSpecial(async () => {
-      await upsertBadgeType({ name: newSpecialName.trim(), shine: newSpecialShine, category: "special" });
+      const { id: badgeId } = await upsertBadgeType({
+        name:     newSpecialName.trim(),
+        shine:    newSpecialShine,
+        category: "special",
+      });
+      if (newSpecialFile) {
+        const fd = new FormData();
+        fd.append("file", newSpecialFile);
+        fd.append("badgeTypeId", String(badgeId));
+        await fetch("/api/badge-icons/upload", { method: "POST", body: fd });
+      }
       setNewSpecialName("");
       setNewSpecialShine(false);
+      setNewSpecialFile(null);
+      setNewSpecialPreview(null);
       router.refresh();
     });
   }
@@ -196,6 +266,19 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
       await deleteBadgeType(id);
       router.refresh();
     });
+  }
+
+  // ── History Revoke ───────────────────────────────────────────────────────
+  const [revoking, setRevoking] = useState<number | null>(null);
+
+  async function handleRevoke(id: number) {
+    setRevoking(id);
+    try {
+      await revokeBadge(id);
+      router.refresh();
+    } finally {
+      setRevoking(null);
+    }
   }
 
   const unmappedCount = topDrivers?.[0]?.unmappedCount ?? 0;
@@ -228,7 +311,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         {tab === "award" && (
           <div className="flex flex-col gap-6">
             {/* Week picker */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <label className="text-sm font-semibold text-slate-700">Week of</label>
               <input
                 type="date"
@@ -342,82 +425,91 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         {/* ── Badge Setup Tab ─────────────────────────────────────────────── */}
         {tab === "setup" && (
           <div className="flex flex-col gap-8">
-            {/* Weekly badges */}
+
+            {/* Weekly rank cards — always editable, no Edit toggle */}
             <div>
-              <p className="text-base font-bold text-slate-800 mb-3">Weekly Badges (Ranks 1–3)</p>
-              <div className="flex flex-col gap-3">
-                {weeklyBadges.length === 0 && (
-                  <p className="text-sm text-slate-400">No weekly badge types configured yet.</p>
-                )}
-                {weeklyBadges.map(bt => (
-                  <div key={bt.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-10 flex justify-center">
-                      <BadgeIcon badge={bt} size={32} />
-                    </div>
-                    {editingId === bt.id ? (
-                      <div className="flex-1 flex items-center gap-3 flex-wrap">
+              <p className="text-base font-bold text-slate-800 mb-1">Weekly Badges</p>
+              <p className="text-xs text-slate-400 mb-4">Click the icon area to upload a custom trophy image for each rank.</p>
+              <div className="flex flex-col gap-4">
+                {[1, 2, 3].map(rank => {
+                  const bt         = weeklyBadges.find(b => b.rank === rank);
+                  const edit       = rankEdits[rank] ?? { name: defaultRankName(rank), shine: false };
+                  const isSaving   = rankSaving[rank] ?? false;
+                  const isUploading = rankUploading[rank] ?? false;
+                  const preview    = rankPendingPreview[rank] ?? null;
+                  const rankEmoji  = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
+                  const rankColor  = rank === 1 ? "text-amber-500" : rank === 2 ? "text-slate-400" : "text-orange-700";
+
+                  return (
+                    <div key={rank} className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4 items-start">
+                      {/* Clickable icon area */}
+                      <div className="flex flex-col items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => rankRefs[rank].current?.click()}
+                          disabled={isUploading}
+                          title="Upload icon"
+                          className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center hover:border-amber-400 hover:bg-amber-50 transition-colors relative overflow-hidden group disabled:opacity-40"
+                        >
+                          {isUploading ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                          ) : preview ? (
+                            <img src={preview} alt="" className="w-full h-full object-contain p-1" />
+                          ) : bt?.iconUrl ? (
+                            <>
+                              <img src={bt.iconUrl} alt="" className="w-full h-full object-contain p-1" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Camera className="w-4 h-4 text-white" />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Camera className="w-5 h-5 text-slate-300" />
+                              <span className="text-[9px] text-slate-300 font-medium">Upload</span>
+                            </div>
+                          )}
+                        </button>
                         <input
-                          value={editName}
-                          onChange={e => setEditName(e.target.value)}
-                          className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm w-40"
-                          placeholder="Badge name"
-                        />
-                        <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
-                          <input type="checkbox" checked={editShine} onChange={e => setEditShine(e.target.checked)} className="rounded" />
-                          Shine
-                        </label>
-                        <input
-                          ref={fileInputRef}
+                          ref={rankRefs[rank]}
                           type="file"
                           accept="image/png,image/svg+xml,image/gif,image/webp"
                           className="hidden"
-                          onChange={e => { const f = e.target.files?.[0]; if (f) handleIconUpload(bt.id, f); }}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) handleRankFileSelect(rank, f); e.target.value = ""; }}
                         />
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                          className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
-                        >
-                          {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
-                          Upload Icon
-                        </button>
-                        <button
-                          onClick={() => handleSaveBadgeType(bt)}
-                          disabled={saving}
-                          className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold disabled:opacity-40 flex items-center gap-1"
-                        >
-                          {saving && <Loader2 className="w-3 h-3 animate-spin" />}
-                          Save
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="text-slate-400 hover:text-slate-700">
-                          <X className="w-4 h-4" />
-                        </button>
+                        <span className={`text-[11px] font-bold ${rankColor}`}>{rankEmoji} Rank {rank}</span>
                       </div>
-                    ) : (
-                      <div className="flex-1 flex items-center gap-3">
-                        <span className="text-sm font-bold text-slate-700">Rank {bt.rank} — {bt.name}</span>
-                        {bt.shine && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Shine</span>}
-                        <button onClick={() => startEdit(bt)} className="ml-auto text-xs font-semibold text-slate-500 hover:text-slate-900 border border-slate-200 px-3 py-1 rounded-lg hover:bg-slate-50 transition-colors">
-                          Edit
-                        </button>
+
+                      {/* Name + shine + save */}
+                      <div className="flex-1 flex flex-col gap-2.5">
+                        <input
+                          value={edit.name}
+                          onChange={e => setRankEdits(prev => ({ ...prev, [rank]: { ...prev[rank], name: e.target.value } }))}
+                          placeholder={`Rank ${rank} badge name`}
+                          className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={edit.shine}
+                              onChange={e => setRankEdits(prev => ({ ...prev, [rank]: { ...prev[rank], shine: e.target.checked } }))}
+                              className="rounded"
+                            />
+                            Shine effect
+                          </label>
+                          <button
+                            onClick={() => handleSaveRank(rank)}
+                            disabled={isSaving || !edit.name.trim()}
+                            className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold disabled:opacity-40 flex items-center gap-1.5 hover:bg-slate-700 transition-colors"
+                          >
+                            {isSaving && <Loader2 className="w-3 h-3 animate-spin" />}
+                            {bt ? "Save" : "Create"}
+                          </button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
-                {/* Add missing weekly rank slots */}
-                {[1,2,3].filter(r => !weeklyBadges.find(b => b.rank === r)).map(rank => (
-                  <button
-                    key={rank}
-                    onClick={async () => {
-                      const label = rank === 1 ? "Gold" : rank === 2 ? "Silver" : "Bronze";
-                      await upsertBadgeType({ rank, name: label, shine: false, category: "weekly" });
-                      router.refresh();
-                    }}
-                    className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-400 hover:border-slate-400 hover:text-slate-600 transition-colors text-center"
-                  >
-                    + Add Rank {rank} badge
-                  </button>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -426,39 +518,81 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
               <p className="text-base font-bold text-slate-800 mb-3">Special Badges</p>
               <div className="flex flex-col gap-3">
                 {specialBadges.map(bt => (
-                  <div key={bt.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4">
-                    <BadgeIcon badge={bt} size={28} />
+                  <div key={bt.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
+                      {bt.iconUrl
+                        ? <img src={bt.iconUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                        : <Trophy className="w-5 h-5 text-amber-500" />
+                      }
+                    </div>
                     <span className="flex-1 text-sm font-semibold text-slate-700">{bt.name}</span>
                     {bt.shine && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Shine</span>}
                     <button
                       onClick={() => handleDeleteSpecial(bt.id)}
                       disabled={deleting}
-                      className="text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40"
+                      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors disabled:opacity-40 rounded-lg hover:bg-red-50"
+                      title="Delete badge type"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
-                {/* Add special badge */}
-                <div className="flex gap-2 items-center flex-wrap">
-                  <input
-                    value={newSpecialName}
-                    onChange={e => setNewSpecialName(e.target.value)}
-                    placeholder="Badge name (e.g. Driver of the Month)"
-                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-[220px]"
-                  />
-                  <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
-                    <input type="checkbox" checked={newSpecialShine} onChange={e => setNewSpecialShine(e.target.checked)} className="rounded" />
-                    Shine
-                  </label>
-                  <button
-                    onClick={handleAddSpecial}
-                    disabled={addingSpecial || !newSpecialName.trim()}
-                    className="px-4 py-1.5 rounded-lg bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
-                  >
-                    {addingSpecial && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Add
-                  </button>
+
+                {/* Add special badge form */}
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex flex-col gap-3">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Special Badge</p>
+                  <div className="flex gap-3 items-start">
+                    {/* Icon upload */}
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => newSpecialRef.current?.click()}
+                        title="Upload icon"
+                        className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center hover:border-violet-400 hover:bg-violet-50 transition-colors overflow-hidden"
+                      >
+                        {newSpecialPreview
+                          ? <img src={newSpecialPreview} alt="" className="w-full h-full object-contain p-0.5" />
+                          : <Camera className="w-4 h-4 text-slate-300" />
+                        }
+                      </button>
+                      <input
+                        ref={newSpecialRef}
+                        type="file"
+                        accept="image/png,image/svg+xml,image/gif,image/webp"
+                        className="hidden"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) { setNewSpecialFile(f); setNewSpecialPreview(URL.createObjectURL(f)); }
+                          e.target.value = "";
+                        }}
+                      />
+                      <span className="text-[9px] text-slate-400 font-medium">Icon</span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col gap-2">
+                      <input
+                        value={newSpecialName}
+                        onChange={e => setNewSpecialName(e.target.value)}
+                        placeholder="Badge name (e.g. Driver of the Month)"
+                        className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-slate-300"
+                        onKeyDown={e => { if (e.key === "Enter") handleAddSpecial(); }}
+                      />
+                      <div className="flex items-center justify-between gap-3">
+                        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                          <input type="checkbox" checked={newSpecialShine} onChange={e => setNewSpecialShine(e.target.checked)} className="rounded" />
+                          Shine effect
+                        </label>
+                        <button
+                          onClick={handleAddSpecial}
+                          disabled={addingSpecial || !newSpecialName.trim()}
+                          className="px-4 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                        >
+                          {addingSpecial && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          Add Badge
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -471,7 +605,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
             {history.length === 0 ? (
               <p className="text-slate-400 text-sm">No badges awarded yet.</p>
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 border-b border-slate-100">
                     <tr>
@@ -479,17 +613,18 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
                       <th className="px-4 py-3 text-left font-semibold text-slate-500">Driver</th>
                       <th className="px-4 py-3 text-left font-semibold text-slate-500">Badge</th>
                       <th className="px-4 py-3 text-left font-semibold text-slate-500">Awarded</th>
+                      <th className="px-4 py-3" />
                     </tr>
                   </thead>
                   <tbody>
                     {history.map(h => (
                       <tr key={h.id} className="border-b border-slate-50 last:border-0">
-                        <td className="px-4 py-3 text-slate-600">{h.weekStart}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{h.weekStart}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             {h.avatarUrl
-                              ? <img src={h.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
-                              : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">{h.driverName[0]}</div>
+                              ? <img src={h.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                              : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">{h.driverName[0]}</div>
                             }
                             <span className="font-semibold text-slate-800">{h.driverName}</span>
                           </div>
@@ -498,13 +633,26 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
                           <div className="flex items-center gap-2">
                             {h.iconUrl
                               ? <span className={h.shine ? "badge-shine" : ""}><img src={h.iconUrl} alt="" className="w-6 h-6 object-contain" /></span>
-                              : <Trophy className="w-5 h-5 text-amber-500" />
+                              : <Trophy className="w-5 h-5 text-amber-500 shrink-0" />
                             }
                             <span className="text-slate-700">{h.badgeName}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs">
+                        <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                           {new Date(h.awardedAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleRevoke(h.id)}
+                            disabled={revoking === h.id}
+                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 font-semibold transition-colors disabled:opacity-40 whitespace-nowrap"
+                          >
+                            {revoking === h.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <X className="w-3 h-3" />
+                            }
+                            Revoke
+                          </button>
                         </td>
                       </tr>
                     ))}
