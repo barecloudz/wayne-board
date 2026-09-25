@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import { Trophy, Settings, Clock, Loader2, X, Camera } from "lucide-react";
 import {
   computeTopDrivers, awardBadgesForWeek, awardSpecialBadge,
-  upsertBadgeType, deleteBadgeType, isWeekAwarded, revokeBadge,
+  upsertBadgeType, deleteBadgeType, isWeekAwarded, revokeBadge, clearBadgeIcon,
 } from "@/lib/actions/badges";
 import type { BadgeTypeRow, TopDriverRow, BadgeHistoryRow } from "@/lib/actions/badges";
 import { useRouter } from "next/navigation";
@@ -458,9 +458,17 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
                           ) : bt?.iconUrl ? (
                             <>
                               <img src={bt.iconUrl} alt="" className="w-full h-full object-contain p-1" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                                 <Camera className="w-4 h-4 text-white" />
                               </div>
+                              <button
+                                type="button"
+                                onClick={e => { e.stopPropagation(); clearBadgeIcon(bt.id).then(() => router.refresh()); }}
+                                className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                title="Remove icon"
+                              >
+                                <X className="w-3 h-3 text-white" />
+                              </button>
                             </>
                           ) : (
                             <div className="flex flex-col items-center gap-0.5">
@@ -519,9 +527,19 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
               <div className="flex flex-col gap-3">
                 {specialBadges.map(bt => (
                   <div key={bt.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0 relative group/icon">
                       {bt.iconUrl
-                        ? <img src={bt.iconUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                        ? <>
+                            <img src={bt.iconUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => clearBadgeIcon(bt.id).then(() => router.refresh())}
+                              className="absolute inset-0 bg-red-500/80 flex items-center justify-center opacity-0 group-hover/icon:opacity-100 transition-opacity"
+                              title="Remove icon"
+                            >
+                              <X className="w-3.5 h-3.5 text-white" />
+                            </button>
+                          </>
                         : <Trophy className="w-5 h-5 text-amber-500" />
                       }
                     </div>

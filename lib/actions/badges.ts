@@ -114,6 +114,15 @@ export async function upsertBadgeType(data: {
   }
 }
 
+export async function clearBadgeIcon(badgeTypeId: number): Promise<void> {
+  const orgId = await requireOrg();
+  await db
+    .update(badgeTypes)
+    .set({ iconUrl: null })
+    .where(and(eq(badgeTypes.id, badgeTypeId), eq(badgeTypes.organizationId, orgId)));
+  revalidatePath("/dashboard/leaderboard");
+}
+
 export async function revokeBadge(driverBadgeId: number): Promise<void> {
   const orgId = await requireOrg();
   await db
