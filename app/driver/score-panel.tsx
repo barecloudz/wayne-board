@@ -6,7 +6,7 @@ import ServiceTab, { type DswRow } from "./service-tab";
 import { getDriverBadges } from "@/lib/actions/badges";
 import type { DriverBadgeRow } from "@/lib/actions/badges";
 
-// ── Shine CSS ─────────────────────────────────────────────────────────────────
+// ── Shine + Glow CSS ──────────────────────────────────────────────────────────
 const shineStyle = `
   @keyframes shine-sweep {
     0%   { background-position: -200% center; }
@@ -25,6 +25,14 @@ const shineStyle = `
     animation: shine-sweep 2s linear infinite;
     pointer-events: none;
     border-radius: inherit;
+  }
+  @keyframes glow-fade {
+    0%   { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.9), 0 0 20px rgba(245,158,11,0.4); }
+    100% { box-shadow: 0 0 0 0px rgba(245, 158, 11, 0), 0 0 0px rgba(245,158,11,0); }
+  }
+  .badge-new-glow {
+    animation: glow-fade 2s ease-out forwards;
+    border-radius: 8px;
   }
 `;
 
@@ -52,6 +60,7 @@ export type ScorePanelProps = {
   myBadges?: DriverBadgeRow[];
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
   driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
+  newBadgeIds?: number[];
 };
 
 type ScoreSection = "score" | "leaderboard" | "reviews" | "service";
@@ -79,6 +88,7 @@ export default function ScorePanel({
   myBadges = [],
   badgeCounts = [],
   driverAvatarMap = {},
+  newBadgeIds = [],
 }: ScorePanelProps) {
   const [section, setSection] = useState<ScoreSection>("score");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
@@ -146,7 +156,7 @@ export default function ScorePanel({
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Your Badges</p>
               <div className="flex gap-3 flex-wrap">
                 {(showAllBadges ? myBadges : myBadges.slice(0, 8)).map((b) => (
-                  <div key={b.id} className="flex flex-col items-center gap-1">
+                  <div key={b.id} className={`flex flex-col items-center gap-1 ${newBadgeIds.includes(b.id) ? "badge-new-glow" : ""}`}>
                     <span className={b.shine ? "badge-shine" : ""} style={{ display: "inline-block" }}>
                       {b.iconUrl
                         ? <img src={b.iconUrl} alt={b.badgeName} className="w-8 h-8 object-contain" />
@@ -220,7 +230,7 @@ export default function ScorePanel({
           {leaderboard.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
               <Trophy className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-              <p className="text-[15px] font-bold text-slate-700">No data yet</p>
+              <p className="text-[15px] font-bold text-slate-700">No ILS data for this week yet</p>
             </div>
           ) : (
             leaderboard.map((entry, idx) => {
@@ -277,12 +287,12 @@ export default function ScorePanel({
                         )}
                       </div>
                       <p className={`text-[12px] ${isMe ? "text-white/70" : "text-slate-400"}`}>
-                        {entry.reviewCount} {entry.reviewCount === 1 ? "review" : "reviews"}
+                        {entry.reviewCount} {entry.reviewCount === 1 ? "day" : "days"}
                       </p>
                     </div>
                   </div>
                   <span className={`text-[16px] font-extrabold shrink-0 ${isMe ? "text-white" : "text-slate-900"}`}>
-                    {entry.avg.toFixed(1)}
+                    {entry.avg.toFixed(1)}%
                   </span>
                 </div>
               );

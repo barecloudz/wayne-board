@@ -11,10 +11,12 @@ import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from
 import GateCodesTab from "./gate-codes-tab";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 import type { DriverBadgeRow } from "@/lib/actions/badges";
+import type { TopDriverRow } from "@/lib/actions/badges";
 import type { DswRow } from "./service-tab";
 import HomeTab from "./home-tab";
 import ScorePanel from "./score-panel";
 import MePanel from "./me-panel";
+import BadgeCelebrationOverlay from "./badge-celebration";
 
 type DriverTab = "home" | "schedule" | "codes" | "score" | "me";
 
@@ -24,7 +26,6 @@ type Review  = {
   improvement: string | null; createdAt: Date | null;
 };
 type Milestone    = { id: number; name: string; description: string | null; daysRequired: number; type: string; bonusAmount: number | null; icon: string };
-type LeaderEntry  = { driverId: string; initials: string; avgScore: number; weeks: number };
 type AssignedVehicle = { id: number; unitNumber: string; make: string; model: string; year: number; mileage: number; type: string } | null;
 type DriverSchedule = { mon: boolean; tue: boolean; wed: boolean; thu: boolean; fri: boolean; sat: boolean; sun: boolean; notes: string | null } | null;
 type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: string; note: string | null };
@@ -32,14 +33,14 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {},
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [],
 }: {
   reviews: Review[];
   milestones: Milestone[];
   streakDays: number;
   driverId: string;
   claimedMilestoneIds: Set<number>;
-  leaderboard: LeaderEntry[];
+  leaderboard: TopDriverRow[];
   myRank: number;
   companyRating: number | null;
   goalMessage: string;
@@ -63,8 +64,11 @@ export default function DriverTabs({
   myBadges?: DriverBadgeRow[];
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
   driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
+  unseenBadges?: DriverBadgeRow[];
 }) {
   const [tab, setTab] = useState<DriverTab>("home");
+  const [claimedBadgeIds, setClaimedBadgeIds] = useState<number[]>([]);
+  const [showCelebration, setShowCelebration] = useState(unseenBadges.length > 0);
 
   // First-login force password change modal
   const [forceModal, setForceModal]     = useState(mustChangePassword);
@@ -193,12 +197,12 @@ export default function DriverTabs({
     riderName: null as string | null,
   }));
 
-  // Map leaderboard to ScorePanel format
+  // Map leaderboard to ScorePanel format (leaderboard is now TopDriverRow[])
   const scorePanelLeaderboard = leaderboard.map((entry) => ({
-    driverId: entry.driverId,
-    name: entry.initials,
-    avg: entry.avgScore,
-    reviewCount: entry.weeks,
+    driverId:    entry.driverId,
+    name:        entry.driverName,
+    avg:         entry.avgIls,
+    reviewCount: entry.dayCount,
   }));
 
   // Map milestones to MePanel format
@@ -234,6 +238,16 @@ export default function DriverTabs({
 
   return (
     <div style={{ "--brand": brand } as React.CSSProperties}>
+      {showCelebration && unseenBadges.length > 0 && (
+        <BadgeCelebrationOverlay
+          badges={unseenBadges}
+          onClaim={(ids) => {
+            setClaimedBadgeIds(ids);
+            setShowCelebration(false);
+          }}
+        />
+      )}
+
       {/* First-login force password change modal */}
       {forceModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4" style={{ backdropFilter: "blur(6px)" }}>
@@ -493,6 +507,7 @@ export default function DriverTabs({
             myBadges={myBadges}
             badgeCounts={badgeCounts}
             driverAvatarMap={driverAvatarMap}
+            newBadgeIds={claimedBadgeIds}
           />
         )}
 

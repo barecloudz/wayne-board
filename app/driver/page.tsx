@@ -24,9 +24,9 @@ import { db } from "@/lib/db";
 import { drivers, rydeReviews, vehicles, workAreas, dailyWorkAreaAssignments, dswRouteDays, organizations } from "@/lib/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
 import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone } from "@/lib/actions/milestones";
-import { getLeaderboard, getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
+import { getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
-import { getDriverBadges, getDriverBadgeCounts } from "@/lib/actions/badges";
+import { getDriverBadges, getDriverBadgeCounts, getUnseenBadges, computeTopDrivers } from "@/lib/actions/badges";
 import { getDrivers } from "@/lib/actions/drivers";
 import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes, getGateAreas } from "@/lib/actions/gate-codes";
@@ -34,6 +34,21 @@ import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
 import Image from "next/image";
 import ProfileButton from "./profile-button";
 import DriverTabs from "./driver-tabs";
+
+function getMostRecentWeekBounds(): { weekStart: string; weekEnd: string } {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon…6=Sat
+  // Walk back to the most recently completed Sunday
+  const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
+  const lastSunday = new Date(today);
+  lastSunday.setDate(today.getDate() - daysToLastSunday);
+  const lastMonday = new Date(lastSunday);
+  lastMonday.setDate(lastSunday.getDate() - 6);
+  return {
+    weekStart: lastMonday.toISOString().slice(0, 10),
+    weekEnd:   lastSunday.toISOString().slice(0, 10),
+  };
+}
 
 function WorkAreaShape({ shape, color, size = 14 }: { shape: string; color: string; size?: number }) {
   if (shape === "triangle") {
@@ -67,12 +82,12 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers, unseenBadges] = await Promise.all([
     db.select().from(rydeReviews).where(and(eq(rydeReviews.driverId, session.driverId), eq(rydeReviews.organizationId, session.organizationId))).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
     getDriverClaims(session.driverId),
-    getLeaderboard(),
+    computeTopDrivers(getMostRecentWeekBounds().weekStart, getMostRecentWeekBounds().weekEnd),
     getCompanyRating(),
     getRydeGoalMessage(),
     db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
@@ -98,6 +113,7 @@ export default async function DriverDashboard() {
     getDriverBadges(session.driverId),
     getDriverBadgeCounts(),
     getDrivers(),
+    getUnseenBadges(session.driverId),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -253,6 +269,7 @@ export default async function DriverDashboard() {
           myBadges={myBadges}
           badgeCounts={badgeCounts}
           driverAvatarMap={Object.fromEntries(allDrivers.map(d => [d.driverId, { name: d.name, avatarUrl: d.avatarUrl ?? null }]))}
+          unseenBadges={unseenBadges}
         />
       </div>
     </div>

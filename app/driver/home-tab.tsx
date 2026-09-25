@@ -82,9 +82,9 @@ export default function HomeTab({
           <Flame className="w-7 h-7 text-orange-500 shrink-0" />
           <div>
             <p className="text-[15px] font-bold text-orange-800 leading-tight">
-              {streakDays} day streak
+              🔥 Clean Streak — {streakDays} days
             </p>
-            <p className="text-[12px] text-orange-600 mt-0.5">Keep it going!</p>
+            <p className="text-[12px] text-orange-600 mt-0.5">Days without an at-fault review</p>
           </div>
         </div>
       )}
