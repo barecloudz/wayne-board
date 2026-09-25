@@ -110,7 +110,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   function loadWeek() {
     startLoadWeek(async () => {
       const [drivers, awarded] = await Promise.all([
-        computeTopDrivers(weekStart, weekEnd),
+        computeTopDrivers(weekStart, weekEnd, 3),
         isWeekAwarded(weekStart),
       ]);
       setTopDrivers(drivers);

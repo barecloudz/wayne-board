@@ -151,6 +151,7 @@ export async function deleteBadgeType(id: number): Promise<void> {
 export async function computeTopDrivers(
   weekStart: string,
   weekEnd: string,
+  limit?: number,
 ): Promise<TopDriverRow[]> {
   const orgId = await requireOrg();
 
@@ -218,7 +219,7 @@ export async function computeTopDrivers(
       unmappedCount,
     }))
     .sort((a, b) => b.avgIls - a.avgIls)
-    .slice(0, 3);
+    .slice(0, limit ?? undefined);
 }
 
 // ── Award Logic ──────────────────────────────────────────────────────────────
