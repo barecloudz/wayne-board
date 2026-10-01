@@ -338,17 +338,6 @@ export default function DriverTabs({
         {/* ── Schedule tab ──────────────────────────────── */}
         {tab === "schedule" && (
           <>
-            {/* Streak badge — shown at top of Schedule tab when active */}
-            {streakDays > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl self-start"
-                style={{ background: "#fffbeb", border: "1px solid #fde68a" }}>
-                <span className="text-base leading-none">🔥</span>
-                <span className="text-[13px] font-bold" style={{ color: "#92400e" }}>
-                  {streakDays} day streak
-                </span>
-              </div>
-            )}
-
             {/* 2-week calendar card */}
             <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
