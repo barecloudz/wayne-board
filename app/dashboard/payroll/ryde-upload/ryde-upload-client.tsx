@@ -47,9 +47,20 @@ export default function RydeUploadClient() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Ryde Upload</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-1 mb-4">
           Upload your Ryde package Excel export to sync driver ratings.
         </p>
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
+          <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">How to export from Spotlight</p>
+          <ol className="text-xs text-slate-500 space-y-1 list-decimal list-inside leading-relaxed">
+            <li>Sign into Spotlight → Ryde → Package Detail</li>
+            <li>Set your date range for the week you want</li>
+            <li>Hover over the grey bar at the bottom-left — click the <strong>⋯</strong> (more options) icon</li>
+            <li>Select <strong>Export data</strong></li>
+            <li>Choose <strong>"Data with current layout"</strong> and download</li>
+            <li>Upload the .xlsx file here</li>
+          </ol>
+        </div>
       </div>
 
       {/* Drop zone */}

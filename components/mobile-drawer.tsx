@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu, X, LayoutGrid, Truck, DollarSign, Users, Map,
   ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
   CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
   Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
-  ChevronDown, ChevronUp, PenLine, Upload, UserSearch,
+  ChevronDown, ChevronUp, PenLine, Upload, UserSearch, Loader2,
 } from "lucide-react";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
@@ -54,11 +54,13 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function MobileDrawer() {
   const [open, setOpen] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const [userRole, setUserRole] = useState("driver");
   const [userName, setUserName] = useState("");
   const [userInitials, setUserInitials] = useState("?");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/me").then(r => r.json()).then(d => {
@@ -70,6 +72,10 @@ export default function MobileDrawer() {
       }
     }).catch(() => {});
   }, []);
+  useEffect(() => {
+    setNavigating(false);
+  }, [pathname]);
+
   const automationActive = automationItems.some(i => pathname === i.href);
   const [autoOpen, setAutoOpen] = useState(automationActive);
 
@@ -84,7 +90,7 @@ export default function MobileDrawer() {
     return (
       <Link
         href={href}
-        onClick={() => setOpen(false)}
+        onClick={() => { setOpen(false); setNavigating(true); }}
         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all ${
           active
             ? "bg-slate-950 text-white"
@@ -100,6 +106,11 @@ export default function MobileDrawer() {
 
   return (
     <>
+      {navigating && (
+        <div className="md:hidden fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+        </div>
+      )}
       {/* ── Mobile header bar ── */}
       <header className="md:hidden flex items-center px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-40">
         <button

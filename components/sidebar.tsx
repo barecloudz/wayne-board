@@ -9,7 +9,7 @@ import {
   UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
   Zap, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
-  Building2, Upload, UserSearch,
+  Building2, Upload, UserSearch, Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocationContext } from "@/components/location-context";
@@ -97,6 +97,11 @@ function CollapsibleSection({
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [navigating, setNavigating] = useState(false);
+
+  useEffect(() => {
+    setNavigating(false);
+  }, [pathname]);
 
   const adminActive  = adminItems.some(i => pathname === i.href);
   const autoActive   = automationItems.some(i => pathname === i.href);
@@ -169,6 +174,7 @@ export default function Sidebar() {
     return (
       <Link
         href={href}
+        onClick={() => setNavigating(true)}
         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
           active ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
         }`}
@@ -180,6 +186,12 @@ export default function Sidebar() {
   }
 
   return (
+    <>
+    {navigating && (
+      <div className="hidden md:flex fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm items-center justify-center">
+        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+      </div>
+    )}
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
@@ -343,5 +355,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
