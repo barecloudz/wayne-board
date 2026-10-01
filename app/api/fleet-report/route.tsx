@@ -1,6 +1,10 @@
 ﻿import { NextResponse } from "next/server";
 import { getAllVehiclesWithConditions } from "@/lib/actions/vehicle-conditions";
 import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { getSession } from "@/lib/session";
+import { db } from "@/lib/db";
+import { organizations } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 const PURPLE = "#4D148C";
 const ORANGE = "#FF6200";
@@ -75,6 +79,19 @@ function routeBadgeStyle(rs: string) {
 }
 
 export async function GET() {
+  const session = await getSession();
+  let orgName = "MyGroundOps";
+  let preparedBy = "Admin";
+  if (session) {
+    preparedBy = session.name ?? "Admin";
+    const [org] = await db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, session.organizationId))
+      .limit(1);
+    if (org?.name) orgName = org.name;
+  }
+
   const rows = await getAllVehiclesWithConditions();
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
@@ -86,20 +103,20 @@ export async function GET() {
   const criticalVehicles = rows.filter((v) => v.conditions.some((c) => c.severity === "critical"));
 
   const doc = (
-    <Document title="742 Fleet Vehicle Status" author="MyGroundOps">
+    <Document title={`${orgName} Fleet Vehicle Status`} author={orgName}>
       {/* ── PAGE 1: Summary ───────────────────────────────────────────── */}
       <Page size="LETTER" style={styles.page}>
         {/* Header band */}
         <View style={styles.topBand}>
-          <View style={styles.badge}><Text style={styles.badgeText}>742</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>{orgName.split(" ")[0]}</Text></View>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>Fleet Vehicle Status</Text>
             <Text style={styles.subtitle}>Route Utilization & Vehicle Condition Review</Text>
           </View>
           <View>
             <Text style={styles.metaText}>Issued  {today}</Text>
-            <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>Blake Nardoni</Text></Text>
-            <Text style={styles.metaText}>MyGroundOps INC</Text>
+            <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>{preparedBy}</Text></Text>
+            <Text style={styles.metaText}>{orgName}</Text>
           </View>
         </View>
         <View style={styles.orangeBar} />
@@ -213,14 +230,14 @@ export async function GET() {
         return (
           <Page key={v.id} size="LETTER" style={styles.page}>
             <View style={styles.topBand}>
-              <View style={styles.badge}><Text style={styles.badgeText}>742</Text></View>
+              <View style={styles.badge}><Text style={styles.badgeText}>{orgName.split(" ")[0]}</Text></View>
               <View style={styles.titleBlock}>
                 <Text style={styles.title}>Vehicle Condition</Text>
                 <Text style={styles.subtitle}>Condition Documentation</Text>
               </View>
               <View>
                 <Text style={styles.metaText}>Issued  {today}</Text>
-                <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>Blake Nardoni</Text></Text>
+                <Text style={styles.metaText}>Prepared by  <Text style={styles.metaBold}>{preparedBy}</Text></Text>
               </View>
             </View>
             <View style={styles.orangeBar} />
@@ -306,7 +323,7 @@ export async function GET() {
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type":        "application/pdf",
-      "Content-Disposition": `inline; filename="742_Fleet_Status_${new Date().toISOString().slice(0,10)}.pdf"`,
+      "Content-Disposition": `inline; filename="${orgName.replace(/\s+/g,"_")}_Fleet_Status_${new Date().toISOString().slice(0,10)}.pdf"`,
     },
   });
 }

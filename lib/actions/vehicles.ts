@@ -151,6 +151,15 @@ export async function updateVehicleCompliance(
   revalidatePath("/dashboard/fleet-status");
 }
 
+export async function updateVehicleLocation(vehicleId: number, locationId: number | null) {
+  const orgId = await requireOrg();
+  await db
+    .update(vehicles)
+    .set({ locationId })
+    .where(and(eq(vehicles.id, vehicleId), eq(vehicles.organizationId, orgId)));
+  revalidatePath("/dashboard/fleet-status");
+}
+
 export async function getActiveVehiclesForMmr(): Promise<Array<{ unitNumber: string; mileage: number }>> {
   const orgId = await requireOrg();
   const rows = await db

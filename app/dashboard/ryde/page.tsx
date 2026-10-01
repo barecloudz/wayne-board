@@ -54,6 +54,8 @@ export default function RydePage() {
   const [shareDriverId,   setShareDriverId]   = useState<string | undefined>(undefined);
   const [reviewTarget,    setReviewTarget]    = useState<{ driver: Driver; reviews: Review[] } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [reviewsShown, setReviewsShown] = useState(20);
+  const REVIEWS_PAGE = 20;
 
   // Review form state
   const [rDriver, setRDriver]     = useState("");
@@ -477,7 +479,7 @@ export default function RydePage() {
               <p className="text-slate-400 text-[13px]">No reviews yet. Use &quot;Add Review&quot; to record customer or performance feedback.</p>
             </div>
           )}
-          {reviews.map((r) => (
+          {reviews.slice(0, reviewsShown).map((r) => (
             <ReviewCard
               key={r.id}
               review={r}
@@ -487,6 +489,14 @@ export default function RydePage() {
               isPending={isPending}
             />
           ))}
+          {reviews.length > reviewsShown && (
+            <button
+              onClick={() => setReviewsShown((n) => n + REVIEWS_PAGE)}
+              className="mt-1 w-full py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+            >
+              Load more ({reviews.length - reviewsShown} remaining)
+            </button>
+          )}
         </div>
       </main>
 

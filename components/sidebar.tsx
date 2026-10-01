@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import {
   Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
-  UserCog, Star, Wrench, Trophy, CalendarDays, WrenchIcon, Settings,
+  UserCog, Star, Wrench, Trophy, Award, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
-  Zap, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
-  Building2, Upload, UserSearch, Loader2,
+  Zap, Bot, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
+  Building2, Upload, UserSearch, Loader2, User,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocationContext } from "@/components/location-context";
@@ -28,14 +28,14 @@ const adminItems = [
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
-  { icon: Trophy,        label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
+  { icon: Award,         label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
   { icon: UserSearch,   label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
   { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
 ];
 
 const automationItems = [
-  { icon: TrendingUp,    label: "Auto GC",         href: "/dashboard/auto-gc",        exact: true },
+  { icon: Bot,           label: "Auto GC",         href: "/dashboard/auto-gc",        exact: true },
 ];
 
 const complianceItems = [
@@ -318,7 +318,7 @@ export default function Sidebar() {
               className="flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
               onClick={() => setAccountOpen(false)}
             >
-              <Settings className="w-3.5 h-3.5 text-slate-400" />
+              <User className="w-3.5 h-3.5 text-slate-400" />
               My Account
             </Link>
             <Link

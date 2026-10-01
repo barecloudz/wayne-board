@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, Check, Loader2, ChevronDown, ChevronUp, FileDown, Plus, X, Wrench } from "lucide-react";
-import { setVehicleActive, updateVehicleCompliance } from "@/lib/actions/vehicles";
+import { setVehicleActive, updateVehicleCompliance, updateVehicleLocation } from "@/lib/actions/vehicles";
 import { addCondition, updateCondition, deleteCondition, type Severity, type CondStatus } from "@/lib/actions/vehicle-conditions";
 import Link from "next/link";
 
@@ -16,10 +16,13 @@ type Vehicle = {
   type: string;
   ownership: string;
   active: boolean;
+  locationId: number | null;
   mmrDue: string | null;
   federalInspectionDue: string | null;
   registrationExpiry: string | null;
 };
+
+type LocationOption = { id: number; name: string };
 
 type Driver = {
   id: number;
@@ -83,7 +86,7 @@ function ComplianceDot({ date, today }: { date: string | null; today: string }) 
 }
 
 function VehicleRow({
-  vehicle, assignedDriver, today, conditions, onToggleActive, onReportIssue,
+  vehicle, assignedDriver, today, conditions, onToggleActive, onReportIssue, locations, onLocationChange,
 }: {
   vehicle: Vehicle;
   assignedDriver: Driver | undefined;
@@ -91,6 +94,8 @@ function VehicleRow({
   conditions: Condition[];
   onToggleActive: (id: number, active: boolean) => void;
   onReportIssue: (vehicle: Vehicle) => void;
+  locations: LocationOption[];
+  onLocationChange: (vehicleId: number, locationId: number | null) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [ownership, setOwnership] = useState(vehicle.ownership);
@@ -139,6 +144,26 @@ function VehicleRow({
         {assignedDriver
           ? <span className="text-[12px] font-semibold text-slate-700">{assignedDriver.name}</span>
           : <span className="text-[12px] text-slate-300">Unassigned</span>}
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap">
+        {locations.length > 0 ? (
+          <select
+            value={vehicle.locationId ?? ""}
+            onChange={(e) => onLocationChange(vehicle.id, e.target.value ? parseInt(e.target.value) : null)}
+            className={`text-[11px] border rounded-lg px-2 py-1 transition-colors ${
+              !vehicle.locationId
+                ? "border-amber-300 bg-amber-50 text-amber-700 font-semibold"
+                : "border-slate-200 bg-white text-slate-700"
+            }`}
+          >
+            <option value="">⚠ Unassigned</option>
+            {locations.map((l) => (
+              <option key={l.id} value={l.id}>{l.name}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-[12px] text-slate-300">—</span>
+        )}
       </td>
       {editing ? (
         <td className="px-4 py-3" colSpan={5}>
@@ -262,11 +287,13 @@ export default function FleetStatusClient({
   drivers,
   conditionsByVehicle: initialConditions,
   resolvedConditions: initialResolved,
+  locations,
 }: {
   vehicles: Vehicle[];
   drivers: Driver[];
   conditionsByVehicle: Record<number, Condition[]>;
   resolvedConditions: Condition[];
+  locations: LocationOption[];
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const [vehicles, setVehicles] = useState(initialVehicles);
@@ -291,6 +318,13 @@ export default function FleetStatusClient({
   const driverByVehicleId = new Map(
     drivers.filter((d) => d.assignedVehicleId).map((d) => [d.assignedVehicleId!, d])
   );
+
+  function handleLocationChange(vehicleId: number, locationId: number | null) {
+    startTransition(async () => {
+      await updateVehicleLocation(vehicleId, locationId);
+      setVehicles((prev) => prev.map((v) => v.id === vehicleId ? { ...v, locationId } : v));
+    });
+  }
 
   function handleToggleActive(id: number, active: boolean) {
     startTransition(async () => {
@@ -412,7 +446,7 @@ export default function FleetStatusClient({
   const tableHead = (
     <thead>
       <tr className="border-b-2 border-slate-200 bg-slate-50">
-        {["Unit", "Vehicle", "Type", "Assigned Driver", "MMR Due", "Fed Inspection", "Registration", "Alerts", ""].map((h) => (
+        {["Unit", "Vehicle", "Type", "Assigned Driver", "Location", "MMR Due", "Fed Inspection", "Registration", "Alerts", ""].map((h) => (
           <th key={h} className="px-4 py-2.5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
             {h}
           </th>
@@ -504,6 +538,8 @@ export default function FleetStatusClient({
                         conditions={conditionsMap[v.id] ?? []}
                         onToggleActive={handleToggleActive}
                         onReportIssue={openReportIssue}
+                        locations={locations}
+                        onLocationChange={handleLocationChange}
                       />
                     ))}
                   </tbody>
@@ -533,6 +569,8 @@ export default function FleetStatusClient({
                         conditions={conditionsMap[v.id] ?? []}
                         onToggleActive={handleToggleActive}
                         onReportIssue={openReportIssue}
+                        locations={locations}
+                        onLocationChange={handleLocationChange}
                       />
                     ))}
                   </tbody>
@@ -658,6 +696,8 @@ export default function FleetStatusClient({
                           conditions={conditionsMap[v.id] ?? []}
                           onToggleActive={handleToggleActive}
                           onReportIssue={openReportIssue}
+                          locations={locations}
+                          onLocationChange={handleLocationChange}
                         />
                       ))}
                     </tbody>

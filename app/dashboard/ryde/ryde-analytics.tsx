@@ -115,6 +115,12 @@ function MultiRingSvg({
 }
 
 // ── Aggregate driver stats ────────────────────────────────────────────────
+// Bayesian avg blends driver's raw avg toward the global mean
+// using BAYES_PRIOR phantom reviews, preventing 2-review drivers
+// from outranking drivers with many real reviews.
+const BAYES_PRIOR = 5;
+const MIN_RANKED  = 5; // minimum reviews to appear in the rankings table
+
 function useDriverStats(reviews: Review[], drivers: Driver[]) {
   return useMemo(() => {
     const nameMap = new Map(drivers.map((d) => [d.driverId, d.name]));
@@ -135,15 +141,23 @@ function useDriverStats(reviews: Review[], drivers: Driver[]) {
       entry.dist[r.stars - 1]++;
     }
 
+    // Global mean across all rated reviews (used as Bayesian prior)
+    const allStars = reviews.filter((r) => r.stars !== null).map((r) => r.stars as number);
+    const globalMean = allStars.length > 0
+      ? allStars.reduce((s, x) => s + x, 0) / allStars.length
+      : 3.0;
+
     return Array.from(map.values())
       .map((d) => {
         const total = d.stars.length;
         const avg   = d.stars.reduce((s, x) => s + x, 0) / total;
         const pos   = d.stars.filter((s) => s >= 4).length;
         const neg   = d.stars.filter((s) => s <= 2).length;
-        return { ...d, total, avg, pos, neg, pct: Math.round(pos / total * 100) };
+        // Bayesian score: weighted blend of driver avg + global mean
+        const bayesianAvg = (total * avg + BAYES_PRIOR * globalMean) / (total + BAYES_PRIOR);
+        return { ...d, total, avg, bayesianAvg, pos, neg, pct: Math.round(pos / total * 100) };
       })
-      .sort((a, b) => b.avg - a.avg);
+      .sort((a, b) => b.bayesianAvg - a.bayesianAvg);
   }, [reviews, drivers]);
 }
 
@@ -317,16 +331,21 @@ export default function RydeAnalytics({ reviews, drivers }: Props) {
         {/* Rankings table */}
         <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
           style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.65)" }}>
-          <div className="text-[7px] font-bold uppercase tracking-[.12em] mb-3" style={{ color: "#86868B" }}>
-            All Driver Rankings
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-[7px] font-bold uppercase tracking-[.12em]" style={{ color: "#86868B" }}>
+              Driver Rankings · Bayesian Score
+            </div>
+            <div className="text-[7px]" style={{ color: "#AEAEB2" }}>
+              Requires {MIN_RANKED}+ reviews to rank · sorted by weighted score
+            </div>
           </div>
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-                {["#","Driver","ID","Avg","Reviews","5★","4★","3★","2★","1★","Pos%","Status"].map((h, i) => (
+                {["#","Driver","ID","Score","Avg","Reviews","5★","4★","3★","2★","1★","Pos%","Status"].map((h, i) => (
                   <th key={h} className="pb-2 px-1"
                     style={{
-                      textAlign: i === 1 || i === 11 ? "left" : "center",
+                      textAlign: i === 1 || i === 12 ? "left" : "center",
                       fontSize: 7, fontWeight: 700, textTransform: "uppercase",
                       letterSpacing: ".09em", color: "#AEAEB2",
                     }}>
@@ -336,41 +355,58 @@ export default function RydeAnalytics({ reviews, drivers }: Props) {
               </tr>
             </thead>
             <tbody>
-              {driverStats.map((d, i) => {
-                const color = scoreColor(d.avg);
-                return (
-                  <tr key={d.driverId}
-                    style={{ borderBottom: "1px solid rgba(0,0,0,0.04)", background: i % 2 !== 0 ? "rgba(0,0,0,0.01)" : undefined }}>
-                    <td className="py-1.5 px-1 text-center text-[9px] font-semibold" style={{ color: "#C7C7CC" }}>{i + 1}</td>
-                    <td className="py-1.5 px-1 text-[10px] font-bold text-[#1D1D1F]">{d.name}</td>
-                    <td className="py-1.5 px-1 text-center text-[8px]" style={{ color: "#AEAEB2" }}>{d.driverId}</td>
-                    <td className="py-1.5 px-1 text-center">
-                      <span className="text-[14px] font-black" style={{ color }}>{d.avg.toFixed(2)}</span>
-                    </td>
-                    <td className="py-1.5 px-1 text-center text-[10px] font-semibold" style={{ color: "#6E6E73" }}>{d.total}</td>
-                    {[4, 3, 2, 1, 0].map((idx) => {
-                      const count = d.dist[idx];
-                      const c = idx >= 3 ? GREEN : idx === 2 ? AMBER : RED;
-                      return (
-                        <td key={idx} className="py-1.5 px-1 text-center text-[10px] font-bold"
-                          style={{ color: count > 0 ? c : "#E5E5EA" }}>
-                          {count}
+              {(() => {
+                const ranked   = driverStats.filter((d) => d.total >= MIN_RANKED);
+                const unranked = driverStats.filter((d) => d.total < MIN_RANKED);
+                return [
+                  ...ranked.map((d, i) => {
+                    const color = scoreColor(d.bayesianAvg);
+                    return (
+                      <tr key={d.driverId}
+                        style={{ borderBottom: "1px solid rgba(0,0,0,0.04)", background: i % 2 !== 0 ? "rgba(0,0,0,0.01)" : undefined }}>
+                        <td className="py-1.5 px-1 text-center text-[9px] font-semibold" style={{ color: "#C7C7CC" }}>{i + 1}</td>
+                        <td className="py-1.5 px-1 text-[10px] font-bold text-[#1D1D1F]">{d.name}</td>
+                        <td className="py-1.5 px-1 text-center text-[8px]" style={{ color: "#AEAEB2" }}>{d.driverId}</td>
+                        <td className="py-1.5 px-1 text-center">
+                          <span className="text-[14px] font-black" style={{ color }}>{d.bayesianAvg.toFixed(2)}</span>
                         </td>
-                      );
-                    })}
-                    <td className="py-1.5 px-1 text-center text-[10px] font-bold"
-                      style={{ color: d.pct >= 70 ? GREEN : d.pct >= 50 ? AMBER : RED }}>
-                      {d.pct}%
-                    </td>
-                    <td className="py-1.5 px-1">
-                      <span className="px-2 py-0.5 rounded-full text-[7px] font-bold uppercase tracking-wider"
-                        style={{ background: `${color}1A`, color }}>
-                        {tierLabel(d.avg)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
+                        <td className="py-1.5 px-1 text-center text-[10px]" style={{ color: "#6E6E73" }}>{d.avg.toFixed(2)}</td>
+                        <td className="py-1.5 px-1 text-center text-[10px] font-semibold" style={{ color: "#6E6E73" }}>{d.total}</td>
+                        {[4, 3, 2, 1, 0].map((idx) => {
+                          const count = d.dist[idx];
+                          const c = idx >= 3 ? GREEN : idx === 2 ? AMBER : RED;
+                          return (
+                            <td key={idx} className="py-1.5 px-1 text-center text-[10px] font-bold"
+                              style={{ color: count > 0 ? c : "#E5E5EA" }}>
+                              {count}
+                            </td>
+                          );
+                        })}
+                        <td className="py-1.5 px-1 text-center text-[10px] font-bold"
+                          style={{ color: d.pct >= 70 ? GREEN : d.pct >= 50 ? AMBER : RED }}>
+                          {d.pct}%
+                        </td>
+                        <td className="py-1.5 px-1">
+                          <span className="px-2 py-0.5 rounded-full text-[7px] font-bold uppercase tracking-wider"
+                            style={{ background: `${color}1A`, color }}>
+                            {tierLabel(d.bayesianAvg)}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  }),
+                  ...unranked.map((d) => (
+                    <tr key={d.driverId} style={{ borderBottom: "1px solid rgba(0,0,0,0.03)", opacity: 0.5 }}>
+                      <td className="py-1.5 px-1 text-center text-[9px]" style={{ color: "#C7C7CC" }}>—</td>
+                      <td className="py-1.5 px-1 text-[10px] text-[#6E6E73]">{d.name}</td>
+                      <td className="py-1.5 px-1 text-center text-[8px]" style={{ color: "#AEAEB2" }}>{d.driverId}</td>
+                      <td colSpan={10} className="py-1.5 px-1 text-[8px]" style={{ color: "#AEAEB2" }}>
+                        {d.total} review{d.total !== 1 ? "s" : ""} — needs {MIN_RANKED - d.total} more to rank
+                      </td>
+                    </tr>
+                  )),
+                ];
+              })()}
             </tbody>
           </table>
         </div>

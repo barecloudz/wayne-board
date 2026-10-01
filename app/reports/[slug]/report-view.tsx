@@ -488,12 +488,20 @@ export default function ReportView({ slug, title, period, fleetData, driverData 
             <p className="text-[13px] text-slate-400 mt-1.5">{period}</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <GlassSecondaryButton onClick={() => alert("Print coming soon.")}>
+            <GlassSecondaryButton onClick={() => window.print()}>
               <Printer className="w-3.5 h-3.5" /> Print
             </GlassSecondaryButton>
-            <GlassPrimaryButton onClick={() => alert("PDF export coming soon.")}>
-              <FileDown className="w-3.5 h-3.5" /> Export PDF
-            </GlassPrimaryButton>
+            {slug === "fleet" ? (
+              <a href="/api/fleet-report" target="_blank" rel="noopener noreferrer">
+                <GlassPrimaryButton onClick={() => {}}>
+                  <FileDown className="w-3.5 h-3.5" /> Export PDF
+                </GlassPrimaryButton>
+              </a>
+            ) : (
+              <GlassPrimaryButton onClick={() => {}}>
+                <FileDown className="w-3.5 h-3.5" /> Export PDF
+              </GlassPrimaryButton>
+            )}
           </div>
         </div>
 
