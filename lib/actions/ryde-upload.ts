@@ -122,7 +122,7 @@ export async function uploadRydeFile(
     // Use matched driverId or fall back to raw resource string (storing as-is)
     const driverIdValue = matchedDriverId ?? (resourceRaw ?? "unknown");
 
-    await db
+    const result = await db
       .insert(rydeReviews)
       .values({
         organizationId: orgId,
@@ -138,9 +138,11 @@ export async function uploadRydeFile(
         source: "ryde_upload",
         trackId,
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ id: rydeReviews.id });
 
-    inserted++;
+    if (result.length > 0) inserted++;
+    else skipped++;
   }
 
   revalidatePath("/dashboard/payroll/ryde-upload");

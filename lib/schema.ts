@@ -157,7 +157,9 @@ export const rydeReviews = pgTable("ryde_reviews", {
   source:           text("source"),
   trackId:          text("track_id"),
   createdAt:        timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  uniqueIndex("ryde_reviews_org_track_unique").on(t.organizationId, t.trackId),
+]);
 
 // ── Milestone Rewards (platform-global, managed by MyGroundOps owner) ─────────
 export const milestoneRewards = pgTable("milestone_rewards", {
