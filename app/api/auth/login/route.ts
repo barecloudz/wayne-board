@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { drivers, organizations } from "@/lib/schema";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/session";
 
@@ -33,13 +33,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid username or password." }, { status: 401 });
   }
 
-  // Match by username if set, fall back to driverId for drivers without one yet
+  // Match by username (case-insensitive) if set, fall back to driverId
+  const trimmed = username.trim();
   const [driver] = await db
     .select()
     .from(drivers)
     .where(and(
       eq(drivers.organizationId, org.id),
-      or(eq(drivers.username, username.trim()), eq(drivers.driverId, username.trim())),
+      or(
+        sql`lower(${drivers.username}) = lower(${trimmed})`,
+        eq(drivers.driverId, trimmed),
+      ),
     ))
     .limit(1);
 
