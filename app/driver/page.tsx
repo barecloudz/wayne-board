@@ -28,6 +28,7 @@ import { getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
 import { getDriverBadges, getDriverBadgeCounts, getUnseenBadges, computeTopDrivers } from "@/lib/actions/badges";
 import { computeRydeLeaderboard } from "@/lib/actions/ryde-upload";
+import { getWeeklyStandings } from "@/lib/weekly-awards";
 import { getDrivers } from "@/lib/actions/drivers";
 import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes, getGateAreas } from "@/lib/actions/gate-codes";
@@ -83,7 +84,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers, unseenBadges, rydeLeaderboard] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers, unseenBadges, rydeLeaderboard, weeklyStandings] = await Promise.all([
     db.select().from(rydeReviews).where(and(eq(rydeReviews.driverId, session.driverId), eq(rydeReviews.organizationId, session.organizationId))).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -116,6 +117,7 @@ export default async function DriverDashboard() {
     getDrivers(),
     getUnseenBadges(session.driverId),
     computeRydeLeaderboard().catch(() => []),
+    getWeeklyStandings(session.organizationId).catch(() => []),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -168,6 +170,12 @@ export default async function DriverDashboard() {
 
   const myRank = leaderboard.findIndex((e) => e.driverId === session.driverId) + 1;
   const myRydeRank = rydeLeaderboard.findIndex((e) => e.driverId === session.driverId) + 1;
+
+  // Live weekly standings for rank pills
+  const myStanding = weeklyStandings.find((s) => s.driverId === session.driverId);
+  const weeklyIlsRank = myStanding?.ilsRank ?? null;
+  const weeklyRydeRank = myStanding?.rydeRank ?? null;
+  const totalDriversThisWeek = weeklyStandings.filter((s) => s.ilsRank !== null).length;
 
   const ratedReviews = reviews.filter((r) => r.stars != null);
   const avgScore = ratedReviews.length
@@ -274,6 +282,9 @@ export default async function DriverDashboard() {
           badgeCounts={badgeCounts}
           driverAvatarMap={Object.fromEntries(allDrivers.map(d => [d.driverId, { name: d.name, avatarUrl: d.avatarUrl ?? null }]))}
           unseenBadges={unseenBadges}
+          weeklyIlsRank={weeklyIlsRank}
+          weeklyRydeRank={weeklyRydeRank}
+          totalDriversThisWeek={totalDriversThisWeek}
         />
       </div>
     </div>

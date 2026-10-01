@@ -34,7 +34,7 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null,
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
 }: {
   reviews: Review[];
   milestones: Milestone[];
@@ -67,6 +67,9 @@ export default function DriverTabs({
   driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
   unseenBadges?: DriverBadgeRow[];
   rydeRank?: number | null;
+  weeklyIlsRank?: number | null;
+  weeklyRydeRank?: number | null;
+  totalDriversThisWeek?: number;
 }) {
   const [tab, setTab] = useState<DriverTab>("home");
   const [claimedBadgeIds, setClaimedBadgeIds] = useState<number[]>([]);
@@ -503,6 +506,9 @@ export default function DriverTabs({
             badgeCounts={badgeCounts}
             driverAvatarMap={driverAvatarMap}
             newBadgeIds={claimedBadgeIds}
+            weeklyIlsRank={weeklyIlsRank}
+            weeklyRydeRank={weeklyRydeRank}
+            totalDriversThisWeek={totalDriversThisWeek}
           />
         )}
 

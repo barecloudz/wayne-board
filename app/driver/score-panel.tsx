@@ -63,6 +63,9 @@ export type ScorePanelProps = {
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
   driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
   newBadgeIds?: number[];
+  weeklyIlsRank?: number | null;
+  weeklyRydeRank?: number | null;
+  totalDriversThisWeek?: number;
 };
 
 type ScoreSection = "score" | "leaderboard" | "reviews" | "service";
@@ -94,6 +97,9 @@ export default function ScorePanel({
   badgeCounts = [],
   driverAvatarMap = {},
   newBadgeIds = [],
+  weeklyIlsRank = null,
+  weeklyRydeRank = null,
+  totalDriversThisWeek = 0,
 }: ScorePanelProps) {
   const [section, setSection] = useState<ScoreSection>("score");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
@@ -185,6 +191,37 @@ export default function ScorePanel({
                   </button>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Weekly rank pills */}
+          {(weeklyIlsRank !== null || weeklyRydeRank !== null) && (
+            <div className="flex gap-2 flex-wrap">
+              {weeklyIlsRank !== null && (
+                <div
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                  style={{ background: "#EFF6FF", border: "1px solid #BFDBFE" }}
+                >
+                  <span className="text-[13px]">📦</span>
+                  <span className="text-[13px] font-bold" style={{ color: "#1D4ED8" }}>
+                    #{weeklyIlsRank}
+                    {totalDriversThisWeek > 0 && (
+                      <span className="font-normal text-[12px]" style={{ color: "#3B82F6" }}> of {totalDriversThisWeek}</span>
+                    )}
+                  </span>
+                  <span className="text-[11px] font-semibold" style={{ color: "#60A5FA" }}>this week</span>
+                </div>
+              )}
+              {weeklyRydeRank !== null && (
+                <div
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
+                  style={{ background: "#FFF7ED", border: "1px solid #FED7AA" }}
+                >
+                  <span className="text-[13px]">⭐</span>
+                  <span className="text-[13px] font-bold" style={{ color: "#C2410C" }}>#{weeklyRydeRank}</span>
+                  <span className="text-[11px] font-semibold" style={{ color: "#FB923C" }}>in ratings</span>
+                </div>
+              )}
             </div>
           )}
 

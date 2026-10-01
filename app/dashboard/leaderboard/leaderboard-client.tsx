@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { Trophy, Settings, Clock, Loader2, X, Camera } from "lucide-react";
+import { Trophy, Settings, Clock, Loader2, X, Camera, TrendingUp, CalendarDays, Zap } from "lucide-react";
 import {
   computeTopDrivers, awardBadgesForWeek, awardSpecialBadge,
   upsertBadgeType, deleteBadgeType, isWeekAwarded, revokeBadge, clearBadgeIcon,
 } from "@/lib/actions/badges";
 import type { BadgeTypeRow, TopDriverRow, BadgeHistoryRow } from "@/lib/actions/badges";
+import type { WeeklyStanding, MonthlyBadgeCount } from "@/lib/weekly-awards";
 import { useRouter } from "next/navigation";
 
 // ── Default trophy SVGs ───────────────────────────────────────────────────────
@@ -78,15 +79,17 @@ function prevMonday(): Date {
 type Driver = { driverId: string; name: string; avatarUrl?: string | null };
 
 type Props = {
-  initialBadgeTypes: BadgeTypeRow[];
-  initialHistory:    BadgeHistoryRow[];
-  allDrivers:        Driver[];
+  initialBadgeTypes:  BadgeTypeRow[];
+  initialHistory:     BadgeHistoryRow[];
+  allDrivers:         Driver[];
+  weeklyStandings:    WeeklyStanding[];
+  monthlyBadgeCounts: MonthlyBadgeCount[];
 };
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function LeaderboardClient({ initialBadgeTypes, initialHistory, allDrivers }: Props) {
+export default function LeaderboardClient({ initialBadgeTypes, initialHistory, allDrivers, weeklyStandings, monthlyBadgeCounts }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<"award" | "setup" | "history">("award");
+  const [tab, setTab] = useState<"award" | "this_week" | "monthly" | "setup" | "history">("award");
   const history = initialHistory;
 
   const weeklyBadges = initialBadgeTypes
@@ -270,6 +273,32 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
     });
   }
 
+  // ── Auto-Award (API route) ────────────────────────────────────────────────
+  const [autoAwarding, setAutoAwarding] = useState(false);
+  const [autoAwardResult, setAutoAwardResult] = useState<string | null>(null);
+
+  async function handleAutoAward() {
+    setAutoAwarding(true);
+    setAutoAwardResult(null);
+    try {
+      const res = await fetch("/api/award-weekly-badges", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      const data = await res.json();
+      if (data.error) { setAutoAwardResult(`Error: ${data.error}`); return; }
+      const parts = [
+        data.ilsGold    && `🥇 ${data.ilsGold}`,
+        data.ilsSilver  && `🥈 ${data.ilsSilver}`,
+        data.ilsBronze  && `🥉 ${data.ilsBronze}`,
+        data.topRated   && `⭐ ${data.topRated}`,
+      ].filter(Boolean);
+      setAutoAwardResult(`Week ${data.week}: ${parts.length ? parts.join(", ") : "no data"} — ${data.badgesInserted} new badge${data.badgesInserted !== 1 ? "s" : ""}`);
+      router.refresh();
+    } catch {
+      setAutoAwardResult("Request failed");
+    } finally {
+      setAutoAwarding(false);
+    }
+  }
+
   // ── History Revoke ───────────────────────────────────────────────────────
   const [revoking, setRevoking] = useState<number | null>(null);
 
@@ -292,8 +321,8 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         <h1 className="text-2xl font-extrabold text-slate-900 mb-6">Leaderboard</h1>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-slate-200">
-          {([["award", "Award", Trophy], ["setup", "Badge Setup", Settings], ["history", "History", Clock]] as const).map(([key, label, Icon]) => (
+        <div className="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto no-scrollbar">
+          {([["award", "Award", Trophy], ["this_week", "This Week", TrendingUp], ["monthly", "Monthly", CalendarDays], ["setup", "Badge Setup", Settings], ["history", "History", Clock]] as const).map(([key, label, Icon]) => (
             <button
               key={key}
               onClick={() => setTab(key)}
@@ -312,6 +341,27 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         {/* ── Award Tab ───────────────────────────────────────────────────── */}
         {tab === "award" && (
           <div className="flex flex-col gap-6">
+            {/* Auto-award previous week */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-sm font-bold text-amber-900">Auto-Award Last Week</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Awards ILS Gold/Silver/Bronze + Top Rated for the previous Monday–Sunday</p>
+                </div>
+                <button
+                  onClick={handleAutoAward}
+                  disabled={autoAwarding}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-40 shrink-0"
+                >
+                  {autoAwarding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                  Award Now
+                </button>
+              </div>
+              {autoAwardResult && (
+                <p className="text-xs font-semibold text-amber-800 bg-amber-100 rounded-lg px-3 py-2">{autoAwardResult}</p>
+              )}
+            </div>
+
             {/* Week picker */}
             <div className="flex items-center gap-3 flex-wrap">
               <label className="text-sm font-semibold text-slate-700">Week of</label>
@@ -631,6 +681,98 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── This Week Tab ────────────────────────────────────────────────── */}
+        {tab === "this_week" && (
+          <div>
+            {weeklyStandings.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                <TrendingUp className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                <p className="text-slate-500 text-sm font-semibold">No DSW or Ryde data yet this week</p>
+                <p className="text-slate-400 text-xs mt-1">Standings update as data is synced</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-500">ILS #</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-500">Driver</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Avg ILS%</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Ryde #</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Ryde Avg</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Reviews</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weeklyStandings.map((s) => (
+                      <tr key={s.driverId} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                        <td className="px-4 py-3 font-bold text-slate-700">
+                          {s.ilsRank != null ? `#${s.ilsRank}` : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-800">{s.driverName}</td>
+                        <td className="px-4 py-3 text-right text-slate-700">
+                          {s.avgIls != null ? `${s.avgIls.toFixed(1)}%` : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-slate-700">
+                          {s.rydeRank != null ? `#${s.rydeRank}` : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-700">
+                          {s.bayesianAvg != null ? s.bayesianAvg.toFixed(2) : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right text-slate-500">{s.reviewCount > 0 ? s.reviewCount : <span className="text-slate-300">—</span>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Monthly Tab ───────────────────────────────────────────────────── */}
+        {tab === "monthly" && (
+          <div>
+            {monthlyBadgeCounts.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                <CalendarDays className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                <p className="text-slate-500 text-sm font-semibold">No weekly badges earned this month yet</p>
+                <p className="text-slate-400 text-xs mt-1">Drivers accumulate badges each week — most wins the Monthly Performer title</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-500">Rank</th>
+                      <th className="px-4 py-3 text-left font-semibold text-slate-500">Driver</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Total Badges</th>
+                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Breakdown</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthlyBadgeCounts.map((m, idx) => (
+                      <tr key={m.driverId} className={`border-b border-slate-50 last:border-0 ${idx === 0 ? "bg-amber-50/60" : ""}`}>
+                        <td className="px-4 py-3 font-bold text-slate-700">#{idx + 1}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-800">
+                          {m.driverName}
+                          {idx === 0 && <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Leader</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-slate-800">{m.badgeCount}</td>
+                        <td className="px-4 py-3 text-right text-slate-500 text-xs">
+                          {m.gold > 0 && <span className="mr-1">🥇×{m.gold}</span>}
+                          {m.silver > 0 && <span className="mr-1">🥈×{m.silver}</span>}
+                          {m.bronze > 0 && <span className="mr-1">🥉×{m.bronze}</span>}
+                          {m.badgeCount - m.gold - m.silver - m.bronze > 0 && <span>⭐×{m.badgeCount - m.gold - m.silver - m.bronze}</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
