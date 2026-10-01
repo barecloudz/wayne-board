@@ -53,11 +53,13 @@ export async function getSession(): Promise<SessionPayload | null> {
     let loginDisabled: boolean | null = null;
     if (session.driverDbId) {
       const [driver] = await db
-        .select({ loginDisabled: drivers.loginDisabled })
+        .select({ loginDisabled: drivers.loginDisabled, driverId: drivers.driverId })
         .from(drivers)
         .where(and(eq(drivers.id, session.driverDbId), eq(drivers.organizationId, session.organizationId)))
         .limit(1);
       if (!driver || driver.loginDisabled) return null;
+      // Always return current driverId from DB — handles FedEx ID linking without re-login
+      return { ...session, driverId: driver.driverId };
     } else {
       const [driver] = await db
         .select({ loginDisabled: drivers.loginDisabled })

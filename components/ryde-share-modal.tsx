@@ -93,7 +93,7 @@ interface RydeShareModalProps {
 export default function RydeShareModal({ drivers, reviews, onClose, initialDriverId }: RydeShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [selectedDriver, setSelectedDriver] = useState<string>(initialDriverId ?? drivers[0]?.driverId ?? "");
-  const [period,         setPeriod]         = useState<Period>("week");
+  const [period,         setPeriod]         = useState<Period>("all");
   const [starFilter,     setStarFilter]     = useState<StarFilter>("all");
   const [sharing,        setSharing]        = useState(false);
 

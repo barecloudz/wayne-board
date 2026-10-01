@@ -63,13 +63,13 @@ export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Pr
     if (!orgId) return { success: false, date: "", rows: 0, matched: 0, error: "No organization found." };
   }
 
-  const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('dro_username', 'dro_password')`;
+  const credsRows = await sql`SELECT key, value FROM settings WHERE organization_id = ${orgId} AND key IN ('spotlight_username', 'spotlight_password')`;
   const credsMap  = Object.fromEntries((credsRows as any[]).map((r) => [r.key, r.value]));
-  const username  = credsMap["dro_username"] || process.env.DRO_USERNAME;
-  const password  = credsMap["dro_password"] || process.env.DRO_PASSWORD;
+  const username  = credsMap["spotlight_username"] || process.env.SPOTLIGHT_USERNAME;
+  const password  = credsMap["spotlight_password"] || process.env.SPOTLIGHT_PASSWORD;
 
   if (!username || !password) {
-    return { success: false, date: "", rows: 0, matched: 0, error: "DRO credentials not configured." };
+    return { success: false, date: "", rows: 0, matched: 0, error: "FedEx credentials not configured. Set them in Auto Spotlight settings." };
   }
 
   // Target date: yesterday by default, in M/D/YYYY format for DSW

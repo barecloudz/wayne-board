@@ -28,10 +28,10 @@ if (!process.env.CHROME_EXECUTABLE_PATH) {
   process.exit(1);
 }
 
-const username = process.env.DRO_USERNAME;
-const password = process.env.DRO_PASSWORD;
+const username = process.env.SPOTLIGHT_USERNAME;
+const password = process.env.SPOTLIGHT_PASSWORD;
 if (!username || !password) {
-  console.error("DRO_USERNAME / DRO_PASSWORD not set in .env.local");
+  console.error("SPOTLIGHT_USERNAME / SPOTLIGHT_PASSWORD not set in .env.local");
   process.exit(1);
 }
 
@@ -51,10 +51,24 @@ console.log("");
 
 const MYBIZ_BASE = "https://mybizaccount.fedex.com";
 
+// Use a separate profile for MyBizAccount — the Spotlight profile has cached
+// Okta cookies for a different user context which cause "Unable to sign in".
+const PROFILE_DIR = "C:/tmp/puppeteer-mybiz";
+// Remove stale lock files that block Chrome from launching
+import { existsSync, unlinkSync } from "fs";
+for (const lock of [`${PROFILE_DIR}/LOCK`, `${PROFILE_DIR}/Default/LOCK`]) {
+  if (existsSync(lock)) { unlinkSync(lock); console.log("Removed stale lock:", lock); }
+}
+
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROME_EXECUTABLE_PATH,
   headless: false,
-  args: ["--no-sandbox", "--disable-setuid-sandbox", "--start-maximized"],
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--start-maximized",
+    `--user-data-dir=${PROFILE_DIR}`,
+  ],
 });
 
 try {
@@ -62,38 +76,81 @@ try {
   page.on("dialog", async (d) => { try { await d.dismiss(); } catch {} });
 
   // ── Login ───────────────────────────────────────────────────────────────────
-  console.log("[1] Navigating to MyBiz...");
+  console.log("[1] Navigating to MyBiz /my.policy...");
   await page.goto(`${MYBIZ_BASE}/my.policy`, { waitUntil: "networkidle2", timeout: 30000 });
   await new Promise(r => setTimeout(r, 1500));
+  await page.screenshot({ path: join(__dirname, "dsw-step1.png") });
+  console.log("[1] URL:", page.url(), "→ screenshot: dsw-step1.png");
 
+  // Click "Sign In" on the MyBizAccount portal
   const signIn = await page.$('input[value="Sign In"]') || await page.$('input[type="submit"]');
-  if (signIn) await signIn.click();
-  await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
-  await new Promise(r => setTimeout(r, 2000));
+  if (signIn) {
+    console.log("[1b] Clicking Sign In...");
+    await signIn.click();
+    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 2000));
+    await page.screenshot({ path: join(__dirname, "dsw-step2.png") });
+    console.log("[1b] URL after Sign In:", page.url(), "→ screenshot: dsw-step2.png");
+  } else {
+    console.log("[1b] No Sign In button found");
+  }
 
+  // Dismiss any popups
   try {
     await page.waitForSelector('button::-p-text(Cancel)', { timeout: 3000 });
     await page.click('button::-p-text(Cancel)');
     await new Promise(r => setTimeout(r, 1000));
   } catch {}
 
-  console.log("[2] Entering username...");
-  await page.waitForSelector('input[name="identifier"]', { timeout: 10000 });
-  const uf = await page.$('input[name="identifier"]') || await page.$('input[type="text"]');
-  if (uf) { await uf.click({ clickCount: 3 }); await uf.type(username, { delay: 40 }); }
-  const nb = await page.$('input[type="submit"], button[type="submit"]');
-  if (nb) await nb.click(); else await page.keyboard.press("Enter");
-  await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 10000 }).catch(() => {});
-  await new Promise(r => setTimeout(r, 2000));
+  // Username
+  console.log("[2] Waiting for username field...");
+  const identifierPresent = await page.waitForSelector('input[name="identifier"]', { timeout: 10000 }).catch(() => null);
+  if (identifierPresent) {
+    const uf = await page.$('input[name="identifier"]');
+    await uf.click({ clickCount: 3 });
+    await uf.type(username, { delay: 40 });
+    await page.screenshot({ path: join(__dirname, "dsw-step3.png") });
+    console.log("[2] Username entered → dsw-step3.png");
+    const nb = await page.$('input[type="submit"], button[type="submit"]');
+    if (nb) await nb.click(); else await page.keyboard.press("Enter");
+    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 10000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 2000));
+    await page.screenshot({ path: join(__dirname, "dsw-step4.png") });
+    console.log("[2b] After username submit:", page.url(), "→ dsw-step4.png");
+  } else {
+    // Check if we're on a MyBizAccount-specific login form (not Okta)
+    await page.screenshot({ path: join(__dirname, "dsw-step3.png") });
+    console.log("[2] No Okta identifier field — URL:", page.url(), "→ dsw-step3.png");
+  }
 
-  console.log("[3] Entering password...");
-  await page.waitForSelector('input[type="password"]', { timeout: 10000 });
-  const pf = await page.$('input[type="password"]');
-  if (pf) { await pf.click({ clickCount: 3 }); await pf.type(password, { delay: 40 }); }
-  const pb = await page.$('input[type="submit"], button[type="submit"]');
-  if (pb) await pb.click(); else await page.keyboard.press("Enter");
-  await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
+  // Password
+  console.log("[3] Waiting for password field...");
+  const pwPresent = await page.waitForSelector('input[type="password"]', { timeout: 10000 }).catch(() => null);
+  if (pwPresent) {
+    const pf = await page.$('input[type="password"]');
+    await pf.click({ clickCount: 3 });
+    await pf.type(password, { delay: 40 });
+    await page.screenshot({ path: join(__dirname, "dsw-step5.png") });
+    console.log("[3] Password entered → dsw-step5.png");
+    const pb = await page.$('input[type="submit"], button[type="submit"]');
+    if (pb) await pb.click(); else await page.keyboard.press("Enter");
+    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 5000));
+    await page.screenshot({ path: join(__dirname, "dsw-step6.png") });
+    console.log("[3b] After password submit:", page.url(), "→ dsw-step6.png");
+  } else {
+    await page.screenshot({ path: join(__dirname, "dsw-step5.png") });
+    console.log("[3] No password field found — URL:", page.url(), "→ dsw-step5.png");
+  }
+
+  // ── Wait for portal frames ───────────────────────────────────────────────────
+  console.log("[3c] Waiting 5s for portal frames...");
   await new Promise(r => setTimeout(r, 5000));
+  await page.screenshot({ path: join(__dirname, "dsw-portal-state.png"), fullPage: true });
+  console.log("[3c] Portal URL:", page.url(), "→ dsw-portal-state.png");
+  const frameList = page.frames();
+  console.log(`[3c] Frames: ${frameList.length}`);
+  for (const f of frameList) console.log(`     ${f.url()}`);
 
   // ── Navigate to DSW ─────────────────────────────────────────────────────────
   console.log("[4] Looking for Daily Service Wk link...");
