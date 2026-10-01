@@ -7,6 +7,45 @@ import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
+export async function getOrgDrivers(): Promise<Array<{ id: number; driverId: string; name: string }>> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  const rows = await db
+    .select({ id: drivers.id, driverId: drivers.driverId, name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function linkRydeDriver(
+  driverDbId: number,
+  resourceRaw: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const m = resourceRaw.match(/\((\d+)\)/);
+  if (!m) return { success: false, error: "Could not extract FedEx ID from resource string" };
+  const fedExId = m[1];
+
+  // Update the driver's FedEx ID
+  await db
+    .update(drivers)
+    .set({ driverId: fedExId })
+    .where(and(eq(drivers.id, driverDbId), eq(drivers.organizationId, orgId)));
+
+  // Retroactively patch ryde_reviews rows that stored the raw resource string as driverId
+  await db
+    .update(rydeReviews)
+    .set({ driverId: fedExId })
+    .where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, resourceRaw)));
+
+  revalidatePath("/dashboard/payroll/ryde-upload");
+  return { success: true };
+}
+
 function toISOWeek(date: Date): string {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = d.getUTCDay() || 7;

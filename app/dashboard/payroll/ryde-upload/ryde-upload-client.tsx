@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadRydeFile, getUploadedRydeDates } from "@/lib/actions/ryde-upload";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { uploadRydeFile, getUploadedRydeDates, getOrgDrivers, linkRydeDriver } from "@/lib/actions/ryde-upload";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2 } from "lucide-react";
+
+type DriverOption = { id: number; driverId: string; name: string };
 
 export default function RydeUploadClient() {
   const [file, setFile] = useState<File | null>(null);
@@ -15,10 +17,15 @@ export default function RydeUploadClient() {
   } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [uploadedWeeks, setUploadedWeeks] = useState<string[]>([]);
+  const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
+  const [linkMappings, setLinkMappings] = useState<Record<string, number>>({});
+  const [linkedResources, setLinkedResources] = useState<Set<string>>(new Set());
+  const [linkingResource, setLinkingResource] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getUploadedRydeDates().then(setUploadedWeeks).catch(() => {});
+    getOrgDrivers().then(setDriverOptions).catch(() => {});
   }, []);
 
   function handleFiles(files: FileList | null) {
@@ -42,6 +49,18 @@ export default function RydeUploadClient() {
       }
     });
   }
+
+  async function handleLink(resourceRaw: string) {
+    const driverDbId = linkMappings[resourceRaw];
+    if (!driverDbId) return;
+    setLinkingResource(resourceRaw);
+    await linkRydeDriver(driverDbId, resourceRaw);
+    setLinkedResources((prev) => new Set([...prev, resourceRaw]));
+    setLinkingResource(null);
+  }
+
+  const unmatchedResources = result?.unmatched ?? [];
+  const pendingUnmatched = unmatchedResources.filter((r) => !linkedResources.has(r));
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -158,20 +177,59 @@ export default function RydeUploadClient() {
                     <span className="font-bold">{result.skipped}</span> skipped
                   </span>
                 </div>
-                {result.unmatched.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs font-semibold text-amber-700 mb-1">
-                      Unmatched drivers ({result.unmatched.length}) — no FedEx ID match found:
-                    </p>
-                    <ul className="text-xs text-amber-700 space-y-0.5 max-h-40 overflow-y-auto">
-                      {result.unmatched.map(r => (
-                        <li key={r} className="font-mono bg-amber-100 rounded px-2 py-0.5">{r}</li>
-                      ))}
-                    </ul>
+                {result.unmatched.length > 0 && pendingUnmatched.length === 0 && (
+                  <div className="mt-3 flex items-center gap-2 text-emerald-700">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <p className="text-xs font-semibold">All drivers linked.</p>
                   </div>
                 )}
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Link unmatched drivers panel */}
+      {result && !result.error && pendingUnmatched.length > 0 && (
+        <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Link2 className="w-4 h-4 text-amber-700" />
+            <p className="text-sm font-bold text-amber-900">Link unmatched drivers</p>
+          </div>
+          <p className="text-xs text-amber-700 mb-4">
+            These Ryde entries don&apos;t match any driver account. Select the driver, save once, and it will auto-match on future uploads.
+          </p>
+          <div className="flex flex-col gap-3">
+            {pendingUnmatched.map((resourceRaw) => (
+              <div key={resourceRaw} className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-mono font-semibold text-slate-700 truncate">{resourceRaw}</p>
+                </div>
+                <select
+                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800 min-w-[160px]"
+                  value={linkMappings[resourceRaw] ?? ""}
+                  onChange={(e) => setLinkMappings((prev) => ({ ...prev, [resourceRaw]: parseInt(e.target.value) }))}
+                >
+                  <option value="">Select driver…</option>
+                  {driverOptions.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleLink(resourceRaw)}
+                  disabled={!linkMappings[resourceRaw] || linkingResource === resourceRaw}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {linkingResource === resourceRaw ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                  Save
+                </button>
+              </div>
+            ))}
+          </div>
+          {linkedResources.size > 0 && (
+            <p className="text-xs text-emerald-700 mt-3 font-medium">
+              {linkedResources.size} driver{linkedResources.size === 1 ? "" : "s"} linked — FedEx ID set and reviews retroactively matched.
+            </p>
           )}
         </div>
       )}

@@ -175,7 +175,14 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
 
   const attendanceDriverIds = new Set(records.map((r) => r.driverId));
   const activeDriverIds = new Set(allDrivers.filter((d) => d.active).map((d) => d.driverId));
-  const allDriverIds = new Set([...attendanceDriverIds, ...activeDriverIds]);
+  // Include drivers terminated during or after weekStart — still need to appear on payroll
+  // for the days they worked before termination.
+  const recentlyTerminatedIds = new Set(
+    allDrivers
+      .filter((d) => !d.active && d.terminatedAt && (d.terminatedAt as Date).toISOString().slice(0, 10) >= weekStart)
+      .map((d) => d.driverId)
+  );
+  const allDriverIds = new Set([...attendanceDriverIds, ...activeDriverIds, ...recentlyTerminatedIds]);
 
   const payrollDrivers: PayrollDriverRow[] = [];
 
@@ -190,27 +197,31 @@ export async function getPayrollWeek(weekStart: string, weekEnd: string): Promis
       notesByDate[normalizeDate(r.date)] = r.note;
     }
 
-    // Infer "work" for scheduled days with no attendance record (active drivers only)
-    // Only infer for days on or after the driver was created — prevents new accounts
-    // from appearing to have worked weeks before they existed.
+    // Infer "work" for scheduled days with no attendance record.
+    // Active drivers: infer all scheduled days in the week.
+    // Recently terminated drivers: infer up to their termination date.
     const isActive = driverRecord ? driverRecord.active : false;
+    const terminatedDateStr = driverRecord?.terminatedAt
+      ? (driverRecord.terminatedAt as Date).toISOString().slice(0, 10)
+      : null;
+    const shouldInfer = isActive || (terminatedDateStr && terminatedDateStr >= weekStart);
     const schedule = scheduleMap.get(driverId);
     const createdDateStr = driverRecord?.createdAt
       ? (driverRecord.createdAt as Date).toISOString().slice(0, 10)
       : null;
     const inferredDates: string[] = [];
-    if (isActive && schedule) {
+    if (shouldInfer && schedule) {
       for (let i = 0; i < 7; i++) {
         const d = new Date(weekStart + "T00:00:00");
         d.setDate(d.getDate() + i);
         const dateStr = normalizeDate(d.toISOString().slice(0, 10));
         if (attendanceByDate[dateStr]) continue; // already has a record
         if (createdDateStr && dateStr < createdDateStr) continue; // before account existed
+        if (terminatedDateStr && dateStr > terminatedDateStr) continue; // after termination
         const key = getScheduleKey(dateStr);
         if (schedule[key]) {
           attendanceByDate[dateStr] = driverRecord?.isTrainee ? "trainee" : "work";
           inferredDates.push(dateStr);
-          // no note for inferred work days
         }
       }
     }

@@ -194,7 +194,7 @@ export default function DriverTabs({
     id: r.id,
     rating: r.stars ?? 0,
     comment: r.content || null,
-    date: r.createdAt ? r.createdAt.toLocaleDateString() : (r.week ?? ""),
+    date: r.week ?? (r.createdAt ? r.createdAt.toLocaleDateString() : ""),
     riderName: null as string | null,
   }));
 

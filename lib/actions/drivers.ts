@@ -214,6 +214,11 @@ export async function updateDriverUsername(id: number, username: string) {
   await db.update(drivers).set({ username: username || null }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
 }
 
+export async function updateDriverFedExId(id: number, fedExId: string) {
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ driverId: fedExId.trim() }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+}
+
 export async function changeDriverPassword(driverId: string, currentPassword: string, newPassword: string) {
   const orgId = await requireOrg();
   const [driver] = await db

@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User, Key,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername,
+  getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername, updateDriverFedExId,
 } from "@/lib/actions/drivers";
 import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds } from "@/lib/actions/driver-locations";
 import { suggestDriverId } from "@/lib/driver-utils";
@@ -80,6 +80,8 @@ export default function DriversPage() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [usernameTarget, setUsernameTarget] = useState<{ id: number; name: string; current: string | null } | null>(null);
   const [newUsername, setNewUsername] = useState("");
+  const [fedExIdTarget, setFedExIdTarget] = useState<{ id: number; name: string; current: string } | null>(null);
+  const [newFedExId, setNewFedExId] = useState("");
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [locationTarget, setLocationTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
@@ -210,6 +212,22 @@ export default function DriversPage() {
     startTransition(async () => {
       await updateDriverUsername(usernameTarget.id, newUsername.trim());
       setUsernameTarget(null);
+      await refresh();
+    });
+  }
+
+  function openFedExIdModal(driver: Driver) {
+    setFedExIdTarget({ id: driver.id, name: driver.name, current: driver.driverId });
+    setNewFedExId(driver.driverId);
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  function handleUpdateFedExId() {
+    if (!fedExIdTarget || !newFedExId.trim()) return;
+    startTransition(async () => {
+      await updateDriverFedExId(fedExIdTarget.id, newFedExId.trim());
+      setFedExIdTarget(null);
       await refresh();
     });
   }
@@ -447,7 +465,7 @@ export default function DriversPage() {
               <table className="w-full text-[13px] min-w-[560px]">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/60">
-                    <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[110px]">Driver ID</th>
+                    <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[110px]">FedEx ID</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Name</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:table-cell w-[140px]">Role</th>
                     <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:table-cell w-[90px]">Created</th>
@@ -459,8 +477,13 @@ export default function DriversPage() {
                   {filtered.map((driver) => (
                     <tr key={driver.id}
                       className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-3 font-mono text-[12px] text-slate-500 font-semibold whitespace-nowrap">
-                        {driver.driverId}
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <span className={`font-mono text-[12px] font-semibold ${/^\d{5,8}$/.test(driver.driverId) ? "text-slate-500" : "text-amber-500"}`}>
+                          {driver.driverId}
+                        </span>
+                        {!/^\d{5,8}$/.test(driver.driverId) && (
+                          <span className="ml-1 text-[10px] text-amber-400 font-semibold">!</span>
+                        )}
                       </td>
                       <td className="px-3 py-3">
                         <p className="font-semibold text-slate-800">{driver.name}</p>
@@ -597,6 +620,13 @@ export default function DriversPage() {
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />Change Username
+                </button>
+                <button
+                  onClick={() => openFedExIdModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <Key className="w-3.5 h-3.5 text-blue-400" />Set FedEx ID
                 </button>
                 <button
                   onClick={() => openProfileModal(driver)}
@@ -866,6 +896,53 @@ export default function DriversPage() {
         </div>
       )}
 
+      {/* Set FedEx ID modal */}
+      {fedExIdTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Set FedEx ID</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Update FedEx ID for <span className="font-semibold text-slate-600">{fedExIdTarget.name}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">FedEx ID</label>
+              <input
+                type="text"
+                value={newFedExId}
+                onChange={(e) => setNewFedExId(e.target.value)}
+                placeholder="e.g. 1234567"
+                className={INPUT_CLS + " mt-1.5 font-mono"}
+                autoFocus
+              />
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                7-digit FedEx-issued ID · used to match Ryde reviews and DSW data.
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setFedExIdTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateFedExId}
+                disabled={!newFedExId.trim() || isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -889,17 +966,17 @@ export default function DriversPage() {
                   autoFocus
                 />
               </div>
-              {/* Driver ID */}
+              {/* FedEx ID */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Driver ID</label>
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">FedEx ID</label>
                 <input
                   type="text"
-                  placeholder="e.g. Marcus742"
+                  placeholder="e.g. 1234567"
                   value={newDriverId}
                   onChange={(e) => setNewDriverId(e.target.value)}
-                  className={INPUT_CLS}
+                  className={INPUT_CLS + " font-mono"}
                 />
-                <p className="text-[11px] text-slate-400">Auto-generated from first name · you can edit it.</p>
+                <p className="text-[11px] text-slate-400">7-digit FedEx-issued ID · used for Ryde &amp; DSW matching. Can be updated later.</p>
               </div>
               {/* Temp password */}
               <div className="flex flex-col gap-1.5">
