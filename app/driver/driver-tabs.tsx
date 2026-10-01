@@ -66,6 +66,7 @@ export default function DriverTabs({
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
   driverAvatarMap?: Record<string, { name: string; avatarUrl: string | null }>;
   unseenBadges?: DriverBadgeRow[];
+  rydeRank?: number | null;
 }) {
   const [tab, setTab] = useState<DriverTab>("home");
   const [claimedBadgeIds, setClaimedBadgeIds] = useState<number[]>([]);
@@ -186,7 +187,8 @@ export default function DriverTabs({
   const rydeAvg = ratedReviews.length
     ? ratedReviews.reduce((s, r) => s + r.stars!, 0) / ratedReviews.length
     : null;
-  const leaderboardRank = myRank > 0 ? myRank : null;
+  // Use Ryde rank (Bayesian-weighted) when available; fall back to ILS rank
+  const leaderboardRank = (rydeRank != null && rydeRank > 0) ? rydeRank : (myRank > 0 ? myRank : null);
   const vehicleNumber = assignedVehicle?.unitNumber ?? null;
 
   // Map reviews to ScorePanel format

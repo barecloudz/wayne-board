@@ -188,6 +188,74 @@ export async function uploadRydeFile(
   return { inserted, skipped, unmatched };
 }
 
+export type RydeLeaderboardRow = {
+  driverId: string;
+  driverName: string;
+  bayesianAvg: number;
+  rawAvg: number;
+  reviewCount: number;
+};
+
+/**
+ * Compute Ryde leaderboard using Bayesian average so review volume matters.
+ * Formula: (totalStars + PRIOR * globalMean) / (count + PRIOR)
+ * A driver with 2 perfect reviews won't outrank one with 13 mostly-good reviews.
+ */
+export async function computeRydeLeaderboard(
+  weekStart?: string,
+  weekEnd?: string,
+): Promise<RydeLeaderboardRow[]> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const conditions = [
+    eq(rydeReviews.organizationId, orgId),
+  ];
+  // Filter to the week range if provided
+  if (weekStart) conditions.push(eq(rydeReviews.week, weekStart));
+
+  const rows = await db
+    .select({
+      driverId:   rydeReviews.driverId,
+      driverName: drivers.name,
+      stars:      rydeReviews.stars,
+    })
+    .from(rydeReviews)
+    .leftJoin(drivers, and(eq(drivers.driverId, rydeReviews.driverId), eq(drivers.organizationId, orgId)))
+    .where(and(...conditions));
+
+  const rated = rows.filter((r) => r.stars != null && r.stars > 0);
+  if (rated.length === 0) return [];
+
+  // Global mean across all rated reviews
+  const globalMean = rated.reduce((s, r) => s + r.stars!, 0) / rated.length;
+  const PRIOR = 5; // virtual review count pulling toward global mean
+
+  // Aggregate per driver
+  const map = new Map<string, { driverName: string; total: number; count: number }>();
+  for (const r of rated) {
+    const prev = map.get(r.driverId);
+    const name = r.driverName ?? r.driverId;
+    if (prev) {
+      prev.total += r.stars!;
+      prev.count += 1;
+    } else {
+      map.set(r.driverId, { driverName: name, total: r.stars!, count: 1 });
+    }
+  }
+
+  return Array.from(map.entries())
+    .map(([driverId, v]) => ({
+      driverId,
+      driverName:  v.driverName,
+      rawAvg:      v.total / v.count,
+      bayesianAvg: (v.total + PRIOR * globalMean) / (v.count + PRIOR),
+      reviewCount: v.count,
+    }))
+    .sort((a, b) => b.bayesianAvg - a.bayesianAvg);
+}
+
 export async function getUploadedRydeDates(): Promise<string[]> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");

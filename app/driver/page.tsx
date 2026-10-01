@@ -27,6 +27,7 @@ import { getMilestoneRewards, getDriverStreaks, getDriverClaims, claimMilestone 
 import { getCompanyRating, getRydeGoalMessage } from "@/lib/actions/ryde";
 import { getDriverSchedule, getDriverTimeOff } from "@/lib/actions/scheduling";
 import { getDriverBadges, getDriverBadgeCounts, getUnseenBadges, computeTopDrivers } from "@/lib/actions/badges";
+import { computeRydeLeaderboard } from "@/lib/actions/ryde-upload";
 import { getDrivers } from "@/lib/actions/drivers";
 import { getSetting } from "@/lib/actions/settings";
 import { getGateCodes, getGateAreas } from "@/lib/actions/gate-codes";
@@ -82,7 +83,7 @@ export default async function DriverDashboard() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers, unseenBadges] = await Promise.all([
+  const [reviews, milestones, streaks, claims, leaderboard, companyRating, goalMessage, [driverRow], driverSchedule, allTimeOff, showRydeSetting, showMilestonesSetting, showDswSetting, gateCodes, gateAreas, myRequests, activeVehicles, latestDswRows, myDswHistory, [orgRow], myBadges, badgeCounts, allDrivers, unseenBadges, rydeLeaderboard] = await Promise.all([
     db.select().from(rydeReviews).where(and(eq(rydeReviews.driverId, session.driverId), eq(rydeReviews.organizationId, session.organizationId))).orderBy(desc(rydeReviews.createdAt)),
     getMilestoneRewards(),
     getDriverStreaks(),
@@ -114,6 +115,7 @@ export default async function DriverDashboard() {
     getDriverBadgeCounts(),
     getDrivers(),
     getUnseenBadges(session.driverId),
+    computeRydeLeaderboard().catch(() => []),
   ]);
 
   const showRyde       = showRydeSetting === "true";
@@ -165,6 +167,7 @@ export default async function DriverDashboard() {
   }
 
   const myRank = leaderboard.findIndex((e) => e.driverId === session.driverId) + 1;
+  const myRydeRank = rydeLeaderboard.findIndex((e) => e.driverId === session.driverId) + 1;
 
   const ratedReviews = reviews.filter((r) => r.stars != null);
   const avgScore = ratedReviews.length
@@ -247,6 +250,7 @@ export default async function DriverDashboard() {
           claimedMilestoneIds={claimedIds}
           leaderboard={leaderboard}
           myRank={myRank}
+          rydeRank={myRydeRank > 0 ? myRydeRank : null}
           companyRating={companyRating}
           goalMessage={goalMessage}
           assignedVehicle={assignedVehicle}
