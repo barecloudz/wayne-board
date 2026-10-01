@@ -34,7 +34,7 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 export default function DriverTabs({
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [],
+  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null,
 }: {
   reviews: Review[];
   milestones: Milestone[];
