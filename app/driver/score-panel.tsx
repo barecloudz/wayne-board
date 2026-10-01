@@ -45,6 +45,8 @@ export type ScorePanelProps = {
     comment: string | null;
     date: string;
     riderName: string | null;
+    type?: "positive" | "negative" | "neutral";
+    category?: string | null;
   }>;
   leaderboard: Array<{
     driverId: string;
@@ -75,6 +77,9 @@ const SCORE_SECTIONS: { key: ScoreSection; label: string; icon: typeof Star }[] 
 const RATING_FILTERS = ["All", "5★", "4★", "3★", "2★", "1★"] as const;
 type RatingFilter = (typeof RATING_FILTERS)[number];
 
+const TYPE_FILTERS = ["All", "Positive", "Negative"] as const;
+type TypeFilter = (typeof TYPE_FILTERS)[number];
+
 export default function ScorePanel({
   rydeAvg,
   reviewCount,
@@ -92,6 +97,7 @@ export default function ScorePanel({
 }: ScorePanelProps) {
   const [section, setSection] = useState<ScoreSection>("score");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("All");
   const [showAllBadges, setShowAllBadges] = useState(false);
 
   // Badge popover state
@@ -115,10 +121,14 @@ export default function ScorePanel({
     }
   }
 
-  const filteredReviews =
-    ratingFilter === "All"
-      ? reviews
-      : reviews.filter((r) => r.rating === parseInt(ratingFilter));
+  const filteredReviews = reviews
+    .filter((r) => ratingFilter === "All" || r.rating === parseInt(ratingFilter))
+    .filter((r) => {
+      if (typeFilter === "All") return true;
+      if (typeFilter === "Positive") return r.type === "positive" || r.rating >= 4;
+      if (typeFilter === "Negative") return r.type === "negative" || r.rating <= 2;
+      return true;
+    });
 
   const badgeCountMap = new Map(badgeCounts.map((b) => [b.driverId, b.badgeCount]));
 
@@ -302,7 +312,30 @@ export default function ScorePanel({
       {/* Reviews section */}
       {section === "reviews" && (
         <div className="flex flex-col">
-          {/* Filter pills */}
+          {/* Type filter pills */}
+          <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
+            {TYPE_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setTypeFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors ${
+                  typeFilter === f
+                    ? "text-white"
+                    : f === "Positive"
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                      : f === "Negative"
+                        ? "bg-red-50 text-red-500 border border-red-200"
+                        : "bg-slate-100 text-slate-500"
+                }`}
+                style={typeFilter === f ? {
+                  backgroundColor: f === "Positive" ? "#16a34a" : f === "Negative" ? "#dc2626" : "var(--brand)",
+                } : {}}
+              >
+                {f === "Positive" ? "👍 Positive" : f === "Negative" ? "👎 Negative" : "All"}
+              </button>
+            ))}
+          </div>
+          {/* Star rating filter pills */}
           <div className="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
             {RATING_FILTERS.map((f) => (
               <button
@@ -323,33 +356,62 @@ export default function ScorePanel({
             {filteredReviews.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                 <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                <p className="text-[15px] font-bold text-slate-700">No reviews yet</p>
+                <p className="text-[15px] font-bold text-slate-700">No reviews</p>
+                <p className="text-[12px] text-slate-400 mt-1">Try a different filter</p>
               </div>
             ) : (
-              filteredReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 ${i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"}`}
-                        />
-                      ))}
+              filteredReviews.map((review) => {
+                const isPositive = review.type === "positive" || (!review.type && review.rating >= 4);
+                const isNegative = review.type === "negative" || (!review.type && review.rating <= 2);
+                const borderColor = isPositive ? "#16a34a" : isNegative ? "#dc2626" : "#94a3b8";
+                const bgColor = isPositive ? "#f0fdf4" : isNegative ? "#fef2f2" : "#f8fafc";
+                const labelColor = isPositive ? "#16a34a" : isNegative ? "#dc2626" : "#64748b";
+                const label = isPositive ? "Positive" : isNegative ? "Negative" : "Neutral";
+                return (
+                  <div
+                    key={review.id}
+                    className="rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.07)] border border-slate-200/60"
+                    style={{ background: bgColor }}
+                  >
+                    {/* Color bar */}
+                    <div className="h-1 w-full" style={{ background: borderColor }} />
+                    <div className="px-4 py-4">
+                      {/* Top row: stars + type badge + date */}
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${i < review.rating ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`}
+                              />
+                            ))}
+                          </div>
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                            style={{ color: labelColor, background: "rgba(0,0,0,0.06)" }}
+                          >
+                            {label}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-medium text-slate-400">{review.date}</span>
+                      </div>
+                      {/* Category badge */}
+                      {review.category && (
+                        <span className="inline-block mb-2 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/70 text-slate-600 border border-slate-200/60">
+                          {review.category}
+                        </span>
+                      )}
+                      {/* Comment */}
+                      {review.comment ? (
+                        <p className="text-[13px] text-slate-700 leading-relaxed">{review.comment}</p>
+                      ) : (
+                        <p className="text-[12px] text-slate-400 italic">No comment left</p>
+                      )}
                     </div>
-                    <span className="text-[11px] text-slate-400">{review.date}</span>
                   </div>
-                  {review.comment && (
-                    <p className="text-[13px] text-slate-700 leading-relaxed">{review.comment}</p>
-                  )}
-                  {review.riderName && (
-                    <p className="text-[11px] text-slate-400 mt-1.5">— {review.riderName}</p>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

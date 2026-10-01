@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadRydeFile, getUploadedRydeDates, getOrgDrivers, linkRydeDriver } from "@/lib/actions/ryde-upload";
+import { uploadRydeFile, getUploadedRydeDates, getOrgDrivers, linkRydeDriver, getUnmatchedRydeResources } from "@/lib/actions/ryde-upload";
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2 } from "lucide-react";
 
 type DriverOption = { id: number; driverId: string; name: string };
@@ -21,11 +21,18 @@ export default function RydeUploadClient() {
   const [linkMappings, setLinkMappings] = useState<Record<string, number>>({});
   const [linkedResources, setLinkedResources] = useState<Set<string>>(new Set());
   const [linkingResource, setLinkingResource] = useState<string | null>(null);
+  // Persisted unmatched — loaded from DB on mount so panel survives page navigation
+  const [persistedUnmatched, setPersistedUnmatched] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function refreshUnmatched() {
+    getUnmatchedRydeResources().then(setPersistedUnmatched).catch(() => {});
+  }
 
   useEffect(() => {
     getUploadedRydeDates().then(setUploadedWeeks).catch(() => {});
     getOrgDrivers().then(setDriverOptions).catch(() => {});
+    refreshUnmatched();
   }, []);
 
   function handleFiles(files: FileList | null) {
@@ -57,10 +64,13 @@ export default function RydeUploadClient() {
     await linkRydeDriver(driverDbId, resourceRaw);
     setLinkedResources((prev) => new Set([...prev, resourceRaw]));
     setLinkingResource(null);
+    // Refresh persisted list so newly-linked resources disappear
+    refreshUnmatched();
   }
 
-  const unmatchedResources = result?.unmatched ?? [];
-  const pendingUnmatched = unmatchedResources.filter((r) => !linkedResources.has(r));
+  // Merge upload-result unmatched with persisted DB unmatched, deduplicate
+  const allUnmatched = Array.from(new Set([...(result?.unmatched ?? []), ...persistedUnmatched]));
+  const pendingUnmatched = allUnmatched.filter((r) => !linkedResources.has(r));
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -189,8 +199,8 @@ export default function RydeUploadClient() {
         </div>
       )}
 
-      {/* Link unmatched drivers panel */}
-      {result && !result.error && pendingUnmatched.length > 0 && (
+      {/* Link unmatched drivers panel — shows from DB-persisted data even without a fresh upload */}
+      {pendingUnmatched.length > 0 && (
         <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-1">
             <Link2 className="w-4 h-4 text-amber-700" />

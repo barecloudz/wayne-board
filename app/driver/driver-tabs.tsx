@@ -198,6 +198,8 @@ export default function DriverTabs({
     comment: r.content || null,
     date: r.week ?? (r.createdAt ? r.createdAt.toLocaleDateString() : ""),
     riderName: null as string | null,
+    type: r.type as "positive" | "negative" | "neutral",
+    category: r.category,
   }));
 
   // Map leaderboard to ScorePanel format (leaderboard is now TopDriverRow[])

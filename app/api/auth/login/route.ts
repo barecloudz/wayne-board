@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
 
   await createSession({
     driverId: driver.driverId,
+    driverDbId: driver.id,
     organizationId: driver.organizationId,
     name: driver.name,
     role: driver.role,

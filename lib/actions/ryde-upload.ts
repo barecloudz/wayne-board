@@ -3,7 +3,7 @@
 import * as XLSX from "xlsx";
 import { db } from "@/lib/db";
 import { rydeReviews, drivers } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, notInArray, isNotNull } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
@@ -30,10 +30,22 @@ export async function linkRydeDriver(
   if (!m) return { success: false, error: "Could not extract FedEx ID from resource string" };
   const fedExId = m[1];
 
-  // Update the driver's FedEx ID
+  // Fetch the driver's current driverId before overwriting it
+  const [existingDriver] = await db
+    .select({ currentDriverId: drivers.driverId, username: drivers.username })
+    .from(drivers)
+    .where(and(eq(drivers.id, driverDbId), eq(drivers.organizationId, orgId)))
+    .limit(1);
+
+  // Preserve the old driverId as username if username is not yet set,
+  // so the driver can still log in with their existing credential after the FedEx ID update.
+  const usernameUpdate = existingDriver && !existingDriver.username
+    ? { driverId: fedExId, username: existingDriver.currentDriverId }
+    : { driverId: fedExId };
+
   await db
     .update(drivers)
-    .set({ driverId: fedExId })
+    .set(usernameUpdate)
     .where(and(eq(drivers.id, driverDbId), eq(drivers.organizationId, orgId)));
 
   // Retroactively patch ryde_reviews rows that stored the raw resource string as driverId
@@ -43,6 +55,7 @@ export async function linkRydeDriver(
     .where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, resourceRaw)));
 
   revalidatePath("/dashboard/payroll/ryde-upload");
+  revalidatePath("/driver");
   return { success: true };
 }
 
@@ -185,7 +198,44 @@ export async function uploadRydeFile(
   }
 
   revalidatePath("/dashboard/payroll/ryde-upload");
+  revalidatePath("/driver");
   return { inserted, skipped, unmatched };
+}
+
+/**
+ * Returns distinct driverId values from ryde_reviews that don't match any
+ * active driver's driverId — these are unlinked resource strings that need
+ * to be mapped. Persisted in DB so the linking panel survives page navigation.
+ */
+export async function getUnmatchedRydeResources(): Promise<string[]> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const orgDrivers = await db
+    .select({ driverId: drivers.driverId })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+
+  const knownIds = orgDrivers.map((d) => d.driverId);
+
+  const rows = await db
+    .selectDistinct({ driverId: rydeReviews.driverId })
+    .from(rydeReviews)
+    .where(
+      and(
+        eq(rydeReviews.organizationId, orgId),
+        isNotNull(rydeReviews.driverId),
+        knownIds.length > 0
+          ? notInArray(rydeReviews.driverId, knownIds)
+          : undefined,
+      )
+    );
+
+  // Only return resource strings that look like they came from Ryde (contain a name/parens pattern)
+  return rows
+    .map((r) => r.driverId)
+    .filter((d): d is string => !!d && d !== "unknown" && /[A-Za-z]/.test(d));
 }
 
 export type RydeLeaderboardRow = {
