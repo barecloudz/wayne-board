@@ -131,7 +131,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as { vehicleIds: number[]; monthYear: string };
   const { vehicleIds, monthYear } = body;
 
-  if (!Array.isArray(vehicleIds) || vehicleIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)) {
+  if (!Array.isArray(vehicleIds) || !vehicleIds.length) {
+    return NextResponse.json({ error: "vehicleIds must be a non-empty array of positive integers" }, { status: 400 });
+  }
+
+  if (vehicleIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)) {
     return NextResponse.json({ error: "vehicleIds must be a non-empty array of positive integers" }, { status: 400 });
   }
 
@@ -146,6 +150,14 @@ export async function POST(req: NextRequest) {
 
   const year = parseInt(monthMatch[1], 10);
   const monthNum = parseInt(monthMatch[2], 10);
+
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const requestedDate = new Date(year, monthNum - 1, 1);
+  if (requestedDate > cutoff) {
+    return NextResponse.json({ error: "Cannot generate for current or future months" }, { status: 400 });
+  }
+
   const firstDay = `${monthYear}-01`;
   const lastDay = new Date(year, monthNum, 0).toISOString().slice(0, 10);
   const orgId = session.organizationId;
