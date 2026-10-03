@@ -20,7 +20,7 @@ export default async function SchedulingPage() {
   const today = new Date();
   const rangeStart = format(today, "yyyy-MM-dd");
   const rangeEnd = format(addDays(today, 14), "yyyy-MM-dd");
-  const attendanceStart = format(addDays(today, -60), "yyyy-MM-dd");
+  const attendanceStart = format(addDays(today, -365), "yyyy-MM-dd");
 
   const session = await getSession();
   const orgId = session!.organizationId;
