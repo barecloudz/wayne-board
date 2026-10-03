@@ -528,6 +528,22 @@ export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", 
   createdAt:      timestamp("created_at").defaultNow(),
 });
 
+// ── MMR Generation Log ────────────────────────────────────────────────────────
+export const mmrGenerations = pgTable("mmr_generations", {
+  id:                  serial("id").primaryKey(),
+  organizationId:      integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  vehicleId:           integer("vehicle_id").notNull().references(() => vehicles.id, { onDelete: "cascade" }),
+  monthYear:           text("month_year").notNull(),            // "YYYY-MM"
+  mileageSnapshot:     text("mileage_snapshot"),                // mileage string used in PDF
+  maintenanceRowCount: integer("maintenance_row_count").notNull().default(0),
+  generatedBy:         text("generated_by").notNull(),          // driverId of admin
+  generatedAt:         timestamp("generated_at").defaultNow(),
+}, (t) => ({
+  orgVehicleMonthUnique: uniqueIndex("mmr_generations_org_vehicle_month_unique").on(
+    t.organizationId, t.vehicleId, t.monthYear
+  ),
+}));
+
 // ── Locations (delivery stations operated by this ISP) ────────────────────────
 export const locations = pgTable("locations", {
   id:             serial("id").primaryKey(),
