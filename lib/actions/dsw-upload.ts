@@ -98,6 +98,44 @@ export async function uploadDswFile(
     .where(eq(dswNameMappings.organizationId, orgId));
   const mappingLookup = new Map(savedMappings.map((m) => [m.dswName, m.driverId]));
 
+  // Load drivers for auto-match fallback
+  const allDrivers = await db
+    .select({ driverId: drivers.driverId, name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+  const driverByName: Record<string, string> = {};
+  for (const d of allDrivers) {
+    driverByName[d.name.toLowerCase().trim().replace(/\s+/g, " ")] = d.driverId;
+  }
+
+  function normalizeDswName(raw: string): string {
+    if (!raw) return "";
+    const [last, ...rest] = raw.split(",");
+    const first = rest.join(" ").trim();
+    const display = first ? `${first} ${last}`.trim() : last.trim();
+    return display.toLowerCase().trim().replace(/\s+/g, " ");
+  }
+
+  function autoMatchDriver(raw: string): string | null {
+    const normalized = normalizeDswName(raw);
+    if (!normalized) return null;
+    if (driverByName[normalized]) return driverByName[normalized];
+    const parts = normalized.split(" ");
+    if (parts.length > 2) {
+      const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
+      if (driverByName[firstLast]) return driverByName[firstLast];
+    }
+    const significant = parts.filter(p => p.length > 1);
+    if (significant.length >= 2) {
+      const hit = Object.entries(driverByName).find(([k]) => {
+        const kWords = k.split(" ");
+        return significant.filter(w => kWords.includes(w)).length >= 2;
+      });
+      if (hit) return hit[1];
+    }
+    return null;
+  }
+
   // Delete existing rows for this org+date before inserting fresh
   await db
     .delete(dswRouteDays)
@@ -135,8 +173,8 @@ export async function uploadDswFile(
     const pldImpactPkgs = impactMap.get(waKey) ?? null;
     const pldGhostPkgs  = ghostMap.get(waKey)  ?? null;
 
-    // Resolve driverId from saved mappings
-    const resolvedDriverId = mappingLookup.get(driverNameRaw) ?? null;
+    // Resolve driverId from saved mappings, then auto-match fallback
+    const resolvedDriverId = mappingLookup.get(driverNameRaw) ?? autoMatchDriver(driverNameRaw);
     if (!resolvedDriverId && !unmatchedNames.includes(driverNameRaw)) {
       unmatchedNames.push(driverNameRaw);
     }

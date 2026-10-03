@@ -196,6 +196,43 @@ export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Pr
       wbByName[d.name.toLowerCase().trim().replace(/\s+/g, " ")] = d.driver_id;
     }
 
+    // Load saved name mappings (manual overrides — checked first)
+    const savedMappings = await sql`SELECT dsw_name, driver_id FROM dsw_name_mappings WHERE organization_id = ${orgId}`;
+    const mappingLookup = new Map((savedMappings as any[]).map((m) => [m.dsw_name as string, m.driver_id as string]));
+
+    function resolveDriver(driverRaw: string): string | null {
+      // 1. Saved mapping (exact raw string)
+      if (mappingLookup.has(driverRaw)) return mappingLookup.get(driverRaw)!;
+
+      const { normalized } = parseDriverName(driverRaw);
+      if (!normalized) return null;
+
+      // 2. Exact normalized match
+      if (wbByName[normalized]) return wbByName[normalized];
+
+      const parts = normalized.split(" ");
+
+      // 3. First + last only (drops middle name)
+      if (parts.length > 2) {
+        const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
+        if (wbByName[firstLast]) return wbByName[firstLast];
+      }
+
+      // 4. Two-word overlap: find a driver whose name shares both first AND last name
+      //    (safer than prefix match — requires both words to appear in the candidate)
+      const significant = parts.filter(p => p.length > 1); // drop single initials
+      if (significant.length >= 2) {
+        const hit = Object.entries(wbByName).find(([k]) => {
+          const kWords = k.split(" ");
+          const matches = significant.filter(w => kWords.includes(w));
+          return matches.length >= 2;
+        });
+        if (hit) return hit[1];
+      }
+
+      return null;
+    }
+
     let matched = 0;
     let inserted = 0;
 
@@ -209,24 +246,7 @@ export async function syncDsw(dateOverride?: string, orgIdOverride?: number): Pr
 
       if (!driverRaw && !waName) continue;
 
-      const { normalized } = parseDriverName(driverRaw);
-
-      // Try exact match, then first+last without middle
-      let driverId: string | null = wbByName[normalized] ?? null;
-      if (!driverId && normalized) {
-        const parts = normalized.split(" ");
-        if (parts.length > 2) {
-          // Try first + last only
-          const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
-          driverId = wbByName[firstLast] ?? null;
-        }
-        if (!driverId) {
-          // Try first name prefix match
-          const firstName = parts[0];
-          const hit = Object.entries(wbByName).find(([k]) => k.startsWith(firstName + " "));
-          if (hit) driverId = hit[1];
-        }
-      }
+      const driverId = resolveDriver(driverRaw);
 
       if (driverId) matched++;
 
