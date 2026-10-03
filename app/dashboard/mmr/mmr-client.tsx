@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Loader2, FileDown, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { Loader2, FileDown, CheckCircle2, Clock, AlertTriangle, X } from "lucide-react";
 import type { VehicleMmrRow } from "@/lib/actions/mmr";
 
 function getPreviousMonth(): string {
@@ -30,6 +30,7 @@ export default function MmrClient({
   const [loadingMonth, setLoadingMonth] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
   const [generatingSingle, setGeneratingSingle] = useState<number | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const maxMonth = getPreviousMonth();
 
   const loadMonth = useCallback(async (m: string) => {
@@ -73,7 +74,7 @@ export default function MmrClient({
     try { await generatePdf(vehicles.map((v) => v.id)); }
     catch (e) {
       console.error(e);
-      alert("Failed to generate PDF. Please try again.");
+      setPdfError("Failed to generate PDF. Please try again.");
     }
     finally { setGeneratingAll(false); }
   }
@@ -83,7 +84,7 @@ export default function MmrClient({
     try { await generatePdf([v.id]); }
     catch (e) {
       console.error(e);
-      alert("Failed to generate PDF. Please try again.");
+      setPdfError("Failed to generate PDF. Please try again.");
     }
     finally { setGeneratingSingle(null); }
   }
@@ -129,6 +130,16 @@ export default function MmrClient({
           </button>
         </div>
       </div>
+
+      {pdfError && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-[13px] text-red-700 font-medium mb-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          {pdfError}
+          <button onClick={() => setPdfError(null)} className="ml-auto p-1 hover:bg-red-100 rounded transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {loadingMonth ? (
         <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2, Plus, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Trash2, Plus, Pencil, Check, X, Loader2, AlertTriangle } from "lucide-react";
 import {
   createLocation,
   updateLocation,
@@ -170,7 +170,14 @@ export default function LocationManager({ initial }: { initial: Location[] }) {
             ) : (
               <div key={loc.id} className="flex items-center gap-3 py-2.5">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-slate-800 truncate">{loc.name}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[13px] font-semibold text-slate-800 truncate">{loc.name}</p>
+                    {!loc.terminalId && (
+                      <span className="flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        <AlertTriangle className="w-3 h-3" /> No station code — required for MMR
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-slate-400">
                     {[
                       loc.terminalId ? `Terminal: ${loc.terminalId}` : null,

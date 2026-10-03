@@ -53,6 +53,7 @@ export default async function ReportPage({
   let driverData: DriverRow[] = [];
   let payrollData: PayrollRow[] = [];
   let period = currentPeriod;
+  let payrollWeekStart: string | undefined;
 
   if (slug === "fleet") {
     const vehicleRows = await db
@@ -115,6 +116,7 @@ export default async function ReportPage({
 
   if (slug === "payroll") {
     const weekStart = getPreviousMonday();
+    payrollWeekStart = weekStart;
     const weekEnd   = addDays(weekStart, 6);
     period = fmtPeriod(weekStart, weekEnd);
     const weekData = await getPayrollWeek(weekStart, weekEnd);
@@ -145,6 +147,7 @@ export default async function ReportPage({
       slug={slug}
       title={REPORT_TITLES[slug]}
       period={period}
+      weekStart={payrollWeekStart}
       fleetData={fleetData}
       driverData={driverData}
       payrollData={payrollData}

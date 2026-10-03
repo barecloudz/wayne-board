@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, FileDown, Printer, ChevronUp, ChevronDown, ChevronsUpDown, Search } from "lucide-react";
+import { ArrowLeft, FileDown, Printer, ChevronUp, ChevronDown, ChevronsUpDown, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import AppShell from "@/components/app-shell";
 import { useState, useMemo } from "react";
 import {
@@ -431,18 +431,57 @@ function DriversReport({ drivers }: { drivers: DriverRow[] }) {
   );
 }
 
+// ─── Payroll helpers ──────────────────────────────────────────────────────────
+
+function shiftWeek(weekStart: string, dir: -1 | 1): string {
+  const d = new Date(weekStart + "T00:00:00");
+  d.setDate(d.getDate() + dir * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+function fmtWeekRange(weekStart: string): string {
+  const s = new Date(weekStart + "T00:00:00");
+  const e = new Date(weekStart + "T00:00:00");
+  e.setDate(e.getDate() + 6);
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${fmt(s)} – ${fmt(e)}`;
+}
+
 // ─── Payroll ──────────────────────────────────────────────────────────────────
 
-function PayrollReport({ rows }: { rows: PayrollRow[] }) {
+function PayrollReport({ rows: initialRows, weekStart: initialWeekStart }: { rows: PayrollRow[]; weekStart: string }) {
   const [search, setSearch] = useState("");
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [rows, setRows] = useState<PayrollRow[]>(initialRows);
+  const [currentWeekStart, setCurrentWeekStart] = useState(initialWeekStart);
+  const [loading, setLoading] = useState(false);
+
+  // Most recent completed week: today's date shifted back to find the last full week
+  const today = new Date().toISOString().slice(0, 10);
+  const isAtMostRecent = shiftWeek(currentWeekStart, 1) > today;
 
   function handleSort(col: string) {
     if (sortCol === col) {
       setSortDir(d => d === "asc" ? "desc" : d === "desc" ? null : "asc");
       if (sortDir === "desc") setSortCol(null);
     } else { setSortCol(col); setSortDir("asc"); }
+  }
+
+  async function navigate(dir: -1 | 1) {
+    const newWeekStart = shiftWeek(currentWeekStart, dir);
+    if (newWeekStart > today) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/payroll-report?weekStart=${newWeekStart}`);
+      if (res.ok) {
+        const data = await res.json() as { rows: PayrollRow[]; weekStart: string };
+        setRows(data.rows);
+        setCurrentWeekStart(data.weekStart);
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   const active = rows.filter(r => !r.isTerminated);
@@ -463,64 +502,87 @@ function PayrollReport({ rows }: { rows: PayrollRow[] }) {
     return filtered;
   }, [search, sortCol, sortDir, rows]);
 
-  if (rows.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
-        <p className="text-[15px] font-semibold text-slate-500 mb-2">No payroll data for this period</p>
-        <p className="text-[13px] text-slate-400">Upload DSW data and mark attendance to populate this report.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Drivers" value={active.length.toString()} />
-        <KpiCard label="Total Days Worked" value={totalDays.toString()} />
-        <KpiCard label="Cuts" value={totalCuts.toString()} />
-        <KpiCard label="Call Outs" value={totalCallOuts.toString()} />
+      {/* Week navigation */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate(-1)}
+          disabled={loading}
+          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40"
+          title="Previous week"
+        >
+          <ChevronLeft className="w-4 h-4 text-slate-600" />
+        </button>
+        <span className="text-[13px] font-semibold text-slate-700 min-w-[220px] text-center">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin text-slate-400 mx-auto" /> : fmtWeekRange(currentWeekStart)}
+        </span>
+        <button
+          onClick={() => navigate(1)}
+          disabled={loading || isAtMostRecent}
+          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-40"
+          title="Next week"
+        >
+          <ChevronRight className="w-4 h-4 text-slate-600" />
+        </button>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <p className="text-[13px] font-bold text-slate-900">Weekly Attendance Summary</p>
+
+      {rows.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
+          <p className="text-[15px] font-semibold text-slate-500 mb-2">No payroll data for this period</p>
+          <p className="text-[13px] text-slate-400">Upload DSW data and mark attendance to populate this report.</p>
         </div>
-        <TableSearch value={search} onChange={setSearch} count={data.length} />
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr>
-                <SortTh colKey="name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Driver</SortTh>
-                <SortTh colKey="daysWorked" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Days Worked</SortTh>
-                <SortTh colKey="cut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Cuts</SortTh>
-                <SortTh colKey="callOut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Call Outs</SortTh>
-                <SortTh colKey="isTrainee" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Type</SortTh>
-                <SortTh colKey="isTerminated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Status</SortTh>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((r) => (
-                <tr key={r.driverId} className="group/row">
-                  <Td bold>{r.name}</Td>
-                  <Td mono right>{r.daysWorked}</Td>
-                  <Td mono right>{r.cut > 0 ? <span className="text-amber-600 font-semibold">{r.cut}</span> : "—"}</Td>
-                  <Td mono right>{r.callOut > 0 ? <span className="text-red-500 font-semibold">{r.callOut}</span> : "—"}</Td>
-                  <Td>
-                    {r.isTrainee
-                      ? <StatusCell color="indigo" label="Trainee" />
-                      : <StatusCell color="slate" label="Driver" />}
-                  </Td>
-                  <Td>
-                    <StatusCell color={r.isTerminated ? "red" : "green"} label={r.isTerminated ? "Terminated" : "Active"} />
-                  </Td>
-                </tr>
-              ))}
-              {data.length === 0 && (
-                <tr><td colSpan={6} className="py-8 text-center text-[12px] text-slate-400">No records match your filter</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <KpiCard label="Drivers" value={active.length.toString()} />
+            <KpiCard label="Total Days Worked" value={totalDays.toString()} />
+            <KpiCard label="Cuts" value={totalCuts.toString()} />
+            <KpiCard label="Call Outs" value={totalCallOuts.toString()} />
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
+            <div className="px-6 py-4 border-b border-slate-100">
+              <p className="text-[13px] font-bold text-slate-900">Weekly Attendance Summary</p>
+            </div>
+            <TableSearch value={search} onChange={setSearch} count={data.length} />
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr>
+                    <SortTh colKey="name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Driver</SortTh>
+                    <SortTh colKey="daysWorked" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Days Worked</SortTh>
+                    <SortTh colKey="cut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Cuts</SortTh>
+                    <SortTh colKey="callOut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Call Outs</SortTh>
+                    <SortTh colKey="isTrainee" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Type</SortTh>
+                    <SortTh colKey="isTerminated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Status</SortTh>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((r) => (
+                    <tr key={r.driverId} className="group/row">
+                      <Td bold>{r.name}</Td>
+                      <Td mono right>{r.daysWorked}</Td>
+                      <Td mono right>{r.cut > 0 ? <span className="text-amber-600 font-semibold">{r.cut}</span> : "—"}</Td>
+                      <Td mono right>{r.callOut > 0 ? <span className="text-red-500 font-semibold">{r.callOut}</span> : "—"}</Td>
+                      <Td>
+                        {r.isTrainee
+                          ? <StatusCell color="indigo" label="Trainee" />
+                          : <StatusCell color="slate" label="Driver" />}
+                      </Td>
+                      <Td>
+                        <StatusCell color={r.isTerminated ? "red" : "green"} label={r.isTerminated ? "Terminated" : "Active"} />
+                      </Td>
+                    </tr>
+                  ))}
+                  {data.length === 0 && (
+                    <tr><td colSpan={6} className="py-8 text-center text-[12px] text-slate-400">No records match your filter</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -550,12 +612,13 @@ export type ReportViewProps = {
   slug: string;
   title: string;
   period: string;
+  weekStart?: string;
   fleetData: FleetRow[];
   driverData: DriverRow[];
   payrollData: PayrollRow[];
 };
 
-export default function ReportView({ slug, title, period, fleetData, driverData, payrollData }: ReportViewProps) {
+export default function ReportView({ slug, title, period, weekStart, fleetData, driverData, payrollData }: ReportViewProps) {
   return (
     <AppShell>
       <main className="flex-1 px-8 py-8 max-w-[1100px] w-full mx-auto flex flex-col gap-6">
@@ -593,7 +656,7 @@ export default function ReportView({ slug, title, period, fleetData, driverData,
 
         {slug === "fleet"   && <FleetReport vehicles={fleetData} />}
         {slug === "drivers" && <DriversReport drivers={driverData} />}
-        {slug === "payroll" && <PayrollReport rows={payrollData} />}
+        {slug === "payroll" && <PayrollReport rows={payrollData} weekStart={weekStart ?? new Date().toISOString().slice(0, 10)} />}
         {slug === "routes"  && <RoutesReport />}
       </main>
     </AppShell>
