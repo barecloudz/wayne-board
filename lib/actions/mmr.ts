@@ -94,29 +94,30 @@ export async function getVehiclesForMmrDashboard(monthYear: string): Promise<Veh
 export async function recordMmrGeneration(
   entries: { vehicleId: number; monthYear: string; mileageSnapshot: string; maintenanceRowCount: number }[]
 ): Promise<void> {
+  if (entries.length === 0) return;
   const { orgId, driverId } = await requireOrg();
 
-  for (const entry of entries) {
-    await db
-      .insert(mmrGenerations)
-      .values({
+  await db
+    .insert(mmrGenerations)
+    .values(
+      entries.map((entry) => ({
         organizationId:      orgId,
         vehicleId:           entry.vehicleId,
         monthYear:           entry.monthYear,
         mileageSnapshot:     entry.mileageSnapshot,
         maintenanceRowCount: entry.maintenanceRowCount,
         generatedBy:         driverId,
-      })
-      .onConflictDoUpdate({
-        target: [mmrGenerations.organizationId, mmrGenerations.vehicleId, mmrGenerations.monthYear],
-        set: {
-          mileageSnapshot:     entry.mileageSnapshot,
-          maintenanceRowCount: entry.maintenanceRowCount,
-          generatedBy:         driverId,
-          generatedAt:         sql`now()`,
-        },
-      });
-  }
+      }))
+    )
+    .onConflictDoUpdate({
+      target: [mmrGenerations.organizationId, mmrGenerations.vehicleId, mmrGenerations.monthYear],
+      set: {
+        mileageSnapshot:     sql`excluded.mileage_snapshot`,
+        maintenanceRowCount: sql`excluded.maintenance_row_count`,
+        generatedBy:         sql`excluded.generated_by`,
+        generatedAt:         sql`now()`,
+      },
+    });
 
   revalidatePath("/dashboard/mmr");
 }
