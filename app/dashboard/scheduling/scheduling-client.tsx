@@ -6,7 +6,7 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History, Map as MapIcon,
 } from "lucide-react";
 import WorkAreaManager from "@/app/dashboard/work-area-manager";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverHireDate, setDriverTrainee } from "@/lib/actions/scheduling";
 import { upsertAttendance, markDayHoliday, unmarkDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
 import { setDailyVehicle } from "@/lib/actions/work-areas";
@@ -40,6 +40,7 @@ type ScheduleRow = {
   isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
+  hireDate?: string | null;
   createdAt?: Date | string | null;
   terminatedAt?: Date | string | null;
   schedule: {
@@ -200,12 +201,12 @@ export default function SchedulingClient({
 
   // ── Driver info editing ───────────────────────────────────────────────────
   const [editingDriver, setEditingDriver] = useState<string | null>(null);
-  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; defaultWorkAreaId: number | null; noticeDate: string; lastDay: string; isTrainee: boolean }>>({});
+  const [driverDrafts, setDriverDrafts] = useState<Record<string, { name: string; workArea: string; defaultWorkAreaId: number | null; noticeDate: string; lastDay: string; hireDate: string; isTrainee: boolean }>>({});
 
   function openDriverEdit(row: ScheduleRow) {
     setDriverDrafts((prev) => ({
       ...prev,
-      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", defaultWorkAreaId: row.defaultWorkAreaId ?? null, noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "", isTrainee: row.isTrainee ?? false },
+      [row.driverId]: { name: row.name, workArea: row.workArea ?? "", defaultWorkAreaId: row.defaultWorkAreaId ?? null, noticeDate: row.noticeDate ?? "", lastDay: row.lastDay ?? "", hireDate: row.hireDate ?? "", isTrainee: row.isTrainee ?? false },
     }));
     setEditingDriver(row.driverId);
   }
@@ -223,6 +224,10 @@ export default function SchedulingClient({
       const lastDayVal = draft.lastDay || null;
       if (lastDayVal !== (currentRow?.lastDay ?? null)) {
         await setDriverLastDay(driverId, lastDayVal);
+      }
+      const hireDateVal = draft.hireDate || null;
+      if (hireDateVal !== (currentRow?.hireDate ?? null)) {
+        await setDriverHireDate(driverId, hireDateVal);
       }
       const isTraineeVal = draft.isTrainee ?? false;
       if (isTraineeVal !== (currentRow?.isTrainee ?? false)) {
@@ -592,6 +597,24 @@ export default function SchedulingClient({
                                 <option key={wa.id} value={wa.id.toString()}>{wa.name}</option>
                               ))}
                             </select>
+                            <div className="flex flex-col gap-0.5">
+                              <label className="text-[10px] font-semibold text-green-700 uppercase tracking-wider">Hire Date</label>
+                              <input
+                                type="date"
+                                value={driverDrafts[row.driverId]?.hireDate ?? ""}
+                                onChange={(e) => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], hireDate: e.target.value } }))}
+                                className="px-2.5 py-1.5 rounded-lg border border-green-200 text-[13px] text-slate-800 outline-none focus:border-green-400 focus:ring-1 focus:ring-green-100 bg-green-50/40"
+                              />
+                              {driverDrafts[row.driverId]?.hireDate && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDriverDrafts((p) => ({ ...p, [row.driverId]: { ...p[row.driverId], hireDate: "" } }))}
+                                  className="text-[10px] text-slate-400 hover:text-red-500 text-left transition-colors"
+                                >
+                                  Clear hire date
+                                </button>
+                              )}
+                            </div>
                             <div className="flex flex-col gap-0.5">
                               <label className="text-[10px] font-semibold text-red-500 uppercase tracking-wider">2-Week Notice Date</label>
                               <input
@@ -1480,7 +1503,12 @@ export default function SchedulingClient({
           if (processedIds.has(driver.driverId)) continue;
           if (!driver.active) continue;
           // Skip drivers who weren't with the company yet on the selected date.
-          if (driver.createdAt && historyDate < new Date(driver.createdAt).toISOString().slice(0, 10)) continue;
+          const joinDate = driver.hireDate
+            ? (typeof driver.hireDate === "string" ? driver.hireDate : new Date(driver.hireDate).toISOString().slice(0, 10))
+            : driver.createdAt
+            ? new Date(driver.createdAt).toISOString().slice(0, 10)
+            : null;
+          if (joinDate && historyDate < joinDate) continue;
           // Skip drivers who were already terminated before the selected date.
           if (driver.terminatedAt && historyDate >= new Date(driver.terminatedAt).toISOString().slice(0, 10)) continue;
           if (isPastLastDay(driver.driverId, date)) continue;

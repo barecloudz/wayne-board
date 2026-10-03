@@ -34,6 +34,7 @@ export async function getAllSchedules() {
       isTrainee:         drivers.isTrainee,
       noticeDate:        drivers.noticeDate,
       lastDay:           drivers.lastDay,
+      hireDate:          drivers.hireDate,
       createdAt:         drivers.createdAt,
       terminatedAt:      drivers.terminatedAt,
       schedule:          driverSchedules,
@@ -59,6 +60,12 @@ export async function setDriverNoticeDate(driverId: string, noticeDate: string |
 export async function setDriverLastDay(driverId: string, lastDay: string | null) {
   const orgId = await requireOrg();
   await db.update(drivers).set({ lastDay }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
+  revalidatePath("/dashboard/scheduling");
+}
+
+export async function setDriverHireDate(driverId: string, hireDate: string | null) {
+  const orgId = await requireOrg();
+  await db.update(drivers).set({ hireDate }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
   revalidatePath("/dashboard/scheduling");
 }
 

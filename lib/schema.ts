@@ -61,6 +61,7 @@ export const drivers = pgTable("drivers", {
   isTrainee:         boolean("is_trainee").notNull().default(false),
   noticeDate:        date("notice_date"),
   lastDay:           date("last_day"),
+  hireDate:          date("hire_date"),
   firstLoginAt:      timestamp("first_login_at"),
   terminationType:   text("termination_type"),   // "notice"|"fired"|"mistake"
   terminationNote:   text("termination_note"),
