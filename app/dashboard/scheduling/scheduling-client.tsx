@@ -3,8 +3,9 @@
 import { useState, useTransition, Fragment, useRef } from "react";
 import {
   Calendar, Clock, ChevronDown, ChevronUp, Plus, Trash2,
-  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History,
+  Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History, Map as MapIcon,
 } from "lucide-react";
+import WorkAreaManager from "@/app/dashboard/work-area-manager";
 import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverTrainee } from "@/lib/actions/scheduling";
 import { upsertAttendance, markDayHoliday, unmarkDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
@@ -124,6 +125,7 @@ export default function SchedulingClient({
   const { locations, selectedLocationIds, allSelected } = useLocationContext();
 
   const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history">("schedules");
+  const [waOpen, setWaOpen] = useState(false);
   const [historyDate, setHistoryDate] = useState(() => {
     // Default to yesterday
     const d = new Date(); d.setDate(d.getDate() - 1);
@@ -431,8 +433,26 @@ export default function SchedulingClient({
         </div>
       </div>
 
+      {/* Work Areas modal */}
+      {waOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setWaOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <span className="text-[14px] font-bold text-slate-900">Work Areas</span>
+              <button onClick={() => setWaOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-4">
+              <WorkAreaManager initial={workAreas} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 mb-2 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+      <div className="flex flex-wrap gap-1 bg-slate-100 rounded-xl p-1 w-fit">
         {([
           { key: "schedules", label: "Weekly Schedule",   icon: Clock },
           { key: "timeoff",   label: "Time Off",          icon: Calendar },
@@ -451,6 +471,14 @@ export default function SchedulingClient({
             {label}
           </button>
         ))}
+      </div>
+        <button
+          onClick={() => setWaOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors"
+        >
+          <MapIcon className="w-3.5 h-3.5" />
+          Work Areas
+        </button>
       </div>
 
       {/* Tab descriptions */}

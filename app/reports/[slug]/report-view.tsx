@@ -179,6 +179,16 @@ export type DriverRow = {
   createdAt: string;
 };
 
+export type PayrollRow = {
+  driverId: string;
+  name: string;
+  daysWorked: number;
+  cut: number;
+  callOut: number;
+  isTrainee: boolean;
+  isTerminated: boolean;
+};
+
 // ─── Fleet ────────────────────────────────────────────────────────────────────
 
 function statusColor(status: string): StatusColor {
@@ -238,7 +248,7 @@ function FleetReport({ vehicles }: { vehicles: FleetRow[] }) {
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="Total Trucks" value={vehicles.length.toString()} />
-        <KpiCard label="Inspected Q2" value={inspected.toString()} sub={`of ${vehicles.length}`} />
+        <KpiCard label="Inspected" value={inspected.toString()} sub={`of ${vehicles.length}`} />
         <KpiCard label="Out of Service" value={oos.toString()} />
         <KpiCard label="Pending" value={(vehicles.length - inspected).toString()} />
       </div>
@@ -423,18 +433,93 @@ function DriversReport({ drivers }: { drivers: DriverRow[] }) {
 
 // ─── Payroll ──────────────────────────────────────────────────────────────────
 
-function PayrollReport() {
+function PayrollReport({ rows }: { rows: PayrollRow[] }) {
+  const [search, setSearch] = useState("");
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+
+  function handleSort(col: string) {
+    if (sortCol === col) {
+      setSortDir(d => d === "asc" ? "desc" : d === "desc" ? null : "asc");
+      if (sortDir === "desc") setSortCol(null);
+    } else { setSortCol(col); setSortDir("asc"); }
+  }
+
+  const active = rows.filter(r => !r.isTerminated);
+  const totalDays = active.reduce((s, r) => s + r.daysWorked, 0);
+  const totalCuts = active.reduce((s, r) => s + r.cut, 0);
+  const totalCallOuts = active.reduce((s, r) => s + r.callOut, 0);
+
+  const data = useMemo(() => {
+    let filtered = rows.filter(r => r.name.toLowerCase().includes(search.toLowerCase()));
+    if (sortCol && sortDir) {
+      filtered = [...filtered].sort((a, b) => {
+        const av = (a as Record<string, unknown>)[sortCol];
+        const bv = (b as Record<string, unknown>)[sortCol];
+        const cmp = typeof av === "number" ? (av as number) - (bv as number) : String(av).localeCompare(String(bv));
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return filtered;
+  }, [search, sortCol, sortDir, rows]);
+
+  if (rows.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
+        <p className="text-[15px] font-semibold text-slate-500 mb-2">No payroll data for this period</p>
+        <p className="text-[13px] text-slate-400">Upload DSW data and mark attendance to populate this report.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Weekly Total" value="$-" />
-        <KpiCard label="Drivers Paid" value="-" />
-        <KpiCard label="Avg Stops / Day" value="-" />
-        <KpiCard label="Period" value="-" />
+        <KpiCard label="Drivers" value={active.length.toString()} />
+        <KpiCard label="Total Days Worked" value={totalDays.toString()} />
+        <KpiCard label="Cuts" value={totalCuts.toString()} />
+        <KpiCard label="Call Outs" value={totalCallOuts.toString()} />
       </div>
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
-        <p className="text-[15px] font-semibold text-slate-500 mb-2">No payroll data yet</p>
-        <p className="text-[13px] text-slate-400">Payroll tracking will be available in a future update.</p>
+      <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.05)]">
+        <div className="px-6 py-4 border-b border-slate-100">
+          <p className="text-[13px] font-bold text-slate-900">Weekly Attendance Summary</p>
+        </div>
+        <TableSearch value={search} onChange={setSearch} count={data.length} />
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr>
+                <SortTh colKey="name" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Driver</SortTh>
+                <SortTh colKey="daysWorked" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Days Worked</SortTh>
+                <SortTh colKey="cut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Cuts</SortTh>
+                <SortTh colKey="callOut" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} right>Call Outs</SortTh>
+                <SortTh colKey="isTrainee" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Type</SortTh>
+                <SortTh colKey="isTerminated" sortCol={sortCol} sortDir={sortDir} onSort={handleSort}>Status</SortTh>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((r) => (
+                <tr key={r.driverId} className="group/row">
+                  <Td bold>{r.name}</Td>
+                  <Td mono right>{r.daysWorked}</Td>
+                  <Td mono right>{r.cut > 0 ? <span className="text-amber-600 font-semibold">{r.cut}</span> : "—"}</Td>
+                  <Td mono right>{r.callOut > 0 ? <span className="text-red-500 font-semibold">{r.callOut}</span> : "—"}</Td>
+                  <Td>
+                    {r.isTrainee
+                      ? <StatusCell color="indigo" label="Trainee" />
+                      : <StatusCell color="slate" label="Driver" />}
+                  </Td>
+                  <Td>
+                    <StatusCell color={r.isTerminated ? "red" : "green"} label={r.isTerminated ? "Terminated" : "Active"} />
+                  </Td>
+                </tr>
+              ))}
+              {data.length === 0 && (
+                <tr><td colSpan={6} className="py-8 text-center text-[12px] text-slate-400">No records match your filter</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -467,9 +552,10 @@ export type ReportViewProps = {
   period: string;
   fleetData: FleetRow[];
   driverData: DriverRow[];
+  payrollData: PayrollRow[];
 };
 
-export default function ReportView({ slug, title, period, fleetData, driverData }: ReportViewProps) {
+export default function ReportView({ slug, title, period, fleetData, driverData, payrollData }: ReportViewProps) {
   return (
     <AppShell>
       <main className="flex-1 px-8 py-8 max-w-[1100px] w-full mx-auto flex flex-col gap-6">
@@ -507,7 +593,7 @@ export default function ReportView({ slug, title, period, fleetData, driverData 
 
         {slug === "fleet"   && <FleetReport vehicles={fleetData} />}
         {slug === "drivers" && <DriversReport drivers={driverData} />}
-        {slug === "payroll" && <PayrollReport />}
+        {slug === "payroll" && <PayrollReport rows={payrollData} />}
         {slug === "routes"  && <RoutesReport />}
       </main>
     </AppShell>
