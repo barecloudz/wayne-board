@@ -33,6 +33,10 @@ const MONTH_NAMES = [
   "July","August","September","October","November","December",
 ];
 
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function todayMDY(): string {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -127,8 +131,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json() as { vehicleIds: number[]; monthYear: string };
   const { vehicleIds, monthYear } = body;
 
-  if (!vehicleIds?.length || !monthYear) {
-    return NextResponse.json({ error: "Missing vehicleIds or monthYear" }, { status: 400 });
+  if (!Array.isArray(vehicleIds) || vehicleIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)) {
+    return NextResponse.json({ error: "vehicleIds must be a non-empty array of positive integers" }, { status: 400 });
+  }
+
+  if (!monthYear) {
+    return NextResponse.json({ error: "Missing monthYear" }, { status: 400 });
   }
 
   const monthMatch = /^(\d{4})-(\d{2})$/.exec(monthYear);
@@ -176,7 +184,13 @@ export async function POST(req: NextRequest) {
   const pages: string[] = [];
   const generationEntries: { vehicleId: number; monthYear: string; mileageSnapshot: string; maintenanceRowCount: number }[] = [];
 
-  for (const vehicleId of vehicleIds) {
+  const sortedVehicleIds = [...vehicleIds].sort((a, b) => {
+    const ua = vehicleMap.get(a)?.unitNumber ?? "";
+    const ub = vehicleMap.get(b)?.unitNumber ?? "";
+    return ua.localeCompare(ub, undefined, { numeric: true, sensitivity: "base" });
+  });
+
+  for (const vehicleId of sortedVehicleIds) {
     const v = vehicleMap.get(vehicleId);
     if (!v) continue;
     const rows = maintByVehicle.get(vehicleId) ?? [];
@@ -184,7 +198,7 @@ export async function POST(req: NextRequest) {
       const d = new Date(r.serviceDate + "T00:00:00");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const dd = String(d.getDate()).padStart(2, "0");
-      return `<tr><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">${mm}/${dd}/${d.getFullYear()}</td><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">${r.description}</td></tr>`;
+      return `<tr><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">${mm}/${dd}/${d.getFullYear()}</td><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">${escHtml(r.description)}</td></tr>`;
     });
     const padCount = Math.max(0, 5 - dataRows.length);
     const padRows = Array(padCount).fill(`<tr><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">&nbsp;</td><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">&nbsp;</td></tr>`);
