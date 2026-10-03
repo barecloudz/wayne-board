@@ -1378,33 +1378,106 @@ export default function SchedulingClient({
 
         type HistoryEntry = { driver: ScheduleRow; reason: string; note: string | null };
         const working: ScheduleRow[] = [];
+        const halfDays: HistoryEntry[] = [];
         const holidays: ScheduleRow[] = [];
         const cuts: HistoryEntry[] = [];
         const callOuts: HistoryEntry[] = [];
+        const dayOffs: HistoryEntry[] = [];
+        const trainees: ScheduleRow[] = [];
         const timeOffList: HistoryEntry[] = [];
 
-        for (const driver of schedules.filter((s) => s.active || offDriverIds.has(s.driverId))) {
+        // Track processed driverIds so fallback passes do not double-count.
+        const processedIds = new Set<string>();
+
+        // -- PASS 1: attendance_log entries for this date are authoritative ----------
+        // attendanceRecords covers today-365 to today+14 (after the page.tsx fix).
+        // Filter to exactly the selected historyDate.
+        const loggedOnDate = attendanceRecords.filter((r) => r.date === historyDate);
+
+        for (const record of loggedOnDate) {
+          processedIds.add(record.driverId);
+
+          // Look up the ScheduleRow for name + isTrainee. The driver may have been
+          // hard-deleted from the drivers table and therefore absent from schedules.
+          // Fall back to a minimal stub using the driverName snapshot from the log
+          // so the historical name still renders.
+          const driver: ScheduleRow = scheduleMap[record.driverId] ?? {
+            id: -1,
+            driverId: record.driverId,
+            name: record.driverName,
+            active: false,
+            workArea: null,
+            defaultWorkAreaId: null,
+            isTrainee: false,
+            noticeDate: null,
+            lastDay: null,
+            schedule: null,
+          };
+
+          switch (record.status) {
+            case "work":
+              working.push(driver);
+              break;
+            case "trainee":
+              trainees.push(driver);
+              break;
+            case "half_day":
+              halfDays.push({ driver, reason: "Half Day", note: record.note });
+              break;
+            case "holiday":
+              holidays.push(driver);
+              break;
+            case "cut":
+              cuts.push({ driver, reason: "Cut", note: record.note });
+              break;
+            case "call_out":
+              callOuts.push({ driver, reason: "Call Out", note: record.note });
+              break;
+            case "day_off":
+              dayOffs.push({ driver, reason: "Day Off", note: record.note });
+              break;
+            default:
+              // Exhaustive guard — AttendanceStatus has no other values in strict mode.
+              working.push(driver);
+          }
+        }
+
+        // -- PASS 2: schedule-inference fallback for active drivers with no log entry
+        // An active driver who was scheduled on this day but has no log entry is
+        // presumed to have worked normally (or as trainee if isTrainee). Mirrors
+        // getPayrollWeek inference so history and payroll agree.
+        for (const driver of schedules) {
+          if (processedIds.has(driver.driverId)) continue;
+          if (!driver.active) continue;
           if (isPastLastDay(driver.driverId, date)) continue;
           const scheduled = dayKey ? driver.schedule?.[dayKey] === true : false;
           const hasOverride = dayOverrideIds.has(driver.driverId);
           if (!scheduled && !hasOverride) continue;
-
-          const attendanceEntry = attendanceMap.get(`${driver.driverId}|${historyDate}`);
-
-          if (!offDriverIds.has(driver.driverId)) {
-            if (driver.active) {
-              if (attendanceEntry?.status === "holiday") {
-                holidays.push(driver);
-              } else {
-                working.push(driver);
-              }
-            }
+          // Skip drivers with a timeOffEntry — handled in Pass 3.
+          if (offDriverIds.has(driver.driverId)) continue;
+          processedIds.add(driver.driverId);
+          if (driver.isTrainee) {
+            trainees.push(driver);
           } else {
-            const entries = dayEntries.filter((to) => to.driverId === driver.driverId);
-            for (const e of entries) {
-              if (e.reason === "Cut" || e.reason === "Other") cuts.push({ driver, reason: e.reason, note: e.note });
-              else if (e.reason === "Call Out") callOuts.push({ driver, reason: e.reason, note: e.note });
-              else timeOffList.push({ driver, reason: e.reason, note: e.note });
+            working.push(driver);
+          }
+        }
+
+        // -- PASS 3: timeOffEntries legacy fallback --------------------------------
+        // Handles Cut/Call Out records written before attendance_log existed, and
+        // any timeOff entry without a corresponding log record.
+        for (const driver of schedules) {
+          if (processedIds.has(driver.driverId)) continue;
+          if (!offDriverIds.has(driver.driverId)) continue;
+          processedIds.add(driver.driverId);
+          const entries = dayEntries.filter((to) => to.driverId === driver.driverId);
+          for (const e of entries) {
+            if (e.reason === "Cut" || e.reason === "Other") {
+              cuts.push({ driver, reason: e.reason, note: e.note });
+            } else if (e.reason === "Call Out") {
+              callOuts.push({ driver, reason: e.reason, note: e.note });
+            } else {
+              timeOffList.push({ driver, reason: e.reason, note: e.note });
             }
           }
         }
@@ -1468,28 +1541,53 @@ export default function SchedulingClient({
                   },
                 },
                 {
+                  title: "Half Day", color: "text-teal-600",
+                  bg: "bg-teal-50 border-teal-200/60",
+                  items: halfDays.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                  emptyText: "No half days",
+                  onClickItem: undefined,
+                },
+                {
+                  title: "Trainee", color: "text-slate-500",
+                  bg: "bg-slate-50 border-slate-200/60",
+                  items: trainees.map((d) => ({ name: d.name, driverId: d.driverId })),
+                  emptyText: "No trainees",
+                  onClickItem: undefined,
+                },
+                {
                   title: "Holiday", color: "text-violet-600",
                   bg: "bg-violet-50 border-violet-200/60",
                   items: holidays.map((d) => ({ name: d.name, driverId: d.driverId })),
                   emptyText: "No holiday",
+                  onClickItem: undefined,
                 },
                 {
                   title: "Cut", color: "text-red-500",
                   bg: "bg-red-50 border-red-200/60",
                   items: cuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
                   emptyText: "No cuts",
+                  onClickItem: undefined,
                 },
                 {
                   title: "Called Out", color: "text-amber-600",
                   bg: "bg-amber-50 border-amber-200/60",
                   items: callOuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
                   emptyText: "No call-outs",
+                  onClickItem: undefined,
+                },
+                {
+                  title: "Day Off", color: "text-sky-600",
+                  bg: "bg-sky-50 border-sky-200/60",
+                  items: dayOffs.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                  emptyText: "No day offs",
+                  onClickItem: undefined,
                 },
                 {
                   title: "Time Off", color: "text-blue-600",
                   bg: "bg-blue-50 border-blue-200/60",
                   items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" · ") })),
                   emptyText: "No time off",
+                  onClickItem: undefined,
                 },
               ].map(({ title, color, bg, items, emptyText, onClickItem }) => (
                 <div key={title} className={`rounded-2xl border p-5 ${bg}`}>
@@ -1498,7 +1596,7 @@ export default function SchedulingClient({
               ))}
             </div>
 
-            {working.length === 0 && holidays.length === 0 && cuts.length === 0 && callOuts.length === 0 && timeOffList.length === 0 && (
+            {working.length === 0 && halfDays.length === 0 && trainees.length === 0 && holidays.length === 0 && cuts.length === 0 && callOuts.length === 0 && dayOffs.length === 0 && timeOffList.length === 0 && (
               <p className="text-[13px] text-slate-400 text-center py-6">No drivers were scheduled on this day.</p>
             )}
           </div>
