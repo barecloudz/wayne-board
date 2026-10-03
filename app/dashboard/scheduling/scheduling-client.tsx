@@ -39,6 +39,8 @@ type ScheduleRow = {
   isTrainee: boolean;
   noticeDate: string | null;
   lastDay: string | null;
+  createdAt?: Date | string | null;
+  terminatedAt?: Date | string | null;
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
@@ -1449,6 +1451,10 @@ export default function SchedulingClient({
         for (const driver of schedules) {
           if (processedIds.has(driver.driverId)) continue;
           if (!driver.active) continue;
+          // Skip drivers who weren't with the company yet on the selected date.
+          if (driver.createdAt && historyDate < new Date(driver.createdAt).toISOString().slice(0, 10)) continue;
+          // Skip drivers who were already terminated before the selected date.
+          if (driver.terminatedAt && historyDate >= new Date(driver.terminatedAt).toISOString().slice(0, 10)) continue;
           if (isPastLastDay(driver.driverId, date)) continue;
           const scheduled = dayKey ? driver.schedule?.[dayKey] === true : false;
           const hasOverride = dayOverrideIds.has(driver.driverId);
