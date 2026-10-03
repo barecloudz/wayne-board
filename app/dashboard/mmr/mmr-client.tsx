@@ -71,14 +71,20 @@ export default function MmrClient({
   async function handleGenerateAll() {
     setGeneratingAll(true);
     try { await generatePdf(vehicles.map((v) => v.id)); }
-    catch (e) { console.error(e); }
+    catch (e) {
+      console.error(e);
+      alert("Failed to generate PDF. Please try again.");
+    }
     finally { setGeneratingAll(false); }
   }
 
   async function handleGenerateSingle(v: VehicleMmrRow) {
     setGeneratingSingle(v.id);
     try { await generatePdf([v.id]); }
-    catch (e) { console.error(e); }
+    catch (e) {
+      console.error(e);
+      alert("Failed to generate PDF. Please try again.");
+    }
     finally { setGeneratingSingle(null); }
   }
 

@@ -10,7 +10,8 @@ export async function GET(req: Request) {
   try {
     const vehicles = await getVehiclesForMmrDashboard(month);
     return NextResponse.json(vehicles);
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (e) {
+    console.error("MMR vehicles fetch error:", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
