@@ -35,6 +35,7 @@ export default function OrgLoginForm({
         setLoading(false);
         return;
       }
+      localStorage.setItem("mgops_org_slug", orgSlug);
       router.push(data.isAdmin ? "/dashboard" : "/driver");
     } catch {
       setError("Something went wrong. Try again.");

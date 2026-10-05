@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2, Loader2, ClipboardList } from "lucide-react";
+import { Plus, Trash2, Loader2, ClipboardList, ChevronDown } from "lucide-react";
 import { createTaskTemplate, deleteTaskTemplate, updateTaskTemplate } from "@/lib/actions/tasks";
 import { setSetting } from "@/lib/actions/settings";
 import type { TaskTemplate } from "@/lib/actions/tasks";
@@ -34,6 +34,7 @@ export default function TaskSettingsCard({
   const [newDays, setNewDays] = useState([1, 2, 3, 4, 5, 6]); // Mon-Sat default
   const [newTime, setNewTime] = useState("17:00");
   const [newRoles, setNewRoles] = useState(["bc", "co_owner", "owner"]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Reminder recipients
   const [reminderRecipients, setReminderRecipients] = useState(initialReminderRecipients);
@@ -124,41 +125,53 @@ export default function TaskSettingsCard({
             placeholder="Task title *"
             className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white"
           />
-          <input
-            value={newDesc}
-            onChange={e => setNewDesc(e.target.value)}
-            placeholder="Description (optional)"
-            className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white"
-          />
-          <div>
-            <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Days</p>
-            <div className="flex gap-1.5 flex-wrap">
-              {DAY_LABELS.map((label, i) => (
-                <button key={i} type="button" onClick={() => toggleDay(i)}
-                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newDays.includes(i) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div>
-              <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Due by</p>
-              <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 transition" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Visible to</p>
-              <div className="flex gap-1.5 flex-wrap">
-                {ALL_ROLES.map(role => (
-                  <button key={role} type="button" onClick={() => toggleRole(role)}
-                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newRoles.includes(role) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-                    {ROLE_LABELS[role]}
-                  </button>
-                ))}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(v => !v)}
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors self-start"
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+            Advanced options
+          </button>
+          {showAdvanced && (
+            <>
+              <input
+                value={newDesc}
+                onChange={e => setNewDesc(e.target.value)}
+                placeholder="Description (optional)"
+                className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white"
+              />
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Days</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {DAY_LABELS.map((label, i) => (
+                    <button key={i} type="button" onClick={() => toggleDay(i)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newDays.includes(i) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Due by</p>
+                  <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 transition" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Visible to</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {ALL_ROLES.map(role => (
+                      <button key={role} type="button" onClick={() => toggleRole(role)}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newRoles.includes(role) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                        {ROLE_LABELS[role]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           <div className="flex gap-2">
             <button onClick={() => setShowAdd(false)}
               className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -11,6 +11,11 @@ function toSlug(v: string) {
 export default function SignInPage() {
   const router = useRouter();
   const [value, setValue] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("mgops_org_slug");
+    if (saved) router.replace(`/login/${saved}`);
+  }, [router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
