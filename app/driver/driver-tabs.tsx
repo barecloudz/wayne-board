@@ -177,8 +177,9 @@ export default function DriverTabs({
     }
   }
 
-  // Derive today's schedule for HomeTab
-  const todayDow = new Date().getDay(); // 0=Sun
+  // Derive today's schedule using the server-provided today string to avoid timezone drift
+  const [_ty, _tm, _td] = today.split("-").map(Number);
+  const todayDow = new Date(_ty, _tm - 1, _td).getDay(); // 0=Sun
   const todayKey = DAY_KEYS[todayDow];
   const todayIsTimeOff = upcomingTimeOff.some(t => t.startDate <= today && t.endDate >= today);
   const scheduleToday = driverSchedule
@@ -597,22 +598,15 @@ export default function DriverTabs({
               </button>
             </div>
             <div className="px-4 pb-6">
-              <button
-                onClick={() => { setShowMoreSheet(false); }}
-                className="w-full flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-4 text-left active:bg-slate-100 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                  <Key className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <Key className="w-4 h-4 text-amber-600" />
                 </div>
-                <div className="flex-1">
+                <div>
                   <p className="text-[15px] font-bold text-slate-800">Gate Codes</p>
-                  <p className="text-[12px] text-slate-400 mt-0.5">Access codes for your routes</p>
+                  <p className="text-[12px] text-slate-400">Access codes for your routes</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
-              </button>
-            </div>
-            {/* Gate codes inline */}
-            <div className="px-4 pb-6 -mt-2">
+              </div>
               <GateCodesTab
                 initial={gateCodes}
                 areas={gateAreas}
