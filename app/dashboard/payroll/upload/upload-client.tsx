@@ -1,18 +1,25 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadDswFile, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDates } from "@/lib/actions/dsw-upload";
+import { uploadDswBatch, deleteDswDay, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts } from "@/lib/actions/dsw-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
 type LocationOption = { id: number; name: string; terminalId: string | null };
 
 export default function UploadClient() {
-  const [dswFile, setDswFile] = useState<File | null>(null);
-  const [pldFile, setPldFile] = useState<File | null>(null);
-  const [result, setResult] = useState<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string } | null>(null);
+  const [dswFiles, setDswFiles] = useState<File[]>([]);
+  const [pldFiles, setPldFiles] = useState<File[]>([]);
+  const [batchResults, setBatchResults] = useState<Array<{
+    fileName: string;
+    date?: string;
+    rowsInserted?: number;
+    unmatchedNames?: string[];
+    success: boolean;
+    error?: string;
+  }> | null>(null);
   const [isPending, startTransition] = useTransition();
   const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
   const [mappings, setMappings] = useState<Record<string, string>>({});
@@ -27,7 +34,8 @@ export default function UploadClient() {
   const [savingEditId, setSavingEditId] = useState<number | null>(null);
 
   // Upload history
-  const [uploadedDates, setUploadedDates] = useState<string[]>([]);
+  const [uploadedDates, setUploadedDates] = useState<Array<{ date: string; rowCount: number }>>([]);
+  const [deletingDate, setDeletingDate] = useState<string | null>(null);
 
   // Location picker (only shown when org has multiple locations)
   const [locations, setLocations] = useState<LocationOption[]>([]);
@@ -39,7 +47,7 @@ export default function UploadClient() {
   useEffect(() => {
     getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
     getDswNameMappings().then(setSavedMappings).catch(() => {});
-    getUploadedDswDates().then(setUploadedDates).catch(() => {});
+    getUploadedDswDatesWithCounts().then(setUploadedDates).catch(() => {});
     getLocationsForOrg().then(locs => {
       setLocations(locs);
       if (locs.length === 1) setSelectedLocationId(String(locs[0].id));
@@ -47,22 +55,33 @@ export default function UploadClient() {
   }, []);
 
   function handleUpload() {
-    if (!dswFile) return;
+    if (dswFiles.length === 0) return;
     if (locations.length > 1 && !selectedLocationId) return;
-    setResult(null);
+    setBatchResults(null);
     setSavedNames(new Set());
     setMappings({});
     startTransition(async () => {
       const fd = new FormData();
-      fd.append("dsw", dswFile);
-      if (pldFile) fd.append("pld", pldFile);
+      dswFiles.forEach(f => fd.append("dsw", f));
+      pldFiles.forEach(f => fd.append("pld", f));
       if (selectedLocationId) fd.append("locationId", selectedLocationId);
-      const res = await uploadDswFile(fd);
-      setResult(res);
-      if (res.success) {
-        getUploadedDswDates().then(setUploadedDates).catch(() => {});
+      const res = await uploadDswBatch(fd);
+      setBatchResults(res.results);
+      if (res.results.some(r => r.success)) {
+        getUploadedDswDatesWithCounts().then(setUploadedDates).catch(() => {});
       }
+      setDswFiles([]);
+      setPldFiles([]);
+      if (dswRef.current) dswRef.current.value = "";
+      if (pldRef.current) pldRef.current.value = "";
     });
+  }
+
+  async function handleDeleteDay(date: string) {
+    setDeletingDate(date);
+    await deleteDswDay(date);
+    setDeletingDate(null);
+    getUploadedDswDatesWithCounts().then(setUploadedDates).catch(() => {});
   }
 
   async function handleSaveMapping(dswName: string) {
@@ -92,8 +111,8 @@ export default function UploadClient() {
     setSavedMappings(prev => prev.filter(m => m.id !== id));
   }
 
-  const unmatchedNames = result?.unmatchedNames ?? [];
-  const pendingUnmatched = unmatchedNames.filter((n) => !savedNames.has(n));
+  const allUnmatched = [...new Set((batchResults ?? []).filter(r => r.success).flatMap(r => r.unmatchedNames ?? []))];
+  const pendingUnmatched = allUnmatched.filter(n => !savedNames.has(n));
 
   function formatDate(d: string) {
     const dt = new Date(d + "T00:00:00");
@@ -114,41 +133,67 @@ export default function UploadClient() {
           <li>Log in to the FedEx DSW portal for the previous day</li>
           <li>Click <strong>Export</strong> &rarr; save as &quot;daily service worksheet.xls&quot;</li>
           <li>Click <strong>All Status Code Pkgs</strong> &rarr; save as &quot;PackageLevelDetails.xls&quot;</li>
-          <li>Upload both files below</li>
+          <li>Upload both files below — you can select multiple files at once for batch upload</li>
         </ol>
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* DSW File */}
+        {/* DSW File(s) */}
         <div
           onClick={() => dswRef.current?.click()}
-          className={`bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-colors ${dswFile ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 hover:border-slate-300"}`}
+          className={`bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-colors ${dswFiles.length > 0 ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 hover:border-slate-300"}`}
         >
-          <input ref={dswRef} type="file" accept=".xls,.xlsx" className="hidden" onChange={(e) => setDswFile(e.target.files?.[0] ?? null)} />
+          <input
+            ref={dswRef}
+            type="file"
+            accept=".xls,.xlsx"
+            multiple
+            className="hidden"
+            onChange={(e) => setDswFiles(Array.from(e.target.files ?? []))}
+          />
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${dswFile ? "bg-emerald-100" : "bg-slate-100"}`}>
-              {dswFile ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <FileSpreadsheet className="w-5 h-5 text-slate-500" />}
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${dswFiles.length > 0 ? "bg-emerald-100" : "bg-slate-100"}`}>
+              {dswFiles.length > 0 ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <FileSpreadsheet className="w-5 h-5 text-slate-500" />}
             </div>
             <div>
               <p className="text-[14px] font-bold text-slate-800">Daily Service Worksheet <span className="text-red-500">*</span></p>
-              <p className="text-[12px] text-slate-400">{dswFile ? dswFile.name : "daily service worksheet.xls"}</p>
+              <p className="text-[12px] text-slate-400">
+                {dswFiles.length === 0
+                  ? "daily service worksheet.xls"
+                  : dswFiles.length === 1
+                  ? dswFiles[0].name
+                  : `${dswFiles.length} files selected`}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* PLD File */}
+        {/* PLD File(s) */}
         <div
           onClick={() => pldRef.current?.click()}
-          className={`bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-colors ${pldFile ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 hover:border-slate-300"}`}
+          className={`bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-colors ${pldFiles.length > 0 ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 hover:border-slate-300"}`}
         >
-          <input ref={pldRef} type="file" accept=".xls,.xlsx" className="hidden" onChange={(e) => setPldFile(e.target.files?.[0] ?? null)} />
+          <input
+            ref={pldRef}
+            type="file"
+            accept=".xls,.xlsx"
+            multiple
+            className="hidden"
+            onChange={(e) => setPldFiles(Array.from(e.target.files ?? []))}
+          />
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pldFile ? "bg-emerald-100" : "bg-slate-100"}`}>
-              {pldFile ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <FileSpreadsheet className="w-5 h-5 text-slate-500" />}
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pldFiles.length > 0 ? "bg-emerald-100" : "bg-slate-100"}`}>
+              {pldFiles.length > 0 ? <CheckCircle className="w-5 h-5 text-emerald-600" /> : <FileSpreadsheet className="w-5 h-5 text-slate-500" />}
             </div>
             <div>
               <p className="text-[14px] font-bold text-slate-800">Package Level Details <span className="text-[12px] font-normal text-slate-400">(optional — adds status code breakdown)</span></p>
-              <p className="text-[12px] text-slate-400">{pldFile ? pldFile.name : "PackageLevelDetails.xls"}</p>
+              <p className="text-[12px] text-slate-400">
+                {pldFiles.length === 0
+                  ? "PackageLevelDetails.xls"
+                  : pldFiles.length === 1
+                  ? pldFiles[0].name
+                  : `${pldFiles.length} files selected`}
+              </p>
             </div>
           </div>
         </div>
@@ -181,36 +226,41 @@ export default function UploadClient() {
 
         <button
           onClick={handleUpload}
-          disabled={!dswFile || isPending || (locations.length > 1 && !selectedLocationId)}
+          disabled={dswFiles.length === 0 || isPending || (locations.length > 1 && !selectedLocationId)}
           className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[14px] font-bold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {isPending ? "Processing..." : "Upload Files"}
         </button>
 
-        {result && (
-          <div className={`rounded-2xl p-4 flex items-start gap-3 ${result.success ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"}`}>
-            {result.success
-              ? <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-              : <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-            }
-            <div>
-              {result.success
-                ? <>
-                    <p className="text-[14px] font-bold text-emerald-800">Upload successful</p>
-                    <p className="text-[12px] text-emerald-700">{result.date} &middot; {result.rowsInserted} driver rows imported{pldFile ? " with status code breakdown" : ""}</p>
-                  </>
-                : <>
-                    <p className="text-[14px] font-bold text-red-800">Upload failed</p>
-                    <p className="text-[12px] text-red-700">{result.error}</p>
-                  </>
-              }
-            </div>
+        {/* Batch results list */}
+        {batchResults && (
+          <div className="flex flex-col gap-2">
+            {batchResults.map((r, i) => (
+              <div key={i} className={`rounded-2xl p-4 flex items-start gap-3 ${r.success ? "bg-emerald-50 border border-emerald-200" : "bg-red-50 border border-red-200"}`}>
+                {r.success
+                  ? <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                  : <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                }
+                <div>
+                  {r.success
+                    ? <>
+                        <p className="text-[13px] font-bold text-emerald-800">{formatDate(r.date!)} · {r.rowsInserted} routes</p>
+                        <p className="text-[11px] text-emerald-700">{r.fileName}</p>
+                      </>
+                    : <>
+                        <p className="text-[13px] font-bold text-red-800">{r.fileName}</p>
+                        <p className="text-[11px] text-red-700">{r.error}</p>
+                      </>
+                  }
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Unmatched driver names panel */}
-        {result?.success && pendingUnmatched.length > 0 && (
+        {batchResults && batchResults.some(r => r.success) && pendingUnmatched.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-1">
               <Link2 className="w-4 h-4 text-amber-700" />
@@ -254,7 +304,7 @@ export default function UploadClient() {
           </div>
         )}
 
-        {result?.success && unmatchedNames.length > 0 && pendingUnmatched.length === 0 && (
+        {batchResults && batchResults.some(r => r.success) && allUnmatched.length > 0 && pendingUnmatched.length === 0 && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
             <p className="text-[13px] font-medium text-emerald-800">All drivers linked successfully.</p>
@@ -270,11 +320,22 @@ export default function UploadClient() {
             <p className="text-[14px] font-bold text-slate-800">Upload History</p>
             <span className="ml-auto text-[11px] text-slate-400">{uploadedDates.length} day{uploadedDates.length !== 1 ? "s" : ""}</span>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {uploadedDates.map(d => (
-              <span key={d} className="text-[11px] font-medium bg-slate-100 text-slate-600 rounded-lg px-2.5 py-1">
-                {formatDate(d)}
-              </span>
+          <div className="flex flex-col divide-y divide-slate-100">
+            {uploadedDates.map(({ date, rowCount }) => (
+              <div key={date} className="flex items-center gap-3 py-2.5">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-slate-800">{formatDate(date)}</p>
+                  <p className="text-[11px] text-slate-400">{rowCount} route{rowCount !== 1 ? "s" : ""}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteDay(date)}
+                  disabled={deletingDate === date}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                  title="Delete this day's data"
+                >
+                  {deletingDate === date ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             ))}
           </div>
         </div>

@@ -3,7 +3,7 @@
 import * as XLSX from "xlsx";
 import { db } from "@/lib/db";
 import { dswRouteDays, dswNameMappings, drivers } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count, desc } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
@@ -21,19 +21,15 @@ function parseIlsPct(val: unknown): number | null {
   return isNaN(n) ? null : n;
 }
 
-export async function uploadDswFile(
-  formData: FormData
-): Promise<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string }> {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
-  const orgId = session.organizationId;
+// ── Private helper: process a single DSW+PLD pair ────────────────────────────
 
-  const dswFile = formData.get("dsw") as File | null;
-  const pldFile = formData.get("pld") as File | null;
-  const locationIdStr = formData.get("locationId") as string | null;
-  const locationId = locationIdStr ? (parseInt(locationIdStr, 10) || null) : null;
-
-  if (!dswFile) return { success: false, error: "DSW file is required" };
+async function processDswPair(
+  dswFile: File,
+  pldFile: File | null,
+  orgId: number,
+  locationId: number | null,
+): Promise<{ success: boolean; fileName: string; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string }> {
+  const fileName = dswFile.name;
 
   // --- Parse DSW ---
   const dswBuffer = await dswFile.arrayBuffer();
@@ -43,7 +39,7 @@ export async function uploadDswFile(
 
   const titleRow = String(dswRows[0]?.[0] ?? "");
   const date = parseDateFromTitle(titleRow);
-  if (!date) return { success: false, error: "Could not parse date from DSW file title: " + titleRow };
+  if (!date) return { success: false, fileName, error: "Could not parse date from DSW file title: " + titleRow };
 
   // Wipe existing rows for this date+org so re-uploads replace rather than duplicate
   await db.delete(dswRouteDays).where(and(eq(dswRouteDays.organizationId, orgId), eq(dswRouteDays.date, date)));
@@ -136,11 +132,6 @@ export async function uploadDswFile(
     return null;
   }
 
-  // Delete existing rows for this org+date before inserting fresh
-  await db
-    .delete(dswRouteDays)
-    .where(and(eq(dswRouteDays.organizationId, orgId), eq(dswRouteDays.date, date)));
-
   // --- Insert DSW rows (data starts at row index 4) ---
   let rowsInserted = 0;
   const unmatchedNames: string[] = [];
@@ -208,7 +199,146 @@ export async function uploadDswFile(
     rowsInserted++;
   }
 
-  return { success: true, date, rowsInserted, unmatchedNames };
+  return { success: true, fileName, date, rowsInserted, unmatchedNames };
+}
+
+// ── Single-file upload (backwards-compatible) ────────────────────────────────
+
+export async function uploadDswFile(
+  formData: FormData
+): Promise<{ success: boolean; date?: string; rowsInserted?: number; unmatchedNames?: string[]; error?: string }> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const dswFile = formData.get("dsw") as File | null;
+  const pldFile = formData.get("pld") as File | null;
+  const locationIdStr = formData.get("locationId") as string | null;
+  const locationId = locationIdStr ? (parseInt(locationIdStr, 10) || null) : null;
+
+  if (!dswFile) return { success: false, error: "DSW file is required" };
+
+  const result = await processDswPair(dswFile, pldFile, orgId, locationId);
+  // Strip fileName from the returned shape to keep the original signature
+  const { fileName: _f, ...rest } = result;
+  void _f;
+  return rest;
+}
+
+// ── Batch multi-file upload ───────────────────────────────────────────────────
+
+export async function uploadDswBatch(formData: FormData): Promise<{
+  results: Array<{
+    fileName: string;
+    date?: string;
+    rowsInserted?: number;
+    unmatchedNames?: string[];
+    success: boolean;
+    error?: string;
+  }>;
+}> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const locationIdStr = formData.get("locationId") as string | null;
+  const locationId = locationIdStr ? (parseInt(locationIdStr, 10) || null) : null;
+
+  const dswFiles = formData.getAll("dsw") as File[];
+  const pldFiles = formData.getAll("pld") as File[];
+
+  // Build a date → PLD File map by parsing each PLD file's title row
+  const pldByDate = new Map<string, File>();
+  for (const pldFile of pldFiles) {
+    try {
+      const buf = await pldFile.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }) as unknown[][];
+      const title = String(rows[0]?.[0] ?? "");
+      const date = parseDateFromTitle(title);
+      if (date) pldByDate.set(date, pldFile);
+    } catch {
+      // If we can't parse a PLD date, skip — it will simply be unmatched
+    }
+  }
+
+  const results: Array<{
+    fileName: string;
+    date?: string;
+    rowsInserted?: number;
+    unmatchedNames?: string[];
+    success: boolean;
+    error?: string;
+  }> = [];
+
+  for (const dswFile of dswFiles) {
+    try {
+      // Peek at DSW date so we can look up the matching PLD
+      const buf = await dswFile.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" }) as unknown[][];
+      const title = String(rows[0]?.[0] ?? "");
+      const dswDate = parseDateFromTitle(title);
+
+      const matchedPld = dswDate ? (pldByDate.get(dswDate) ?? null) : null;
+
+      // Re-construct a File from the already-read buffer so processDswPair can arrayBuffer() it again
+      const dswFileClone = new File([buf], dswFile.name, { type: dswFile.type });
+      const result = await processDswPair(dswFileClone, matchedPld, orgId, locationId);
+      results.push(result);
+    } catch (err) {
+      results.push({
+        fileName: dswFile.name,
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  revalidatePath("/dashboard/payroll");
+  revalidatePath("/dashboard/payroll/upload");
+
+  return { results };
+}
+
+// ── Get uploaded dates with row counts (most recent 60) ──────────────────────
+
+export async function getUploadedDswDatesWithCounts(): Promise<Array<{ date: string; rowCount: number }>> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select({ date: dswRouteDays.date, rowCount: count() })
+    .from(dswRouteDays)
+    .where(eq(dswRouteDays.organizationId, orgId))
+    .groupBy(dswRouteDays.date)
+    .orderBy(desc(dswRouteDays.date))
+    .limit(60);
+
+  return rows.map(r => ({
+    date: typeof r.date === "string" ? r.date.slice(0, 10) : (r.date as Date).toISOString().slice(0, 10),
+    rowCount: Number(r.rowCount),
+  }));
+}
+
+// ── Delete all DSW data for a given date ─────────────────────────────────────
+
+export async function deleteDswDay(date: string): Promise<{ success: boolean; error?: string }> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  await db
+    .delete(dswRouteDays)
+    .where(and(eq(dswRouteDays.organizationId, orgId), eq(dswRouteDays.date, date)));
+
+  revalidatePath("/dashboard/payroll");
+  revalidatePath("/dashboard/payroll/upload");
+
+  return { success: true };
 }
 
 // ── Save a DSW name → driver mapping and retroactively patch existing rows ────
@@ -245,7 +375,7 @@ export async function saveDswNameMapping(
   return { success: true };
 }
 
-// ── Get distinct uploaded dates (most recent 30) ─────────────────────────────
+// ── Get distinct uploaded dates (most recent 30) — kept for backwards compat ──
 
 export async function getUploadedDswDates(): Promise<string[]> {
   const session = await getSession();
