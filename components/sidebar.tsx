@@ -9,7 +9,7 @@ import {
   UserCog, Star, Wrench, Trophy, Award, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
   Zap, Bot, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
-  Building2, Upload, UserSearch, Loader2, User,
+  Building2, Upload, UserSearch, Loader2, User, FileText,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocationContext } from "@/components/location-context";
@@ -25,6 +25,7 @@ const adminItems = [
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
   { icon: Gauge,         label: "Fleet Status", href: "/dashboard/fleet-status",   exact: true },
   { icon: WrenchIcon,    label: "Maintenance",  href: "/dashboard/maintenance",    exact: true },
+  { icon: FileText,      label: "MMR Generator", href: "/dashboard/mmr",           exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
@@ -36,6 +37,7 @@ const adminItems = [
 
 const automationItems = [
   { icon: Bot,           label: "Auto GC",         href: "/dashboard/auto-gc",        exact: true },
+  { icon: FileText,      label: "MMR Generator",   href: "/dashboard/mmr",            exact: true },
 ];
 
 const complianceItems = [
@@ -104,7 +106,7 @@ export default function Sidebar() {
   }, [pathname]);
 
   const adminActive  = adminItems.some(i => pathname === i.href);
-  const autoActive   = automationItems.some(i => pathname === i.href);
+  const autoActive   = automationItems.some(i => i.exact ? pathname === i.href : pathname.startsWith(i.href));
   const compActive   = complianceItems.some(i => pathname.startsWith(i.href));
   const reportActive = reportItems.some(i => pathname === i.href);
 

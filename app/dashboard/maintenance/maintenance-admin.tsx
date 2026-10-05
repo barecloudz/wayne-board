@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import {
   Clock, AlertTriangle, CheckCircle2, Trash2, Loader2, ChevronDown,
-  Pencil, X, Check, Truck, Plus, Wrench, FileText,
+  Pencil, X, Check, Truck, Plus, Wrench, FileText, ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import { updateRequestStatus, deleteRequest, createMaintenanceRecord, deleteMaintenanceRecord } from "@/lib/actions/maintenance";
 import type { RequestStatus, MaintenanceRecordType } from "@/lib/actions/maintenance";
 
@@ -195,6 +196,13 @@ export default function MaintenanceAdmin({
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Maintenance</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/mmr"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+          >
+            <ExternalLink className="w-4 h-4" />
+            MMR Generator
+          </Link>
           <button
             onClick={openLogModal}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-900 bg-slate-900 text-white hover:bg-slate-700 transition-all"

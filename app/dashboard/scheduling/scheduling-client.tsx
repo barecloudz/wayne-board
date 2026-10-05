@@ -132,6 +132,7 @@ export default function SchedulingClient({
     const d = new Date(); d.setDate(d.getDate() - 1);
     return d.toISOString().slice(0, 10);
   });
+  const [showNotWorking, setShowNotWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // ── Attendance map ────────────────────────────────────────────────────────
@@ -1589,7 +1590,7 @@ export default function SchedulingClient({
               </span>
             </div>
 
-            {/* Attendance grid */}
+            {/* Attendance grid — working */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 {
@@ -1623,40 +1624,64 @@ export default function SchedulingClient({
                   emptyText: "No holiday",
                   onClickItem: undefined,
                 },
-                {
-                  title: "Cut", color: "text-red-500",
-                  bg: "bg-red-50 border-red-200/60",
-                  items: cuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
-                  emptyText: "No cuts",
-                  onClickItem: undefined,
-                },
-                {
-                  title: "Called Out", color: "text-amber-600",
-                  bg: "bg-amber-50 border-amber-200/60",
-                  items: callOuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
-                  emptyText: "No call-outs",
-                  onClickItem: undefined,
-                },
-                {
-                  title: "Day Off", color: "text-sky-600",
-                  bg: "bg-sky-50 border-sky-200/60",
-                  items: dayOffs.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
-                  emptyText: "No day offs",
-                  onClickItem: undefined,
-                },
-                {
-                  title: "Time Off", color: "text-blue-600",
-                  bg: "bg-blue-50 border-blue-200/60",
-                  items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" · ") })),
-                  emptyText: "No time off",
-                  onClickItem: undefined,
-                },
               ].map(({ title, color, bg, items, emptyText, onClickItem }) => (
                 <div key={title} className={`rounded-2xl border p-5 ${bg}`}>
                   <Section title={title} color={color} items={items} emptyText={emptyText} onClickItem={onClickItem} />
                 </div>
               ))}
             </div>
+
+            {/* Not working toggle */}
+            {(cuts.length > 0 || callOuts.length > 0 || dayOffs.length > 0 || timeOffList.length > 0) && (() => {
+              const notWorkingCount = cuts.length + callOuts.length + dayOffs.length + timeOffList.length;
+              return (
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => setShowNotWorking(v => !v)}
+                    className="flex items-center gap-2 text-[13px] font-semibold text-slate-500 hover:text-slate-800 transition-colors self-start"
+                  >
+                    <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${showNotWorking ? "border-slate-700 bg-slate-700" : "border-slate-300"}`}>
+                      {showNotWorking && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </span>
+                    Show not working ({notWorkingCount})
+                  </button>
+                  {showNotWorking && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {[
+                        {
+                          title: "Cut", color: "text-red-500",
+                          bg: "bg-red-50 border-red-200/60",
+                          items: cuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                          emptyText: "No cuts",
+                        },
+                        {
+                          title: "Called Out", color: "text-amber-600",
+                          bg: "bg-amber-50 border-amber-200/60",
+                          items: callOuts.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                          emptyText: "No call-outs",
+                        },
+                        {
+                          title: "Day Off", color: "text-sky-600",
+                          bg: "bg-sky-50 border-sky-200/60",
+                          items: dayOffs.map(({ driver, note }) => ({ name: driver.name, driverId: driver.driverId, note })),
+                          emptyText: "No day offs",
+                        },
+                        {
+                          title: "Time Off", color: "text-blue-600",
+                          bg: "bg-blue-50 border-blue-200/60",
+                          items: timeOffList.map(({ driver, reason, note }) => ({ name: driver.name, driverId: driver.driverId, note: [reason, note].filter(Boolean).join(" · ") })),
+                          emptyText: "No time off",
+                        },
+                      ].map(({ title, color, bg, items, emptyText }) => (
+                        <div key={title} className={`rounded-2xl border p-5 ${bg}`}>
+                          <Section title={title} color={color} items={items} emptyText={emptyText} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {working.length === 0 && halfDays.length === 0 && trainees.length === 0 && holidays.length === 0 && cuts.length === 0 && callOuts.length === 0 && dayOffs.length === 0 && timeOffList.length === 0 && (
               <p className="text-[13px] text-slate-400 text-center py-6">No drivers were scheduled on this day.</p>
