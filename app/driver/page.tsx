@@ -251,6 +251,7 @@ export default async function DriverDashboard() {
         </div>
 
         <DriverTabs
+          today={today}
           reviews={reviews}
           milestones={activeMilestones}
           streakDays={streakDays}

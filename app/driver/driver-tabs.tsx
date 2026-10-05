@@ -34,8 +34,10 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
 export default function DriverTabs({
+  today,
   reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
 }: {
+  today: string;
   reviews: Review[];
   milestones: Milestone[];
   streakDays: number;
@@ -178,19 +180,14 @@ export default function DriverTabs({
     }
   }
 
-  // Local date string helper — avoids UTC shift (toISOString shifts in non-UTC timezones)
-  function localDate(d: Date) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
   // Derive today's schedule for HomeTab
   const todayDow = new Date().getDay(); // 0=Sun
   const todayKey = DAY_KEYS[todayDow];
-  const todayIsoStr = localDate(new Date());
-  const todayIsTimeOff = upcomingTimeOff.some(t => t.startDate <= todayIsoStr && t.endDate >= todayIsoStr);
+  const todayIsTimeOff = upcomingTimeOff.some(t => t.startDate <= today && t.endDate >= today);
   const scheduleToday = driverSchedule
     ? { isWork: !!(driverSchedule[todayKey as keyof typeof driverSchedule]) && !todayIsTimeOff }
     : null;
+
 
   // Derived values for HomeTab
   const ratedReviews = reviews.filter((r) => r.stars != null);
@@ -335,6 +332,7 @@ export default function DriverTabs({
         {tab === "home" && (
           <HomeTab
             driverName={driverName}
+            today={today}
             streakDays={streakDays}
             scheduleToday={scheduleToday}
             rydeAvg={rydeAvg}
@@ -357,16 +355,16 @@ export default function DriverTabs({
                 <h2 className="text-[15px] font-bold text-slate-900">My Schedule</h2>
               </div>
               {(() => {
-                const todayDate = new Date();
-                const todayStr = localDate(todayDate);
-                // Start from Sunday of current week
-                const startOfWeek = new Date(todayDate);
-                startOfWeek.setDate(todayDate.getDate() - todayDate.getDay());
+                const todayStr = today;
+                // Start from Sunday of current week — parse today string to avoid timezone issues
+                const [ty, tm, td] = today.split("-").map(Number);
+                const startOfWeek = new Date(ty, tm - 1, td);
+                startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
                 const DAY_KEYS_LOCAL = ["sun","mon","tue","wed","thu","fri","sat"] as const;
                 const calDays = Array.from({ length: 14 }, (_, i) => {
                   const d = new Date(startOfWeek);
                   d.setDate(startOfWeek.getDate() + i);
-                  const dateStr = localDate(d);
+                  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
                   const dow = d.getDay();
                   const dayKey = DAY_KEYS_LOCAL[dow];
                   const isWork = driverSchedule ? !!(driverSchedule[dayKey as keyof typeof driverSchedule]) : false;

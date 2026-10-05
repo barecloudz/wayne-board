@@ -4,6 +4,7 @@ import { Flame, CalendarDays, Key, Star, User, MapPin, Truck, ChevronRight } fro
 
 export type HomeTabProps = {
   driverName: string;
+  today: string;
   streakDays: number;
   scheduleToday: { isWork: boolean; startTime?: string; endTime?: string } | null;
   rydeAvg: number | null;
@@ -17,6 +18,7 @@ export type HomeTabProps = {
 
 export default function HomeTab({
   driverName,
+  today,
   streakDays,
   scheduleToday,
   rydeAvg,
@@ -27,8 +29,8 @@ export default function HomeTab({
   showRyde,
   onNavigate,
 }: HomeTabProps) {
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-US", {
+  const [ty, tm, td] = today.split("-").map(Number);
+  const dateLabel = new Date(ty, tm - 1, td).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
