@@ -178,10 +178,15 @@ export default function DriverTabs({
     }
   }
 
+  // Local date string helper — avoids UTC shift (toISOString shifts in non-UTC timezones)
+  function localDate(d: Date) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
   // Derive today's schedule for HomeTab
   const todayDow = new Date().getDay(); // 0=Sun
   const todayKey = DAY_KEYS[todayDow];
-  const todayIsoStr = new Date().toISOString().slice(0, 10);
+  const todayIsoStr = localDate(new Date());
   const todayIsTimeOff = upcomingTimeOff.some(t => t.startDate <= todayIsoStr && t.endDate >= todayIsoStr);
   const scheduleToday = driverSchedule
     ? { isWork: !!(driverSchedule[todayKey as keyof typeof driverSchedule]) && !todayIsTimeOff }
@@ -353,7 +358,7 @@ export default function DriverTabs({
               </div>
               {(() => {
                 const todayDate = new Date();
-                const todayStr = todayDate.toISOString().slice(0, 10);
+                const todayStr = localDate(todayDate);
                 // Start from Sunday of current week
                 const startOfWeek = new Date(todayDate);
                 startOfWeek.setDate(todayDate.getDate() - todayDate.getDay());
@@ -361,7 +366,7 @@ export default function DriverTabs({
                 const calDays = Array.from({ length: 14 }, (_, i) => {
                   const d = new Date(startOfWeek);
                   d.setDate(startOfWeek.getDate() + i);
-                  const dateStr = d.toISOString().slice(0, 10);
+                  const dateStr = localDate(d);
                   const dow = d.getDay();
                   const dayKey = DAY_KEYS_LOCAL[dow];
                   const isWork = driverSchedule ? !!(driverSchedule[dayKey as keyof typeof driverSchedule]) : false;
