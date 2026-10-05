@@ -329,7 +329,7 @@ export default function DriverTabs({
             {/* Today card */}
             <div className="px-4 pt-5 pb-2">
               <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest">
-                {new Date(...(today.split("-").map(Number) as [number,number,number])).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                {(() => { const [y,m,d] = today.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }); })()}
               </p>
               <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight mt-0.5">
                 Hey, {driverName.split(" ")[0]} 👋
@@ -587,26 +587,32 @@ export default function DriverTabs({
       {showMoreSheet && (
         <>
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowMoreSheet(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-slate-200" />
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <h2 className="text-[17px] font-extrabold text-slate-900">More</h2>
-              <button onClick={() => setShowMoreSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-            <div className="px-4 pb-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                  <Key className="w-4 h-4 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-[15px] font-bold text-slate-800">Gate Codes</p>
-                  <p className="text-[12px] text-slate-400">Access codes for your routes</p>
-                </div>
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)] flex flex-col"
+            style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            {/* Sticky handle + header */}
+            <div className="flex-shrink-0">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-slate-200" />
               </div>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                    <Key className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-[17px] font-extrabold text-slate-900">Gate Codes</h2>
+                    <p className="text-[12px] text-slate-400">Access codes for your routes</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowMoreSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
+            </div>
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1 px-4 py-4">
               <GateCodesTab
                 initial={gateCodes}
                 areas={gateAreas}
