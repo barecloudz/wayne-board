@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Lock, Eye, EyeOff, Loader2, RefreshCw,
   CalendarDays, CalendarOff, Key,
-  Home as HomeIcon, Star, User, Trophy,
+  Star, User, Trophy, Wrench, MoreHorizontal, X,
+  ChevronRight,
 } from "lucide-react";
 import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
@@ -13,13 +14,13 @@ import type { GateCodeRow } from "@/lib/gate-code-constants";
 import type { DriverBadgeRow } from "@/lib/actions/badges";
 import type { TopDriverRow } from "@/lib/actions/badges";
 import type { DswRow } from "./service-tab";
-import HomeTab from "./home-tab";
 import ScorePanel from "./score-panel";
 import MePanel from "./me-panel";
+import MaintenanceTab from "./maintenance-tab";
 import BadgeCelebrationOverlay from "./badge-celebration";
 import BadgeShelfTab from "./badge-shelf-tab";
 
-type DriverTab = "home" | "schedule" | "codes" | "score" | "me" | "awards";
+type DriverTab = "schedule" | "maintenance" | "me" | "more";
 
 type Review  = {
   id: number; type: string; stars: number | null;
@@ -73,9 +74,12 @@ export default function DriverTabs({
   weeklyRydeRank?: number | null;
   totalDriversThisWeek?: number;
 }) {
-  const [tab, setTab] = useState<DriverTab>("home");
+  const [tab, setTab] = useState<DriverTab>("schedule");
   const [claimedBadgeIds, setClaimedBadgeIds] = useState<number[]>([]);
   const [showCelebration, setShowCelebration] = useState(unseenBadges.length > 0);
+  const [showTrophySheet, setShowTrophySheet] = useState(false);
+  const [trophyTab, setTrophyTab] = useState<"score" | "awards">("score");
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
 
   // First-login force password change modal
   const [forceModal, setForceModal]     = useState(mustChangePassword);
@@ -91,8 +95,6 @@ export default function DriverTabs({
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Maintenance notification dot
-  const [maintenanceDot, setMaintenanceDot] = useState(false);
 
   async function handleForcePassword(e: React.FormEvent) {
     e.preventDefault();
@@ -139,13 +141,6 @@ export default function DriverTabs({
     };
   }, [router, refreshing]);
 
-  // Maintenance notification dot effect
-  useEffect(() => {
-    const nonPending = maintenanceRequests.filter((r: any) => r.status !== "pending").length;
-    const key = "mgops_maint_seen";
-    const seen = parseInt(localStorage.getItem(key) ?? "0", 10);
-    if (nonPending > seen) setMaintenanceDot(true);
-  }, [maintenanceRequests]);
 
   // Listen for profile circle "goto-tab" events dispatched from the nav
   useEffect(() => {
@@ -159,24 +154,26 @@ export default function DriverTabs({
   }, []);
 
   function goTab(t: string) {
-    // Map legacy tab names to new 5-tab names
     const legacyMap: Record<string, DriverTab> = {
+      home: "schedule",
       account: "me",
-      service: "score",
-      maintenance: "me",
-      reviews: "score",
+      service: "schedule",
+      codes: "more",
+      reviews: "schedule",
       milestones: "me",
       bonuses: "me",
-      leaderboard: "score",
+      leaderboard: "schedule",
     };
+    // Score and awards open the trophy sheet instead of a dock tab
+    if (t === "score" || t === "awards") {
+      setTrophyTab(t as "score" | "awards");
+      setShowTrophySheet(true);
+      return;
+    }
     const resolved = (legacyMap[t] ?? t) as DriverTab;
-    if (["home", "schedule", "codes", "score", "me", "awards"].includes(resolved)) {
+    if (["schedule", "maintenance", "me", "more"].includes(resolved)) {
       setTab(resolved);
-      if (resolved === "me") {
-        const nonPending = maintenanceRequests.filter((r: any) => r.status !== "pending").length;
-        localStorage.setItem("mgops_maint_seen", String(nonPending));
-        setMaintenanceDot(false);
-      }
+      if (resolved === "more") setShowMoreSheet(true);
     }
   }
 
@@ -187,7 +184,6 @@ export default function DriverTabs({
   const scheduleToday = driverSchedule
     ? { isWork: !!(driverSchedule[todayKey as keyof typeof driverSchedule]) && !todayIsTimeOff }
     : null;
-
 
   // Derived values for HomeTab
   const ratedReviews = reviews.filter((r) => r.stars != null);
@@ -239,12 +235,10 @@ export default function DriverTabs({
   };
 
   const dockItems: DockItem[] = [
-    { key: "home",     label: "Home",     icon: HomeIcon    },
-    { key: "schedule", label: "Schedule", icon: CalendarDays },
-    { key: "codes",    label: "Codes",    icon: Key         },
-    ...(showRyde ? [{ key: "score" as DriverTab, label: "Score", icon: Star }] : []),
-    { key: "awards" as DriverTab, label: "Awards", icon: Trophy },
-    { key: "me",       label: "Me",       icon: User        },
+    { key: "schedule",    label: "Schedule",    icon: CalendarDays   },
+    { key: "maintenance", label: "Maintenance", icon: Wrench         },
+    { key: "me",          label: "Me",          icon: User           },
+    { key: "more",        label: "More",        icon: MoreHorizontal },
   ];
 
   const brand = accentColor;
@@ -325,38 +319,75 @@ export default function DriverTabs({
         </div>
       )}
 
-      {/* Tab content · pb-28 so dock doesn't overlap */}
+      {/* Tab content · pb-32 so dock doesn't overlap */}
       <div className="pb-32 flex flex-col gap-4">
 
-        {/* ── Home tab ─────────────────────────────────── */}
-        {tab === "home" && (
-          <HomeTab
-            driverName={driverName}
-            today={today}
-            streakDays={streakDays}
-            scheduleToday={scheduleToday}
-            rydeAvg={rydeAvg}
-            reviewCount={reviews.length}
-            leaderboardRank={leaderboardRank}
-            vehicleNumber={vehicleNumber}
-            workAreaName={null}
-            showRyde={showRyde}
-            onNavigate={(dest) => setTab(dest)}
-          />
-        )}
-
-        {/* ── Schedule tab ──────────────────────────────── */}
+        {/* ── Schedule tab (also serves as home) ───────── */}
         {tab === "schedule" && (
           <>
+            {/* Today card */}
+            <div className="px-4 pt-5 pb-2">
+              <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest">
+                {new Date(...(today.split("-").map(Number) as [number,number,number])).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </p>
+              <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight mt-0.5">
+                Hey, {driverName.split(" ")[0]} 👋
+              </h1>
+            </div>
+
+            {/* Today status card */}
+            <div className="px-4">
+              <div className={`w-full flex items-center justify-between rounded-2xl px-5 py-4 ${
+                scheduleToday?.isWork ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"
+              }`}>
+                <div>
+                  <p className="text-[15px] font-bold leading-tight">
+                    {scheduleToday?.isWork ? "Working Today" : todayIsTimeOff ? "Time Off" : "Day Off"}
+                  </p>
+                  <p className="text-[13px] mt-0.5 opacity-80">
+                    {scheduleToday?.isWork ? "You're scheduled today" : todayIsTimeOff ? "Approved time off" : "Enjoy your day"}
+                  </p>
+                </div>
+                <CalendarDays className="w-5 h-5 opacity-40 shrink-0" />
+              </div>
+            </div>
+
+            {/* Quick stats row */}
+            {(showRyde && rydeAvg !== null) || vehicleNumber ? (
+              <div className="px-4 flex gap-3">
+                {showRyde && rydeAvg !== null && (
+                  <button
+                    onClick={() => { setTrophyTab("score"); setShowTrophySheet(true); }}
+                    className="flex-1 bg-white rounded-2xl border border-slate-200/80 px-4 py-3 flex items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)] text-left"
+                  >
+                    <Star className="w-4 h-4 text-amber-400 shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Ryde Avg</p>
+                      <p className="text-[18px] font-extrabold text-slate-900 leading-none">{rydeAvg.toFixed(1)}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 ml-auto shrink-0" />
+                  </button>
+                )}
+                {vehicleNumber && (
+                  <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 px-4 py-3 flex items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                    <span className="text-[16px]">🚚</span>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Truck</p>
+                      <p className="text-[18px] font-extrabold text-slate-900 leading-none">{vehicleNumber}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
             {/* 2-week calendar card */}
-            <div className="bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+            <div className="mx-4 bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarDays className="w-4 h-4 text-slate-400" />
                 <h2 className="text-[15px] font-bold text-slate-900">My Schedule</h2>
               </div>
               {(() => {
                 const todayStr = today;
-                // Start from Sunday of current week — parse today string to avoid timezone issues
                 const [ty, tm, td] = today.split("-").map(Number);
                 const startOfWeek = new Date(ty, tm - 1, td);
                 startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
@@ -372,11 +403,9 @@ export default function DriverTabs({
                   return { d, dateStr, dow, dateNum: d.getDate(), isToday: dateStr === todayStr, isWork, timeOffEntry };
                 });
                 const DOW_LABELS_2 = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-                // Month label: use the month of the first day of the current week
                 const monthLabel = startOfWeek.toLocaleDateString("en-US", { month: "long", year: "numeric" });
                 return (
                   <div className="px-5 pt-4 pb-5 flex flex-col gap-5">
-                    {/* Month header */}
                     <p className="text-[13px] font-bold text-slate-700 -mb-2">{monthLabel}</p>
                     {[
                       { label: "This Week", days: calDays.slice(0, 7), muted: false },
@@ -389,7 +418,6 @@ export default function DriverTabs({
                             const isOff = !!day.timeOffEntry;
                             const isWorkDay = day.isWork && !isOff;
                             const todayOff = day.isToday && isOff;
-                            const todayWork = day.isToday && isWorkDay;
                             const todayRest = day.isToday && !isOff && !isWorkDay;
                             return (
                               <div
@@ -397,87 +425,52 @@ export default function DriverTabs({
                                 className="flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all"
                                 style={{
                                   background: todayOff ? "#fffbeb"
-                                    : todayWork || todayRest ? "var(--brand)"
+                                    : (day.isToday && isWorkDay) || todayRest ? "var(--brand)"
                                     : isOff ? "#fffbeb"
                                     : isWorkDay ? "var(--brand)"
                                     : "#F8FAFC",
                                   boxShadow: day.isToday ? (todayOff ? "0 0 0 2px #d97706, 0 0 0 4px rgba(217,119,6,0.18)" : "0 0 0 2px var(--brand), 0 0 0 4px rgba(255,98,0,0.18)") : undefined,
                                 }}
                               >
-                                <span
-                                  className="text-[9px] font-bold uppercase"
-                                  style={{
-                                    color: todayOff ? "#d97706"
-                                      : day.isToday ? "rgba(255,255,255,0.8)"
-                                      : isOff ? "#d97706"
-                                      : isWorkDay ? "rgba(255,255,255,0.75)"
-                                      : "#CBD5E1"
-                                  }}
-                                >
+                                <span className="text-[9px] font-bold uppercase" style={{ color: todayOff ? "#d97706" : day.isToday ? "rgba(255,255,255,0.8)" : isOff ? "#d97706" : isWorkDay ? "rgba(255,255,255,0.75)" : "#CBD5E1" }}>
                                   {DOW_LABELS_2[day.dow]}
                                 </span>
-                                <span
-                                  className="text-[15px] font-extrabold leading-none"
-                                  style={{
-                                    color: todayOff ? "#b45309"
-                                      : day.isToday ? "#ffffff"
-                                      : isOff ? "#b45309"
-                                      : isWorkDay ? "#ffffff"
-                                      : "#CBD5E1"
-                                  }}
-                                >
+                                <span className="text-[15px] font-extrabold leading-none" style={{ color: todayOff ? "#b45309" : day.isToday ? "#ffffff" : isOff ? "#b45309" : isWorkDay ? "#ffffff" : "#CBD5E1" }}>
                                   {day.dateNum}
                                 </span>
-                                {isOff && (
-                                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
-                                    style={{ background: "#fef3c7", color: "#b45309" }}>Off</span>
-                                )}
-                                {!isOff && !isWorkDay && !day.isToday && (
-                                  <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>-</span>
-                                )}
-                                {(isWorkDay || todayRest) && !isOff && (
-                                  <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
-                                    style={{ background: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.9)" }}>
-                                    {todayRest ? "Today" : "On"}
-                                  </span>
-                                )}
+                                {isOff && <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5" style={{ background: "#fef3c7", color: "#b45309" }}>Off</span>}
+                                {!isOff && !isWorkDay && !day.isToday && <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>-</span>}
+                                {(isWorkDay || todayRest) && !isOff && <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5" style={{ background: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.9)" }}>{todayRest ? "Today" : "On"}</span>}
                               </div>
                             );
                           })}
                         </div>
                       </div>
                     ))}
-                    {driverSchedule?.notes && (
-                      <p className="text-[12px] text-slate-500 italic pt-1 border-t border-slate-100">{driverSchedule.notes}</p>
-                    )}
-                    {!driverSchedule && (
-                      <p className="text-[13px] text-slate-400 text-center py-4">Your schedule hasn&apos;t been set yet. Contact your manager.</p>
-                    )}
+                    {driverSchedule?.notes && <p className="text-[12px] text-slate-500 italic pt-1 border-t border-slate-100">{driverSchedule.notes}</p>}
+                    {!driverSchedule && <p className="text-[13px] text-slate-400 text-center py-4">Your schedule hasn&apos;t been set yet. Contact your manager.</p>}
                   </div>
                 );
               })()}
             </div>
 
-            <div className="bg-white rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.2)] overflow-hidden">
+            {/* Upcoming time off */}
+            <div className="mx-4 bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarOff className="w-4 h-4 text-slate-400" />
                 <h2 className="text-[15px] font-bold text-slate-900">Upcoming Time Off</h2>
               </div>
               {upcomingTimeOff.length === 0 ? (
-                <div className="px-5 py-8 text-center">
-                  <p className="text-[13px] text-slate-400">No upcoming time off on record.</p>
-                </div>
+                <div className="px-5 py-8 text-center"><p className="text-[13px] text-slate-400">No upcoming time off on record.</p></div>
               ) : (
                 <div className="divide-y divide-slate-100">
                   {upcomingTimeOff.map((entry) => (
-                    <div key={entry.id} className="px-5 py-4 flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[13px] font-semibold text-slate-800">{entry.reason}</span>
-                        <p className="text-[12px] font-mono text-slate-400 mt-0.5">
-                          {fmtDate(entry.startDate)}{entry.startDate !== entry.endDate ? ` → ${fmtDate(entry.endDate)}` : ""}
-                        </p>
-                        {entry.note && <p className="text-[12px] text-slate-500 italic mt-0.5">{entry.note}</p>}
-                      </div>
+                    <div key={entry.id} className="px-5 py-4">
+                      <span className="text-[13px] font-semibold text-slate-800">{entry.reason}</span>
+                      <p className="text-[12px] font-mono text-slate-400 mt-0.5">
+                        {fmtDate(entry.startDate)}{entry.startDate !== entry.endDate ? ` → ${fmtDate(entry.endDate)}` : ""}
+                      </p>
+                      {entry.note && <p className="text-[12px] text-slate-500 italic mt-0.5">{entry.note}</p>}
                     </div>
                   ))}
                 </div>
@@ -486,42 +479,16 @@ export default function DriverTabs({
           </>
         )}
 
-        {/* ── Gate Codes tab ────────────────────────────── */}
-        {tab === "codes" && (
-          <GateCodesTab
-            initial={gateCodes}
-            areas={gateAreas}
-            driverId={driverId}
-            driverName={driverName}
-            isAdmin={isAdmin ?? false}
-          />
-        )}
-
-        {/* ── Score tab ─────────────────────────────────── */}
-        {tab === "score" && showRyde && (
-          <ScorePanel
-            rydeAvg={rydeAvg}
-            reviewCount={reviews.length}
-            reviews={scorePanelReviews}
-            leaderboard={scorePanelLeaderboard}
-            currentDriverId={driverId}
-            serviceRows={dswRows}
-            myDswHistory={myDswHistory}
-            showDsw={showDsw}
-            accent={accentColor}
-            myBadges={myBadges}
-            badgeCounts={badgeCounts}
-            driverAvatarMap={driverAvatarMap}
-            newBadgeIds={claimedBadgeIds}
-            weeklyIlsRank={weeklyIlsRank}
-            weeklyRydeRank={weeklyRydeRank}
-            totalDriversThisWeek={totalDriversThisWeek}
-          />
-        )}
-
-        {/* ── Awards tab ───────────────────────────────── */}
-        {tab === "awards" && (
-          <BadgeShelfTab badges={myBadges} />
+        {/* ── Maintenance tab ───────────────────────────── */}
+        {tab === "maintenance" && (
+          <div className="px-4 pt-4">
+            <MaintenanceTab
+              initial={maintenanceRequests}
+              driverId={driverId}
+              driverName={driverName}
+              vehicles={mePanelVehicles.map(v => ({ ...v, model: "" }))}
+            />
+          </div>
         )}
 
         {/* ── Me tab ────────────────────────────────────── */}
@@ -541,29 +508,141 @@ export default function DriverTabs({
         )}
       </div>
 
+      {/* ── Trophy FAB ────────────────────────────────────── */}
+      <button
+        onClick={() => setShowTrophySheet(true)}
+        className="fixed z-40 flex items-center justify-center rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.18)] active:scale-95 transition-transform"
+        style={{
+          bottom: "calc(env(safe-area-inset-bottom) + 72px)",
+          right: "20px",
+          width: 52,
+          height: 52,
+          backgroundColor: "var(--brand)",
+        }}
+        aria-label="Score & Awards"
+      >
+        <Trophy className="w-5 h-5 text-white" />
+      </button>
+
+      {/* ── Trophy bottom sheet ───────────────────────────── */}
+      {showTrophySheet && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTrophySheet(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-slate-200" />
+            </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3">
+              <h2 className="text-[17px] font-extrabold text-slate-900">Score & Awards</h2>
+              <button onClick={() => setShowTrophySheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            {/* Sub-tabs */}
+            <div className="flex gap-2 px-5 pb-3">
+              {(["score", "awards"] as const).filter(t => t === "awards" || showRyde).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTrophyTab(t)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-colors"
+                  style={trophyTab === t ? { backgroundColor: "var(--brand)", color: "#fff" } : { backgroundColor: "#F1F5F9", color: "#64748B" }}
+                >
+                  {t === "score" ? <Star className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5" />}
+                  {t === "score" ? "Ryde Score" : "Awards"}
+                </button>
+              ))}
+            </div>
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[70vh] px-0 pb-4">
+              {trophyTab === "score" && showRyde && (
+                <ScorePanel
+                  rydeAvg={rydeAvg}
+                  reviewCount={reviews.length}
+                  reviews={scorePanelReviews}
+                  leaderboard={scorePanelLeaderboard}
+                  currentDriverId={driverId}
+                  serviceRows={dswRows}
+                  myDswHistory={myDswHistory}
+                  showDsw={showDsw}
+                  accent={accentColor}
+                  myBadges={myBadges}
+                  badgeCounts={badgeCounts}
+                  driverAvatarMap={driverAvatarMap}
+                  newBadgeIds={claimedBadgeIds}
+                  weeklyIlsRank={weeklyIlsRank}
+                  weeklyRydeRank={weeklyRydeRank}
+                  totalDriversThisWeek={totalDriversThisWeek}
+                />
+              )}
+              {trophyTab === "awards" && <BadgeShelfTab badges={myBadges} />}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── More bottom sheet ─────────────────────────────── */}
+      {showMoreSheet && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowMoreSheet(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-slate-200" />
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <h2 className="text-[17px] font-extrabold text-slate-900">More</h2>
+              <button onClick={() => setShowMoreSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+            <div className="px-4 pb-6">
+              <button
+                onClick={() => { setShowMoreSheet(false); }}
+                className="w-full flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-4 text-left active:bg-slate-100 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                  <Key className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[15px] font-bold text-slate-800">Gate Codes</p>
+                  <p className="text-[12px] text-slate-400 mt-0.5">Access codes for your routes</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+              </button>
+            </div>
+            {/* Gate codes inline */}
+            <div className="px-4 pb-6 -mt-2">
+              <GateCodesTab
+                initial={gateCodes}
+                areas={gateAreas}
+                driverId={driverId}
+                driverName={driverName}
+                isAdmin={isAdmin ?? false}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Bottom dock */}
       <nav
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 flex z-40"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {dockItems.map(({ key, label, icon: Icon }) => {
-          const active = tab === key;
+          const active = tab === key && !(key === "more" && !showMoreSheet);
           return (
             <button
               key={key}
-              onClick={() => goTab(key)}
-              className="flex-1 flex flex-col items-center justify-center pt-2 pb-1.5 relative gap-0.5 rounded-xl active:bg-slate-100 transition-colors"
+              onClick={() => {
+                if (key === "more") { setShowMoreSheet(true); }
+                else { setTab(key); setShowMoreSheet(false); setShowTrophySheet(false); }
+              }}
+              className="flex-1 flex flex-col items-center justify-center pt-2 pb-1.5 relative gap-0.5 active:bg-slate-100 transition-colors"
             >
-              {/* Active indicator bar */}
               {active && (
-                <span
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                  style={{ backgroundColor: "var(--brand)" }}
-                />
-              )}
-              {/* Maintenance dot on Me tab */}
-              {key === "me" && maintenanceDot && !active && (
-                <span className="absolute top-1.5 right-[calc(50%-14px)] w-2 h-2 bg-red-500 rounded-full border border-white" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full" style={{ backgroundColor: "var(--brand)" }} />
               )}
               <Icon
                 className={`w-5 h-5 transition-colors ${active ? "fill-current" : "text-slate-500"}`}
