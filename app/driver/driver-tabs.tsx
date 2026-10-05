@@ -181,8 +181,10 @@ export default function DriverTabs({
   // Derive today's schedule for HomeTab
   const todayDow = new Date().getDay(); // 0=Sun
   const todayKey = DAY_KEYS[todayDow];
+  const todayIsoStr = new Date().toISOString().slice(0, 10);
+  const todayIsTimeOff = upcomingTimeOff.some(t => t.startDate <= todayIsoStr && t.endDate >= todayIsoStr);
   const scheduleToday = driverSchedule
-    ? { isWork: !!(driverSchedule[todayKey as keyof typeof driverSchedule]) }
+    ? { isWork: !!(driverSchedule[todayKey as keyof typeof driverSchedule]) && !todayIsTimeOff }
     : null;
 
   // Derived values for HomeTab
@@ -383,25 +385,27 @@ export default function DriverTabs({
                           {days.map((day) => {
                             const isOff = !!day.timeOffEntry;
                             const isWorkDay = day.isWork && !isOff;
+                            const todayOff = day.isToday && isOff;
+                            const todayWork = day.isToday && isWorkDay;
+                            const todayRest = day.isToday && !isOff && !isWorkDay;
                             return (
                               <div
                                 key={day.dateStr}
                                 className="flex flex-col items-center gap-0.5 py-2 rounded-xl transition-all"
                                 style={{
-                                  background: day.isToday
-                                    ? "var(--brand)"
+                                  background: todayOff ? "#fffbeb"
+                                    : todayWork || todayRest ? "var(--brand)"
                                     : isOff ? "#fffbeb"
                                     : isWorkDay ? "var(--brand)"
                                     : "#F8FAFC",
-                                  opacity: day.isToday ? 1 : undefined,
-                                  boxShadow: day.isToday ? "0 0 0 2px var(--brand), 0 0 0 4px rgba(255,98,0,0.18)" : undefined,
+                                  boxShadow: day.isToday ? (todayOff ? "0 0 0 2px #d97706, 0 0 0 4px rgba(217,119,6,0.18)" : "0 0 0 2px var(--brand), 0 0 0 4px rgba(255,98,0,0.18)") : undefined,
                                 }}
                               >
                                 <span
                                   className="text-[9px] font-bold uppercase"
                                   style={{
-                                    color: day.isToday
-                                      ? "rgba(255,255,255,0.8)"
+                                    color: todayOff ? "#d97706"
+                                      : day.isToday ? "rgba(255,255,255,0.8)"
                                       : isOff ? "#d97706"
                                       : isWorkDay ? "rgba(255,255,255,0.75)"
                                       : "#CBD5E1"
@@ -412,8 +416,8 @@ export default function DriverTabs({
                                 <span
                                   className="text-[15px] font-extrabold leading-none"
                                   style={{
-                                    color: day.isToday
-                                      ? "#ffffff"
+                                    color: todayOff ? "#b45309"
+                                      : day.isToday ? "#ffffff"
                                       : isOff ? "#b45309"
                                       : isWorkDay ? "#ffffff"
                                       : "#CBD5E1"
@@ -421,17 +425,17 @@ export default function DriverTabs({
                                 >
                                   {day.dateNum}
                                 </span>
-                                {isOff && !day.isToday && (
+                                {isOff && (
                                   <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
                                     style={{ background: "#fef3c7", color: "#b45309" }}>Off</span>
                                 )}
                                 {!isOff && !isWorkDay && !day.isToday && (
                                   <span className="text-[7px] font-bold uppercase tracking-wide" style={{ color: "#CBD5E1" }}>-</span>
                                 )}
-                                {(isWorkDay || day.isToday) && !isOff && (
+                                {(isWorkDay || todayRest) && !isOff && (
                                   <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
                                     style={{ background: "rgba(255,255,255,0.22)", color: "rgba(255,255,255,0.9)" }}>
-                                    {day.isToday && !isWorkDay ? "Today" : "On"}
+                                    {todayRest ? "Today" : "On"}
                                   </span>
                                 )}
                               </div>
