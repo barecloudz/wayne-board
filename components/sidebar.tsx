@@ -9,8 +9,9 @@ import {
   UserCog, Star, Wrench, Trophy, Award, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
   Zap, Bot, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
-  Building2, Upload, UserSearch, Loader2, User, FileText,
+  Building2, Upload, UserSearch, Loader2, User, FileText, Bell,
 } from "lucide-react";
+import NotificationBell from "@/components/notification-bell";
 import { useRouter } from "next/navigation";
 import { useLocationContext } from "@/components/location-context";
 
@@ -31,8 +32,9 @@ const adminItems = [
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
   { icon: Award,         label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
-  { icon: UserSearch,   label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
-  { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
+  { icon: UserSearch,   label: "Recruiting",    href: "/dashboard/recruiting",      exact: true },
+  { icon: Bell,         label: "Notifications", href: "/dashboard/notifications",   exact: true },
+  { icon: Settings,     label: "Settings",      href: "/dashboard/settings",        exact: true },
 ];
 
 const automationItems = [
@@ -202,10 +204,11 @@ export default function Sidebar() {
         ) : (
           <Image src="/logo-icon.png" alt="MyGroundOps" width={32} height={32} className="object-contain rounded-lg flex-shrink-0" priority />
         )}
-        <div className="flex flex-col leading-none min-w-0">
+        <div className="flex flex-col leading-none min-w-0 flex-1">
           <span className="text-[13px] font-bold text-slate-900 tracking-tight truncate">{orgName}</span>
           <span className="text-[11px] text-slate-400 mt-0.5">Admin Dashboard</span>
         </div>
+        <NotificationBell recipientId={0} />
       </div>
 
       {/* Location Filter · only shown when org has multiple locations */}

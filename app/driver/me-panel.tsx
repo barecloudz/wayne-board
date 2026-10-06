@@ -30,6 +30,8 @@ export type MePanelProps = {
   vehicles: Array<{ id: number; unitNumber: string }>;
   maintenanceRequests: any[];
   avatarUrl?: string | null;
+  currentEmail?: string | null;
+  onChangeEmail: (newEmail: string) => Promise<{ error?: string }>;
 };
 
 type MeSection = "milestones" | "maintenance" | "account";
@@ -42,10 +44,12 @@ export default function MePanel({
   driverUsername,
   onChangeUsername,
   onChangePassword,
+  onChangeEmail,
   driverId,
   vehicles,
   maintenanceRequests,
   avatarUrl,
+  currentEmail,
 }: MePanelProps) {
   const defaultSection: MeSection = showMilestones ? "milestones" : "maintenance";
   const [section, setSection] = useState<MeSection>(defaultSection);
@@ -72,6 +76,8 @@ export default function MePanel({
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [pwMsg, setPwMsg] = useState<{ error: boolean; text: string } | null>(null);
+  const [newEmail, setNewEmail] = useState(currentEmail ?? "");
+  const [emailMsg, setEmailMsg] = useState<{ error: boolean; text: string } | null>(null);
 
   const ME_SECTIONS: { key: MeSection; label: string; icon: typeof Trophy }[] = [
     ...(showMilestones ? [{ key: "milestones" as const, label: "Milestones", icon: Trophy }] : []),
@@ -111,6 +117,22 @@ export default function MePanel({
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
+    }
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailMsg(null);
+    const trimmed = newEmail.trim();
+    if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailMsg({ error: true, text: "Please enter a valid email address." });
+      return;
+    }
+    const result = await onChangeEmail(trimmed);
+    if (result.error) {
+      setEmailMsg({ error: true, text: result.error });
+    } else {
+      setEmailMsg({ error: false, text: "Email updated!" });
     }
   }
 
@@ -305,6 +327,35 @@ export default function MePanel({
               style={{ backgroundColor: "var(--brand)" }}
             >
               Update Username
+            </button>
+          </form>
+
+          {/* Email address */}
+          <form onSubmit={handleEmailSubmit} className="bg-white rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <p className="text-[13px] font-bold text-slate-700 mb-3">Email address</p>
+            <input
+              type="email"
+              placeholder="driver@example.com"
+              value={newEmail}
+              onChange={(e) => { setNewEmail(e.target.value); setEmailMsg(null); }}
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 mb-2"
+              style={{ "--tw-ring-color": "var(--brand)" } as React.CSSProperties}
+            />
+            {emailMsg ? (
+              <p className={`text-[12px] mb-2 ${emailMsg.error ? "text-red-500" : "text-emerald-600"}`}>
+                {emailMsg.text}
+              </p>
+            ) : !newEmail.trim() ? (
+              <p className="text-[12px] text-slate-400 mb-2">
+                Add your email to receive notifications about your requests
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-xl text-[14px] font-bold text-white transition-opacity active:opacity-80"
+              style={{ backgroundColor: "var(--brand)" }}
+            >
+              Update Email
             </button>
           </form>
 

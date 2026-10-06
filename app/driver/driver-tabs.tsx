@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import NotificationBell from "@/components/notification-bell";
 import {
   Lock, Eye, EyeOff, Loader2, RefreshCw,
   CalendarDays, CalendarOff, Key,
   Star, User, Trophy, Wrench, MoreHorizontal, X,
   ChevronRight,
 } from "lucide-react";
-import { changeDriverPassword, changeMyUsername, clearPasswordForceChange } from "@/lib/actions/drivers";
+import { changeDriverPassword, changeMyUsername, clearPasswordForceChange, updateMyEmail } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 import type { DriverBadgeRow } from "@/lib/actions/badges";
@@ -34,15 +35,34 @@ type TimeOffEntry = { id: number; startDate: string; endDate: string; reason: st
 
 const DAY_KEYS   = ["sun","mon","tue","wed","thu","fri","sat"] as const;
 
+function useCountUp(target: number | null, duration = 1000): number | null {
+  const [val, setVal] = useState<number | null>(null);
+  useEffect(() => {
+    if (target === null) return;
+    const start = performance.now();
+    const from = 0;
+    function step(now: number) {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setVal(from + (target! - from) * eased);
+      if (t < 1) requestAnimationFrame(step);
+      else setVal(target);
+    }
+    requestAnimationFrame(step);
+  }, [target]);
+  return val;
+}
+
 export default function DriverTabs({
   today,
-  reviews, milestones, streakDays, driverId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
+  reviews, milestones, streakDays, driverId, driverDbId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, currentEmail = null, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
 }: {
   today: string;
   reviews: Review[];
   milestones: Milestone[];
   streakDays: number;
   driverId: string;
+  driverDbId?: number;
   claimedMilestoneIds: Set<number>;
   leaderboard: TopDriverRow[];
   myRank: number;
@@ -64,6 +84,7 @@ export default function DriverTabs({
   showDsw: boolean;
   accentColor?: string;
   currentUsername?: string | null;
+  currentEmail?: string | null;
   mustChangePassword?: boolean;
   myBadges?: DriverBadgeRow[];
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
@@ -119,6 +140,11 @@ export default function DriverTabs({
   async function handleChangePassword(currentPassword: string, newPassword: string): Promise<{ error?: string }> {
     const result = await changeDriverPassword(driverId, currentPassword, newPassword);
     return "error" in result ? { error: result.error ?? "Unknown error." } : {};
+  }
+
+  async function handleChangeEmail(newEmailValue: string): Promise<{ error?: string }> {
+    const result = await updateMyEmail(newEmailValue);
+    return "error" in result ? { error: result.error ?? "Failed." } : {};
   }
 
   // Pull-to-refresh effect
@@ -331,9 +357,14 @@ export default function DriverTabs({
               <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-widest">
                 {(() => { const [y,m,d] = today.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }); })()}
               </p>
-              <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight mt-0.5">
-                Hey, {driverName.split(" ")[0]} 👋
-              </h1>
+              <div className="flex items-center justify-between mt-0.5">
+                <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight">
+                  Hey, {driverName.split(" ")[0]} 👋
+                </h1>
+                {driverDbId != null && driverDbId > 0 && (
+                  <NotificationBell recipientId={driverDbId} />
+                )}
+              </div>
             </div>
 
             {/* Today status card */}
@@ -502,9 +533,11 @@ export default function DriverTabs({
             driverUsername={currentUsername ?? ""}
             onChangeUsername={handleChangeUsername}
             onChangePassword={handleChangePassword}
+            onChangeEmail={handleChangeEmail}
             driverId={driverId}
             vehicles={mePanelVehicles}
             maintenanceRequests={maintenanceRequests}
+            currentEmail={currentEmail}
           />
         )}
       </div>

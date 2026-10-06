@@ -8,7 +8,7 @@ import {
   XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User, Key,
 } from "lucide-react";
 import {
-  getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername, updateDriverFedExId,
+  getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername, updateDriverFedExId, updateDriverEmail,
 } from "@/lib/actions/drivers";
 import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds } from "@/lib/actions/driver-locations";
 import { suggestDriverId } from "@/lib/driver-utils";
@@ -82,6 +82,9 @@ export default function DriversPage() {
   const [newUsername, setNewUsername] = useState("");
   const [fedExIdTarget, setFedExIdTarget] = useState<{ id: number; name: string; current: string } | null>(null);
   const [newFedExId, setNewFedExId] = useState("");
+  const [emailTarget, setEmailTarget] = useState<{ id: number; name: string; current: string | null } | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [locationTarget, setLocationTarget] = useState<{ id: number; driverId: string; name: string } | null>(null);
@@ -228,6 +231,29 @@ export default function DriversPage() {
     startTransition(async () => {
       await updateDriverFedExId(fedExIdTarget.id, newFedExId.trim());
       setFedExIdTarget(null);
+      await refresh();
+    });
+  }
+
+  function openEmailModal(driver: Driver) {
+    setEmailTarget({ id: driver.id, name: driver.name, current: null });
+    setNewEmail("");
+    setEmailError("");
+    setMenuOpen(null);
+    setMenuPos(null);
+  }
+
+  function handleUpdateEmail() {
+    if (!emailTarget) return;
+    const trimmed = newEmail.trim();
+    if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailError("Please enter a valid email address.");
+      return;
+    }
+    setEmailError("");
+    startTransition(async () => {
+      await updateDriverEmail(emailTarget.id, trimmed);
+      setEmailTarget(null);
       await refresh();
     });
   }
@@ -629,6 +655,13 @@ export default function DriversPage() {
                   <Key className="w-3.5 h-3.5 text-blue-400" />Set FedEx ID
                 </button>
                 <button
+                  onClick={() => openEmailModal(driver)}
+                  className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
+                    hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <User className="w-3.5 h-3.5 text-indigo-400" />Set Email
+                </button>
+                <button
                   onClick={() => openProfileModal(driver)}
                   className="w-full text-left px-4 py-2.5 text-[13px] text-slate-700
                     hover:bg-slate-50 transition-colors flex items-center gap-2"
@@ -931,6 +964,55 @@ export default function DriversPage() {
               <button
                 onClick={handleUpdateFedExId}
                 disabled={!newFedExId.trim() || isPending}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
+                  hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2"
+              >
+                {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set Email modal */}
+      {emailTarget && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+              <h2 className="text-[16px] font-extrabold text-slate-900">Set Email Address</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">
+                Update email for <span className="font-semibold text-slate-600">{emailTarget.name}</span>
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email address</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => { setNewEmail(e.target.value); setEmailError(""); }}
+                placeholder="driver@example.com"
+                className={INPUT_CLS + " mt-1.5"}
+                autoFocus
+              />
+              {emailError ? (
+                <p className="text-[11px] text-red-500 mt-1.5">{emailError}</p>
+              ) : !newEmail.trim() ? (
+                <p className="text-[11px] text-slate-400 mt-1.5">Required for email notifications</p>
+              ) : null}
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setEmailTarget(null)}
+                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                  text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateEmail}
+                disabled={isPending}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
                   hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
                   flex items-center justify-center gap-2"

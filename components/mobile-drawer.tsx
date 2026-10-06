@@ -9,7 +9,7 @@ import {
   ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
   CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
   Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
-  ChevronDown, ChevronUp, PenLine, Upload, UserSearch, Loader2,
+  ChevronDown, ChevronUp, PenLine, Upload, UserSearch, Loader2, FileText,
 } from "lucide-react";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
@@ -23,6 +23,7 @@ const adminItems = [
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
   { icon: Gauge,         label: "Fleet Status", href: "/dashboard/fleet-status",   exact: true },
   { icon: WrenchIcon,    label: "Maintenance",  href: "/dashboard/maintenance",    exact: true },
+  { icon: FileText,      label: "MMR Generator", href: "/dashboard/mmr",           exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },

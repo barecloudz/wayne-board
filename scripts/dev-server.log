@@ -1,0 +1,73 @@
+
+> wayneboard@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.152:3000
+- Environments: .env.local
+✓ Ready in 832ms
+
+○ Compiling / ...
+ GET / 200 in 9.2s (next.js: 6.8s, application-code: 2.4s)
+ GET / 200 in 1514ms (next.js: 26ms, application-code: 1488ms)
+ GET / 200 in 506ms (next.js: 162ms, application-code: 345ms)
+ GET / 200 in 176ms (next.js: 7ms, application-code: 169ms)
+ GET /sign-in 200 in 271ms (next.js: 139ms, application-code: 132ms)
+ GET / 200 in 622ms (next.js: 24ms, application-code: 598ms)
+ GET /driver 200 in 1852ms (next.js: 473ms, proxy.ts: 53ms, application-code: 1326ms)
+ GET /driver 200 in 677ms (next.js: 6ms, proxy.ts: 9ms, application-code: 662ms)
+ GET /driver 200 in 536ms (next.js: 46ms, proxy.ts: 8ms, application-code: 483ms)
+ GET /driver 200 in 729ms (next.js: 6ms, proxy.ts: 8ms, application-code: 715ms)
+ GET /driver 200 in 723ms (next.js: 4ms, proxy.ts: 6ms, application-code: 713ms)
+✓ Compiled in 460ms
+✓ Compiled in 1513ms
+✓ Compiled in 532ms
+✓ Compiled in 1090ms
+✓ Compiled in 3.4s
+✓ Compiled in 404ms
+✓ Compiled in 255ms
+✓ Compiled in 1251ms
+✓ Compiled in 1203ms
+✓ Compiled in 1287ms
+✓ Compiled in 761ms
+✓ Compiled in 650ms
+✓ Compiled in 909ms
+✓ Compiled in 524ms
+✓ Compiled in 273ms
+✓ Compiled in 1556ms
+✓ Compiled in 1923ms
+✓ Compiled in 1545ms
+ GET / 200 in 1492ms (next.js: 530ms, application-code: 962ms)
+ GET / 200 in 1170ms (next.js: 111ms, application-code: 1059ms)
+✓ Compiled in 12.6s
+✓ Compiled in 2s
+✓ Compiled in 455ms
+✓ Compiled in 485ms
+✓ Compiled in 448ms
+ GET / 200 in 1452ms (next.js: 422ms, application-code: 1030ms)
+[browser] Image with src "/logo-full.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+✓ Compiled in 1004ms
+✓ Compiled in 574ms
+✓ Compiled in 455ms
+✓ Compiled in 1830ms
+✓ Compiled in 1050ms
+✓ Compiled in 393ms
+✓ Compiled in 474ms
+✓ Compiled in 478ms
+✓ Compiled in 570ms
+✓ Compiled in 2.7s
+✓ Compiled in 372ms
+✓ Compiled in 911ms
+✓ Compiled in 765ms
+✓ Compiled in 377ms
+✓ Compiled in 452ms
+✓ Compiled in 1205ms
+✓ Compiled in 553ms
+✓ Compiled in 453ms
+✓ Compiled in 542ms
+✓ Compiled in 454ms
+✓ Compiled in 584ms
+✓ Compiled in 3.8s
+✓ Compiled in 534ms
+✓ Compiled in 928ms

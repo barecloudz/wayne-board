@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { maintenanceRequests, vehicleMaintenanceRecords } from "@/lib/schema";
+import { maintenanceRequests, vehicleMaintenanceRecords, drivers } from "@/lib/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
+import { createNotification, NOTIFICATION_TYPES } from "@/lib/notifications";
 
 async function requireOrg() {
   const session = await getSession();
@@ -21,10 +22,21 @@ export async function submitMaintenanceRequest(
   description: string,
 ) {
   const orgId = await requireOrg();
-  await db.insert(maintenanceRequests).values({
+  const [newRequest] = await db.insert(maintenanceRequests).values({
     organizationId: orgId,
     driverId, driverName, truckNumber: truckNumber.trim(), description: description.trim(),
+  }).returning();
+
+  // Notify managers/owners of new maintenance request
+  await createNotification({
+    organizationId: orgId,
+    type: NOTIFICATION_TYPES.MAINTENANCE_REQUEST,
+    title: "New Maintenance Request",
+    body: `${driverName} submitted a request for Truck ${truckNumber.trim()}.`,
+    linkTo: "/dashboard/maintenance",
+    metadata: { requestId: newRequest.id, truckNumber: truckNumber.trim(), driverName },
   });
+
   revalidatePath("/driver");
   revalidatePath("/dashboard/maintenance");
 }
@@ -49,9 +61,36 @@ export async function getAllMaintenanceRequests() {
 
 export async function updateRequestStatus(id: number, status: RequestStatus, adminNote?: string) {
   const orgId = await requireOrg();
+
+  // Fetch the request before updating so we have driverId + truckNumber for the notification
+  const [request] = await db
+    .select({ driverId: maintenanceRequests.driverId, truckNumber: maintenanceRequests.truckNumber })
+    .from(maintenanceRequests)
+    .where(and(eq(maintenanceRequests.id, id), eq(maintenanceRequests.organizationId, orgId)));
+
   await db.update(maintenanceRequests)
     .set({ status, adminNote: adminNote ?? null, updatedAt: new Date() })
     .where(and(eq(maintenanceRequests.id, id), eq(maintenanceRequests.organizationId, orgId)));
+
+  // Notify the submitting driver when their request is resolved
+  if (status === "resolved" && request) {
+    const [driver] = await db
+      .select({ id: drivers.id })
+      .from(drivers)
+      .where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, request.driverId)));
+
+    if (driver) {
+      await createNotification({
+        organizationId: orgId,
+        type: NOTIFICATION_TYPES.MAINTENANCE_RESOLVED,
+        title: "Maintenance Request Resolved",
+        body: `Your maintenance request for Truck ${request.truckNumber} has been resolved.`,
+        linkTo: "/dashboard/maintenance",
+        recipientIds: [driver.id],
+      });
+    }
+  }
+
   revalidatePath("/dashboard/maintenance");
 }
 

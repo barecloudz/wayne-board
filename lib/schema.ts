@@ -66,6 +66,7 @@ export const drivers = pgTable("drivers", {
   terminationType:   text("termination_type"),   // "notice"|"fired"|"mistake"
   terminationNote:   text("termination_note"),
   terminatedAt:      timestamp("terminated_at"),
+  email:             text("email"),
   createdAt:         timestamp("created_at").defaultNow(),
 }, (t) => ({
   orgDriverUnique: uniqueIndex("drivers_org_driver_unique").on(t.organizationId, t.driverId),
@@ -670,3 +671,38 @@ export const driverBadges = pgTable("driverBadges", {
   orgBadgeWeekUniq: uniqueIndex("driverBadges_org_badgeType_week_uniq")
     .on(t.organizationId, t.badgeTypeId, t.weekStart),
 }));
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+export const notifications = pgTable("notifications", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  recipientId:    integer("recipient_id").notNull().references(() => drivers.id),
+  type:           text("type").notNull(),
+  title:          text("title").notNull(),
+  body:           text("body").notNull(),
+  linkTo:         text("link_to"),
+  metadata:       json("metadata"),
+  readAt:         timestamp("read_at"),
+  emailSentAt:    timestamp("email_sent_at"),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("notifications_recipient_unread_idx").on(t.recipientId, t.readAt),
+  index("notifications_org_created_idx").on(t.organizationId, t.createdAt),
+]);
+
+// ── Notification Preferences (per-org, per-type) ──────────────────────────────
+export const notificationPreferences = pgTable("notification_preferences", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id),
+  type:           text("type").notNull(),
+  enabled:        boolean("enabled").default(true).notNull(),
+  inAppEnabled:   boolean("in_app_enabled").default(true).notNull(),
+  emailEnabled:   boolean("email_enabled").default(false).notNull(),
+  recipientRoles: json("recipient_roles").$type<string[]>().default(["owner"]),
+  recipientIds:   json("recipient_ids").$type<number[]>().default([]),
+  timingDays:     json("timing_days").$type<number[]>().default([30, 7, 0]),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+  updatedAt:      timestamp("updated_at").defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("notification_preferences_org_type_idx").on(t.organizationId, t.type),
+]);

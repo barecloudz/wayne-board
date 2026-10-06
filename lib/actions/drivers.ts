@@ -272,3 +272,21 @@ export async function clearPasswordForceChange() {
   if (!session) return;
   await createSession({ ...session, mustChangePassword: false });
 }
+
+export async function updateDriverEmail(id: number, email: string) {
+  const orgId = await requireOrg();
+  const trimmed = email.trim();
+  await db.update(drivers).set({ email: trimmed || null }).where(and(eq(drivers.id, id), eq(drivers.organizationId, orgId)));
+}
+
+export async function updateMyEmail(newEmail: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  const trimmed = newEmail.trim();
+  if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { error: "Please enter a valid email address." };
+  }
+  await db.update(drivers).set({ email: trimmed || null }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, session.driverId)));
+  return { ok: true };
+}

@@ -92,7 +92,7 @@ export default async function DriverDashboard() {
     computeTopDrivers(getMostRecentWeekBounds().weekStart, getMostRecentWeekBounds().weekEnd),
     getCompanyRating(),
     getRydeGoalMessage(),
-    db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
+    db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username, email: drivers.email }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
@@ -256,6 +256,7 @@ export default async function DriverDashboard() {
           milestones={activeMilestones}
           streakDays={streakDays}
           driverId={session.driverId}
+          driverDbId={session.driverDbId}
           claimedMilestoneIds={claimedIds}
           leaderboard={leaderboard}
           myRank={myRank}
@@ -278,6 +279,7 @@ export default async function DriverDashboard() {
           myDswHistory={myDswHistory as any}
           accentColor={orgRow?.accentColor ?? "#FF6200"}
           currentUsername={driverRow?.username ?? null}
+          currentEmail={driverRow?.email ?? null}
           mustChangePassword={session.mustChangePassword ?? false}
           myBadges={myBadges}
           badgeCounts={badgeCounts}

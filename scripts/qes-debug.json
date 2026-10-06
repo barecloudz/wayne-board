@@ -1,0 +1,171 @@
+[
+  {
+    "idx": 0,
+    "cols": "G0",
+    "rowCount": 4,
+    "vdKeys": [
+      "D0"
+    ]
+  },
+  {
+    "idx": 1,
+    "cols": "?,M0,M1",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 2,
+    "cols": "G0,G1",
+    "rowCount": 1,
+    "vdKeys": [
+      "D0",
+      "D1"
+    ]
+  },
+  {
+    "idx": 3,
+    "cols": "M0,M1,M2",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 4,
+    "cols": "G0,M0",
+    "rowCount": 5,
+    "vdKeys": []
+  },
+  {
+    "idx": 5,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 6,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 7,
+    "cols": "G0,G1",
+    "rowCount": 6,
+    "vdKeys": [
+      "D0",
+      "D1"
+    ]
+  },
+  {
+    "idx": 8,
+    "cols": "M0,M1",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 9,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 10,
+    "cols": "G0,G1",
+    "rowCount": 8,
+    "vdKeys": [
+      "D0",
+      "D1"
+    ]
+  },
+  {
+    "idx": 11,
+    "cols": "G0,M0",
+    "rowCount": 9,
+    "vdKeys": []
+  },
+  {
+    "idx": 12,
+    "cols": "G0,M0",
+    "rowCount": 7,
+    "vdKeys": []
+  },
+  {
+    "idx": 13,
+    "cols": "G0,M0",
+    "rowCount": 81,
+    "vdKeys": []
+  },
+  {
+    "idx": 14,
+    "cols": "G0,M0,M1,M2,M3,M4,M5",
+    "rowCount": 81,
+    "vdKeys": []
+  },
+  {
+    "idx": 15,
+    "cols": "G0,M0,M1,M2,M3,M4,M5,M6,M7",
+    "rowCount": 81,
+    "vdKeys": []
+  },
+  {
+    "idx": 16,
+    "cols": "G0,M0",
+    "rowCount": 5,
+    "vdKeys": []
+  },
+  {
+    "idx": 17,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 18,
+    "cols": "?,M0,M1",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 19,
+    "cols": "G0",
+    "rowCount": 4,
+    "vdKeys": [
+      "D0"
+    ]
+  },
+  {
+    "idx": 20,
+    "cols": "M0,M1",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 21,
+    "cols": "G0,M0",
+    "rowCount": 9,
+    "vdKeys": []
+  },
+  {
+    "idx": 22,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 23,
+    "cols": "M0,M1,M2",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 24,
+    "cols": "M0",
+    "rowCount": 1,
+    "vdKeys": []
+  },
+  {
+    "idx": 25,
+    "cols": "G0,M0",
+    "rowCount": 7,
+    "vdKeys": []
+  }
+]
