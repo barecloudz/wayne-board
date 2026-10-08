@@ -61,11 +61,12 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
   const [loading,        setLoading]        = useState(false);
   const [visible,        setVisible]        = useState(true);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
-  const router       = useRouter();
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const esRef         = useRef<EventSource | null>(null);
+  const router        = useRouter();
 
-  // ── Fetch unread count ────────────────────────────────────────────────────
+  // ── Fetch unread count (polling fallback) ─────────────────────────────────
   const fetchCount = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications/unread-count", { cache: "no-store" });
@@ -74,40 +75,58 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
         setUnreadCount(data.count ?? 0);
       }
     } catch {
-      // ignore network errors silently
+      // ignore
     }
   }, []);
 
-  // ── Polling: every 30 s, paused when tab is hidden ───────────────────────
+  // ── SSE real-time push with polling fallback ──────────────────────────────
   useEffect(() => {
-    fetchCount();
-
-    function startInterval() {
+    function startPolling() {
       if (intervalRef.current) return;
+      fetchCount();
       intervalRef.current = setInterval(fetchCount, 10_000);
     }
-    function stopInterval() {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+    function stopPolling() {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     }
+    function closeSSE() {
+      if (esRef.current) { esRef.current.close(); esRef.current = null; }
+    }
+
+    function connectSSE() {
+      closeSSE();
+      const es = new EventSource("/api/notifications/stream");
+      esRef.current = es;
+      es.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          setUnreadCount(data.count ?? 0);
+        } catch { /* ignore */ }
+      };
+      es.onerror = () => {
+        closeSSE();
+        startPolling(); // fall back to polling if SSE fails
+      };
+      stopPolling(); // SSE is live — no need to poll
+    }
+
     function handleVisibility() {
       if (document.visibilityState === "visible") {
         setVisible(true);
-        fetchCount();
-        startInterval();
+        connectSSE();
       } else {
         setVisible(false);
-        stopInterval();
+        closeSSE();
+        stopPolling();
       }
     }
 
-    if (document.visibilityState === "visible") startInterval();
+    if (document.visibilityState === "visible") connectSSE();
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      stopInterval();
+      closeSSE();
+      stopPolling();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [fetchCount]);

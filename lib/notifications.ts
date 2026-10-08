@@ -123,6 +123,7 @@ export async function createNotification({
           title,
           body,
           linkTo: linkTo ?? "/dashboard",
+          type,
         });
 
         await db
@@ -137,36 +138,89 @@ export async function createNotification({
   }
 }
 
+function getAccentColor(type: string): string {
+  switch (type) {
+    case "maintenance_request":
+    case "maintenance_resolved":
+      return "#f97316"; // orange
+    case "vehicle_expiry":
+    case "vehicle_condition_critical":
+      return "#3b82f6"; // blue
+    case "task_overdue":
+      return "#a855f7"; // purple
+    case "payroll_ready":
+    case "mmr_report":
+      return "#10b981"; // green
+    default:
+      return "#64748b"; // slate
+  }
+}
+
 async function sendNotificationEmail({
   to,
   name,
   title,
   body,
   linkTo,
+  type,
 }: {
   to: string;
   name: string;
   title: string;
   body: string;
   linkTo: string;
+  type: string;
 }) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mygroundops.com";
   const actionUrl = linkTo.startsWith("http") ? linkTo : `${baseUrl}${linkTo}`;
+  const accent = getAccentColor(type);
 
   await resend.emails.send({
     from: "MyGroundOps <alerts@mygroundops.com>",
     to,
     subject: title,
-    html: `
-      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
-        <h2 style="font-size:20px;font-weight:800;color:#0f172a;margin:0 0 8px;">${title}</h2>
-        <p style="font-size:14px;color:#64748b;margin:0 0 8px;">Hi ${name},</p>
-        <p style="font-size:14px;color:#374151;margin:0 0 24px;">${body}</p>
-        <a href="${actionUrl}" style="display:inline-block;background:#0f172a;color:#fff;font-size:13px;font-weight:700;padding:12px 24px;border-radius:10px;text-decoration:none;">
-          View Details &rarr;
-        </a>
-        <p style="font-size:11px;color:#94a3b8;margin-top:32px;">Sent by MyGroundOps &middot; <a href="${baseUrl}" style="color:#94a3b8;">mygroundops.com</a></p>
-      </div>
-    `,
+    html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background:#0f172a;padding:28px 32px 24px;">
+      <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#94a3b8;">MyGroundOps &middot; Alerts</p>
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#f8fafc;line-height:1.3;">${title}</h1>
+      <p style="margin:0;font-size:13px;color:#94a3b8;">For: ${name}</p>
+    </div>
+
+    <!-- Accent banner -->
+    <div style="height:4px;background:${accent};"></div>
+
+    <!-- Body card -->
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:15px;font-weight:600;color:#0f172a;">Hi ${name},</p>
+      <p style="margin:0 0 28px;font-size:14px;color:#374151;line-height:1.6;">${body}</p>
+
+      <!-- CTA button -->
+      <a href="${actionUrl}"
+         style="display:inline-block;background:${accent};color:#ffffff;font-size:13px;font-weight:700;padding:13px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.02em;">
+        View Details &rarr;
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #e2e8f0;padding:20px 32px;background:#f8fafc;">
+      <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;">
+        MyGroundOps &middot; Apparo Group INC &middot;
+        <a href="${baseUrl}" style="color:#94a3b8;text-decoration:none;">mygroundops.com</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`,
   });
 }
