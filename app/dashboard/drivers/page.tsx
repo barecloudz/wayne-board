@@ -866,7 +866,7 @@ export default function DriversPage() {
                   !terminationType ||
                   isPending ||
                   (terminationType === "fired" && !terminationNote.trim()) ||
-                  (terminationType === "mistake" && deleteConfirmText.trim() !== deleteTarget?.name)
+                  (terminationType === "mistake" && deleteConfirmText.trim().toLowerCase() !== deleteTarget?.name.toLowerCase())
                 }
                 className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-40
                   flex items-center justify-center gap-2 ${
