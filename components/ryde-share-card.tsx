@@ -23,13 +23,14 @@ export type RydeShareCardProps = {
   avgStars: number;
   negBreakdown: NegCategory[];
   recentReviews?: ReviewSnippet[];
+  orgName?: string;
 };
 
 const CAT_COLORS = ["#a78bfa","#38bdf8","#fb923c","#34d399","#f472b6","#facc15"];
 const R = 52, CIRC = 2 * Math.PI * R, CX = 70, CY = 70, SIZE = 140;
 
 const RydeShareCard = React.forwardRef<HTMLDivElement, RydeShareCardProps>(
-  ({ driverName, period, positivePct, totalRatings, avgStars, negBreakdown, recentReviews = [] }, ref) => {
+  ({ driverName, period, positivePct, totalRatings, avgStars, negBreakdown, recentReviews = [], orgName = "MyGroundOps" }, ref) => {
     const pct = Math.max(0, Math.min(100, positivePct));
     const dash = Math.max(0, (pct / 100) * CIRC);
 
@@ -64,7 +65,7 @@ const RydeShareCard = React.forwardRef<HTMLDivElement, RydeShareCardProps>(
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", color: "#94a3b8", textTransform: "uppercase" as const }}>742 Logistics</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", color: "#94a3b8", textTransform: "uppercase" as const }}>{orgName}</div>
             <div style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.06em", marginTop: 3 }}>RYDE · Wayne Board</div>
           </div>
           <div style={{
@@ -169,7 +170,7 @@ const RydeShareCard = React.forwardRef<HTMLDivElement, RydeShareCardProps>(
         {/* Footer */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ flex: 1, height: 1, background: "#1e293b" }} />
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#334155", textTransform: "uppercase" as const, whiteSpace: "nowrap" as const }}>Wayne Board · 742 Logistics</span>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#334155", textTransform: "uppercase" as const, whiteSpace: "nowrap" as const }}>MyGroundOps · {orgName}</span>
           <div style={{ flex: 1, height: 1, background: "#1e293b" }} />
         </div>
 

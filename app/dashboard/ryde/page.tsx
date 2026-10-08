@@ -13,6 +13,7 @@ import {
   getCompanyRating, setCompanyRating,
   getRydeGoalMessage, setRydeGoalMessage,
 } from "@/lib/actions/ryde";
+import { getOrgName } from "@/lib/actions/mmr";
 
 type Driver = { id: number; driverId: string; name: string };
 type Review = {
@@ -43,6 +44,7 @@ function currentWeekDate() {
 export default function RydePage() {
   const [drivers, setDrivers]   = useState<Driver[]>([]);
   const [reviews, setReviews]   = useState<Review[]>([]);
+  const [orgName, setOrgName]   = useState<string>("MyGroundOps");
   const [companyRating, setCompanyRatingState] = useState<number | null>(null);
   const [editingRating, setEditingRating] = useState(false);
   const [ratingInput, setRatingInput] = useState("");
@@ -80,11 +82,12 @@ export default function RydePage() {
   const [eCustomerInitials, setECustomerInitials] = useState("");
 
   async function refresh() {
-    const [d, r, cr, msg] = await Promise.all([getRydeDrivers(), getRydeReviews(), getCompanyRating(), getRydeGoalMessage()]);
+    const [d, r, cr, msg, name] = await Promise.all([getRydeDrivers(), getRydeReviews(), getCompanyRating(), getRydeGoalMessage(), getOrgName()]);
     setDrivers(d as Driver[]);
     setReviews(r as Review[]);
     setCompanyRatingState(cr);
     setGoalMessageState(msg);
+    setOrgName(name);
   }
 
   function handleSaveMessage() {
@@ -613,6 +616,7 @@ export default function RydePage() {
           drivers={drivers}
           reviews={reviews}
           initialDriverId={shareDriverId}
+          orgName={orgName}
           onClose={() => { setShowShareCard(false); setShareDriverId(undefined); }}
         />
       )}

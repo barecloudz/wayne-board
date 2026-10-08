@@ -88,9 +88,10 @@ interface RydeShareModalProps {
   reviews: Review[];
   onClose: () => void;
   initialDriverId?: string;
+  orgName?: string;
 }
 
-export default function RydeShareModal({ drivers, reviews, onClose, initialDriverId }: RydeShareModalProps) {
+export default function RydeShareModal({ drivers, reviews, onClose, initialDriverId, orgName }: RydeShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [selectedDriver, setSelectedDriver] = useState<string>(initialDriverId ?? drivers[0]?.driverId ?? "");
   const [period,         setPeriod]         = useState<Period>("all");
@@ -291,6 +292,7 @@ export default function RydeShareModal({ drivers, reviews, onClose, initialDrive
                   avgStars={avgStars}
                   negBreakdown={negBreakdown}
                   recentReviews={recentReviews}
+                  orgName={orgName}
                 />
               </div>
             </div>
