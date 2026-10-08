@@ -361,9 +361,6 @@ export default function DriverTabs({
                 <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight">
                   Hey, {driverName.split(" ")[0]} 👋
                 </h1>
-                {driverDbId != null && driverDbId > 0 && (
-                  <NotificationBell recipientId={driverDbId} />
-                )}
               </div>
             </div>
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
-import { Camera, Loader2, Check, User, ExternalLink, Download, XCircle } from "lucide-react";
-import { updateMyAvatar } from "@/lib/actions/drivers";
+import { Camera, Loader2, Check, User, ExternalLink, Download, XCircle, Mail, Pencil, X } from "lucide-react";
+import { updateMyAvatar, updateMyEmail } from "@/lib/actions/drivers";
 
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner", co_owner: "Co-Owner", developer: "Developer", bc: "Business Contact", driver: "Driver",
@@ -35,6 +35,7 @@ type Profile = {
   username: string | null;
   role: string;
   avatarUrl: string | null;
+  email: string | null;
 };
 
 type OrgSubscription = {
@@ -53,6 +54,11 @@ export default function AccountClient({
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl ?? "");
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [emailEdit, setEmailEdit] = useState(false);
+  const [emailValue, setEmailValue] = useState(profile.email ?? "");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSaved, setEmailSaved] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -127,6 +133,23 @@ export default function AccountClient({
     }
   }
 
+  async function handleSaveEmail() {
+    setEmailError("");
+    setEmailSaving(true);
+    try {
+      const result = await updateMyEmail(emailValue);
+      if ("error" in result && result.error) {
+        setEmailError(result.error);
+      } else {
+        setEmailEdit(false);
+        setEmailSaved(true);
+        setTimeout(() => setEmailSaved(false), 3000);
+      }
+    } finally {
+      setEmailSaving(false);
+    }
+  }
+
   return (
     <main className="flex-1 px-6 py-8 max-w-[680px] w-full mx-auto">
       <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
@@ -185,6 +208,71 @@ export default function AccountClient({
         <p className="text-[12px] text-slate-400 mt-4">
           Click the camera icon to upload a new profile picture. Square images work best.
         </p>
+      </div>
+
+      {/* Notification email */}
+      <div className="mt-6 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] p-6">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4 text-slate-400" />
+            <h3 className="text-[13px] font-bold text-slate-800">Notification Email</h3>
+          </div>
+          {!emailEdit && (
+            <button
+              onClick={() => { setEmailEdit(true); setEmailError(""); }}
+              className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <Pencil className="w-3 h-3" />
+              Edit
+            </button>
+          )}
+        </div>
+        <p className="text-[12px] text-slate-400 mb-4">
+          Used to receive in-app notification emails (maintenance alerts, task reminders, compliance expiry).
+        </p>
+        {emailEdit ? (
+          <div className="flex flex-col gap-2">
+            <input
+              type="email"
+              value={emailValue}
+              onChange={e => setEmailValue(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+              autoFocus
+            />
+            {emailError && <p className="text-[12px] text-red-500 font-medium">{emailError}</p>}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setEmailEdit(false); setEmailValue(profile.email ?? ""); setEmailError(""); }}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
+              >
+                <X className="w-3 h-3" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEmail}
+                disabled={emailSaving}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                {emailSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                Save Email
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            {emailValue ? (
+              <span className="text-[14px] font-semibold text-slate-800">{emailValue}</span>
+            ) : (
+              <span className="text-[13px] text-slate-400 italic">No email set — notifications won&apos;t be delivered.</span>
+            )}
+            {emailSaved && (
+              <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600">
+                <Check className="w-3 h-3" /> Saved
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {profile.role === "owner" && orgSubscription && (

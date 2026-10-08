@@ -123,26 +123,30 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, []);
 
-  // ── Fetch notifications when panel opens ──────────────────────────────────
+  // ── Fetch notifications when panel opens; re-sync count on close ─────────
   useEffect(() => {
-    if (!panelOpen) return;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/notifications?limit=20", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setNotifications(data.notifications ?? []);
-          setUnreadCount(data.unread ?? 0);
+    if (panelOpen) {
+      async function load() {
+        setLoading(true);
+        try {
+          const res = await fetch("/api/notifications?limit=20", { cache: "no-store" });
+          if (res.ok) {
+            const data = await res.json();
+            setNotifications(data.notifications ?? []);
+            setUnreadCount(data.unread ?? 0);
+          }
+        } catch {
+          // ignore
+        } finally {
+          setLoading(false);
         }
-      } catch {
-        // ignore
-      } finally {
-        setLoading(false);
       }
+      load();
+    } else {
+      // Panel just closed — re-sync badge so it reflects reads done inside panel
+      fetchCount();
     }
-    load();
-  }, [panelOpen]);
+  }, [panelOpen, fetchCount]);
 
   // ── Mark all read ─────────────────────────────────────────────────────────
   async function handleMarkAllRead() {

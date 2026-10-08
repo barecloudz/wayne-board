@@ -68,6 +68,7 @@ export async function getMyProfile() {
     username:  drivers.username,
     role:      drivers.role,
     avatarUrl: drivers.avatarUrl,
+    email:     drivers.email,
   }).from(drivers)
     .where(and(eq(drivers.organizationId, session.organizationId), eq(drivers.driverId, session.driverId)))
     .limit(1);

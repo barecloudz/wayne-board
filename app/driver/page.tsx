@@ -36,6 +36,7 @@ import { getMyMaintenanceRequests } from "@/lib/actions/maintenance";
 import Image from "next/image";
 import ProfileButton from "./profile-button";
 import DriverTabs from "./driver-tabs";
+import NotificationBell from "@/components/notification-bell";
 
 function getMostRecentWeekBounds(): { weekStart: string; weekEnd: string } {
   const today = new Date();
@@ -210,12 +211,17 @@ export default async function DriverDashboard() {
             <span className="text-[11px] font-medium" style={{ color: "#94A3B8" }}>Driver Portal</span>
           </div>
         </div>
-        <ProfileButton
-          name={session.name}
-          orgSlug={orgRow?.slug ?? ""}
-          isAdmin={session.isAdmin}
-          accentColor={orgRow?.accentColor ?? "#FF6200"}
-        />
+        <div className="flex items-center gap-2">
+          {session.driverDbId && session.driverDbId > 0 && (
+            <NotificationBell recipientId={session.driverDbId} />
+          )}
+          <ProfileButton
+            name={session.name}
+            orgSlug={orgRow?.slug ?? ""}
+            isAdmin={session.isAdmin}
+            accentColor={orgRow?.accentColor ?? "#FF6200"}
+          />
+        </div>
       </nav>
 
       {/* Content */}

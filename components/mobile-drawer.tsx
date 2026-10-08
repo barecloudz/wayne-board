@@ -11,6 +11,7 @@ import {
   Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
   ChevronDown, ChevronUp, PenLine, Upload, UserSearch, Loader2, FileText,
 } from "lucide-react";
+import NotificationBell from "@/components/notification-bell";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
@@ -127,8 +128,7 @@ export default function MobileDrawer() {
           <span className="text-[14px] font-bold text-slate-900">MyGroundOps</span>
         </Link>
 
-        {/* spacer to balance hamburger */}
-        <div className="w-9" />
+        <NotificationBell recipientId={0} />
       </header>
 
       {/* ── Backdrop ── */}
