@@ -1,5 +1,3 @@
-"use server";
-
 import { Resend } from "resend";
 import { db } from "@/lib/db";
 import { notifications, notificationPreferences, drivers } from "@/lib/schema";
