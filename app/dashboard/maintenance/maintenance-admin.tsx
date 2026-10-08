@@ -100,6 +100,8 @@ export default function MaintenanceAdmin({
   const [logVendor, setLogVendor]       = useState("");
   const [logError, setLogError]         = useState("");
 
+  const [truckFilter, setTruckFilter] = useState<string>("all");
+
   const [isPending, startTransition] = useTransition();
 
   function openEdit(r: Request) {
@@ -392,6 +394,39 @@ export default function MaintenanceAdmin({
 
       {/* ── MAINTENANCE RECORDS TAB ── */}
       {tab === "records" && (
+        <>
+          {/* Truck filter chips */}
+          {records.length > 0 && (() => {
+            const trucks = Array.from(new Set(records.map(r => r.truckNumber))).sort();
+            return (
+              <div className="flex gap-1.5 flex-wrap mb-4">
+                <button
+                  onClick={() => setTruckFilter("all")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                    truckFilter === "all"
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700"
+                  }`}
+                >
+                  All Trucks
+                </button>
+                {trucks.map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTruckFilter(t)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                      truckFilter === t
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700"
+                    }`}
+                  >
+                    <Truck className="w-3 h-3" />
+                    {t}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
           {records.length === 0 ? (
             <div className="px-6 py-16 text-center">
@@ -407,7 +442,7 @@ export default function MaintenanceAdmin({
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {records.map((r) => {
+              {(truckFilter === "all" ? records : records.filter(r => r.truckNumber === truckFilter)).map((r) => {
                 const typeColor = RECORD_TYPE_COLORS[r.type] ?? RECORD_TYPE_COLORS.other;
                 const typeLabel = RECORD_TYPE_LABELS[r.type] ?? r.type;
                 return (
@@ -436,6 +471,7 @@ export default function MaintenanceAdmin({
             </div>
           )}
         </div>
+        </>
       )}
 
       {/* ── LOG MAINTENANCE MODAL ── */}
