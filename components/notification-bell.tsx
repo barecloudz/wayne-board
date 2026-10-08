@@ -84,7 +84,7 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
 
     function startInterval() {
       if (intervalRef.current) return;
-      intervalRef.current = setInterval(fetchCount, 30_000);
+      intervalRef.current = setInterval(fetchCount, 10_000);
     }
     function stopInterval() {
       if (intervalRef.current) {

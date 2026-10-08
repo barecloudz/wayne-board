@@ -29,7 +29,7 @@ export default async function SettingsPage() {
         .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
     : [null];
 
-  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList, payWeekStartSetting, payrollEmailSettings, taskTemplatesList, taskReminderRecipients] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList, payWeekStartSetting, payrollEmailSettings, taskTemplatesList] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getSetting("clock_in_enabled", "false"),
@@ -40,7 +40,6 @@ export default async function SettingsPage() {
     getSetting("pay_week_start", "6"),
     getPayrollEmailSettings(),
     getAllTaskTemplates(),
-    getSetting("task_reminder_recipients", ""),
   ]);
 
   // Compute most recent completed pay week for Send Now
@@ -87,7 +86,6 @@ export default async function SettingsPage() {
             initialTasks={taskTemplatesList}
             currentUserRole={session?.role ?? "bc"}
             currentUserId={session?.driverId ?? ""}
-            initialReminderRecipients={taskReminderRecipients}
           />
         </div>
       </main>

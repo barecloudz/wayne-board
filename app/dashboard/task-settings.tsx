@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2, Loader2, ClipboardList, ChevronDown, Clock } from "lucide-react";
+import { Plus, Trash2, Loader2, ClipboardList, ChevronDown, Clock, Bell, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { createTaskTemplate, deleteTaskTemplate, updateTaskTemplate } from "@/lib/actions/tasks";
-import { setSetting } from "@/lib/actions/settings";
 import type { TaskTemplate } from "@/lib/actions/tasks";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,12 +16,10 @@ export default function TaskSettingsCard({
   initialTasks,
   currentUserRole,
   currentUserId,
-  initialReminderRecipients,
 }: {
   initialTasks: TaskTemplate[];
   currentUserRole: string;
   currentUserId: string;
-  initialReminderRecipients: string;
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [showAdd, setShowAdd] = useState(false);
@@ -36,9 +34,6 @@ export default function TaskSettingsCard({
   const [newRoles, setNewRoles] = useState(["bc", "co_owner", "owner"]);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Reminder recipients
-  const [reminderRecipients, setReminderRecipients] = useState(initialReminderRecipients);
-  const [recipientsSaved, setRecipientsSaved] = useState(false);
 
   function toggleDay(d: number) {
     setNewDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
@@ -78,14 +73,6 @@ export default function TaskSettingsCard({
     startTransition(async () => {
       await updateTaskTemplate(id, { active: !current });
       setTasks(prev => prev.map(t => t.id === id ? { ...t, active: !current } : t));
-    });
-  }
-
-  function handleSaveRecipients() {
-    startTransition(async () => {
-      await setSetting("task_reminder_recipients", reminderRecipients);
-      setRecipientsSaved(true);
-      setTimeout(() => setRecipientsSaved(false), 2000);
     });
   }
 
@@ -279,25 +266,22 @@ export default function TaskSettingsCard({
         </div>
       )}
 
-      {/* Reminder recipients section */}
-      <div className="mt-6 pt-5 border-t border-slate-100">
-        <h3 className="text-[13px] font-extrabold text-slate-800 mb-1">Reminder Recipients</h3>
-        <p className="text-[12px] text-slate-400 mb-3">Email addresses to notify when tasks are overdue (one per line or comma-separated).</p>
-        <textarea
-          value={reminderRecipients}
-          onChange={e => setReminderRecipients(e.target.value)}
-          rows={3}
-          placeholder="admin@example.com, owner@example.com"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition resize-none"
-        />
-        <button
-          onClick={handleSaveRecipients}
-          disabled={isPending}
-          className="mt-2 px-4 py-2 rounded-xl text-[12px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-2"
+      {/* Notification settings link */}
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4 text-slate-400" />
+          <div>
+            <p className="text-[13px] font-bold text-slate-800">Task Overdue Alerts</p>
+            <p className="text-[12px] text-slate-400">Configure who gets notified when tasks are overdue.</p>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/notifications"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors whitespace-nowrap"
         >
-          {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {recipientsSaved ? "Saved!" : "Save Recipients"}
-        </button>
+          Notification Settings
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </div>
   );

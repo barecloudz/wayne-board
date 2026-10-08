@@ -76,9 +76,10 @@ const ALL_TYPES = [
 ];
 
 const ROLE_OPTIONS = [
-  { value: "owner",    label: "Owner" },
-  { value: "co_owner", label: "Co-Owner" },
-  { value: "bc",       label: "BC" },
+  { value: "owner",     label: "Owner" },
+  { value: "co_owner",  label: "Co-Owner" },
+  { value: "bc",        label: "BC" },
+  { value: "developer", label: "Developer" },
 ];
 
 const TIMING_OPTIONS = [60, 30, 7, 0];
