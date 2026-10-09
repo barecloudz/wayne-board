@@ -35,7 +35,7 @@ function StatusCell({ status, note }: { status: AttendanceStatus | undefined; no
   if (status === "work") {
     return (
       <div className="flex flex-col items-center gap-0.5" title={note ?? undefined}>
-        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)] inline-block" />
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500 text-white border border-emerald-600">ON</span>
         {note && <span className="text-[8px] text-slate-400 leading-none">✎</span>}
       </div>
     );
@@ -333,7 +333,7 @@ export default function PayrollClient({
       {weekData.drivers.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-3 print:hidden">
           {[
-            { dot: <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />, label: "Work" },
+            { dot: <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500 text-white border border-emerald-600">ON</span>, label: "Work" },
             { dot: <span className="text-[11px] font-black text-amber-500">½</span>, label: "Half Day" },
             { dot: <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-100/80 text-slate-500 border border-slate-200/60">Cut</span>, label: "Cut" },
             { dot: <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-50/80 text-red-500 border border-red-200/60">Out</span>, label: "Called out" },
