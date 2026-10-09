@@ -81,13 +81,14 @@ export async function createDriver(
   customDriverId?: string,
   customTempPassword?: string,
   locationId?: number,
+  username?: string,
 ) {
   const orgId = await requireOrg();
   const driverId     = customDriverId     ?? suggestDriverId(name);
   const tempPassword = customTempPassword ?? "Fedex1234#";
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-  await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role, isAdmin: role !== "driver", locationId: locationId ?? null });
+  await db.insert(drivers).values({ organizationId: orgId, driverId, name, passwordHash, role, isAdmin: role !== "driver", locationId: locationId ?? null, username: username?.trim() || null });
 
   // Also populate the driverLocations join table (the source of truth for all filtering/display)
   if (locationId) {

@@ -60,6 +60,7 @@ export default function DriversPage() {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [createUsername, setCreateUsername] = useState("");
   const [newDriverId, setNewDriverId] = useState("");
   const [newTempPassword, setNewTempPassword] = useState("Fedex1234#");
   const [newRole, setNewRole] = useState<"driver" | "bc">("driver");
@@ -131,6 +132,7 @@ export default function DriversPage() {
 
   function openCreate() {
     setNewName("");
+    setCreateUsername("");
     setNewDriverId("");
     setNewTempPassword("Fedex1234#");
     setNewRole("driver");
@@ -155,9 +157,9 @@ export default function DriversPage() {
   }
 
   function handleCreate() {
-    if (!newName.trim() || !newDriverId.trim() || !newTempPassword.trim()) return;
+    if (!newName.trim() || !createUsername.trim() || !newTempPassword.trim()) return;
     startTransition(async () => {
-      const result = await createDriver(newName.trim(), newRole, newDriverId.trim(), newTempPassword.trim(), newLocationId);
+      const result = await createDriver(newName.trim(), newRole, newDriverId.trim() || undefined, newTempPassword.trim(), newLocationId, createUsername.trim());
       setCreated({ driverId: result.driverId, password: result.tempPassword });
       setShowCreate(false);
       await refresh();
@@ -1048,9 +1050,21 @@ export default function DriversPage() {
                   autoFocus
                 />
               </div>
+              {/* Username */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Username <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. marcuswebb"
+                  value={createUsername}
+                  onChange={(e) => setCreateUsername(e.target.value)}
+                  className={INPUT_CLS}
+                />
+                <p className="text-[11px] text-slate-400">Driver logs in with this username.</p>
+              </div>
               {/* FedEx ID */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">FedEx ID</label>
+                <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">FedEx ID <span className="text-slate-300 font-normal normal-case">(optional)</span></label>
                 <input
                   type="text"
                   placeholder="e.g. 1234567"
@@ -1126,7 +1140,7 @@ export default function DriversPage() {
               </button>
               <button
                 onClick={handleCreate}
-                disabled={!newName.trim() || !newDriverId.trim() || !newTempPassword.trim() || isPending}
+                disabled={!newName.trim() || !createUsername.trim() || !newTempPassword.trim() || isPending}
                 className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold bg-slate-900 text-white
                   hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed
                   flex items-center justify-center gap-2"
