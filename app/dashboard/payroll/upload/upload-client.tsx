@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadDswBatch, deleteDswDay, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts } from "@/lib/actions/dsw-upload";
+import { uploadDswBatch, deleteDswDay, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames } from "@/lib/actions/dsw-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
+type UnmatchedRow = { driverNameRaw: string; rowCount: number; dates: string[] };
 type LocationOption = { id: number; name: string; terminalId: string | null };
 
 export default function UploadClient() {
@@ -35,6 +36,11 @@ export default function UploadClient() {
 
   // Upload history
   const [uploadedDates, setUploadedDates] = useState<Array<{ date: string; rowCount: number }>>([]);
+
+  // Persistent unmatched rows from DB (driverId IS NULL)
+  const [persistedUnmatched, setPersistedUnmatched] = useState<UnmatchedRow[]>([]);
+  const [persistedMappings, setPersistedMappings] = useState<Record<string, string>>({});
+  const [savingPersistedName, setSavingPersistedName] = useState<string | null>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
 
   // Location picker (only shown when org has multiple locations)
@@ -44,6 +50,10 @@ export default function UploadClient() {
   const dswRef = useRef<HTMLInputElement>(null);
   const pldRef = useRef<HTMLInputElement>(null);
 
+  function refreshUnmatched() {
+    getUnmatchedDswNames().then(setPersistedUnmatched).catch(() => {});
+  }
+
   useEffect(() => {
     getActiveDriversForOrg().then(setDriverOptions).catch(() => {});
     getDswNameMappings().then(setSavedMappings).catch(() => {});
@@ -52,6 +62,7 @@ export default function UploadClient() {
       setLocations(locs);
       if (locs.length === 1) setSelectedLocationId(String(locs[0].id));
     }).catch(() => {});
+    refreshUnmatched();
   }, []);
 
   function handleUpload() {
@@ -69,6 +80,7 @@ export default function UploadClient() {
       setBatchResults(res.results);
       if (res.results.some(r => r.success)) {
         getUploadedDswDatesWithCounts().then(setUploadedDates).catch(() => {});
+        refreshUnmatched();
       }
       setDswFiles([]);
       setPldFiles([]);
@@ -92,6 +104,17 @@ export default function UploadClient() {
     setSavedNames((prev) => new Set([...prev, dswName]));
     setSavingName(null);
     getDswNameMappings().then(setSavedMappings).catch(() => {});
+    refreshUnmatched();
+  }
+
+  async function handleSavePersistedMapping(driverNameRaw: string) {
+    const driverId = persistedMappings[driverNameRaw];
+    if (!driverId) return;
+    setSavingPersistedName(driverNameRaw);
+    await saveDswNameMapping(driverNameRaw, driverId);
+    setSavingPersistedName(null);
+    getDswNameMappings().then(setSavedMappings).catch(() => {});
+    refreshUnmatched();
   }
 
   async function handleSaveEdit(mapping: Mapping) {
@@ -334,6 +357,48 @@ export default function UploadClient() {
                   title="Delete this day's data"
                 >
                   {deletingDate === date ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Persistent unmatched DSW names — always visible if any rows have driverId=null */}
+      {persistedUnmatched.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertCircle className="w-4 h-4 text-red-600" />
+            <p className="text-[14px] font-bold text-red-900">Unlinked DSW names in database</p>
+            <span className="ml-auto text-[11px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{persistedUnmatched.length} name{persistedUnmatched.length !== 1 ? "s" : ""}</span>
+          </div>
+          <p className="text-[12px] text-red-700 mb-4">
+            These names exist in uploaded DSW files but have no driver linked — their data is <strong>invisible in payroll and won&apos;t count toward any awards</strong>. Link each one now.
+          </p>
+          <div className="flex flex-col gap-3">
+            {persistedUnmatched.map((u) => (
+              <div key={u.driverNameRaw} className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-mono font-semibold text-slate-700 truncate">{u.driverNameRaw}</p>
+                  <p className="text-[11px] text-slate-400">{u.rowCount} row{u.rowCount !== 1 ? "s" : ""} · {u.dates.slice(0, 3).map(d => formatDate(d)).join(", ")}{u.dates.length > 3 ? ` +${u.dates.length - 3} more` : ""}</p>
+                </div>
+                <select
+                  className="text-[12px] border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-800 min-w-[160px]"
+                  value={persistedMappings[u.driverNameRaw] ?? ""}
+                  onChange={(e) => setPersistedMappings(prev => ({ ...prev, [u.driverNameRaw]: e.target.value }))}
+                >
+                  <option value="">Select driver…</option>
+                  {driverOptions.map((d) => (
+                    <option key={d.driverId} value={d.driverId}>{d.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleSavePersistedMapping(u.driverNameRaw)}
+                  disabled={!persistedMappings[u.driverNameRaw] || savingPersistedName === u.driverNameRaw}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-bold bg-red-700 text-white hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {savingPersistedName === u.driverNameRaw ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                  Link
                 </button>
               </div>
             ))}

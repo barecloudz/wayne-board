@@ -3,7 +3,7 @@
 import * as XLSX from "xlsx";
 import { db } from "@/lib/db";
 import { dswRouteDays, dswNameMappings, drivers } from "@/lib/schema";
-import { eq, and, count, desc } from "drizzle-orm";
+import { eq, and, count, desc, isNull, sql } from "drizzle-orm";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
@@ -373,6 +373,31 @@ export async function saveDswNameMapping(
 
   revalidatePath("/dashboard/payroll");
   return { success: true };
+}
+
+// ── Get all DSW rows with no matched driverId (grouped by raw name) ───────────
+
+export async function getUnmatchedDswNames(): Promise<Array<{ driverNameRaw: string; rowCount: number; dates: string[] }>> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select({
+      driverNameRaw: dswRouteDays.driverNameRaw,
+      rowCount: count(),
+      dates: sql<string>`string_agg(${dswRouteDays.date}::text, ',' ORDER BY ${dswRouteDays.date} DESC)`,
+    })
+    .from(dswRouteDays)
+    .where(and(eq(dswRouteDays.organizationId, orgId), isNull(dswRouteDays.driverId)))
+    .groupBy(dswRouteDays.driverNameRaw)
+    .orderBy(count());
+
+  return rows.map(r => ({
+    driverNameRaw: r.driverNameRaw,
+    rowCount: Number(r.rowCount),
+    dates: typeof r.dates === "string" ? r.dates.split(",").map(d => d.slice(0, 10)) : [],
+  }));
 }
 
 // ── Get distinct uploaded dates (most recent 30) — kept for backwards compat ──
