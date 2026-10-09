@@ -93,7 +93,7 @@ export default async function DriverDashboard() {
     computeTopDrivers(getMostRecentWeekBounds().weekStart, getMostRecentWeekBounds().weekEnd),
     getCompanyRating(),
     getRydeGoalMessage(),
-    db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username, email: drivers.email }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
+    db.select({ defaultWorkAreaId: drivers.defaultWorkAreaId, username: drivers.username, email: drivers.email, avatarUrl: drivers.avatarUrl }).from(drivers).where(and(eq(drivers.driverId, session.driverId), eq(drivers.organizationId, session.organizationId))).limit(1),
     getDriverSchedule(session.driverId),
     getDriverTimeOff(session.driverId),
     getSetting("show_ryde", "true"),
@@ -220,6 +220,7 @@ export default async function DriverDashboard() {
             orgSlug={orgRow?.slug ?? ""}
             isAdmin={session.isAdmin}
             accentColor={orgRow?.accentColor ?? "#FF6200"}
+            avatarUrl={driverRow?.avatarUrl ?? null}
           />
         </div>
       </nav>
@@ -257,6 +258,7 @@ export default async function DriverDashboard() {
           accentColor={orgRow?.accentColor ?? "#FF6200"}
           currentUsername={driverRow?.username ?? null}
           currentEmail={driverRow?.email ?? null}
+          avatarUrl={driverRow?.avatarUrl ?? null}
           mustChangePassword={session.mustChangePassword ?? false}
           myBadges={myBadges}
           badgeCounts={badgeCounts}

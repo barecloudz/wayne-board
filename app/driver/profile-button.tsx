@@ -2,18 +2,20 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Camera } from "lucide-react";
 
 export default function ProfileButton({
   name,
   orgSlug,
   isAdmin,
   accentColor = "#FF6200",
+  avatarUrl,
 }: {
   name: string;
   orgSlug: string;
   isAdmin?: boolean;
   accentColor?: string;
+  avatarUrl?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -44,54 +46,79 @@ export default function ProfileButton({
     router.push(orgSlug ? `/login/${orgSlug}` : "/sign-in");
   }
 
-  function goAccount() {
+  function openAccount() {
     setOpen(false);
-    window.dispatchEvent(
-      new CustomEvent("mgops:goto-driver-tab", { detail: "me" })
-    );
+    window.dispatchEvent(new CustomEvent("mgops:open-account"));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
     <div ref={ref} className="relative">
+      {/* Avatar button */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Profile menu"
-        className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold text-white shadow-sm transition-all active:scale-95 hover:opacity-90 select-none"
+        className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-[13px] font-bold text-white shadow-sm transition-all active:scale-95 hover:opacity-90 select-none border-2 border-white/40"
         style={{ background: accentColor }}
       >
-        {initials}
+        {avatarUrl
+          ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          : initials
+        }
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 w-48 rounded-2xl overflow-hidden z-50"
+          className="absolute right-0 top-full mt-2 w-64 rounded-2xl overflow-hidden z-50"
           style={{
             background: "#ffffff",
             border: "1px solid #E2E8F0",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.14)",
           }}
         >
-          <div className="px-4 py-3 border-b border-slate-100">
-            <p className="text-[13px] font-semibold text-slate-800 truncate">{name}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Driver Portal</p>
+          {/* Profile header card */}
+          <div className="px-4 py-4 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              {/* Avatar with camera nudge */}
+              <button
+                onClick={openAccount}
+                className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 group"
+                style={{ background: accentColor }}
+                title="Change photo"
+              >
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+                  : <span className="text-[18px] font-bold text-white">{initials}</span>
+                }
+                <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-extrabold text-slate-900 truncate">{name}</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Driver Portal</p>
+                <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                  Tap photo to update it — it shows on the leaderboard
+                </p>
+              </div>
+            </div>
           </div>
 
+          {/* Menu items */}
           {isAdmin && (
             <a
               href="/dashboard"
-              className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100"
               onClick={() => setOpen(false)}
             >
-              Dashboard
+              Admin Dashboard
             </a>
           )}
 
           <button
-            onClick={goAccount}
-            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors text-left"
+            onClick={openAccount}
+            className="flex items-center gap-2.5 w-full px-4 py-3 text-[13px] font-medium text-slate-700 hover:bg-slate-50 transition-colors text-left"
           >
-            <Settings className="w-4 h-4 text-slate-400 shrink-0" />
             Account Settings
           </button>
 
@@ -99,7 +126,7 @@ export default function ProfileButton({
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
+            className="flex items-center gap-2.5 w-full px-4 py-3 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             Sign Out

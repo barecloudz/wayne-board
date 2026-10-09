@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import NotificationBell from "@/components/notification-bell";
 import {
   Lock, Eye, EyeOff, Loader2, RefreshCw,
   CalendarDays, CalendarOff, Key,
-  Star, User, Trophy, Wrench, MoreHorizontal, X,
+  Star, Trophy, Wrench, Camera, X,
   ChevronRight,
 } from "lucide-react";
-import { changeDriverPassword, changeMyUsername, clearPasswordForceChange, updateMyEmail } from "@/lib/actions/drivers";
+import { changeDriverPassword, clearPasswordForceChange, updateMyEmail } from "@/lib/actions/drivers";
 import GateCodesTab from "./gate-codes-tab";
 import type { GateCodeRow } from "@/lib/gate-code-constants";
 import type { DriverBadgeRow } from "@/lib/actions/badges";
 import type { TopDriverRow } from "@/lib/actions/badges";
 import type { DswRow } from "./service-tab";
 import ScorePanel from "./score-panel";
-import MePanel from "./me-panel";
 import MaintenanceTab from "./maintenance-tab";
 import BadgeCelebrationOverlay from "./badge-celebration";
 import BadgeShelfTab from "./badge-shelf-tab";
 
-type DriverTab = "schedule" | "maintenance" | "me" | "more";
+type DriverTab = "schedule" | "maintenance" | "codes";
 
 type Review  = {
   id: number; type: string; stars: number | null;
@@ -56,7 +55,7 @@ function useCountUp(target: number | null, duration = 1000): number | null {
 
 export default function DriverTabs({
   today,
-  reviews, milestones, streakDays, driverId, driverDbId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, currentEmail = null, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
+  reviews, milestones, streakDays, driverId, driverDbId, claimedMilestoneIds, leaderboard, myRank, companyRating, goalMessage, assignedVehicle, driverSchedule, upcomingTimeOff, showRyde, showMilestones, showDsw, gateCodes, gateAreas, maintenanceRequests, activeVehicles, isAdmin, driverName, dswRows, myDswHistory, accentColor = "var(--brand)", currentUsername, currentEmail = null, avatarUrl = null, mustChangePassword = false, myBadges = [], badgeCounts = [], driverAvatarMap = {}, unseenBadges = [], rydeRank = null, weeklyIlsRank = null, weeklyRydeRank = null, totalDriversThisWeek = 0,
 }: {
   today: string;
   reviews: Review[];
@@ -86,6 +85,7 @@ export default function DriverTabs({
   accentColor?: string;
   currentUsername?: string | null;
   currentEmail?: string | null;
+  avatarUrl?: string | null;
   mustChangePassword?: boolean;
   myBadges?: DriverBadgeRow[];
   badgeCounts?: Array<{ driverId: string; badgeCount: number }>;
@@ -101,7 +101,19 @@ export default function DriverTabs({
   const [showCelebration, setShowCelebration] = useState(unseenBadges.length > 0);
   const [showTrophySheet, setShowTrophySheet] = useState(false);
   const [trophyTab, setTrophyTab] = useState<"score" | "awards">("score");
-  const [showMoreSheet, setShowMoreSheet] = useState(false);
+  const [showCodesSheet, setShowCodesSheet]   = useState(false);
+  const [showAccountSheet, setShowAccountSheet] = useState(false);
+
+  // Account sheet state
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [localAvatar, setLocalAvatar]   = useState<string | null>(avatarUrl ?? null);
+  const [uploading, setUploading]       = useState(false);
+  const [editEmail, setEditEmail]       = useState(currentEmail ?? "");
+  const [emailMsg, setEmailMsg]         = useState<{ error: boolean; text: string } | null>(null);
+  const [currentPw, setCurrentPw]       = useState("");
+  const [newPw, setNewPw]               = useState("");
+  const [confirmPw, setConfirmPw]       = useState("");
+  const [pwMsg, setPwMsg]               = useState<{ error: boolean; text: string } | null>(null);
 
   // First-login force password change modal
   const [forceModal, setForceModal]     = useState(mustChangePassword);
@@ -132,12 +144,6 @@ export default function DriverTabs({
     setForceModal(false);
   }
 
-  // Server-action wrappers passed to MePanel
-  async function handleChangeUsername(newUsername: string): Promise<{ error?: string }> {
-    const result = await changeMyUsername(driverId, newUsername);
-    return "error" in result ? { error: result.error ?? "Failed." } : {};
-  }
-
   async function handleChangePassword(currentPassword: string, newPassword: string): Promise<{ error?: string }> {
     const result = await changeDriverPassword(driverId, currentPassword, newPassword);
     return "error" in result ? { error: result.error ?? "Unknown error." } : {};
@@ -146,6 +152,39 @@ export default function DriverTabs({
   async function handleChangeEmail(newEmailValue: string): Promise<{ error?: string }> {
     const result = await updateMyEmail(newEmailValue);
     return "error" in result ? { error: result.error ?? "Failed." } : {};
+  }
+
+  async function handleAvatarUpload(file: File) {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/avatar/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.url) setLocalAvatar(data.url);
+    setUploading(false);
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailMsg(null);
+    const trimmed = editEmail.trim();
+    if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailMsg({ error: true, text: "Please enter a valid email." });
+      return;
+    }
+    const result = await handleChangeEmail(trimmed);
+    if (result.error) setEmailMsg({ error: true, text: result.error });
+    else setEmailMsg({ error: false, text: "Email updated!" });
+  }
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setPwMsg(null);
+    if (newPw !== confirmPw) { setPwMsg({ error: true, text: "Passwords don't match" }); return; }
+    if (newPw.length < 8) { setPwMsg({ error: true, text: "Password must be at least 8 characters" }); return; }
+    const result = await handleChangePassword(currentPw, newPw);
+    if (result.error) setPwMsg({ error: true, text: result.error });
+    else { setPwMsg({ error: false, text: "Password updated!" }); setCurrentPw(""); setNewPw(""); setConfirmPw(""); }
   }
 
   // Pull-to-refresh effect
@@ -169,6 +208,12 @@ export default function DriverTabs({
   }, [router, refreshing]);
 
 
+  useEffect(() => {
+    function handler() { setShowAccountSheet(true); }
+    window.addEventListener("mgops:open-account", handler);
+    return () => window.removeEventListener("mgops:open-account", handler);
+  }, []);
+
   // Listen for profile circle "goto-tab" events dispatched from the nav
   useEffect(() => {
     function handler(e: Event) {
@@ -181,26 +226,27 @@ export default function DriverTabs({
   }, []);
 
   function goTab(t: string) {
-    const legacyMap: Record<string, DriverTab> = {
-      home: "schedule",
-      account: "me",
-      service: "schedule",
-      codes: "more",
-      reviews: "schedule",
-      milestones: "me",
-      bonuses: "me",
-      leaderboard: "schedule",
-    };
-    // Score and awards open the trophy sheet instead of a dock tab
+    // Score and awards open the trophy sheet
     if (t === "score" || t === "awards") {
       setTrophyTab(t as "score" | "awards");
       setShowTrophySheet(true);
       return;
     }
-    const resolved = (legacyMap[t] ?? t) as DriverTab;
-    if (["schedule", "maintenance", "me", "more"].includes(resolved)) {
+    // Account / me → open account sheet
+    if (t === "me" || t === "account" || t === "milestones" || t === "bonuses") {
+      setShowAccountSheet(true);
+      return;
+    }
+    // Codes / more → open codes sheet
+    if (t === "codes" || t === "more") {
+      setShowCodesSheet(true);
+      return;
+    }
+    const resolved = t as DriverTab;
+    if (["schedule", "maintenance", "codes"].includes(resolved)) {
       setTab(resolved);
-      if (resolved === "more") setShowMoreSheet(true);
+      setShowCodesSheet(false);
+      setShowTrophySheet(false);
     }
   }
 
@@ -265,10 +311,9 @@ export default function DriverTabs({
   };
 
   const dockItems: DockItem[] = [
-    { key: "schedule",    label: "Schedule",    icon: CalendarDays   },
-    { key: "maintenance", label: "Maintenance", icon: Wrench         },
-    { key: "me",          label: "Me",          icon: User           },
-    { key: "more",        label: "More",        icon: MoreHorizontal },
+    { key: "schedule",    label: "Schedule",    icon: CalendarDays },
+    { key: "maintenance", label: "Maintenance", icon: Wrench       },
+    { key: "codes",       label: "Gate Codes",  icon: Key          },
   ];
 
   const brand = accentColor;
@@ -523,23 +568,6 @@ export default function DriverTabs({
           </div>
         )}
 
-        {/* ── Me tab ────────────────────────────────────── */}
-        {tab === "me" && (
-          <MePanel
-            showMilestones={showMilestones}
-            milestones={mePanelMilestones}
-            bonuses={[]}
-            driverName={driverName}
-            driverUsername={currentUsername ?? ""}
-            onChangeUsername={handleChangeUsername}
-            onChangePassword={handleChangePassword}
-            onChangeEmail={handleChangeEmail}
-            driverId={driverId}
-            vehicles={mePanelVehicles}
-            maintenanceRequests={maintenanceRequests}
-            currentEmail={currentEmail}
-          />
-        )}
       </div>
 
       {/* ── Trophy FAB ────────────────────────────────────── */}
@@ -651,10 +679,10 @@ export default function DriverTabs({
         </>
       )}
 
-      {/* ── More bottom sheet ─────────────────────────────── */}
-      {showMoreSheet && (
+      {/* ── Gate Codes bottom sheet ─────────────────────────────── */}
+      {showCodesSheet && (
         <>
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowMoreSheet(false)} />
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowCodesSheet(false)} />
           <div
             className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)] flex flex-col"
             style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -674,7 +702,7 @@ export default function DriverTabs({
                     <p className="text-[12px] text-slate-400">Access codes for your routes</p>
                   </div>
                 </div>
-                <button onClick={() => setShowMoreSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                <button onClick={() => setShowCodesSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
                   <X className="w-4 h-4 text-slate-500" />
                 </button>
               </div>
@@ -693,19 +721,132 @@ export default function DriverTabs({
         </>
       )}
 
+      {/* ── Account bottom sheet ──────────────────────────── */}
+      {showAccountSheet && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowAccountSheet(false)} />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)] flex flex-col"
+            style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            {/* Handle */}
+            <div className="flex-shrink-0">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-slate-200" />
+              </div>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+                <h2 className="text-[17px] font-extrabold text-slate-900">Account</h2>
+                <button onClick={() => setShowAccountSheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                  <X className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1 px-4 py-5 flex flex-col gap-5">
+              {/* Avatar section */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-200 flex items-center justify-center group"
+                  title="Tap to change photo"
+                >
+                  {localAvatar
+                    ? <img src={localAvatar} alt="avatar" className="w-full h-full object-cover" />
+                    : <span className="text-3xl font-bold text-slate-500">{driverName?.[0] ?? "?"}</span>
+                  }
+                  <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                    {uploading
+                      ? <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      : <Camera className="w-6 h-6 text-white" />
+                    }
+                  </div>
+                </button>
+                <div className="text-center">
+                  <p className="text-[15px] font-extrabold text-slate-900">{driverName}</p>
+                  <p className="text-[12px] text-slate-400 mt-0.5">@{currentUsername ?? driverId}</p>
+                  <p className="text-[11px] text-slate-400 mt-1.5 px-6 leading-snug">
+                    📸 Your profile photo appears on the leaderboard — tap the circle to update it
+                  </p>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }}
+                />
+              </div>
+
+              {/* Email */}
+              <form onSubmit={handleEmailSubmit} className="bg-white rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <p className="text-[13px] font-bold text-slate-700 mb-3">Email address</p>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={editEmail}
+                  onChange={e => { setEditEmail(e.target.value); setEmailMsg(null); }}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 mb-2"
+                  style={{ "--tw-ring-color": "var(--brand)" } as React.CSSProperties}
+                />
+                {emailMsg
+                  ? <p className={`text-[12px] mb-2 ${emailMsg.error ? "text-red-500" : "text-emerald-600"}`}>{emailMsg.text}</p>
+                  : !editEmail.trim() && <p className="text-[12px] text-slate-400 mb-2">Add your email to get notifications</p>
+                }
+                <button type="submit" className="w-full py-2.5 rounded-xl text-[14px] font-bold text-white transition-opacity active:opacity-80" style={{ backgroundColor: "var(--brand)" }}>
+                  Save Email
+                </button>
+              </form>
+
+              {/* Password */}
+              <form onSubmit={handlePasswordSubmit} className="bg-white rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <p className="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-slate-400" />
+                  Change Password
+                </p>
+                {(["Current password", "New password", "Confirm new password"] as const).map((placeholder, i) => {
+                  const vals = [currentPw, newPw, confirmPw];
+                  const setters = [setCurrentPw, setNewPw, setConfirmPw];
+                  return (
+                    <input
+                      key={placeholder}
+                      type="password"
+                      placeholder={placeholder}
+                      value={vals[i]}
+                      onChange={e => setters[i](e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 mb-2"
+                      style={{ "--tw-ring-color": "var(--brand)" } as React.CSSProperties}
+                    />
+                  );
+                })}
+                {pwMsg && <p className={`text-[12px] mb-2 ${pwMsg.error ? "text-red-500" : "text-emerald-600"}`}>{pwMsg.text}</p>}
+                <button type="submit" className="w-full py-2.5 rounded-xl text-[14px] font-bold text-white transition-opacity active:opacity-80" style={{ backgroundColor: "var(--brand)" }}>
+                  Update Password
+                </button>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Bottom dock */}
       <nav
         className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 flex z-40"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {dockItems.map(({ key, label, icon: Icon }) => {
-          const active = tab === key && !(key === "more" && !showMoreSheet);
+          const active = key === "codes" ? showCodesSheet : (tab === key && !showCodesSheet);
           return (
             <button
               key={key}
               onClick={() => {
-                if (key === "more") { setShowMoreSheet(true); }
-                else { setTab(key); setShowMoreSheet(false); setShowTrophySheet(false); }
+                if (key === "codes") {
+                  setShowCodesSheet(true);
+                  setShowTrophySheet(false);
+                } else {
+                  setTab(key);
+                  setShowCodesSheet(false);
+                  setShowTrophySheet(false);
+                }
               }}
               className="flex-1 flex flex-col items-center justify-center pt-2 pb-1.5 relative gap-0.5 active:bg-slate-100 transition-colors"
             >
