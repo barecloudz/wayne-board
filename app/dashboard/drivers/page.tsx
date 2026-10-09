@@ -10,7 +10,8 @@ import {
 import {
   getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername, updateDriverFedExId, updateDriverEmail,
 } from "@/lib/actions/drivers";
-import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds } from "@/lib/actions/driver-locations";
+import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds, getDriverLocationMap } from "@/lib/actions/driver-locations";
+import { useLocationContext } from "@/components/location-context";
 import { suggestDriverId } from "@/lib/driver-utils";
 
 type Driver = {
@@ -96,14 +97,17 @@ export default function DriversPage() {
   const [driverAllLocations, setDriverAllLocations] = useState(false);
   const [orgLocations, setOrgLocations] = useState<Array<{ id: number; name: string; terminalId: string | null }>>([]);
   const [assignedDriverIds, setAssignedDriverIds] = useState<Set<string>>(new Set());
+  const [driverLocationMap, setDriverLocationMap] = useState<Record<string, number[]>>({});
+  const { selectedLocationIds: ctxLocationIds, allSelected: ctxAllSelected } = useLocationContext();
   const [showTerminated, setShowTerminated] = useState(false);
   const [profileTarget, setProfileTarget] = useState<Driver | null>(null);
   const [removingAvatar, setRemovingAvatar] = useState(false);
 
   async function refresh() {
-    const [driverData, assignedIds] = await Promise.all([getDrivers(), getAssignedDriverIds()]);
+    const [driverData, assignedIds, locMap] = await Promise.all([getDrivers(), getAssignedDriverIds(), getDriverLocationMap()]);
     setDrivers(driverData as Driver[]);
     setAssignedDriverIds(new Set(assignedIds));
+    setDriverLocationMap(locMap);
     setLoading(false);
   }
 
@@ -123,6 +127,11 @@ export default function DriversPage() {
 
   const filtered = drivers.filter((d) => {
     if (!showTerminated && d.terminationType != null) return false;
+    if (!ctxAllSelected) {
+      const driverLocs = driverLocationMap[d.driverId] ?? [];
+      const matchesLocation = d.allLocations || driverLocs.some(id => ctxLocationIds.includes(id));
+      if (!matchesLocation) return false;
+    }
     return (
       d.name.toLowerCase().includes(search.toLowerCase()) ||
       d.driverId.toLowerCase().includes(search.toLowerCase())
@@ -310,8 +319,7 @@ export default function DriversPage() {
     startTransition(async () => {
       await setDriverLocations(locationTarget.driverId, selectedLocationIds, driverAllLocations);
       setLocationTarget(null);
-      const updated = await getDrivers();
-      setDrivers(updated as Driver[]);
+      await refresh();
     });
   }
 

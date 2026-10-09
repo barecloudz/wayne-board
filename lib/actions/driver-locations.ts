@@ -74,3 +74,17 @@ export async function getAssignedDriverIds(): Promise<string[]> {
     .where(eq(driverLocations.organizationId, session.organizationId));
   return rows.map(r => r.driverId);
 }
+
+export async function getDriverLocationMap(): Promise<Record<string, number[]>> {
+  const session = await requireSession();
+  const rows = await db
+    .select({ driverId: driverLocations.driverId, locationId: driverLocations.locationId })
+    .from(driverLocations)
+    .where(eq(driverLocations.organizationId, session.organizationId));
+  const map: Record<string, number[]> = {};
+  for (const row of rows) {
+    if (!map[row.driverId]) map[row.driverId] = [];
+    map[row.driverId].push(row.locationId);
+  }
+  return map;
+}
