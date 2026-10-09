@@ -8,7 +8,7 @@ import {
   Truck, DollarSign, Users, Map, LayoutGrid, ClipboardCheck,
   UserCog, Star, Wrench, Trophy, Award, CalendarDays, WrenchIcon, Settings,
   Gauge, Route, TrendingUp, ClipboardList, Scissors, GraduationCap,
-  Zap, Bot, ChevronDown, ChevronUp, PenLine, LogOut, ShieldCheck, BarChart2, SlidersHorizontal,
+  Zap, Bot, ChevronDown, ChevronUp, PenLine, LogOut, BarChart2, SlidersHorizontal,
   Building2, Upload, UserSearch, User, FileText, Bell,
 } from "lucide-react";
 import TruckSpinner from "@/components/ui/truck-spinner";
@@ -25,9 +25,6 @@ const adminItems = [
   { icon: Upload,        label: "DSW Upload",   href: "/dashboard/payroll/upload",      exact: true },
   { icon: Upload,        label: "Ryde Upload",  href: "/dashboard/payroll/ryde-upload", exact: true },
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
-  { icon: Gauge,         label: "Fleet Status", href: "/dashboard/fleet-status",   exact: true },
-  { icon: WrenchIcon,    label: "Maintenance",  href: "/dashboard/maintenance",    exact: true },
-  { icon: FileText,      label: "MMR Generator", href: "/dashboard/mmr",           exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
@@ -38,14 +35,16 @@ const adminItems = [
   { icon: Settings,     label: "Settings",      href: "/dashboard/settings",        exact: true },
 ];
 
-const automationItems = [
-  { icon: Bot,           label: "Auto GC",         href: "/dashboard/auto-gc",        exact: true },
-  { icon: FileText,      label: "MMR Generator",   href: "/dashboard/mmr",            exact: true },
+const fleetItems = [
+  { icon: Gauge,          label: "Fleet Status",       href: "/dashboard/fleet-status", exact: true },
+  { icon: WrenchIcon,     label: "Maintenance Records", href: "/dashboard/maintenance",  exact: true },
+  { icon: FileText,       label: "MMR Generator",      href: "/dashboard/mmr",          exact: true },
+  { icon: ClipboardCheck, label: "Inspections",        href: "/fleet",                  exact: false },
+  { icon: Wrench,         label: "Vehicles",           href: "/vehicles",               exact: false },
 ];
 
-const complianceItems = [
-  { icon: ClipboardCheck, label: "Inspections", href: "/fleet",    exact: false },
-  { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
+const automationItems = [
+  { icon: Bot, label: "Auto GC", href: "/dashboard/auto-gc", exact: true },
 ];
 
 const reportItems = [
@@ -111,13 +110,13 @@ export default function Sidebar() {
   }, [pathname]);
 
   const adminActive  = adminItems.some(i => pathname === i.href);
+  const fleetActive  = fleetItems.some(i => i.exact ? pathname === i.href : pathname.startsWith(i.href));
   const autoActive   = automationItems.some(i => i.exact ? pathname === i.href : pathname.startsWith(i.href));
-  const compActive   = complianceItems.some(i => pathname.startsWith(i.href));
   const reportActive = reportItems.some(i => pathname === i.href);
 
   const [adminOpen,  setAdminOpen]  = useState(adminActive || pathname.startsWith("/dashboard"));
+  const [fleetOpen,  setFleetOpen]  = useState(fleetActive);
   const [autoOpen,   setAutoOpen]   = useState(autoActive);
-  const [compOpen,   setCompOpen]   = useState(compActive);
   const [reportOpen, setReportOpen] = useState(reportActive);
 
   const router = useRouter();
@@ -288,13 +287,13 @@ export default function Sidebar() {
         <div className="my-2 border-t border-slate-100" />
 
         <CollapsibleSection
-          label="Compliance"
-          open={compOpen}
-          onToggle={() => setCompOpen(v => !v)}
-          active={compActive}
-          iconEl={<ShieldCheck className="w-4 h-4 flex-shrink-0" />}
+          label="Fleet Management"
+          open={fleetOpen}
+          onToggle={() => setFleetOpen(v => !v)}
+          active={fleetActive}
+          iconEl={<Truck className="w-4 h-4 flex-shrink-0" />}
         >
-          {complianceItems.map(item => <NavLink key={item.href} {...item} />)}
+          {fleetItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
 
         <div className="my-2 border-t border-slate-100" />

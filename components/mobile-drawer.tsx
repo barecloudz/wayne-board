@@ -23,25 +23,25 @@ const adminItems = [
   { icon: Upload,        label: "DSW Upload",   href: "/dashboard/payroll/upload",      exact: true },
   { icon: Upload,        label: "Ryde Upload",  href: "/dashboard/payroll/ryde-upload", exact: true },
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
-  { icon: Gauge,         label: "Fleet Status", href: "/dashboard/fleet-status",   exact: true },
-  { icon: WrenchIcon,    label: "Maintenance",  href: "/dashboard/maintenance",    exact: true },
-  { icon: FileText,      label: "MMR Generator", href: "/dashboard/mmr",           exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
   { icon: Trophy,        label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
-  { icon: UserSearch,   label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
+  { icon: UserSearch,    label: "Recruiting",   href: "/dashboard/recruiting",     exact: true },
   { icon: Settings,      label: "Settings",     href: "/dashboard/settings",       exact: true },
 ];
 
-const automationItems = [
-  { icon: TrendingUp,    label: "Auto GC",       href: "/dashboard/auto-gc",       exact: true },
+const fleetItems = [
+  { icon: Gauge,          label: "Fleet Status",        href: "/dashboard/fleet-status", exact: true },
+  { icon: WrenchIcon,     label: "Maintenance Records", href: "/dashboard/maintenance",  exact: true },
+  { icon: FileText,       label: "MMR Generator",       href: "/dashboard/mmr",          exact: true },
+  { icon: ClipboardCheck, label: "Inspections",         href: "/fleet",                  exact: false },
+  { icon: Wrench,         label: "Vehicles",            href: "/vehicles",               exact: false },
 ];
 
-const complianceItems = [
-  { icon: ClipboardCheck, label: "Inspections", href: "/fleet",    exact: false },
-  { icon: Wrench,         label: "Vehicles",    href: "/vehicles", exact: false },
+const automationItems = [
+  { icon: Zap, label: "Auto GC", href: "/dashboard/auto-gc", exact: true },
 ];
 
 const reportItems = [
@@ -82,7 +82,9 @@ export default function MobileDrawer() {
   }, [pathname]);
 
   const automationActive = automationItems.some(i => pathname === i.href);
+  const fleetActive = fleetItems.some(i => i.exact ? pathname === i.href : pathname.startsWith(i.href));
   const [autoOpen, setAutoOpen] = useState(automationActive);
+  const [fleetOpen, setFleetOpen] = useState(fleetActive);
 
   function isActive(href: string, exact: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -200,8 +202,26 @@ export default function MobileDrawer() {
 
           <div className="my-3 border-t border-slate-100" />
 
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-1">Compliance</p>
-          {complianceItems.map((item) => <NavLink key={item.href} {...item} />)}
+          {/* Fleet Management · collapsible */}
+          <button
+            onClick={() => setFleetOpen(v => !v)}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all w-full text-left ${
+              fleetActive ? "text-slate-900 bg-slate-50" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            }`}
+          >
+            <Truck className={`w-4 h-4 shrink-0 ${fleetActive ? "text-slate-700" : "text-slate-400"}`} />
+            <span className="flex-1">Fleet Management</span>
+            {fleetActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+            {fleetOpen
+              ? <ChevronUp className="w-3.5 h-3.5 text-slate-300" />
+              : <ChevronDown className="w-3.5 h-3.5 text-slate-300" />
+            }
+          </button>
+          {fleetOpen && (
+            <div className="ml-3 pl-3 border-l border-slate-100 flex flex-col gap-0.5 mt-0.5">
+              {fleetItems.map((item) => <NavLink key={item.href} {...item} />)}
+            </div>
+          )}
 
           <div className="my-3 border-t border-slate-100" />
 
