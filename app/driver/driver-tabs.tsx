@@ -275,7 +275,9 @@ export default function DriverTabs({
     comment: r.content || null,
     date: r.reviewDate
       ? new Date(r.reviewDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : r.week ? r.week : "",
+      : r.createdAt
+        ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "",
     riderName: null as string | null,
     type: r.type as "positive" | "negative" | "neutral",
     category: r.category,
@@ -670,7 +672,7 @@ export default function DriverTabs({
               </div>
 
               {/* Scrollable content */}
-              <div className="overflow-y-auto flex-1">
+              <div key={trophyTab} className="overflow-y-auto flex-1">
                 {trophyTab === "score" && (
                   <ScorePanel
                     rydeAvg={rydeAvg}

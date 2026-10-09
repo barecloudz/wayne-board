@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,9 +9,10 @@ import {
   ClipboardCheck, UserCog, ChevronRight, Star, Wrench,
   CalendarDays, Trophy, WrenchIcon, Settings, Gauge,
   Route, TrendingUp, ClipboardList, Scissors, Zap, GraduationCap,
-  ChevronDown, ChevronUp, PenLine, Upload, UserSearch, Loader2, FileText,
+  ChevronDown, ChevronUp, PenLine, Upload, UserSearch, FileText,
 } from "lucide-react";
 import NotificationBell from "@/components/notification-bell";
+import TruckSpinner from "@/components/ui/truck-spinner";
 
 const overviewItem = { icon: LayoutGrid, label: "Overview", href: "/dashboard", exact: true };
 
@@ -57,6 +58,7 @@ const ROLE_LABELS: Record<string, string> = {
 export default function MobileDrawer() {
   const [open, setOpen] = useState(false);
   const [navigating, setNavigating] = useState(false);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [userRole, setUserRole] = useState("driver");
   const [userName, setUserName] = useState("");
   const [userInitials, setUserInitials] = useState("?");
@@ -76,6 +78,7 @@ export default function MobileDrawer() {
   }, []);
   useEffect(() => {
     setNavigating(false);
+    if (navTimerRef.current) { clearTimeout(navTimerRef.current); navTimerRef.current = null; }
   }, [pathname]);
 
   const automationActive = automationItems.some(i => pathname === i.href);
@@ -92,7 +95,7 @@ export default function MobileDrawer() {
     return (
       <Link
         href={href}
-        onClick={() => { setOpen(false); setNavigating(true); }}
+        onClick={() => { setOpen(false); setNavigating(true); navTimerRef.current = setTimeout(() => setNavigating(false), 6000); }}
         className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all ${
           active
             ? "bg-slate-950 text-white"
@@ -110,7 +113,7 @@ export default function MobileDrawer() {
     <>
       {navigating && (
         <div className="md:hidden fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+          <TruckSpinner size={72} />
         </div>
       )}
       {/* ── Mobile header bar ── */}

@@ -8,6 +8,8 @@ import Link from "next/link";
 
 interface NotificationBellProps {
   recipientId: number;
+  /** If provided, shown as "View all" footer link. Pass null to hide the footer entirely. */
+  viewAllHref?: string | null;
 }
 
 interface NotificationItem {
@@ -54,9 +56,10 @@ function TypeIcon({ type }: { type: string }) {
   return <Bell className={cls + " text-slate-400"} />;
 }
 
-export default function NotificationBell({ recipientId: _recipientId }: NotificationBellProps) {
+export default function NotificationBell({ recipientId: _recipientId, viewAllHref = "/dashboard/notifications" }: NotificationBellProps) {
   const [unreadCount,    setUnreadCount]    = useState(0);
   const [panelOpen,      setPanelOpen]      = useState(false);
+  const [closing,        setClosing]        = useState(false);
   const [notifications,  setNotifications]  = useState<NotificationItem[]>([]);
   const [loading,        setLoading]        = useState(false);
   const [visible,        setVisible]        = useState(true);
@@ -158,6 +161,12 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
     }
   }, [panelOpen, fetchCount]);
 
+  // ── Animated close ───────────────────────────────────────────────────────
+  function closePanel() {
+    setClosing(true);
+    setTimeout(() => { setPanelOpen(false); setClosing(false); }, 260);
+  }
+
   // ── Mark all read ─────────────────────────────────────────────────────────
   async function handleMarkAllRead() {
     await fetch("/api/notifications/read-all", { method: "POST" });
@@ -172,7 +181,7 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
   // ── Row click ─────────────────────────────────────────────────────────────
   async function handleRowClick(n: NotificationItem) {
     await fetch(`/api/notifications/${n.id}/read`, { method: "POST" }).catch(() => {});
-    setPanelOpen(false);
+    closePanel();
     if (n.linkTo) {
       router.push(n.linkTo);
     }
@@ -184,16 +193,25 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
     <>
       <style>{`
         @keyframes notif-slide-down {
-          from { opacity: 0; transform: translateY(-12px); }
+          from { opacity: 0; transform: translateY(-100%); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .notif-modal { animation: notif-slide-down 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        @keyframes notif-slide-up {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(-100%); }
+        }
+        @keyframes notif-scrim-in  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes notif-scrim-out { from { opacity: 1; } to { opacity: 0; } }
+        .notif-modal        { animation: notif-slide-down 0.30s cubic-bezier(0.22,1,0.36,1) forwards; }
+        .notif-modal-out    { animation: notif-slide-up   0.24s cubic-bezier(0.55,0,1,0.45) forwards; }
+        .notif-scrim        { animation: notif-scrim-in   0.20s ease forwards; }
+        .notif-scrim-out    { animation: notif-scrim-out  0.24s ease forwards; }
       `}</style>
 
       {/* Bell button */}
       <button
         ref={containerRef as React.RefObject<HTMLButtonElement>}
-        onClick={() => setPanelOpen(v => !v)}
+        onClick={() => panelOpen ? closePanel() : setPanelOpen(true)}
         aria-label="Notifications"
         className="relative flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
       >
@@ -209,11 +227,11 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
       {panelOpen && (
         <div className="fixed inset-0 z-[200] flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
           {/* Scrim */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPanelOpen(false)} />
+          <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${closing ? "notif-scrim-out" : "notif-scrim"}`} onClick={closePanel} />
 
           {/* Modal card — slides down from top, takes ~90% height */}
           <div
-            className="notif-modal relative z-10 mx-auto w-full max-w-lg flex flex-col bg-white shadow-[0_16px_64px_rgba(0,0,0,0.25)]"
+            className={`${closing ? "notif-modal-out" : "notif-modal"} relative z-10 mx-auto w-full max-w-lg flex flex-col bg-white shadow-[0_16px_64px_rgba(0,0,0,0.25)]`}
             style={{
               height: "88vh",
               borderRadius: "0 0 28px 28px",
@@ -237,7 +255,7 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
                   </button>
                 )}
                 <button
-                  onClick={() => setPanelOpen(false)}
+                  onClick={closePanel}
                   className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
                   aria-label="Close"
                 >
@@ -296,15 +314,17 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
             </div>
 
             {/* Footer */}
-            <div className="flex-shrink-0 border-t border-slate-100 px-5 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
-              <Link
-                href="/dashboard/notifications"
-                onClick={() => setPanelOpen(false)}
-                className="flex items-center justify-center w-full py-3 rounded-2xl bg-slate-900 text-white text-[14px] font-bold hover:bg-slate-700 transition-colors"
-              >
-                View all notifications
-              </Link>
-            </div>
+            {viewAllHref && (
+              <div className="flex-shrink-0 border-t border-slate-100 px-5 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
+                <Link
+                  href={viewAllHref}
+                  onClick={closePanel}
+                  className="flex items-center justify-center w-full py-3 rounded-2xl bg-slate-900 text-white text-[14px] font-bold hover:bg-slate-700 transition-colors"
+                >
+                  View all notifications
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

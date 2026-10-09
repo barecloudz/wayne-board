@@ -213,7 +213,7 @@ export default async function DriverDashboard() {
         </div>
         <div className="flex items-center gap-2">
           {session.driverDbId && session.driverDbId > 0 && (
-            <NotificationBell recipientId={session.driverDbId} />
+            <NotificationBell recipientId={session.driverDbId} viewAllHref={null} />
           )}
           <ProfileButton
             name={session.name}
