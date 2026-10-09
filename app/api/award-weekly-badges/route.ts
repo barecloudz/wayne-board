@@ -5,6 +5,7 @@ import {
   computeAndAwardMonthlyPerformer,
   getPreviousMonday,
 } from "@/lib/weekly-awards";
+import { getSetting } from "@/lib/actions/settings";
 import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
@@ -16,7 +17,20 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const weekStart: string = body.weekStart ?? getPreviousMonday();
 
-  const result = await computeAndAwardWeeklyBadges(weekStart, session.organizationId);
+  const [minIlsDaysSetting, minRydeReviewsSetting, ilsEnabledSetting, rydeEnabledSetting] = await Promise.all([
+    getSetting('award_min_ils_days', '1'),
+    getSetting('award_min_ryde_reviews', '1'),
+    getSetting('award_ils_enabled', 'true'),
+    getSetting('award_ryde_enabled', 'true'),
+  ]);
+  const options = {
+    minIlsDays: parseInt(minIlsDaysSetting) || 1,
+    minRydeReviews: parseInt(minRydeReviewsSetting) || 1,
+    ilsEnabled: ilsEnabledSetting === 'true',
+    rydeEnabled: rydeEnabledSetting === 'true',
+  };
+
+  const result = await computeAndAwardWeeklyBadges(weekStart, session.organizationId, options);
 
   // Run monthly performer if caller requests it
   if (body.runMonthly) {

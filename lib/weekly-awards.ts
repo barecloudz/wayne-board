@@ -12,6 +12,13 @@ import { eq, and, gte, lte, isNotNull, isNull, inArray } from "drizzle-orm";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export type AwardOptions = {
+  minIlsDays: number;       // driver must have this many DSW days to qualify (default 1)
+  minRydeReviews: number;   // driver must have this many reviews to qualify for Top Rated (default 1)
+  ilsEnabled: boolean;      // award ILS badges at all (default true)
+  rydeEnabled: boolean;     // award Top Rated at all (default true)
+};
+
 export type AwardResult = {
   week: string;
   ilsGold: string | null;
@@ -21,6 +28,8 @@ export type AwardResult = {
   monthlyPerformer: string[] | null;
   badgesInserted: number;
   skipped: number;
+  disqualifiedIls: Array<{ driverName: string; days: number; avgIls: number }>;
+  disqualifiedRyde: Array<{ driverName: string; reviewCount: number }>;
 };
 
 export type WeeklyStanding = {
@@ -160,125 +169,162 @@ async function insertBadge(
 
 // ── Award Computation ─────────────────────────────────────────────────────────
 
+const DEFAULT_AWARD_OPTIONS: AwardOptions = {
+  minIlsDays: 1,
+  minRydeReviews: 1,
+  ilsEnabled: true,
+  rydeEnabled: true,
+};
+
 export async function computeAndAwardWeeklyBadges(
   weekStart: string,
   orgId: number,
+  options?: Partial<AwardOptions>,
 ): Promise<AwardResult> {
+  const opts: AwardOptions = { ...DEFAULT_AWARD_OPTIONS, ...options };
   const weekEnd = addDays(weekStart, 6);
   const isoWeek = toIsoWeek(weekStart);
 
   let badgesInserted = 0;
   let skipped = 0;
 
-  // ── ILS badges (Gold / Silver / Bronze) ────────────────────────────────────
-  const dswRows = await db
-    .select({
-      driverId:   dswRouteDays.driverId,
-      driverName: drivers.name,
-      ilsPct:     dswRouteDays.ilsPct,
-    })
-    .from(dswRouteDays)
-    .innerJoin(
-      drivers,
-      and(
-        eq(drivers.driverId, dswRouteDays.driverId!),
-        eq(drivers.organizationId, orgId),
-      ),
-    )
-    .where(
-      and(
-        eq(dswRouteDays.organizationId, orgId),
-        gte(dswRouteDays.date, weekStart),
-        lte(dswRouteDays.date, weekEnd),
-        isNotNull(dswRouteDays.driverId),
-        isNotNull(dswRouteDays.ilsPct),
-      ),
-    );
-
-  const ilsMap = new Map<string, { driverName: string; total: number; days: number }>();
-  for (const row of dswRows) {
-    if (!row.driverId) continue;
-    const ils = Number(row.ilsPct);
-    const prev = ilsMap.get(row.driverId);
-    if (prev) { prev.total += ils; prev.days += 1; }
-    else ilsMap.set(row.driverId, { driverName: row.driverName, total: ils, days: 1 });
-  }
-
-  // Sort: ascending avgIls (lower = better), break ties by descending dayCount
-  const ilsRanked = Array.from(ilsMap.entries())
-    .map(([driverId, v]) => ({ driverId, driverName: v.driverName, avgIls: v.total / v.days, days: v.days }))
-    .sort((a, b) => a.avgIls !== b.avgIls ? a.avgIls - b.avgIls : b.days - a.days);
-
   let ilsGold: string | null   = null;
   let ilsSilver: string | null = null;
   let ilsBronze: string | null = null;
+  const disqualifiedIls: Array<{ driverName: string; days: number; avgIls: number }> = [];
 
-  if (ilsRanked[0]) {
-    const id = await ensureIlsBadgeType(orgId, 1);
-    ilsGold = ilsRanked[0].driverName;
-    (await insertBadge(orgId, ilsRanked[0].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
-  }
-  if (ilsRanked[1]) {
-    const id = await ensureIlsBadgeType(orgId, 2);
-    ilsSilver = ilsRanked[1].driverName;
-    (await insertBadge(orgId, ilsRanked[1].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
-  }
-  if (ilsRanked[2]) {
-    const id = await ensureIlsBadgeType(orgId, 3);
-    ilsBronze = ilsRanked[2].driverName;
-    (await insertBadge(orgId, ilsRanked[2].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
+  // ── ILS badges (Gold / Silver / Bronze) ────────────────────────────────────
+  if (opts.ilsEnabled) {
+    const dswRows = await db
+      .select({
+        driverId:   dswRouteDays.driverId,
+        driverName: drivers.name,
+        ilsPct:     dswRouteDays.ilsPct,
+      })
+      .from(dswRouteDays)
+      .innerJoin(
+        drivers,
+        and(
+          eq(drivers.driverId, dswRouteDays.driverId!),
+          eq(drivers.organizationId, orgId),
+        ),
+      )
+      .where(
+        and(
+          eq(dswRouteDays.organizationId, orgId),
+          gte(dswRouteDays.date, weekStart),
+          lte(dswRouteDays.date, weekEnd),
+          isNotNull(dswRouteDays.driverId),
+          isNotNull(dswRouteDays.ilsPct),
+        ),
+      );
+
+    const ilsMap = new Map<string, { driverName: string; total: number; days: number }>();
+    for (const row of dswRows) {
+      if (!row.driverId) continue;
+      const ils = Number(row.ilsPct);
+      const prev = ilsMap.get(row.driverId);
+      if (prev) { prev.total += ils; prev.days += 1; }
+      else ilsMap.set(row.driverId, { driverName: row.driverName, total: ils, days: 1 });
+    }
+
+    // Sort: ascending avgIls (lower = better), break ties by descending dayCount
+    const ilsAll = Array.from(ilsMap.entries())
+      .map(([driverId, v]) => ({ driverId, driverName: v.driverName, avgIls: v.total / v.days, days: v.days }))
+      .sort((a, b) => a.avgIls !== b.avgIls ? a.avgIls - b.avgIls : b.days - a.days);
+
+    // Split qualified vs disqualified
+    const ilsRanked = ilsAll.filter(d => d.days >= opts.minIlsDays);
+    for (const d of ilsAll) {
+      if (d.days < opts.minIlsDays) {
+        disqualifiedIls.push({ driverName: d.driverName, days: d.days, avgIls: d.avgIls });
+      }
+    }
+
+    if (ilsRanked[0]) {
+      const id = await ensureIlsBadgeType(orgId, 1);
+      ilsGold = ilsRanked[0].driverName;
+      (await insertBadge(orgId, ilsRanked[0].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
+    }
+    if (ilsRanked[1]) {
+      const id = await ensureIlsBadgeType(orgId, 2);
+      ilsSilver = ilsRanked[1].driverName;
+      (await insertBadge(orgId, ilsRanked[1].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
+    }
+    if (ilsRanked[2]) {
+      const id = await ensureIlsBadgeType(orgId, 3);
+      ilsBronze = ilsRanked[2].driverName;
+      (await insertBadge(orgId, ilsRanked[2].driverId, id, weekStart)) ? badgesInserted++ : skipped++;
+    }
   }
 
   // ── Top Rated (Ryde) badge ─────────────────────────────────────────────────
-  const weekReviews = await db
-    .select({ driverId: rydeReviews.driverId, stars: rydeReviews.stars })
-    .from(rydeReviews)
-    .where(
-      and(
-        eq(rydeReviews.organizationId, orgId),
-        eq(rydeReviews.week, isoWeek),
-        isNotNull(rydeReviews.stars),
-      ),
-    );
-
-  const allStars = await db
-    .select({ stars: rydeReviews.stars })
-    .from(rydeReviews)
-    .where(and(eq(rydeReviews.organizationId, orgId), isNotNull(rydeReviews.stars)));
-
-  const globalMean =
-    allStars.length > 0
-      ? allStars.reduce((s, r) => s + (r.stars ?? 0), 0) / allStars.length
-      : 5;
-
-  const PRIOR = 5;
-  const rydeMap = new Map<string, { sum: number; count: number }>();
-  for (const r of weekReviews) {
-    if (!r.driverId) continue;
-    const prev = rydeMap.get(r.driverId);
-    if (prev) { prev.sum += r.stars!; prev.count += 1; }
-    else rydeMap.set(r.driverId, { sum: r.stars!, count: 1 });
-  }
-
-  const rydeRanked = Array.from(rydeMap.entries())
-    .map(([driverId, v]) => ({
-      driverId,
-      bayesianAvg: (v.sum + PRIOR * globalMean) / (v.count + PRIOR),
-    }))
-    .sort((a, b) => b.bayesianAvg - a.bayesianAvg);
-
   let topRated: string | null = null;
-  if (rydeRanked[0]) {
-    const topRatedId = await ensureUnrankedBadgeType(orgId, "weekly_ryde", "Top Rated", true);
-    const [driverRow] = await db
-      .select({ name: drivers.name })
-      .from(drivers)
-      .where(and(eq(drivers.driverId, rydeRanked[0].driverId), eq(drivers.organizationId, orgId)))
-      .limit(1);
-    topRated = driverRow?.name ?? rydeRanked[0].driverId;
-    (await insertBadge(orgId, rydeRanked[0].driverId, topRatedId, weekStart))
-      ? badgesInserted++
-      : skipped++;
+  const disqualifiedRyde: Array<{ driverName: string; reviewCount: number }> = [];
+
+  if (opts.rydeEnabled) {
+    const weekReviews = await db
+      .select({ driverId: rydeReviews.driverId, stars: rydeReviews.stars })
+      .from(rydeReviews)
+      .where(
+        and(
+          eq(rydeReviews.organizationId, orgId),
+          eq(rydeReviews.week, isoWeek),
+          isNotNull(rydeReviews.stars),
+        ),
+      );
+
+    const allStars = await db
+      .select({ stars: rydeReviews.stars })
+      .from(rydeReviews)
+      .where(and(eq(rydeReviews.organizationId, orgId), isNotNull(rydeReviews.stars)));
+
+    const globalMean =
+      allStars.length > 0
+        ? allStars.reduce((s, r) => s + (r.stars ?? 0), 0) / allStars.length
+        : 5;
+
+    const PRIOR = 5;
+    const rydeMap = new Map<string, { sum: number; count: number }>();
+    for (const r of weekReviews) {
+      if (!r.driverId) continue;
+      const prev = rydeMap.get(r.driverId);
+      if (prev) { prev.sum += r.stars!; prev.count += 1; }
+      else rydeMap.set(r.driverId, { sum: r.stars!, count: 1 });
+    }
+
+    const rydeAll = Array.from(rydeMap.entries())
+      .map(([driverId, v]) => ({
+        driverId,
+        bayesianAvg: (v.sum + PRIOR * globalMean) / (v.count + PRIOR),
+        count: v.count,
+      }))
+      .sort((a, b) => b.bayesianAvg - a.bayesianAvg);
+
+    // Filter by minRydeReviews; collect disqualified with names
+    const rydeRanked = rydeAll.filter(d => d.count >= opts.minRydeReviews);
+    const rydeDisqIds = rydeAll.filter(d => d.count < opts.minRydeReviews);
+    for (const d of rydeDisqIds) {
+      const [dr] = await db
+        .select({ name: drivers.name })
+        .from(drivers)
+        .where(and(eq(drivers.driverId, d.driverId), eq(drivers.organizationId, orgId)))
+        .limit(1);
+      disqualifiedRyde.push({ driverName: dr?.name ?? d.driverId, reviewCount: d.count });
+    }
+
+    if (rydeRanked[0]) {
+      const topRatedId = await ensureUnrankedBadgeType(orgId, "weekly_ryde", "Top Rated", true);
+      const [driverRow] = await db
+        .select({ name: drivers.name })
+        .from(drivers)
+        .where(and(eq(drivers.driverId, rydeRanked[0].driverId), eq(drivers.organizationId, orgId)))
+        .limit(1);
+      topRated = driverRow?.name ?? rydeRanked[0].driverId;
+      (await insertBadge(orgId, rydeRanked[0].driverId, topRatedId, weekStart))
+        ? badgesInserted++
+        : skipped++;
+    }
   }
 
   return {
@@ -290,6 +336,8 @@ export async function computeAndAwardWeeklyBadges(
     monthlyPerformer: null,
     badgesInserted,
     skipped,
+    disqualifiedIls,
+    disqualifiedRyde,
   };
 }
 

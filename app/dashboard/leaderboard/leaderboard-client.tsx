@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { Trophy, Settings, Clock, Loader2, X, Camera, TrendingUp, CalendarDays, Zap } from "lucide-react";
+import { Trophy, Settings, Clock, Loader2, X, Camera, TrendingUp, CalendarDays, Zap, AlertTriangle, Info, Shield } from "lucide-react";
 import {
   computeTopDrivers, awardBadgesForWeek, awardSpecialBadge,
   upsertBadgeType, deleteBadgeType, isWeekAwarded, revokeBadge, clearBadgeIcon,
 } from "@/lib/actions/badges";
+import { setSetting } from "@/lib/actions/settings";
 import type { BadgeTypeRow, TopDriverRow, BadgeHistoryRow } from "@/lib/actions/badges";
 import type { WeeklyStanding, MonthlyBadgeCount } from "@/lib/weekly-awards";
 import { useRouter } from "next/navigation";
@@ -75,8 +76,20 @@ function prevMonday(): Date {
   prev.setDate(prev.getDate() - 7);
   return prev;
 }
+function formatDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
 
 type Driver = { driverId: string; name: string; avatarUrl?: string | null };
+
+type AwardRules = {
+  minIlsDays: number;
+  minRydeReviews: number;
+  ilsEnabled: boolean;
+  rydeEnabled: boolean;
+  monthlyEnabled: boolean;
+};
 
 type Props = {
   initialBadgeTypes:  BadgeTypeRow[];
@@ -84,10 +97,11 @@ type Props = {
   allDrivers:         Driver[];
   weeklyStandings:    WeeklyStanding[];
   monthlyBadgeCounts: MonthlyBadgeCount[];
+  initialAwardRules:  AwardRules;
 };
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function LeaderboardClient({ initialBadgeTypes, initialHistory, allDrivers, weeklyStandings, monthlyBadgeCounts }: Props) {
+export default function LeaderboardClient({ initialBadgeTypes, initialHistory, allDrivers, weeklyStandings, monthlyBadgeCounts, initialAwardRules }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<"award" | "this_week" | "monthly" | "setup" | "history">("award");
   const history = initialHistory;
@@ -96,6 +110,25 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
     .filter(b => b.category === "weekly")
     .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
   const specialBadges = initialBadgeTypes.filter(b => b.category === "special");
+
+  // ── Award Rules State ────────────────────────────────────────────────────
+  const [awardRules, setAwardRules] = useState<AwardRules>(initialAwardRules);
+  const [rulesSaving, setRulesSaving] = useState(false);
+  const [rulesSaved, setRulesSaved] = useState(false);
+
+  async function saveAwardRules() {
+    setRulesSaving(true);
+    await Promise.all([
+      setSetting('award_min_ils_days', String(awardRules.minIlsDays)),
+      setSetting('award_min_ryde_reviews', String(awardRules.minRydeReviews)),
+      setSetting('award_ils_enabled', String(awardRules.ilsEnabled)),
+      setSetting('award_ryde_enabled', String(awardRules.rydeEnabled)),
+      setSetting('award_monthly_enabled', String(awardRules.monthlyEnabled)),
+    ]);
+    setRulesSaving(false);
+    setRulesSaved(true);
+    setTimeout(() => setRulesSaved(false), 2500);
+  }
 
   // ── Award Tab State ──────────────────────────────────────────────────────
   const [weekStart, setWeekStart] = useState(() => toDateStr(prevMonday()));
@@ -113,7 +146,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   function loadWeek() {
     startLoadWeek(async () => {
       const [drivers, awarded] = await Promise.all([
-        computeTopDrivers(weekStart, weekEnd, 3),
+        computeTopDrivers(weekStart, weekEnd, 10),
         isWeekAwarded(weekStart),
       ]);
       setTopDrivers(drivers);
@@ -121,10 +154,14 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
     });
   }
 
+  // Compute filtered/disqualified lists client-side from topDrivers + awardRules
+  const qualifiedIls = topDrivers?.filter(d => d.dayCount >= awardRules.minIlsDays).slice(0, 3) ?? [];
+  const disqualifiedIls = topDrivers?.filter(d => d.dayCount < awardRules.minIlsDays) ?? [];
+
   function handleAward() {
     if (!topDrivers) return;
     startAward(async () => {
-      const awards = topDrivers
+      const awards = qualifiedIls
         .map((d, i) => ({ driverId: d.driverId, badgeTypeId: weeklyBadges[i]?.id }))
         .filter(a => a.badgeTypeId != null) as Array<{ driverId: string; badgeTypeId: number }>;
       await awardBadgesForWeek(weekStart, awards);
@@ -281,7 +318,7 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
     setAutoAwarding(true);
     setAutoAwardResult(null);
     try {
-      const res = await fetch("/api/award-weekly-badges", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      const res = await fetch("/api/award-weekly-badges", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ weekStart }) });
       const data = await res.json();
       if (data.error) { setAutoAwardResult(`Error: ${data.error}`); return; }
       const parts = [
@@ -290,7 +327,15 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         data.ilsBronze  && `🥉 ${data.ilsBronze}`,
         data.topRated   && `⭐ ${data.topRated}`,
       ].filter(Boolean);
-      setAutoAwardResult(`Week ${data.week}: ${parts.length ? parts.join(", ") : "no data"} — ${data.badgesInserted} new badge${data.badgesInserted !== 1 ? "s" : ""}`);
+      const disqParts = [
+        ...(data.disqualifiedIls?.length ? [`${data.disqualifiedIls.length} ILS driver${data.disqualifiedIls.length !== 1 ? "s" : ""} filtered`] : []),
+        ...(data.disqualifiedRyde?.length ? [`${data.disqualifiedRyde.length} Ryde driver${data.disqualifiedRyde.length !== 1 ? "s" : ""} filtered`] : []),
+      ];
+      setAutoAwardResult(
+        `Week ${data.week}: ${parts.length ? parts.join(", ") : "no data"} — ${data.badgesInserted} new badge${data.badgesInserted !== 1 ? "s" : ""}` +
+        (disqParts.length ? ` (${disqParts.join(", ")})` : "")
+      );
+      setWeekAwarded(true);
       router.refresh();
     } catch {
       setAutoAwardResult("Request failed");
@@ -313,6 +358,12 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
   }
 
   const unmappedCount = topDrivers?.[0]?.unmappedCount ?? 0;
+
+  // Active rules summary pill text
+  const rulesPillText = [
+    awardRules.ilsEnabled ? `ILS: min ${awardRules.minIlsDays}d` : "ILS: off",
+    awardRules.rydeEnabled ? `Ryde: min ${awardRules.minRydeReviews}r` : "Ryde: off",
+  ].join(" · ");
 
   return (
     <>
@@ -341,45 +392,70 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
         {/* ── Award Tab ───────────────────────────────────────────────────── */}
         {tab === "award" && (
           <div className="flex flex-col gap-6">
-            {/* Auto-award previous week */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="text-sm font-bold text-amber-900">Auto-Award Last Week</p>
-                  <p className="text-xs text-amber-700 mt-0.5">Awards ILS Gold/Silver/Bronze + Top Rated for the previous Monday–Sunday</p>
-                </div>
-                <button
-                  onClick={handleAutoAward}
-                  disabled={autoAwarding}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-40 shrink-0"
-                >
-                  {autoAwarding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                  Award Now
-                </button>
+
+            {/* Active rules pill + link */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1.5">
+                <Shield className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span className="text-xs font-semibold text-slate-600">{rulesPillText}</span>
               </div>
-              {autoAwardResult && (
-                <p className="text-xs font-semibold text-amber-800 bg-amber-100 rounded-lg px-3 py-2">{autoAwardResult}</p>
-              )}
+              <button
+                onClick={() => setTab("setup")}
+                className="text-xs text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
+              >
+                <Settings className="w-3 h-3" />
+                Edit in Badge Setup → Award Rules
+              </button>
             </div>
 
             {/* Week picker */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <label className="text-sm font-semibold text-slate-700">Week of</label>
-              <input
-                type="date"
-                value={weekStart}
-                onChange={e => { setWeekStart(e.target.value); setTopDrivers(null); setWeekAwarded(false); }}
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
-              />
-              <span className="text-sm text-slate-400">→ {weekEnd}</span>
-              <button
-                onClick={loadWeek}
-                disabled={loadingWeek}
-                className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
-              >
-                {loadingWeek && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Load
-              </button>
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-col gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="text-sm font-semibold text-slate-700">Week of</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const d = new Date(weekStart + "T00:00:00");
+                      d.setDate(d.getDate() - 7);
+                      setWeekStart(toDateStr(d));
+                      setTopDrivers(null);
+                      setWeekAwarded(false);
+                      setAutoAwardResult(null);
+                    }}
+                    className="px-2 py-1 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                  >
+                    ← Prev
+                  </button>
+                  <input
+                    type="date"
+                    value={weekStart}
+                    onChange={e => { setWeekStart(e.target.value); setTopDrivers(null); setWeekAwarded(false); setAutoAwardResult(null); }}
+                    className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      const d = new Date(weekStart + "T00:00:00");
+                      d.setDate(d.getDate() + 7);
+                      setWeekStart(toDateStr(d));
+                      setTopDrivers(null);
+                      setWeekAwarded(false);
+                      setAutoAwardResult(null);
+                    }}
+                    className="px-2 py-1 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                  >
+                    Next →
+                  </button>
+                </div>
+                <span className="text-sm text-slate-400">→ {formatDisplayDate(weekEnd)}</span>
+                <button
+                  onClick={loadWeek}
+                  disabled={loadingWeek}
+                  className="px-4 py-1.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-1.5"
+                >
+                  {loadingWeek && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Load Standings
+                </button>
+              </div>
             </div>
 
             {unmappedCount > 0 && (
@@ -388,55 +464,104 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
               </div>
             )}
 
-            {topDrivers && topDrivers.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b border-slate-100">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-500">Rank</th>
-                      <th className="px-4 py-3 text-left font-semibold text-slate-500">Driver</th>
-                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Avg ILS%</th>
-                      <th className="px-4 py-3 text-right font-semibold text-slate-500">Days</th>
-                      <th className="px-4 py-3 text-center font-semibold text-slate-500">Badge</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topDrivers.map((d, i) => {
-                      const badge = weeklyBadges[i];
-                      return (
-                        <tr key={d.driverId} className="border-b border-slate-50 last:border-0">
-                          <td className="px-4 py-3 font-bold text-slate-800">#{i + 1}</td>
-                          <td className="px-4 py-3 font-semibold text-slate-800">{d.driverName}</td>
-                          <td className="px-4 py-3 text-right text-slate-700">{d.avgIls.toFixed(1)}%</td>
-                          <td className="px-4 py-3 text-right text-slate-500">{d.dayCount}</td>
-                          <td className="px-4 py-3 flex justify-center">
-                            {badge ? <BadgeIcon badge={badge} size={28} /> : <span className="text-slate-300">—</span>}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            {/* Preview table */}
+            {topDrivers !== null && (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm font-bold text-slate-700">
+                  Preview — {formatDisplayDate(weekStart)} to {formatDisplayDate(weekEnd)}
+                </p>
+
+                {topDrivers.length === 0 ? (
+                  <p className="text-slate-500 text-sm">No mapped DSW data found for this week.</p>
+                ) : (
+                  <>
+                    {/* Qualified drivers */}
+                    {awardRules.ilsEnabled && qualifiedIls.length > 0 && (
+                      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-semibold text-slate-500">Rank</th>
+                              <th className="px-4 py-3 text-left font-semibold text-slate-500">Driver</th>
+                              <th className="px-4 py-3 text-right font-semibold text-slate-500">Avg ILS%</th>
+                              <th className="px-4 py-3 text-right font-semibold text-slate-500">Days</th>
+                              <th className="px-4 py-3 text-center font-semibold text-slate-500">Badge</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {qualifiedIls.map((d, i) => {
+                              const badge = weeklyBadges[i];
+                              const rankEmoji = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
+                              return (
+                                <tr key={d.driverId} className="border-b border-slate-50 last:border-0 bg-emerald-50/30">
+                                  <td className="px-4 py-3 font-bold text-slate-800">{rankEmoji} #{i + 1}</td>
+                                  <td className="px-4 py-3 font-semibold text-slate-800">{d.driverName}</td>
+                                  <td className="px-4 py-3 text-right text-slate-700">{d.avgIls.toFixed(1)}%</td>
+                                  <td className="px-4 py-3 text-right text-slate-500">{d.dayCount}d</td>
+                                  <td className="px-4 py-3 flex justify-center">
+                                    {badge ? <BadgeIcon badge={badge} size={28} /> : <span className="text-slate-300">—</span>}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {awardRules.ilsEnabled && qualifiedIls.length === 0 && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        No drivers meet the minimum {awardRules.minIlsDays}-day threshold for ILS badges.
+                      </div>
+                    )}
+
+                    {!awardRules.ilsEnabled && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
+                        <Info className="w-4 h-4 shrink-0" />
+                        ILS badges are disabled in Award Rules.
+                      </div>
+                    )}
+
+                    {/* Disqualified drivers */}
+                    {disqualifiedIls.length > 0 && awardRules.ilsEnabled && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                          <p className="text-xs font-bold text-red-700 uppercase tracking-wider">Disqualified (ILS — insufficient days)</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {disqualifiedIls.map(d => (
+                            <div key={d.driverId} className="flex items-center justify-between text-sm">
+                              <span className="line-through text-red-400 font-semibold">{d.driverName}</span>
+                              <span className="text-xs text-red-400">{d.avgIls.toFixed(1)}% avg · {d.dayCount}d worked (needs {awardRules.minIlsDays}+)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Award button */}
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleAutoAward}
+                    disabled={autoAwarding || topDrivers.length === 0}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors disabled:opacity-40"
+                  >
+                    {autoAwarding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                    Award Badges for This Week
+                  </button>
+                  {weekAwarded && !autoAwardResult && (
+                    <p className="text-sm font-semibold text-emerald-600">✓ Already awarded</p>
+                  )}
+                </div>
+
+                {autoAwardResult && (
+                  <p className="text-xs font-semibold text-amber-800 bg-amber-100 rounded-lg px-3 py-2">{autoAwardResult}</p>
+                )}
               </div>
-            )}
-
-            {topDrivers && topDrivers.length === 0 && (
-              <p className="text-slate-500 text-sm">No mapped DSW data found for this week.</p>
-            )}
-
-            {topDrivers && !weekAwarded && (
-              <button
-                onClick={handleAward}
-                disabled={awarding || topDrivers.length === 0}
-                className="self-start px-6 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:bg-amber-600 transition-colors disabled:opacity-40 flex items-center gap-2"
-              >
-                {awarding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Award Badges for This Week
-              </button>
-            )}
-
-            {weekAwarded && (
-              <p className="text-sm font-semibold text-emerald-600">✓ Badges awarded for this week</p>
             )}
 
             {/* Special badge award */}
@@ -585,6 +710,124 @@ export default function LeaderboardClient({ initialBadgeTypes, initialHistory, a
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* ── Award Rules ─────────────────────────────────────────────── */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4 text-slate-600" />
+                <p className="text-base font-bold text-slate-800">Award Rules</p>
+              </div>
+              <p className="text-xs text-slate-400 mb-4">Control which drivers qualify for auto-awarded badges each week.</p>
+
+              <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col gap-6">
+
+                {/* ILS Badges */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-slate-700">ILS Badges</p>
+                    <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={awardRules.ilsEnabled}
+                        onChange={e => setAwardRules(prev => ({ ...prev, ilsEnabled: e.target.checked }))}
+                        className="rounded"
+                      />
+                      Enabled
+                    </label>
+                  </div>
+                  <div className={`flex flex-col gap-1.5 ${!awardRules.ilsEnabled ? "opacity-40 pointer-events-none" : ""}`}>
+                    <label className="text-xs text-slate-500 font-medium">Minimum days worked this week to qualify</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={1}
+                        max={7}
+                        value={awardRules.minIlsDays}
+                        onChange={e => setAwardRules(prev => ({ ...prev, minIlsDays: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-slate-300"
+                      />
+                      <span className="text-sm text-slate-500">days &mdash; drivers with fewer days are skipped</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100" />
+
+                {/* Ryde Top Rated */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-slate-700">Ryde Top Rated Badge</p>
+                    <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={awardRules.rydeEnabled}
+                        onChange={e => setAwardRules(prev => ({ ...prev, rydeEnabled: e.target.checked }))}
+                        className="rounded"
+                      />
+                      Enabled
+                    </label>
+                  </div>
+                  <div className={`flex flex-col gap-1.5 ${!awardRules.rydeEnabled ? "opacity-40 pointer-events-none" : ""}`}>
+                    <label className="text-xs text-slate-500 font-medium">Minimum reviews this week to qualify</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={1}
+                        value={awardRules.minRydeReviews}
+                        onChange={e => setAwardRules(prev => ({ ...prev, minRydeReviews: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-slate-300"
+                      />
+                      <span className="text-sm text-slate-500">reviews</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100" />
+
+                {/* Monthly Performer */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-slate-700">Monthly Performer Badge</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Awards at end of month to driver with most weekly badges</p>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={awardRules.monthlyEnabled}
+                      onChange={e => setAwardRules(prev => ({ ...prev, monthlyEnabled: e.target.checked }))}
+                      className="rounded"
+                    />
+                    Enabled
+                  </label>
+                </div>
+
+                <div className="border-t border-slate-100" />
+
+                {/* How ILS ranking works */}
+                <div className="bg-slate-50 rounded-lg p-3 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <Info className="w-3.5 h-3.5" />
+                    How ILS ranking works
+                  </div>
+                  <p className="text-xs text-slate-500">Drivers are ranked by average ILS% that week. Lower % = better = fewer impact events. Ties are broken by most days worked.</p>
+                </div>
+
+                {/* Save button */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={saveAwardRules}
+                    disabled={rulesSaving}
+                    className="px-5 py-2 rounded-lg bg-slate-900 text-white text-sm font-bold hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center gap-2"
+                  >
+                    {rulesSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Save Award Rules
+                  </button>
+                  {rulesSaved && (
+                    <span className="text-sm font-semibold text-emerald-600">✓ Saved</span>
+                  )}
+                </div>
               </div>
             </div>
 
