@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Wrench, Truck, CheckSquare, DollarSign, Loader2 } from "lucide-react";
+import { Bell, Wrench, Truck, CheckSquare, DollarSign, Loader2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
@@ -61,7 +61,7 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
   const [loading,        setLoading]        = useState(false);
   const [visible,        setVisible]        = useState(true);
 
-  const containerRef  = useRef<HTMLDivElement>(null);
+  const containerRef  = useRef<HTMLButtonElement>(null);
   const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const esRef         = useRef<EventSource | null>(null);
   const router        = useRouter();
@@ -131,16 +131,7 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
     };
   }, [fetchCount]);
 
-  // ── Close on outside click ────────────────────────────────────────────────
-  useEffect(() => {
-    function handleMouseDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setPanelOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
-  }, []);
+  // Scrim click handles close — no outside-click listener needed
 
   // ── Fetch notifications when panel opens; re-sync count on close ─────────
   useEffect(() => {
@@ -190,9 +181,18 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
   const displayCount = unreadCount > 9 ? "9+" : unreadCount > 0 ? String(unreadCount) : "";
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
+      <style>{`
+        @keyframes notif-slide-down {
+          from { opacity: 0; transform: translateY(-12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .notif-modal { animation: notif-slide-down 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      `}</style>
+
       {/* Bell button */}
       <button
+        ref={containerRef as React.RefObject<HTMLButtonElement>}
         onClick={() => setPanelOpen(v => !v)}
         aria-label="Notifications"
         className="relative flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
@@ -205,92 +205,109 @@ export default function NotificationBell({ recipientId: _recipientId }: Notifica
         )}
       </button>
 
-      {/* Panel */}
+      {/* Full-screen overlay modal */}
       {panelOpen && (
-        <div
-          className="absolute right-0 top-full mt-2 z-50 w-80 bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-200/80 flex flex-col overflow-hidden"
-          style={{
-            maxHeight: "70vh",
-            animation: "notif-panel-in 0.18s ease forwards",
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
-            <span className="text-[14px] font-semibold text-slate-800">Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-[12px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                Mark all read
-              </button>
-            )}
-          </div>
+        <div className="fixed inset-0 z-[200] flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+          {/* Scrim */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPanelOpen(false)} />
 
-          {/* Body */}
-          <div className="overflow-y-auto flex-1">
-            {loading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
+          {/* Modal card — slides down from top, takes ~90% height */}
+          <div
+            className="notif-modal relative z-10 mx-auto w-full max-w-lg flex flex-col bg-white shadow-[0_16px_64px_rgba(0,0,0,0.25)]"
+            style={{
+              height: "88vh",
+              borderRadius: "0 0 28px 28px",
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
+              <div>
+                <h2 className="text-[18px] font-extrabold text-slate-900 leading-none">Notifications</h2>
+                {unreadCount > 0 && (
+                  <p className="text-[12px] text-slate-400 mt-1">{unreadCount} unread</p>
+                )}
               </div>
-            ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-1">
-                <span className="text-[22px]">✓</span>
-                <p className="text-[13px] text-slate-400 font-medium">You're all caught up</p>
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                <button
+                  onClick={() => setPanelOpen(false)}
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
               </div>
-            ) : (
-              <ul>
-                {notifications.map(n => {
-                  const isUnread = n.readAt === null;
-                  return (
-                    <li key={n.id}>
-                      <button
-                        onClick={() => handleRowClick(n)}
-                        className={`w-full text-left flex gap-3 px-4 py-3 border-l-4 hover:bg-slate-50 transition-colors ${typeColor(n.type)} ${isUnread ? typeBg(n.type) : ""}`}
-                      >
-                        <div className="pt-0.5 flex-shrink-0">
-                          <TypeIcon type={n.type} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className={`text-[13px] leading-snug truncate ${isUnread ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>
-                            {n.title}
-                          </p>
-                          {n.body && (
-                            <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-1 leading-snug">
-                              {n.body}
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto flex-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="w-6 h-6 text-slate-300 animate-spin" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-2">
+                  <Bell className="w-10 h-10 text-slate-200" />
+                  <p className="text-[15px] font-bold text-slate-700">You're all caught up</p>
+                  <p className="text-[13px] text-slate-400">No notifications right now</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {notifications.map(n => {
+                    const isUnread = n.readAt === null;
+                    return (
+                      <li key={n.id}>
+                        <button
+                          onClick={() => handleRowClick(n)}
+                          className={`w-full text-left flex gap-4 px-5 py-4 border-l-[3px] active:bg-slate-50 transition-colors ${typeColor(n.type)} ${isUnread ? typeBg(n.type) : "bg-white"}`}
+                        >
+                          <div className="mt-0.5 flex-shrink-0">
+                            <TypeIcon type={n.type} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-[14px] leading-snug ${isUnread ? "font-semibold text-slate-900" : "font-medium text-slate-600"}`}>
+                              {n.title}
                             </p>
+                            {n.body && (
+                              <p className="text-[13px] text-slate-500 mt-0.5 line-clamp-2 leading-snug">
+                                {n.body}
+                              </p>
+                            )}
+                            <p className="text-[11px] text-slate-400 mt-1.5 leading-none">
+                              {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                          {isUnread && (
+                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
                           )}
-                          <p className="text-[11px] text-slate-400 mt-1 leading-none">
-                            {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
 
-          {/* Footer */}
-          <div className="flex-shrink-0 border-t border-slate-100 px-4 py-2.5">
-            <Link
-              href="/dashboard/notifications"
-              onClick={() => setPanelOpen(false)}
-              className="text-[12px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              View all notifications →
-            </Link>
+            {/* Footer */}
+            <div className="flex-shrink-0 border-t border-slate-100 px-5 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
+              <Link
+                href="/dashboard/notifications"
+                onClick={() => setPanelOpen(false)}
+                className="flex items-center justify-center w-full py-3 rounded-2xl bg-slate-900 text-white text-[14px] font-bold hover:bg-slate-700 transition-colors"
+              >
+                View all notifications
+              </Link>
+            </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes notif-panel-in {
-          from { opacity: 0; transform: translateY(4px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-      `}</style>
-    </div>
+    </>
   );
 }

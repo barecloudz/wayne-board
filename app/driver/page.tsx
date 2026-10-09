@@ -226,35 +226,6 @@ export default async function DriverDashboard() {
 
       {/* Content */}
       <div className="flex-1 px-5 pt-6 md:px-10 max-w-2xl mx-auto w-full">
-        <div className="mb-7">
-          <p className="text-[12px] font-medium mb-0.5" style={{ color: "#94A3B8", letterSpacing: "0.02em" }}>Welcome back,</p>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-[32px] font-bold tracking-tight leading-none" style={{ color: "#0F172A" }}>{session.name}</h1>
-            {showRyde && avgScore !== null && (
-              <div
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full shrink-0"
-                style={{
-                  background: avgScore >= 4.5 ? "#dcfce7" : avgScore >= 3 ? "#fef9c3" : "#fee2e2",
-                  border: `1px solid ${avgScore >= 4.5 ? "#bbf7d0" : avgScore >= 3 ? "#fef08a" : "#fecaca"}`,
-                }}
-              >
-                <span className="text-[12px]">⭐</span>
-                <span
-                  className="text-[13px] font-bold leading-none"
-                  style={{ color: avgScore >= 4.5 ? "#16a34a" : avgScore >= 3 ? "#ca8a04" : "#dc2626" }}
-                >
-                  {avgScore.toFixed(1)}
-                </span>
-              </div>
-            )}
-          </div>
-          {todayWorkArea && (
-            <div className="flex items-center gap-2 mt-2.5">
-              <WorkAreaShape shape={todayWorkArea.shape} color={todayWorkArea.color} size={12} />
-              <span className="text-[12px] font-semibold" style={{ color: "#64748B" }}>{todayWorkArea.name}</span>
-            </div>
-          )}
-        </div>
 
         <DriverTabs
           today={today}

@@ -548,35 +548,49 @@ export default function DriverTabs({
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
-        @keyframes trophy-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.7), 0 4px 20px rgba(0,0,0,0.25); }
-          50%       { box-shadow: 0 0 0 9px rgba(250,204,21,0), 0 4px 20px rgba(0,0,0,0.25); }
+        @keyframes trophy-glow {
+          0%, 100% { opacity: 0.5; }
+          50%       { opacity: 1; }
         }
-        .trophy-ring { animation: trophy-spin 3s linear infinite; }
-        .trophy-fab  { animation: trophy-pulse 2s ease-in-out infinite; }
+        .trophy-ring { animation: trophy-spin 4s linear infinite; }
+        .trophy-glow { animation: trophy-glow 2s ease-in-out infinite; }
       `}</style>
       <button
         onClick={() => setShowTrophySheet(true)}
-        className="trophy-fab fixed z-40 flex items-center justify-center rounded-full active:scale-95 transition-transform"
+        className="fixed z-40 flex items-center justify-center active:scale-95 transition-transform"
         style={{
-          bottom: "calc(env(safe-area-inset-bottom) + 72px)",
-          right: "20px",
-          width: 56,
-          height: 56,
-          background: "linear-gradient(135deg, #92400e 0%, #d97706 40%, #fbbf24 70%, #fef08a 100%)",
+          bottom: "calc(env(safe-area-inset-bottom) + 76px)",
+          right: "16px",
+          width: 68,
+          height: 68,
+          borderRadius: 18,
+          background: "linear-gradient(160deg, rgba(30,20,5,0.92) 0%, rgba(15,10,2,0.96) 100%)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 -1px 0 rgba(0,0,0,0.5) inset",
+          border: "1px solid rgba(255,200,50,0.25)",
+          backdropFilter: "blur(12px)",
         }}
         aria-label="Score & Awards"
       >
-        {/* Spinning sparkle ring */}
-        <svg className="trophy-ring absolute inset-0 w-full h-full" viewBox="0 0 56 56" fill="none" style={{ pointerEvents: "none" }}>
-          {[0,45,90,135,180,225,270,315].map((deg, i) => {
+        {/* Spinning sparkle orbit — positioned outside the dark card */}
+        <svg className="trophy-ring absolute pointer-events-none" viewBox="0 0 84 84" fill="none"
+          style={{ width: 84, height: 84, top: "50%", left: "50%", transform: "translate(-50%,-50%) rotate(0deg)", transformOrigin: "center" }}>
+          {[0,40,80,120,160,200,240,280,320].map((deg, i) => {
             const rad = (deg * Math.PI) / 180;
-            const cx = 28 + 24 * Math.cos(rad);
-            const cy = 28 + 24 * Math.sin(rad);
-            return <circle key={i} cx={cx} cy={cy} r={i % 2 === 0 ? 2.5 : 1.5} fill={i % 2 === 0 ? "#fef08a" : "#fbbf24"} opacity={i % 2 === 0 ? 0.95 : 0.6} />;
+            const cx = 42 + 38 * Math.cos(rad);
+            const cy = 42 + 38 * Math.sin(rad);
+            return <circle key={i} cx={cx} cy={cy} r={i % 3 === 0 ? 3 : i % 3 === 1 ? 2 : 1.2}
+              fill={i % 3 === 0 ? "#fef08a" : i % 3 === 1 ? "#fbbf24" : "#ffffff"}
+              opacity={i % 3 === 0 ? 0.9 : 0.55} />;
           })}
         </svg>
-        <Trophy className="w-6 h-6 relative z-10" style={{ color: "#fef9c3", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }} />
+        {/* Soft gold glow behind trophy */}
+        <div className="trophy-glow absolute rounded-full pointer-events-none"
+          style={{ width: 36, height: 36, background: "radial-gradient(circle, rgba(251,191,36,0.35) 0%, transparent 70%)" }} />
+        {/* Trophy icon */}
+        <Trophy className="w-7 h-7 relative z-10" style={{ color: "#fde68a", filter: "drop-shadow(0 0 6px rgba(251,191,36,0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.6))" }} />
+        {/* Glass top-edge highlight */}
+        <div className="absolute top-0 left-0 right-0 pointer-events-none"
+          style={{ height: "40%", borderRadius: "18px 18px 0 0", background: "linear-gradient(to bottom, rgba(255,255,255,0.1), transparent)" }} />
       </button>
 
       {/* ── Trophy bottom sheet ───────────────────────────── */}
