@@ -134,13 +134,15 @@ export default function PayrollClient({
     : dswRows.filter(r => r.locationId == null || selectedLocationIds.includes(r.locationId));
 
   // Build DSW map: driverId -> Map<date, DswDayRow>
+  // Use stored driverId first (set at upload); fall back to name matching for legacy rows without one.
   const dswByDriverDate = new Map<string, Map<string, DswDayRow>>();
   for (const driver of weekData.drivers) {
     const driverDsw = new Map<string, DswDayRow>();
     for (const row of filteredDswRows) {
-      if (matchDswName(driver.name, row.driverNameRaw)) {
-        driverDsw.set(row.date, row);
-      }
+      const matched = row.driverId
+        ? row.driverId === driver.driverId
+        : matchDswName(driver.name, row.driverNameRaw);
+      if (matched) driverDsw.set(row.date, row);
     }
     if (driverDsw.size > 0) dswByDriverDate.set(driver.driverId, driverDsw);
   }
