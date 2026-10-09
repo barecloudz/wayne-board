@@ -100,7 +100,7 @@ export default function DriverTabs({
   const [claimedBadgeIds, setClaimedBadgeIds] = useState<number[]>([]);
   const [showCelebration, setShowCelebration] = useState(unseenBadges.length > 0);
   const [showTrophySheet, setShowTrophySheet] = useState(false);
-  const [trophyTab, setTrophyTab] = useState<"score" | "awards">("score");
+  const [trophyTab, setTrophyTab] = useState<"score" | "leaderboard" | "awards">("score");
   const [showCodesSheet, setShowCodesSheet]   = useState(false);
   const [showAccountSheet, setShowAccountSheet] = useState(false);
 
@@ -227,8 +227,8 @@ export default function DriverTabs({
 
   function goTab(t: string) {
     // Score and awards open the trophy sheet
-    if (t === "score" || t === "awards") {
-      setTrophyTab(t as "score" | "awards");
+    if (t === "score" || t === "leaderboard" || t === "awards") {
+      setTrophyTab(t as "score" | "leaderboard" | "awards");
       setShowTrophySheet(true);
       return;
     }
@@ -622,62 +622,123 @@ export default function DriverTabs({
       </button>
 
       {/* ── Trophy bottom sheet ───────────────────────────── */}
-      {showTrophySheet && (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTrophySheet(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-slate-200" />
+      {showTrophySheet && (() => {
+        const TABS = [
+          { key: "score"       as const, emoji: "⭐", label: "Ryde Score",  bg: "var(--brand)",                              shadow: "rgba(255,98,0,0.35)"     },
+          { key: "leaderboard" as const, emoji: "🏆", label: "Leaderboard", bg: "linear-gradient(135deg,#1e3a8a,#3b82f6)",   shadow: "rgba(59,130,246,0.35)"   },
+          { key: "awards"      as const, emoji: "🎖️",  label: "Awards",      bg: "linear-gradient(135deg,#92400e,#f59e0b)",   shadow: "rgba(245,158,11,0.35)"   },
+        ] as const;
+        const badgeCountMap = new Map(badgeCounts.map(b => [b.driverId, b.badgeCount]));
+        return (
+          <>
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTrophySheet(false)} />
+            <div
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.12)] flex flex-col"
+              style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}
+            >
+              {/* Handle */}
+              <div className="flex-shrink-0">
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-slate-200" />
+                </div>
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-1 pb-3">
+                  <h2 className="text-[17px] font-extrabold text-slate-900">Score & Awards</h2>
+                  <button onClick={() => setShowTrophySheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                    <X className="w-4 h-4 text-slate-500" />
+                  </button>
+                </div>
+                {/* 3-tab gamified selector */}
+                <div className="px-4 pb-4 flex gap-2.5">
+                  {TABS.map(t => {
+                    const active = trophyTab === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => setTrophyTab(t.key)}
+                        className="flex-1 flex flex-col items-center gap-1.5 py-3 px-1 rounded-2xl transition-all active:scale-95"
+                        style={active
+                          ? { background: t.bg, boxShadow: `0 6px 20px ${t.shadow}` }
+                          : { background: "#F1F5F9" }}
+                      >
+                        <span className="text-[22px] leading-none">{t.emoji}</span>
+                        <span className={`text-[11px] font-extrabold leading-none ${active ? "text-white" : "text-slate-500"}`}>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Scrollable content */}
+              <div className="overflow-y-auto flex-1">
+                {trophyTab === "score" && (
+                  <ScorePanel
+                    rydeAvg={rydeAvg}
+                    reviewCount={reviews.length}
+                    reviews={scorePanelReviews}
+                    leaderboard={scorePanelLeaderboard}
+                    currentDriverId={driverId}
+                    serviceRows={dswRows}
+                    myDswHistory={myDswHistory}
+                    showDsw={showDsw}
+                    accent={accentColor}
+                    myBadges={myBadges}
+                    badgeCounts={badgeCounts}
+                    driverAvatarMap={driverAvatarMap}
+                    newBadgeIds={claimedBadgeIds}
+                    weeklyIlsRank={weeklyIlsRank}
+                    weeklyRydeRank={weeklyRydeRank}
+                    totalDriversThisWeek={totalDriversThisWeek}
+                  />
+                )}
+                {trophyTab === "leaderboard" && (
+                  <div className="px-4 pt-2 pb-6 flex flex-col gap-2">
+                    {scorePanelLeaderboard.length === 0 ? (
+                      <div className="bg-white rounded-2xl border border-slate-200/80 p-8 text-center">
+                        <Trophy className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                        <p className="text-[15px] font-bold text-slate-700">No data yet this week</p>
+                      </div>
+                    ) : scorePanelLeaderboard.map((entry, idx) => {
+                      const isMe      = entry.driverId === driverId;
+                      const avatarUrl = driverAvatarMap[entry.driverId]?.avatarUrl ?? null;
+                      const bc        = badgeCountMap.get(entry.driverId) ?? 0;
+                      const medal     = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : null;
+                      return (
+                        <div
+                          key={entry.driverId}
+                          className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-colors ${isMe ? "border-2" : "bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"}`}
+                          style={isMe ? { borderColor: "var(--brand)", backgroundColor: "var(--brand)" } : {}}
+                        >
+                          <span className="text-[15px] w-7 text-center shrink-0 font-extrabold" style={{ color: isMe ? "rgba(255,255,255,0.6)" : "#94a3b8" }}>
+                            {medal ?? idx + 1}
+                          </span>
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 flex-shrink-0 flex items-center justify-center">
+                            {avatarUrl
+                              ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                              : <span className="text-xs font-bold" style={{ color: isMe ? "rgba(255,255,255,0.8)" : "#64748b" }}>{entry.name?.[0]?.toUpperCase() ?? "?"}</span>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className={`text-[14px] font-bold truncate ${isMe ? "text-white" : "text-slate-800"}`}>
+                                {entry.name}{isMe && <span className="ml-1.5 text-[11px] opacity-70">You</span>}
+                              </p>
+                              {bc > 0 && <span className="bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 text-[11px] font-bold shrink-0">🏆 ×{bc}</span>}
+                            </div>
+                            <p className={`text-[12px] ${isMe ? "text-white/60" : "text-slate-400"}`}>{entry.reviewCount} {entry.reviewCount === 1 ? "day" : "days"}</p>
+                          </div>
+                          <span className={`text-[16px] font-extrabold shrink-0 ${isMe ? "text-white" : "text-slate-900"}`}>{entry.avg.toFixed(1)}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {trophyTab === "awards" && <BadgeShelfTab badges={myBadges} />}
+              </div>
             </div>
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3">
-              <h2 className="text-[17px] font-extrabold text-slate-900">Score & Awards</h2>
-              <button onClick={() => setShowTrophySheet(false)} className="p-1.5 rounded-full hover:bg-slate-100 transition-colors">
-                <X className="w-4 h-4 text-slate-500" />
-              </button>
-            </div>
-            {/* Sub-tabs */}
-            <div className="flex gap-2 px-5 pb-3">
-              {(["score", "awards"] as const).filter(t => t === "awards" || showRyde).map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTrophyTab(t)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-colors"
-                  style={trophyTab === t ? { backgroundColor: "var(--brand)", color: "#fff" } : { backgroundColor: "#F1F5F9", color: "#64748B" }}
-                >
-                  {t === "score" ? <Star className="w-3.5 h-3.5" /> : <Trophy className="w-3.5 h-3.5" />}
-                  {t === "score" ? "Ryde Score" : "Awards"}
-                </button>
-              ))}
-            </div>
-            {/* Content */}
-            <div className="overflow-y-auto max-h-[70vh] px-0 pb-4">
-              {trophyTab === "score" && showRyde && (
-                <ScorePanel
-                  rydeAvg={rydeAvg}
-                  reviewCount={reviews.length}
-                  reviews={scorePanelReviews}
-                  leaderboard={scorePanelLeaderboard}
-                  currentDriverId={driverId}
-                  serviceRows={dswRows}
-                  myDswHistory={myDswHistory}
-                  showDsw={showDsw}
-                  accent={accentColor}
-                  myBadges={myBadges}
-                  badgeCounts={badgeCounts}
-                  driverAvatarMap={driverAvatarMap}
-                  newBadgeIds={claimedBadgeIds}
-                  weeklyIlsRank={weeklyIlsRank}
-                  weeklyRydeRank={weeklyRydeRank}
-                  totalDriversThisWeek={totalDriversThisWeek}
-                />
-              )}
-              {trophyTab === "awards" && <BadgeShelfTab badges={myBadges} />}
-            </div>
-          </div>
-        </>
-      )}
+          </>
+        );
+      })()}
 
       {/* ── Gate Codes bottom sheet ─────────────────────────────── */}
       {showCodesSheet && (
