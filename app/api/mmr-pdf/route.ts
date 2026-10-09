@@ -50,6 +50,7 @@ function generateVehiclePage(p: {
 }): string {
   const topYes = p.hasRows ? "&#10003;" : "";
   const topNo  = p.hasRows ? "" : "&#10003;";
+  const botNo  = p.hasRows ? "" : "&#10003;";
   return `
 <div style="page-break-after:always;font-family:Arial,Helvetica,sans-serif;font-size:10pt;padding:0.55in 0.6in 0.4in 0.6in;color:#000;box-sizing:border-box;width:8.5in;min-height:11in;">
   <div style="border:2px solid #000;text-align:center;padding:6px 12px;margin-bottom:6px;">
@@ -80,7 +81,7 @@ function generateVehiclePage(p: {
     <div style="flex:1;padding-top:1px;line-height:1.3;">If &ldquo;no&rdquo; maintenance was performed, was the unit out of service and unable to provide service (i.e., awaiting repair, on litigation hold, etc.)?</div>
     <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;padding-left:12px;">
       <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;"></span><span>Yes</span>
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">&#10003;</span><span>No</span>
+      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${botNo}</span><span>No</span>
     </div>
   </div>
   <div style="margin:7px 0;">

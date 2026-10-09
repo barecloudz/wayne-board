@@ -333,6 +333,12 @@ export default function MmrClient({
                     ? `${v.maintenanceCount} maintenance entr${v.maintenanceCount === 1 ? "y" : "ies"} this month`
                     : "No maintenance records this month"}
                 </p>
+                <div className="flex items-center gap-1.5">
+                  <Gauge className={`w-3.5 h-3.5 shrink-0 ${v.mileage ? "text-slate-400" : "text-amber-400"}`} />
+                  <span className={`text-[12px] font-semibold ${v.mileage ? "text-slate-600" : "text-amber-500"}`}>
+                    {v.mileage ? `${v.mileage.toLocaleString()} mi` : "No mileage on file"}
+                  </span>
+                </div>
                 {isGenerated && (
                   <p className="text-[11px] text-slate-400">Generated {formatTimestamp(v.lastGenerated)}</p>
                 )}
