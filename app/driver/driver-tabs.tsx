@@ -543,19 +543,40 @@ export default function DriverTabs({
       </div>
 
       {/* ── Trophy FAB ────────────────────────────────────── */}
+      <style>{`
+        @keyframes trophy-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes trophy-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.7), 0 4px 20px rgba(0,0,0,0.25); }
+          50%       { box-shadow: 0 0 0 9px rgba(250,204,21,0), 0 4px 20px rgba(0,0,0,0.25); }
+        }
+        .trophy-ring { animation: trophy-spin 3s linear infinite; }
+        .trophy-fab  { animation: trophy-pulse 2s ease-in-out infinite; }
+      `}</style>
       <button
         onClick={() => setShowTrophySheet(true)}
-        className="fixed z-40 flex items-center justify-center rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.18)] active:scale-95 transition-transform"
+        className="trophy-fab fixed z-40 flex items-center justify-center rounded-full active:scale-95 transition-transform"
         style={{
           bottom: "calc(env(safe-area-inset-bottom) + 72px)",
           right: "20px",
-          width: 52,
-          height: 52,
-          backgroundColor: "var(--brand)",
+          width: 56,
+          height: 56,
+          background: "linear-gradient(135deg, #92400e 0%, #d97706 40%, #fbbf24 70%, #fef08a 100%)",
         }}
         aria-label="Score & Awards"
       >
-        <Trophy className="w-5 h-5 text-white" />
+        {/* Spinning sparkle ring */}
+        <svg className="trophy-ring absolute inset-0 w-full h-full" viewBox="0 0 56 56" fill="none" style={{ pointerEvents: "none" }}>
+          {[0,45,90,135,180,225,270,315].map((deg, i) => {
+            const rad = (deg * Math.PI) / 180;
+            const cx = 28 + 24 * Math.cos(rad);
+            const cy = 28 + 24 * Math.sin(rad);
+            return <circle key={i} cx={cx} cy={cy} r={i % 2 === 0 ? 2.5 : 1.5} fill={i % 2 === 0 ? "#fef08a" : "#fbbf24"} opacity={i % 2 === 0 ? 0.95 : 0.6} />;
+          })}
+        </svg>
+        <Trophy className="w-6 h-6 relative z-10" style={{ color: "#fef9c3", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }} />
       </button>
 
       {/* ── Trophy bottom sheet ───────────────────────────── */}
