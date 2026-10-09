@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Loader2, FileDown, CheckCircle2, Clock, AlertTriangle, X } from "lucide-react";
+import { Loader2, FileDown, CheckCircle2, Clock, AlertTriangle, X, Gauge } from "lucide-react";
 import type { VehicleMmrRow } from "@/lib/actions/mmr";
 
 function getPreviousMonth(): string {
@@ -32,6 +32,28 @@ export default function MmrClient({
   const [generatingSingle, setGeneratingSingle] = useState<number | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const maxMonth = getPreviousMonth();
+
+  // Mileage pull state
+  type MileageResult = {
+    vehicleName: string;
+    unitNumber: string | null;
+    startMileage: number | null;
+    endMileage: number | null;
+    status: "matched" | "unmatched";
+    isAnomaly: boolean;
+    anomalyReason: string | null;
+  };
+  const getFirstOfPrevMonth = () => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return d.toISOString().slice(0, 10);
+  };
+  const [mileageDate,    setMileageDate]    = useState(getFirstOfPrevMonth);
+  const [mileagePulling, setMileagePulling] = useState(false);
+  const [mileageResults, setMileageResults] = useState<MileageResult[] | null>(null);
+  const [mileageError,   setMileageError]   = useState<string | null>(null);
+  const [mileageMessage, setMileageMessage] = useState<string | null>(null);
 
   const loadMonth = useCallback(async (m: string) => {
     setLoadingMonth(true);
@@ -67,6 +89,34 @@ export default function MmrClient({
     a.click();
     URL.revokeObjectURL(url);
     await loadMonth(month);
+  }
+
+  async function handlePullMileage() {
+    setMileagePulling(true);
+    setMileageResults(null);
+    setMileageError(null);
+    setMileageMessage(null);
+    try {
+      const res = await fetch("/api/auto-gc/pull-mileage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: mileageDate }),
+      });
+      const r = await res.json();
+      if (r.success) {
+        setMileageResults(r.results ?? []);
+        if (r.results?.length > 0) {
+          // Reload vehicles to reflect updated mileage
+          await loadMonth(month);
+        }
+      } else {
+        setMileageError(r.message ?? r.error ?? "Pull failed");
+      }
+    } catch (e: any) {
+      setMileageError(e?.message ?? "Unknown error");
+    } finally {
+      setMileagePulling(false);
+    }
   }
 
   async function handleGenerateAll() {
@@ -140,6 +190,119 @@ export default function MmrClient({
           </button>
         </div>
       )}
+
+      {/* ── Pull Mileage from GC ── */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] p-5 mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Gauge className="w-4 h-4 text-slate-400" />
+          <h2 className="text-[14px] font-extrabold text-slate-900">Pull Mileage from GC</h2>
+        </div>
+        <p className="text-[12px] text-slate-400 mb-4">
+          Fetch vehicle odometer readings from GroundCloud for a specific date and update vehicle mileage records.
+        </p>
+        <div className="flex items-end gap-3 flex-wrap">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</label>
+            <input
+              type="date"
+              value={mileageDate}
+              onChange={e => setMileageDate(e.target.value)}
+              disabled={mileagePulling}
+              className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white"
+            />
+          </div>
+          <button
+            onClick={handlePullMileage}
+            disabled={mileagePulling || !mileageDate}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold
+              bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+          >
+            {mileagePulling
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Pulling…</>
+              : <><Gauge className="w-4 h-4" /> Pull Mileage</>
+            }
+          </button>
+        </div>
+
+        {mileageError && (
+          <div className="mt-4 flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-[13px] text-red-700">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{mileageError}</span>
+            <button onClick={() => setMileageError(null)} className="ml-auto p-1 hover:bg-red-100 rounded">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {mileageMessage && (
+          <p className="mt-3 text-[12px] text-slate-500">{mileageMessage}</p>
+        )}
+
+        {mileageResults && mileageResults.length > 0 && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  {["Unit #", "Start Miles", "End Miles", "Status", "Anomaly"].map(h => (
+                    <th key={h} className="pb-2.5 pr-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {mileageResults.map((r, i) => (
+                  <tr
+                    key={i}
+                    className={`border-b border-slate-50 transition-colors ${
+                      r.isAnomaly ? "bg-amber-50/60 hover:bg-amber-50" : "hover:bg-slate-50/50"
+                    }`}
+                  >
+                    <td className="py-2.5 pr-4">
+                      <span className="text-[13px] font-semibold text-slate-800">
+                        {r.unitNumber ?? r.vehicleName}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      <span className="text-[13px] text-slate-600 font-mono">
+                        {r.startMileage != null ? r.startMileage.toLocaleString() : "-"}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      <span className="text-[13px] text-slate-600 font-mono">
+                        {r.endMileage != null ? r.endMileage.toLocaleString() : "-"}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      {r.status === "matched"
+                        ? <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Matched</span>
+                        : <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-50 text-slate-500 border border-slate-200">Unmatched</span>
+                      }
+                    </td>
+                    <td className="py-2.5">
+                      {r.isAnomaly
+                        ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700">
+                            <AlertTriangle className="w-3.5 h-3.5" /> {r.anomalyReason}
+                          </span>
+                        : <span className="text-[12px] text-slate-300">—</span>
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-2 text-[12px] text-slate-400">
+              {mileageResults.filter(r => r.status === "matched").length} matched ·{" "}
+              {mileageResults.filter(r => r.isAnomaly).length} anomalies detected
+              {mileageResults.some(r => r.isAnomaly) &&
+                " · Anomalous vehicles were flagged but vehicle mileage was not updated"
+              }
+            </p>
+          </div>
+        )}
+
+        {mileageResults && mileageResults.length === 0 && (
+          <p className="mt-4 text-[13px] text-slate-400">No vehicle mileage records returned for this date.</p>
+        )}
+      </div>
 
       {loadingMonth ? (
         <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>

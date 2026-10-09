@@ -691,6 +691,24 @@ export const notifications = pgTable("notifications", {
   index("notifications_org_created_idx").on(t.organizationId, t.createdAt),
 ]);
 
+// ── GC Vehicle Mileage ────────────────────────────────────────────────────────
+export const gcVehicleMileage = pgTable("gc_vehicle_mileage", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  date:           date("date").notNull(),
+  gcRouteDayId:   integer("gc_route_day_id"),
+  vehicleName:    text("vehicle_name"),               // raw name from GC
+  vehicleId:      integer("vehicle_id").references(() => vehicles.id, { onDelete: "set null" }),
+  unitNumber:     text("unit_number"),                // matched unit number
+  startMileage:   integer("start_mileage"),
+  endMileage:     integer("end_mileage"),
+  isAnomaly:      boolean("is_anomaly").notNull().default(false),
+  anomalyReason:  text("anomaly_reason"),
+  pulledAt:       timestamp("pulled_at").defaultNow(),
+}, (t) => [
+  uniqueIndex("gc_vehicle_mileage_org_date_vehicle_unique").on(t.organizationId, t.date, t.vehicleName),
+]);
+
 // ── Notification Preferences (per-org, per-type) ──────────────────────────────
 export const notificationPreferences = pgTable("notification_preferences", {
   id:             serial("id").primaryKey(),

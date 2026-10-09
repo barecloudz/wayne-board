@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   RefreshCw, CheckCircle, XCircle, Eye, EyeOff,
-  Clock, KeyRound, Activity, Loader2, TrendingUp,
+  Clock, KeyRound, Activity, Loader2, TrendingUp, Gauge, AlertTriangle,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -95,6 +95,24 @@ export default function AutoGcClient() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedSaved,  setSchedSaved]  = useState(false);
 
+  // Vehicle Mileage Sync
+  const [mileageSchedule,    setMileageSchedule]    = useState<"first" | "last" | "manual">("manual");
+  const [mileageLastPulled,  setMileageLastPulled]  = useState<string | null>(null);
+  const [mileagePulling,     setMileagePulling]     = useState(false);
+  const [mileageSchedSaving, setMileageSchedSaving] = useState(false);
+  const [mileageSchedSaved,  setMileageSchedSaved]  = useState(false);
+  type MileageResult = {
+    vehicleName: string;
+    unitNumber: string | null;
+    startMileage: number | null;
+    endMileage: number | null;
+    status: "matched" | "unmatched";
+    isAnomaly: boolean;
+    anomalyReason: string | null;
+  };
+  const [mileageResults, setMileageResults] = useState<MileageResult[] | null>(null);
+  const [mileageError,   setMileageError]   = useState<string | null>(null);
+
   async function loadStatus() {
     const res = await fetch("/api/auto-gc/status");
     if (res.ok) {
@@ -103,6 +121,22 @@ export default function AutoGcClient() {
       setAutoEnabled(d.autoEnabled);
     }
     setLoading(false);
+  }
+
+  async function loadMileageSettings() {
+    const [schedRes, lastRes] = await Promise.all([
+      fetch("/api/settings?key=gc_mileage_pull_schedule"),
+      fetch("/api/settings?key=gc_mileage_last_pulled"),
+    ]);
+    if (schedRes.ok) {
+      const d = await schedRes.json();
+      const val = d.value ?? "manual";
+      if (val === "first" || val === "last" || val === "manual") setMileageSchedule(val);
+    }
+    if (lastRes.ok) {
+      const d = await lastRes.json();
+      setMileageLastPulled(d.value ?? null);
+    }
   }
 
   async function loadCreds() {
@@ -116,6 +150,7 @@ export default function AutoGcClient() {
   useEffect(() => {
     loadStatus();
     loadCreds();
+    loadMileageSettings();
     fetch("/api/drivers/active").then(r => r.ok ? r.json() : []).then(d => {
       if (Array.isArray(d)) setWbDrivers(d);
     }).catch(() => {});
@@ -206,6 +241,44 @@ export default function AutoGcClient() {
     setBackfillDone({ totalRoutes, totalMatched, errors, days: dates.length });
     setBackfilling(false);
     await loadStatus();
+  }
+
+  async function saveMileageSchedule(val: "first" | "last" | "manual") {
+    setMileageSchedSaving(true);
+    await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "gc_mileage_pull_schedule", value: val }),
+    });
+    setMileageSchedule(val);
+    setMileageSchedSaving(false);
+    setMileageSchedSaved(true);
+    setTimeout(() => setMileageSchedSaved(false), 3000);
+  }
+
+  async function handlePullMileageNow() {
+    setMileagePulling(true);
+    setMileageResults(null);
+    setMileageError(null);
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      const res = await fetch("/api/auto-gc/pull-mileage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: today }),
+      });
+      const r = await res.json();
+      if (r.success) {
+        setMileageResults(r.results ?? []);
+        await loadMileageSettings();
+      } else {
+        setMileageError(r.message ?? r.error ?? "Pull failed");
+      }
+    } catch (e: any) {
+      setMileageError(e?.message ?? "Unknown error");
+    } finally {
+      setMileagePulling(false);
+    }
   }
 
   async function saveSchedule(newValue: boolean) {
@@ -593,6 +666,139 @@ export default function AutoGcClient() {
                 </p>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* ── Vehicle Mileage Sync ── */}
+        <div className={CARD}>
+          <div className="flex items-center gap-2 mb-1">
+            <Gauge className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[15px] font-extrabold text-slate-900">Vehicle Mileage Sync</h2>
+          </div>
+          <p className="text-[12px] text-slate-400 mb-5">
+            Pull odometer readings from GroundCloud route-days and update vehicle records.
+          </p>
+
+          {/* Schedule selector */}
+          <div className="flex flex-col gap-3 mb-5">
+            <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Auto-Pull Schedule
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {(["first", "last", "manual"] as const).map((opt) => {
+                const labels = { first: "First day of month", last: "Last day of month", manual: "Manual only" };
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => saveMileageSchedule(opt)}
+                    disabled={mileageSchedSaving}
+                    className={`px-4 py-2 rounded-lg text-[12px] font-semibold border transition-all ${
+                      mileageSchedule === opt
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                    }`}
+                  >
+                    {labels[opt]}
+                  </button>
+                );
+              })}
+              {mileageSchedSaved && (
+                <span className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600 ml-1">
+                  <CheckCircle className="w-3.5 h-3.5" /> Saved
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Last pulled timestamp */}
+          {mileageLastPulled && (
+            <p className="text-[12px] text-slate-400 mb-4">
+              Last pulled:{" "}
+              <span className="font-semibold text-slate-600">
+                {new Date(mileageLastPulled).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}{" "}
+                at {new Date(mileageLastPulled).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+              </span>
+            </p>
+          )}
+
+          {/* Pull Now button */}
+          <button
+            onClick={handlePullMileageNow}
+            disabled={mileagePulling}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-semibold
+              bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+          >
+            {mileagePulling
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Pulling…</>
+              : <><Gauge className="w-4 h-4" /> Pull Mileage Now</>
+            }
+          </button>
+
+          {/* Error */}
+          {mileageError && (
+            <div className="mt-4 flex items-start gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-[13px] text-red-700">
+              <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              {mileageError}
+            </div>
+          )}
+
+          {/* Results table */}
+          {mileageResults && mileageResults.length > 0 && (
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    {["Unit #", "Start Miles", "End Miles", "Status", "Anomaly"].map(h => (
+                      <th key={h} className="pb-3 pr-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mileageResults.map((r, i) => (
+                    <tr
+                      key={i}
+                      className={`border-b border-slate-50 transition-colors ${
+                        r.isAnomaly ? "bg-amber-50/60 hover:bg-amber-50" : "hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <td className="py-2.5 pr-4">
+                        <span className="text-[13px] font-semibold text-slate-800">
+                          {r.unitNumber ?? r.vehicleName}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <span className="text-[13px] text-slate-600 font-mono">
+                          {r.startMileage != null ? r.startMileage.toLocaleString() : "-"}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <span className="text-[13px] text-slate-600 font-mono">
+                          {r.endMileage != null ? r.endMileage.toLocaleString() : "-"}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        {r.status === "matched"
+                          ? <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Matched</span>
+                          : <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-50 text-slate-500 border border-slate-200">Unmatched</span>
+                        }
+                      </td>
+                      <td className="py-2.5">
+                        {r.isAnomaly
+                          ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700">
+                              <AlertTriangle className="w-3.5 h-3.5" /> {r.anomalyReason}
+                            </span>
+                          : <span className="text-[12px] text-slate-300">—</span>
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {mileageResults && mileageResults.length === 0 && (
+            <p className="mt-4 text-[13px] text-slate-400">No vehicle mileage records returned for this date.</p>
           )}
         </div>
 
