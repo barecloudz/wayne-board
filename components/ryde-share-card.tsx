@@ -13,6 +13,7 @@ export type ReviewSnippet = {
   stars: number;
   content: string;
   initials?: string | null;
+  date?: string | null;
 };
 
 export type RydeShareCardProps = {
@@ -126,14 +127,17 @@ const RydeShareCard = React.forwardRef<HTMLDivElement, RydeShareCardProps>(
             {recentReviews.slice(0, 3).map((rv, i) => (
               <div key={i}>
                 {i > 0 && <div style={{ height: 1, background: "#1e293b", margin: "10px 0" }} />}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <div style={{ display: "flex", gap: 2 }}>
-                    {[1,2,3,4,5].map(s => (
-                      <span key={s} style={{ fontSize: 11, color: s <= rv.stars ? "#facc15" : "#1e293b" }}>★</span>
-                    ))}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {[1,2,3,4,5].map(s => (
+                        <span key={s} style={{ fontSize: 11, color: s <= rv.stars ? "#facc15" : "#1e293b" }}>★</span>
+                      ))}
+                    </div>
+                    {rv.initials && <span style={{ fontSize: 9, color: "#60a5fa", fontWeight: 700 }}>{rv.initials}</span>}
+                    <span style={{ fontSize: 8, fontWeight: 800, color: rv.type === "positive" ? "#4ade80" : "#f87171", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{rv.type}</span>
                   </div>
-                  {rv.initials && <span style={{ fontSize: 9, color: "#60a5fa", fontWeight: 700 }}>{rv.initials}</span>}
-                  <span style={{ fontSize: 8, fontWeight: 800, color: rv.type === "positive" ? "#4ade80" : "#f87171", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{rv.type}</span>
+                  {rv.date && <span style={{ fontSize: 8, color: "#475569", fontWeight: 600 }}>{rv.date}</span>}
                 </div>
                 <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.5, fontStyle: "italic" as const }}>
                   "{rv.content.length > 90 ? rv.content.slice(0, 87) + "…" : rv.content}"

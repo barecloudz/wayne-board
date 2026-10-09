@@ -49,6 +49,20 @@ function currentMonthStr(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function weekToReadable(week: string): string {
+  // "2026-W41" → "Oct 6, 2026" (Monday of that ISO week)
+  const [yearStr, wPart] = week.split("-W");
+  const year = parseInt(yearStr, 10);
+  const wn   = parseInt(wPart, 10);
+  if (isNaN(year) || isNaN(wn)) return week;
+  // Jan 4 is always in week 1 of the ISO year
+  const jan4 = new Date(year, 0, 4);
+  const jan4Dow = jan4.getDay() || 7; // Mon=1..Sun=7
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - (jan4Dow - 1) + (wn - 1) * 7);
+  return monday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function weekToMonth(week: string): string {
   // "2026-W28" → "2026-07"
   const [yearStr, wPart] = week.split("-W");
@@ -146,6 +160,7 @@ export default function RydeShareModal({ drivers, reviews, onClose, initialDrive
       stars: r.stars ?? 0,
       content: r.content,
       initials: (r as any).customerInitials ?? null,
+      date: r.week ? weekToReadable(r.week) : null,
     }));
 
   const driverName   = drivers.find(d => d.driverId === selectedDriver)?.name ?? selectedDriver;
