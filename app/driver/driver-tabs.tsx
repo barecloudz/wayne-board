@@ -26,6 +26,7 @@ type DriverTab = "schedule" | "maintenance" | "me" | "more";
 type Review  = {
   id: number; type: string; stars: number | null;
   category: string | null; content: string; week: string | null;
+  reviewDate: string | null;
   improvement: string | null; createdAt: Date | null;
 };
 type Milestone    = { id: number; name: string; description: string | null; daysRequired: number; type: string; bonusAmount: number | null; icon: string };
@@ -226,9 +227,9 @@ export default function DriverTabs({
     id: r.id,
     rating: r.stars ?? 0,
     comment: r.content || null,
-    date: r.createdAt
-      ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : r.week ?? "",
+    date: r.reviewDate
+      ? new Date(r.reviewDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : r.week ? r.week : "",
     riderName: null as string | null,
     type: r.type as "positive" | "negative" | "neutral",
     category: r.category,

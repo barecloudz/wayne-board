@@ -153,6 +153,7 @@ export const rydeReviews = pgTable("ryde_reviews", {
   category:         text("category"),
   content:          text("content").notNull(),
   week:             text("week"),
+  reviewDate:       text("review_date"),              // "YYYY-MM-DD" — actual delivery/review date from xlsx
   improvement:      text("improvement"),
   atFault:          boolean("at_fault").notNull().default(false),
   customerInitials: text("customer_initials"),

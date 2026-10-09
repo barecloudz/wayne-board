@@ -138,12 +138,17 @@ export async function uploadRydeFile(
 
     // Parse delivery date
     let week: string | null = null;
+    let reviewDate: string | null = null;
     if (delvDateRaw != null && typeof delvDateRaw === "number") {
       const d = serialToDate(delvDateRaw);
       week = toISOWeek(d);
+      reviewDate = d.toISOString().slice(0, 10);
     } else if (delvDateRaw != null && typeof delvDateRaw === "string" && delvDateRaw.trim()) {
       const d = new Date(delvDateRaw);
-      if (!isNaN(d.getTime())) week = toISOWeek(d);
+      if (!isNaN(d.getTime())) {
+        week = toISOWeek(d);
+        reviewDate = d.toISOString().slice(0, 10);
+      }
     }
 
     // Extract FedEx ID from Resource field
@@ -184,6 +189,7 @@ export async function uploadRydeFile(
         category,
         content,
         week,
+        reviewDate,
         improvement: null,
         atFault,
         customerInitials: null,

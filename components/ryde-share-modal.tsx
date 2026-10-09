@@ -7,6 +7,7 @@ import RydeShareCard, { type NegCategory, type ReviewSnippet } from "./ryde-shar
 type Review = {
   id: number; driverId: string; type: string; stars: number | null;
   category: string | null; content: string; week: string | null;
+  reviewDate: string | null;
   createdAt: Date | null;
 };
 type Driver = { id: number; driverId: string; name: string };
@@ -160,7 +161,9 @@ export default function RydeShareModal({ drivers, reviews, onClose, initialDrive
       stars: r.stars ?? 0,
       content: r.content,
       initials: (r as any).customerInitials ?? null,
-      date: r.week ? weekToReadable(r.week) : null,
+      date: r.reviewDate
+        ? new Date(r.reviewDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : r.week ? weekToReadable(r.week) : null,
     }));
 
   const driverName   = drivers.find(d => d.driverId === selectedDriver)?.name ?? selectedDriver;

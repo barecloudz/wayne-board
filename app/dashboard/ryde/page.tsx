@@ -19,6 +19,7 @@ type Driver = { id: number; driverId: string; name: string };
 type Review = {
   id: number; driverId: string; type: string; stars: number | null;
   category: string | null; content: string; week: string | null;
+  reviewDate: string | null;
   improvement: string | null; atFault: boolean;
   customerInitials: string | null; createdAt: Date | null;
 };
