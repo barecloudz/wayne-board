@@ -1,8 +1,8 @@
 ﻿"use server";
 
 import { db } from "@/lib/db";
-import { drivers, rydeScores, rydeReviews, driverMilestoneClaims, driverLocations } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { drivers, rydeScores, rydeReviews, driverMilestoneClaims, driverLocations, driverNotes } from "@/lib/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { getSession, createSession } from "@/lib/session";
@@ -291,4 +291,28 @@ export async function updateMyEmail(newEmail: string) {
   }
   await db.update(drivers).set({ email: trimmed || null }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, session.driverId)));
   return { ok: true };
+}
+
+// ── Driver Notes ──────────────────────────────────────────────────────────────
+
+export async function getDriverNotes(driverDbId: number) {
+  const orgId = await requireOrg();
+  return db
+    .select()
+    .from(driverNotes)
+    .where(and(eq(driverNotes.driverDbId, driverDbId), eq(driverNotes.organizationId, orgId)))
+    .orderBy(desc(driverNotes.createdAt));
+}
+
+export async function addDriverNote(driverDbId: number, content: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  const authorName = session.name ?? session.driverId;
+  await db.insert(driverNotes).values({ organizationId: orgId, driverDbId, content: content.trim(), authorName });
+}
+
+export async function deleteDriverNote(noteId: number) {
+  const orgId = await requireOrg();
+  await db.delete(driverNotes).where(and(eq(driverNotes.id, noteId), eq(driverNotes.organizationId, orgId)));
 }

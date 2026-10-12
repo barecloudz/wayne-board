@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/app-shell";
 import {
   UserPlus, Search, MoreVertical, CheckCircle2,
-  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User, Key,
+  XCircle, Eye, EyeOff, Copy, Check, Loader2, Trash2, ShieldCheck, Clock, ChevronRight, MapPin, User, Key, StickyNote, Send,
 } from "lucide-react";
 import {
   getDrivers, createDriver, setDriverActive, setDriverRole, resetDriverPassword, deleteDriver, terminateDriver, purgeDriverRydeData, updateDriverUsername, updateDriverFedExId, updateDriverEmail,
+  getDriverNotes, addDriverNote, deleteDriverNote,
 } from "@/lib/actions/drivers";
 import { getLocationsForOrg, getDriverLocations, setDriverLocations, getAssignedDriverIds, getDriverLocationMap } from "@/lib/actions/driver-locations";
 import { useLocationContext } from "@/components/location-context";
@@ -102,6 +103,14 @@ export default function DriversPage() {
   const [showTerminated, setShowTerminated] = useState(false);
   const [profileTarget, setProfileTarget] = useState<Driver | null>(null);
   const [removingAvatar, setRemovingAvatar] = useState(false);
+
+  // Notes tab state
+  type NoteRow = { id: number; content: string; authorName: string; createdAt: Date };
+  const [profileTab, setProfileTab] = useState<"profile" | "notes">("profile");
+  const [notes, setNotes] = useState<NoteRow[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
 
   async function refresh() {
     const [driverData, assignedIds, locMap] = await Promise.all([getDrivers(), getAssignedDriverIds(), getDriverLocationMap()]);
@@ -346,8 +355,30 @@ export default function DriversPage() {
 
   function openProfileModal(driver: Driver) {
     setProfileTarget(driver);
+    setProfileTab("profile");
+    setNewNote("");
     setMenuOpen(null);
     setMenuPos(null);
+    setNotesLoading(true);
+    getDriverNotes(driver.id).then(rows => {
+      setNotes(rows as NoteRow[]);
+      setNotesLoading(false);
+    }).catch(() => setNotesLoading(false));
+  }
+
+  async function handleAddNote() {
+    if (!profileTarget || !newNote.trim()) return;
+    setNoteSubmitting(true);
+    await addDriverNote(profileTarget.id, newNote.trim());
+    const rows = await getDriverNotes(profileTarget.id);
+    setNotes(rows as NoteRow[]);
+    setNewNote("");
+    setNoteSubmitting(false);
+  }
+
+  async function handleDeleteNote(noteId: number) {
+    await deleteDriverNote(noteId);
+    setNotes(prev => prev.filter(n => n.id !== noteId));
   }
 
   async function handleRemoveAvatar() {
@@ -1247,65 +1278,138 @@ export default function DriversPage() {
       {/* Driver Profile Modal */}
       {profileTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm">
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.25)] w-full max-w-sm flex flex-col" style={{ maxHeight: "88vh" }}>
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex-shrink-0">
               <h2 className="text-[16px] font-extrabold text-slate-900">Driver Profile</h2>
               <p className="text-[12px] text-slate-400 mt-0.5">
                 {profileTarget.name} · {profileTarget.driverId}
               </p>
+              {/* Tab switcher */}
+              <div className="flex gap-1 mt-4">
+                {([
+                  { key: "profile", label: "Profile", Icon: User },
+                  { key: "notes",   label: `Notes${notes.length > 0 ? ` (${notes.length})` : ""}`, Icon: StickyNote },
+                ] as const).map(({ key, label, Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setProfileTab(key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
+                      profileTab === key ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="px-6 py-5">
-              {/* Avatar Display */}
-              <div className="mb-5 flex justify-center">
-                <div className="w-24 h-24 rounded-2xl bg-amber-100 border border-slate-200 overflow-hidden flex items-center justify-center">
-                  {profileTarget.avatarUrl ? (
-                    <img src={profileTarget.avatarUrl} alt={profileTarget.name} className="w-full h-full object-cover" />
+
+            <div className="overflow-y-auto flex-1 px-6 py-5">
+              {profileTab === "profile" && (
+                <>
+                  {/* Avatar Display */}
+                  <div className="mb-5 flex justify-center">
+                    <div className="w-24 h-24 rounded-2xl bg-amber-100 border border-slate-200 overflow-hidden flex items-center justify-center">
+                      {profileTarget.avatarUrl ? (
+                        <img src={profileTarget.avatarUrl} alt={profileTarget.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-10 h-10 text-amber-400" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-3 mb-5">
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Name</p>
+                      <p className="text-[13px] font-semibold text-slate-800">{profileTarget.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Driver ID</p>
+                      <p className="text-[13px] font-mono text-slate-800">{profileTarget.driverId}</p>
+                    </div>
+                    {profileTarget.username && (
+                      <div>
+                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Username</p>
+                        <p className="text-[13px] text-slate-800">@{profileTarget.username}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Role</p>
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border inline-block ${ROLE_COLORS[profileTarget.role] ?? ROLE_COLORS.driver}`}>
+                        {ROLE_LABELS[profileTarget.role] ?? profileTarget.role}
+                      </span>
+                    </div>
+                  </div>
+                  {profileTarget.avatarUrl && (
+                    <button
+                      onClick={handleRemoveAvatar}
+                      disabled={removingAvatar}
+                      className="w-full text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 px-3 py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      {removingAvatar && <Loader2 className="w-3 h-3 animate-spin" />}
+                      Remove Image
+                    </button>
+                  )}
+                </>
+              )}
+
+              {profileTab === "notes" && (
+                <div className="flex flex-col gap-4">
+                  {/* Add note */}
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      rows={3}
+                      placeholder="Add a note about this driver…"
+                      value={newNote}
+                      onChange={e => setNewNote(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-400 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition resize-none"
+                    />
+                    <button
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim() || noteSubmitting}
+                      className="self-end flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                    >
+                      {noteSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      Add Note
+                    </button>
+                  </div>
+
+                  {/* Notes list */}
+                  {notesLoading ? (
+                    <div className="flex items-center gap-2 text-slate-400 py-4 justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-[13px]">Loading…</span>
+                    </div>
+                  ) : notes.length === 0 ? (
+                    <p className="text-[13px] text-slate-400 text-center py-6">No notes yet.</p>
                   ) : (
-                    <User className="w-10 h-10 text-amber-400" />
+                    <div className="flex flex-col gap-3">
+                      {notes.map(note => (
+                        <div key={note.id} className="bg-slate-50 rounded-xl border border-slate-200/80 px-4 py-3">
+                          <p className="text-[13px] text-slate-800 whitespace-pre-wrap leading-relaxed">{note.content}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-[11px] text-slate-400">
+                              {note.authorName} · {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteNote(note.id)}
+                              className="p-1 rounded hover:bg-red-50 text-slate-300 hover:text-red-400 transition-colors"
+                              title="Delete note"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-
-              {/* Profile Info */}
-              <div className="space-y-3 mb-5">
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Name</p>
-                  <p className="text-[13px] font-semibold text-slate-800">{profileTarget.name}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Driver ID</p>
-                  <p className="text-[13px] font-mono text-slate-800">{profileTarget.driverId}</p>
-                </div>
-                {profileTarget.username && (
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Username</p>
-                    <p className="text-[13px] text-slate-800">@{profileTarget.username}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Role</p>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border inline-block ${ROLE_COLORS[profileTarget.role] ?? ROLE_COLORS.driver}`}>
-                    {ROLE_LABELS[profileTarget.role] ?? profileTarget.role}
-                  </span>
-                </div>
-              </div>
-
-              {/* Remove Image Button */}
-              {profileTarget.avatarUrl && (
-                <button
-                  onClick={handleRemoveAvatar}
-                  disabled={removingAvatar}
-                  className="w-full text-xs font-semibold text-red-500 hover:text-red-700 border border-red-200 px-3 py-2.5 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5"
-                >
-                  {removingAvatar && <Loader2 className="w-3 h-3 animate-spin" />}
-                  Remove Image
-                </button>
               )}
             </div>
-            <div className="px-6 pb-6 flex gap-2">
+
+            <div className="px-6 pb-6 flex-shrink-0">
               <button
                 onClick={() => setProfileTarget(null)}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
+                className="w-full py-2.5 rounded-lg text-[13px] font-semibold border border-slate-200
                   text-slate-500 hover:bg-slate-50 transition-colors"
               >
                 Close

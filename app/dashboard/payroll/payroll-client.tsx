@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Printer, Settings, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer, Settings, Upload, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import type { PayrollWeekData, PayrollDriverRow, AttendanceStatus } from "@/lib/actions/attendance";
 import type { DswDayRow } from "@/lib/actions/dsw-data";
 import PayWeekModal from "./pay-week-modal";
@@ -128,6 +129,41 @@ export default function PayrollClient({
     router.push(`/dashboard/payroll?offset=${newOffset}`);
   }
 
+  function exportXlsx() {
+    const STATUS_LABELS: Record<string, string> = {
+      work: "Work", half_day: "Half Day", cut: "Cut",
+      call_out: "Called Out", holiday: "Holiday", trainee: "Trainee", day_off: "",
+    };
+
+    const headers = ["Driver", "FedEx ID",
+      ...weekDates.map(d => { const dt = new Date(d + "T00:00:00"); return `${DAY_ABBREVS[dt.getDay()]} ${formatShortDate(d)}`; }),
+      "Days", "Trainee Days", "Notes",
+    ];
+
+    const allDrivers = [...weekData.drivers.filter(d => !d.isTerminated && matchesLocation(d)),
+                        ...weekData.drivers.filter(d => d.isTerminated && matchesLocation(d))];
+
+    const rows = allDrivers.map(driver => {
+      const { workDays, traineeDays } = computeRowTotals(driver.attendance);
+      const dayCells = weekDates.map(date => STATUS_LABELS[driver.attendance[date] ?? ""] ?? "");
+      const noteText = weekDates
+        .filter(date => driver.notes[date])
+        .map(date => { const dt = new Date(date + "T00:00:00"); return `${DAY_ABBREVS[dt.getDay()]}: ${driver.notes[date]}`; })
+        .join(" | ");
+      return [driver.name, driver.driverId, ...dayCells,
+        workDays % 1 === 0 ? workDays : parseFloat(workDays.toFixed(1)),
+        traineeDays || "",
+        noteText,
+      ];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws["!cols"] = [{ wch: 22 }, { wch: 10 }, ...weekDates.map(() => ({ wch: 12 })), { wch: 7 }, { wch: 7 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Payroll");
+    XLSX.writeFile(wb, `payroll_${weekData.weekStart}.xlsx`);
+  }
+
   // Filter DSW rows by selected location (null = legacy/untagged, always shown)
   const filteredDswRows = (allSelected || locations.length <= 1)
     ? dswRows
@@ -197,6 +233,13 @@ export default function PayrollClient({
               hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all"
           >
             <Settings className="w-3.5 h-3.5" /> Pay Week
+          </button>
+          <button
+            onClick={exportXlsx}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
+              bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-all"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Export XLSX
           </button>
           <button
             onClick={() => { window.location.href = `/api/payroll-pdf?offset=${currentOffset}`; }}

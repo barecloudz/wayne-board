@@ -14,6 +14,8 @@ export type DswRow = {
   allStatusCodePkgs: number | null;
   vscanPkgs: number | null;
   delStpsPlanned: number | null;
+  codeBreakdown: Record<string, number> | null;
+  pldImpactPkgs: number | null;
 };
 
 const STREAK_GOAL = 14; // days of clean ILS for Chick-fil-A

@@ -66,6 +66,8 @@ export default function ScorePanel({
   weeklyIlsRank = null,
   weeklyRydeRank = null,
   totalDriversThisWeek = 0,
+  myDswHistory = [],
+  currentDriverId = "",
 }: ScorePanelProps) {
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("All");
   const [typeFilter,   setTypeFilter]   = useState<TypeFilter>("All");
@@ -100,10 +102,141 @@ export default function ScorePanel({
       return true;
     });
 
+  // ── 2-week ILS performance data ───────────────────────────────────────────
+  const myIlsHistory = (() => {
+    // Get last 14 calendar days, deduplicated by date (keep first match per date)
+    const seen = new Set<string>();
+    const rows = myDswHistory
+      .filter(r => r.driverId === currentDriverId)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .filter(r => { if (seen.has(r.date)) return false; seen.add(r.date); return true; })
+      .slice(0, 14)
+      .reverse();
+    return rows;
+  })();
+
+  const ilsAvg14 = (() => {
+    const days = myIlsHistory.filter(r => r.ilsPct != null);
+    if (!days.length) return null;
+    return days.reduce((s, r) => s + r.ilsPct!, 0) / days.length;
+  })();
+
+  const allCodes = (() => {
+    const totals: Record<string, number> = {};
+    for (const r of myIlsHistory) {
+      if (!r.codeBreakdown) continue;
+      for (const [code, count] of Object.entries(r.codeBreakdown)) {
+        totals[code] = (totals[code] ?? 0) + count;
+      }
+    }
+    return Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  })();
+
+  const CODE_LABELS: Record<string, string> = {
+    "2": "Not Home", "3": "Business Closed", "12": "Unable to Access",
+    "27": "Future Del", "85": "Dev Scan",
+  };
+
   return (
     <div className="flex flex-col">
       <style>{css}</style>
       <div className="px-4 pb-6 flex flex-col gap-4">
+
+        {/* ── 2-Week Performance Card ── */}
+        {myIlsHistory.length > 0 && (
+          <div className="rounded-3xl overflow-hidden" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)" }}>
+            {/* Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-white/8">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">My Performance · Last 2 Weeks</p>
+              <div className="flex items-end gap-3">
+                <div>
+                  <span className={`text-[36px] font-black leading-none tabular-nums ${
+                    ilsAvg14 == null ? "text-white/30"
+                    : ilsAvg14 >= 99 ? "text-emerald-400"
+                    : ilsAvg14 >= 95 ? "text-amber-400"
+                    : "text-red-400"
+                  }`}>
+                    {ilsAvg14 != null ? `${ilsAvg14.toFixed(1)}%` : "—"}
+                  </span>
+                  <p className="text-[11px] text-white/35 mt-0.5">Avg ILS · {myIlsHistory.length} day{myIlsHistory.length !== 1 ? "s" : ""}</p>
+                </div>
+                {ilsAvg14 != null && (
+                  <span className={`mb-1 px-2.5 py-1 rounded-full text-[11px] font-black ${
+                    ilsAvg14 >= 99 ? "bg-emerald-500/20 text-emerald-400" :
+                    ilsAvg14 >= 95 ? "bg-amber-500/20 text-amber-400" :
+                    "bg-red-500/20 text-red-400"
+                  }`}>
+                    {ilsAvg14 >= 99 ? "ON TARGET" : ilsAvg14 >= 95 ? "WATCH" : "NEEDS WORK"}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Day strip */}
+            <div className="px-5 pt-4 pb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">Daily ILS%</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
+                {myIlsHistory.map(r => {
+                  const pct = r.ilsPct;
+                  const pass = pct != null && pct >= 99;
+                  const warn = pct != null && pct >= 95 && pct < 99;
+                  const fail = pct != null && pct < 95;
+                  const [, m, d] = r.date.split("-").map(Number);
+                  return (
+                    <div key={r.date} className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ minWidth: 36 }}>
+                      <span className={`text-[13px] font-black tabular-nums ${
+                        pass ? "text-emerald-400" : warn ? "text-amber-400" : fail ? "text-red-400" : "text-white/25"
+                      }`}>
+                        {pct != null ? Math.round(pct) : "—"}
+                      </span>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-bold border ${
+                        pass ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300" :
+                        warn ? "bg-amber-500/20 border-amber-500/40 text-amber-300" :
+                        fail ? "bg-red-500/20 border-red-500/40 text-red-300" :
+                        "bg-white/5 border-white/10 text-white/25"
+                      }`}>
+                        {pass ? "✓" : fail ? "✗" : pct != null ? "~" : "—"}
+                      </div>
+                      <span className="text-[9px] text-white/25">{`${m}/${d}`}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Status code breakdown */}
+            {allCodes.length > 0 && (
+              <div className="px-5 pt-3 pb-5 border-t border-white/8 mt-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-3">Status Codes Against You</p>
+                <div className="flex flex-col gap-2">
+                  {allCodes.map(([code, total]) => {
+                    const maxVal = allCodes[0][1];
+                    const pctBar = Math.max(8, (total / maxVal) * 100);
+                    return (
+                      <div key={code} className="flex items-center gap-3">
+                        <span className="text-[11px] font-black text-white/50 w-6 shrink-0 text-right">{code}</span>
+                        <div className="flex-1 h-5 bg-white/5 rounded-lg overflow-hidden">
+                          <div
+                            className="h-full rounded-lg flex items-center px-2"
+                            style={{
+                              width: `${pctBar}%`,
+                              background: total >= 5 ? "rgba(239,68,68,0.35)" : total >= 3 ? "rgba(245,158,11,0.35)" : "rgba(148,163,184,0.2)",
+                            }}
+                          >
+                            <span className={`text-[10px] font-black ${total >= 5 ? "text-red-300" : total >= 3 ? "text-amber-300" : "text-white/40"}`}>
+                              ×{total}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-white/30 w-24 shrink-0 truncate">{CODE_LABELS[code] ?? `Code ${code}`}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Badges */}
         {myBadges.length > 0 && (

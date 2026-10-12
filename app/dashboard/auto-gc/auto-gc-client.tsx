@@ -102,10 +102,10 @@ export default function AutoGcClient() {
   const [mileageSchedSaving, setMileageSchedSaving] = useState(false);
   const [mileageSchedSaved,  setMileageSchedSaved]  = useState(false);
   type MileageResult = {
-    vehicleName: string;
+    gcVehicleId: number;
+    gcName: string;
     unitNumber: string | null;
-    startMileage: number | null;
-    endMileage: number | null;
+    odometer: number | null;
     status: "matched" | "unmatched";
     isAnomaly: boolean;
     anomalyReason: string | null;
@@ -748,7 +748,7 @@ export default function AutoGcClient() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    {["Unit #", "Start Miles", "End Miles", "Status", "Anomaly"].map(h => (
+                    {["Unit #", "Odometer", "Status", "Anomaly"].map(h => (
                       <th key={h} className="pb-3 pr-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -763,17 +763,12 @@ export default function AutoGcClient() {
                     >
                       <td className="py-2.5 pr-4">
                         <span className="text-[13px] font-semibold text-slate-800">
-                          {r.unitNumber ?? r.vehicleName}
+                          {r.unitNumber ?? r.gcName}
                         </span>
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className="text-[13px] text-slate-600 font-mono">
-                          {r.startMileage != null ? r.startMileage.toLocaleString() : "-"}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-4">
-                        <span className="text-[13px] text-slate-600 font-mono">
-                          {r.endMileage != null ? r.endMileage.toLocaleString() : "-"}
+                          {r.odometer != null ? r.odometer.toLocaleString() : "-"}
                         </span>
                       </td>
                       <td className="py-2.5 pr-4">

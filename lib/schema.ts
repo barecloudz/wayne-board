@@ -696,12 +696,11 @@ export const gcVehicleMileage = pgTable("gc_vehicle_mileage", {
   id:             serial("id").primaryKey(),
   organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   date:           date("date").notNull(),
-  gcRouteDayId:   integer("gc_route_day_id"),
-  vehicleName:    text("vehicle_name"),               // raw name from GC
+  gcVehicleId:    integer("gc_vehicle_id"),           // GC's internal vehicle ID
+  vehicleName:    text("vehicle_name"),               // raw name/unit number from GC
   vehicleId:      integer("vehicle_id").references(() => vehicles.id, { onDelete: "set null" }),
   unitNumber:     text("unit_number"),                // matched unit number
-  startMileage:   integer("start_mileage"),
-  endMileage:     integer("end_mileage"),
+  odometer:       integer("odometer"),                // odometer reading from vehicle-maintenances
   isAnomaly:      boolean("is_anomaly").notNull().default(false),
   anomalyReason:  text("anomaly_reason"),
   pulledAt:       timestamp("pulled_at").defaultNow(),
@@ -724,4 +723,16 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 }, (t) => [
   uniqueIndex("notification_preferences_org_type_idx").on(t.organizationId, t.type),
+]);
+
+// ── Driver Notes ──────────────────────────────────────────────────────────────
+export const driverNotes = pgTable("driver_notes", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  driverDbId:     integer("driver_db_id").notNull().references(() => drivers.id, { onDelete: "cascade" }),
+  content:        text("content").notNull(),
+  authorName:     text("author_name").notNull(),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("driver_notes_driver_idx").on(t.driverDbId),
 ]);
