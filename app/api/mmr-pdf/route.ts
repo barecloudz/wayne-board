@@ -48,9 +48,9 @@ function generateVehiclePage(p: {
   unit: string; station: string; mileage: string; companyName: string;
   monthLabel: string; dateCompleted: string; hasRows: boolean; tableRows: string;
 }): string {
-  const topYes = p.hasRows ? "&#10003;" : "";
-  const topNo  = p.hasRows ? "" : "&#10003;";
-  const botNo  = p.hasRows ? "" : "&#10003;";
+  const topYes = p.hasRows ? "✓" : "";
+  const topNo  = p.hasRows ? "" : "✓";
+  const botNo  = p.hasRows ? "" : "✓";
   return `
 <div style="page-break-after:always;font-family:Arial,Helvetica,sans-serif;font-size:10pt;padding:0.55in 0.6in 0.4in 0.6in;color:#000;box-sizing:border-box;width:8.5in;min-height:11in;">
   <div style="border:2px solid #000;text-align:center;padding:6px 12px;margin-bottom:6px;">
@@ -98,7 +98,7 @@ function generateVehiclePage(p: {
     <tbody>${p.tableRows}</tbody>
   </table>
   <div style="display:flex;gap:6px;margin-bottom:10px;">
-    <div style="width:12px;height:12px;min-width:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9pt;font-weight:bold;margin-top:1px;">&#9632;</div>
+    <div style="width:12px;height:12px;min-width:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9pt;font-weight:bold;margin-top:1px;">✓</div>
     <div style="font-size:8.5pt;line-height:1.4;">By checking this box, I declare that this record is true and correct. Unless otherwise clearly indicated as &#8220;out of service&#8221; on this record, I confirm that the equipment on this record is in compliance with the Federal Motor Carrier Safety Regulations 49 C.F.R. 396.3(a)(1) and 396.7 (a) and is in safe operating condition and meets all federal, state and local motor vehicle laws. Furthermore, I confirm that preventative maintenance is consistent with the interval schedule per 396.3(b)(2).</div>
   </div>
   <div style="display:grid;grid-template-columns:1fr auto;gap:20px;margin-bottom:10px;align-items:end;">

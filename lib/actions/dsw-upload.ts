@@ -123,11 +123,26 @@ async function processDswPair(
     }
     const significant = parts.filter(p => p.length > 1);
     if (significant.length >= 2) {
+      // Exact word match
       const hit = Object.entries(driverByName).find(([k]) => {
         const kWords = k.split(" ");
         return significant.filter(w => kWords.includes(w)).length >= 2;
       });
       if (hit) return hit[1];
+      // Prefix match — handles nicknames (e.g. "alex" matches "alexander")
+      const hit2 = Object.entries(driverByName).find(([k]) => {
+        const kWords = k.split(" ");
+        let matches = 0;
+        for (const w of significant) {
+          if (kWords.some(kw =>
+            kw === w ||
+            (w.length >= 3 && kw.startsWith(w)) ||
+            (kw.length >= 3 && w.startsWith(kw))
+          )) matches++;
+        }
+        return matches >= 2;
+      });
+      if (hit2) return hit2[1];
     }
     return null;
   }

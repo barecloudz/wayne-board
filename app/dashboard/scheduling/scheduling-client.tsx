@@ -146,6 +146,9 @@ export default function SchedulingClient({
   const [noteAction, setNoteAction] = useState<AttendanceAction | null>(null);
   const [noteText, setNoteText] = useState("");
 
+  // ── Holiday modal state ───────────────────────────────────────────────────
+  const [holidayModal, setHolidayModal] = useState<{ dateStr: string; working: ScheduleRow[] } | null>(null);
+
   // ── Schedule editing ──────────────────────────────────────────────────────
   // Local draft state per driver: driverId -> days object
   const [drafts, setDrafts] = useState<Record<string, Record<DayKey, boolean>>>({});
@@ -1118,8 +1121,12 @@ export default function SchedulingClient({
                         : "border-slate-200 bg-white"
                     }`}
                   >
-                    {/* Date header */}
-                    <div className={`px-3 py-2 text-center ${isToday ? "bg-slate-900" : isWeekend ? "bg-slate-100/80" : "bg-slate-50"}`}>
+                    {/* Date header — click to open holiday modal */}
+                    <button
+                      type="button"
+                      onClick={() => !isHolidayDay && working.length > 0 && setHolidayModal({ dateStr, working })}
+                      className={`w-full px-3 py-2 text-center ${isToday ? "bg-slate-900" : isWeekend ? "bg-slate-100/80" : "bg-slate-50"} ${!isHolidayDay && working.length > 0 ? "cursor-pointer hover:brightness-95 active:brightness-90" : "cursor-default"} transition-all`}
+                    >
                       <p className={`text-[10px] font-bold uppercase tracking-wider ${isToday ? "text-slate-300" : "text-slate-400"}`}>
                         {format(day, "EEE")}
                       </p>
@@ -1131,24 +1138,7 @@ export default function SchedulingClient({
                       }`}>
                         {routeCount} route{routeCount !== 1 ? "s" : ""}
                       </p>
-                      {!isHolidayDay && working.length > 0 && (
-                        <button
-                          onClick={() => {
-                            startTransition(async () => {
-                              await markDayHoliday(
-                                dateStr,
-                                working.map(d => ({ driverId: d.driverId, driverName: d.name }))
-                              );
-                            });
-                          }}
-                          disabled={isPending}
-                          className="text-[9px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 px-1.5 py-0.5 rounded transition-colors disabled:opacity-40"
-                          title="Mark day as FedEx holiday"
-                        >
-                          Holiday
-                        </button>
-                      )}
-                    </div>
+                    </button>
 
                     {/* Drivers working */}
                     <div className="flex flex-col p-2 gap-1 flex-1">
@@ -1883,6 +1873,52 @@ export default function SchedulingClient({
           </div>
         );
       })()}
+
+      {/* ── Holiday Modal ─────────────────────────────────────────────────── */}
+      {holidayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setHolidayModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-80 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+              <div>
+                <p className="text-white font-bold text-[15px]">Mark as Holiday</p>
+                <p className="text-slate-400 text-[12px] mt-0.5">{formatDate(holidayModal.dateStr)}</p>
+              </div>
+              <button onClick={() => setHolidayModal(null)} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-3">
+              <p className="text-[13px] text-slate-600 leading-relaxed">
+                Mark this day as a FedEx holiday? All {holidayModal.working.length} driver{holidayModal.working.length !== 1 ? "s" : ""} scheduled will be marked as <span className="font-semibold text-slate-800">Holiday</span>.
+              </p>
+              <div className="flex flex-col gap-2 text-[12px] text-slate-500 max-h-32 overflow-y-auto bg-slate-50 rounded-xl px-3 py-2">
+                {holidayModal.working.map(d => (
+                  <span key={d.driverId}>{d.name}</span>
+                ))}
+              </div>
+              <button
+                disabled={isPending}
+                onClick={() => {
+                  const modal = holidayModal;
+                  setHolidayModal(null);
+                  startTransition(async () => {
+                    await markDayHoliday(
+                      modal.dateStr,
+                      modal.working.map(d => ({ driverId: d.driverId, driverName: d.name }))
+                    );
+                  });
+                }}
+                className="w-full py-3 rounded-xl text-[14px] font-bold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                🏖 Confirm Holiday
+              </button>
+              <button onClick={() => setHolidayModal(null)} className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

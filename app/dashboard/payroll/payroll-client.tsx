@@ -100,7 +100,11 @@ function matchDswName(driverName: string, dswNameRaw: string): boolean {
   const driverParts = driverName.toUpperCase().split(/\s+/).filter(Boolean);
   let matches = 0;
   for (const p of driverParts) {
-    if (dswParts.some(d => d === p)) matches++;
+    if (dswParts.some(d =>
+      d === p ||
+      (p.length >= 3 && d.startsWith(p)) ||
+      (d.length >= 3 && p.startsWith(d))
+    )) matches++;
   }
   return matches >= 2;
 }
