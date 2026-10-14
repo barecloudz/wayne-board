@@ -246,54 +246,20 @@ export default function PayrollClient({
   const activeDrivers    = weekData.drivers.filter(d => !d.isTerminated && matchesLocation(d));
   const terminatedDrivers = weekData.drivers.filter(d => d.isTerminated && matchesLocation(d));
 
-  return (
-    <main className="flex-1 px-6 py-8 max-w-[1280px] w-full mx-auto">
+  // ── Summary stats ─────────────────────────────────────────────────────────
+  const totalWorkDays = activeDrivers.reduce((sum, d) => sum + computeRowTotals(d.attendance).workDays, 0);
+  const teamIlsAvg = teamIlsByDate.size > 0
+    ? [...teamIlsByDate.values()].reduce((s, v) => s + v.pct, 0) / teamIlsByDate.size
+    : null;
+  const rydeFives = rydeRows.filter(r => r.stars === 5).length;
+  const rydeOnes  = rydeRows.filter(r => r.stars === 1).length;
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-8 print:hidden">
-        <div>
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">MyGroundOps · Payroll</p>
-          <h1 className="text-[32px] font-black text-slate-900 tracking-tight leading-none">Payroll</h1>
-          <p className="text-[13px] text-slate-400 mt-1.5">Weekly attendance summary</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/payroll/upload"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
-              bg-white/70 backdrop-blur-sm border border-slate-200/80 text-slate-600
-              hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all"
-          >
-            <Upload className="w-3.5 h-3.5" /> DSW Upload
-          </Link>
-          <button
-            onClick={() => setShowPayWeekModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
-              bg-white/70 backdrop-blur-sm border border-slate-200/80 text-slate-600
-              hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all"
-          >
-            <Settings className="w-3.5 h-3.5" /> Pay Week
-          </button>
-          <button
-            onClick={exportXlsx}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
-              bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition-all"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" /> Export XLSX
-          </button>
-          <button
-            onClick={() => { window.location.href = `/api/payroll-pdf?offset=${currentOffset}`; }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold
-              bg-slate-900 text-white hover:bg-slate-700 shadow-sm transition-all"
-          >
-            <Printer className="w-3.5 h-3.5" /> Download PDF
-          </button>
-        </div>
-      </div>
+  return (
+    <main className="flex-1 px-6 py-8 max-w-[1400px] w-full mx-auto">
 
       {showPayWeekModal && (
         <PayWeekModal initialDay={payWeekStart} onClose={() => setShowPayWeekModal(false)} />
       )}
-
       {editTarget && (
         <PayrollEditModal
           target={editTarget}
@@ -302,35 +268,109 @@ export default function PayrollClient({
         />
       )}
 
-      {/* ── Week nav ── */}
-      <div className="flex items-center gap-3 mb-6 print:mb-4">
-        <button
-          onClick={() => navigate(currentOffset + 1)}
-          className="p-2 rounded-xl bg-white/70 backdrop-blur-sm border border-slate-200/80 hover:bg-white hover:shadow-sm transition-all print:hidden"
-        >
-          <ChevronLeft className="w-4 h-4 text-slate-600" />
-        </button>
-        <div className="flex-1 text-center">
-          <p className="text-[17px] font-black text-slate-900">{weekLabel}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            {currentOffset === 0 ? "Most recent completed week" : `${currentOffset} week${currentOffset > 1 ? "s" : ""} ago`}
-          </p>
+      {/* ── Dark hero banner ── */}
+      <div className="print:hidden relative rounded-3xl overflow-hidden mb-6 bg-slate-900 shadow-[0_8px_40px_rgba(0,0,0,0.18)]">
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage:"repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)"}} />
+        <div className="relative px-7 py-6 flex items-center justify-between gap-6">
+          {/* Left: title + week nav */}
+          <div className="flex items-center gap-5 min-w-0">
+            <div>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">MyGroundOps · Payroll</p>
+              <h1 className="text-[26px] font-black text-white tracking-tight leading-none">Payroll</h1>
+            </div>
+            <div className="w-px h-10 bg-slate-700" />
+            {/* Week navigator */}
+            <div className="flex items-center gap-2">
+              <button onClick={() => navigate(currentOffset + 1)} className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all">
+                <ChevronLeft className="w-4 h-4 text-slate-300" />
+              </button>
+              <div className="text-center min-w-[160px]">
+                <p className="text-[15px] font-black text-white leading-tight">{weekLabel}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  {currentOffset === 0 ? "Most recent week" : `${currentOffset}w ago`}
+                </p>
+              </div>
+              <button onClick={() => navigate(Math.max(0, currentOffset - 1))} disabled={currentOffset === 0}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all disabled:opacity-30">
+                <ChevronRight className="w-4 h-4 text-slate-300" />
+              </button>
+            </div>
+          </div>
+          {/* Right: actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/dashboard/payroll/upload"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all">
+              <Upload className="w-3.5 h-3.5" /> DSW
+            </Link>
+            <button onClick={() => setShowPayWeekModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all">
+              <Settings className="w-3.5 h-3.5" /> Pay Week
+            </button>
+            <button onClick={exportXlsx}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.3)] transition-all">
+              <FileSpreadsheet className="w-3.5 h-3.5" /> XLSX
+            </button>
+            <button onClick={() => { window.location.href = `/api/payroll-pdf?offset=${currentOffset}`; }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-sm transition-all">
+              <Printer className="w-3.5 h-3.5" /> PDF
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => navigate(Math.max(0, currentOffset - 1))}
-          disabled={currentOffset === 0}
-          className="p-2 rounded-xl bg-white/70 backdrop-blur-sm border border-slate-200/80 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all print:hidden"
-        >
-          <ChevronRight className="w-4 h-4 text-slate-600" />
-        </button>
       </div>
 
+      {/* Print header */}
       <div className="hidden print:block mb-4">
         <p className="text-[18px] font-extrabold">Payroll · {weekLabel}</p>
       </div>
 
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 print:hidden">
+        {/* Drivers */}
+        <div className="bg-white rounded-2xl border border-slate-100 px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Drivers</p>
+          <p className="text-[32px] font-black text-slate-900 leading-none">{activeDrivers.length}</p>
+          <p className="text-[11px] text-slate-400 mt-1">active this week</p>
+        </div>
+        {/* Work days */}
+        <div className="bg-white rounded-2xl border border-slate-100 px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Work Days</p>
+          <p className="text-[32px] font-black text-slate-900 leading-none">{totalWorkDays % 1 === 0 ? totalWorkDays : totalWorkDays.toFixed(1)}</p>
+          <p className="text-[11px] text-slate-400 mt-1">total across team</p>
+        </div>
+        {/* Team ILS */}
+        <div className={`rounded-2xl border px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)] ${
+          teamIlsAvg == null ? "bg-white border-slate-100" :
+          teamIlsAvg >= 99 ? "bg-emerald-50 border-emerald-100" :
+          teamIlsAvg >= 97 ? "bg-amber-50 border-amber-100" :
+          "bg-red-50 border-red-100"
+        }`}>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Team ILS</p>
+          {teamIlsAvg != null ? (
+            <>
+              <p className={`text-[32px] font-black leading-none ${
+                teamIlsAvg >= 99 ? "text-emerald-600" : teamIlsAvg >= 97 ? "text-amber-600" : "text-red-600"
+              }`}>{teamIlsAvg.toFixed(1)}%</p>
+              <p className="text-[11px] text-slate-400 mt-1">{daysPassed}/{daysWithData} days ≥99%</p>
+            </>
+          ) : (
+            <><p className="text-[32px] font-black text-slate-200 leading-none">—</p><p className="text-[11px] text-slate-400 mt-1">no data uploaded</p></>
+          )}
+        </div>
+        {/* Ryde */}
+        <div className="bg-white rounded-2xl border border-slate-100 px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Ryde Reviews</p>
+          <p className="text-[32px] font-black text-slate-900 leading-none">{rydeRows.length}</p>
+          <div className="flex items-center gap-2 mt-1">
+            {rydeFives > 0 && <span className="text-[11px] font-bold text-emerald-600">{rydeFives}×★5</span>}
+            {rydeOnes  > 0 && <span className="text-[11px] font-bold text-red-500">{rydeOnes}×★1</span>}
+            {rydeRows.length === 0 && <span className="text-[11px] text-slate-400">this week</span>}
+          </div>
+        </div>
+      </div>
+
       {locations.length > 1 && !allSelected && (
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex items-center gap-2 mb-4 flex-wrap print:hidden">
           <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wide">Showing:</span>
           {locations.filter(l => selectedLocationIds.includes(l.id)).map(l => (
             <span key={l.id} className="px-2.5 py-1 rounded-full bg-white/70 text-[11px] font-semibold text-slate-600 border border-slate-200 backdrop-blur-sm">
@@ -340,40 +380,40 @@ export default function PayrollClient({
         </div>
       )}
 
-      {/* ── Weekly Service Summary ── */}
+      {/* ── Team ILS day-by-day ── */}
       {daysWithData > 0 && (
-        <div className="mb-5 bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/80 px-5 py-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Team Service — {weekLabel}</p>
-            <span className={`text-[12px] font-black px-3 py-1 rounded-full ${
+        <div className="mb-5 bg-white rounded-2xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.05)] overflow-hidden print:hidden">
+          <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-50">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Team ILS — Day by Day</p>
+            <span className={`text-[11px] font-black px-3 py-1 rounded-full ${
               daysPassed === daysWithData ? "bg-emerald-100 text-emerald-700" :
               daysPassed >= daysWithData * 0.8 ? "bg-amber-100 text-amber-700" :
               "bg-red-100 text-red-700"
             }`}>
-              {daysPassed === daysWithData
-                ? `${daysPassed}/${daysWithData} ✓ Perfect week`
-                : `${daysPassed}/${daysWithData} days ≥99%`}
+              {daysPassed === daysWithData ? `✓ Perfect — ${daysPassed}/${daysWithData}` : `${daysPassed}/${daysWithData} days ≥99%`}
             </span>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="px-5 py-4 flex gap-3">
             {weekDates.map(date => {
               const d = new Date(date + "T00:00:00");
               const entry = teamIlsByDate.get(date);
               if (!entry) return (
-                <div key={date} className="flex flex-col items-center gap-1 min-w-[52px]">
-                  <div className="text-[10px] font-bold text-slate-300 uppercase">{DAY_ABBREVS[d.getDay()]}</div>
-                  <div className="text-[10px] text-slate-200">—</div>
+                <div key={date} className="flex-1 flex flex-col items-center gap-2 min-w-[48px]">
+                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">{DAY_ABBREVS[d.getDay()]}</p>
+                  <div className="w-full h-1.5 rounded-full bg-slate-100" />
+                  <p className="text-[10px] text-slate-300">—</p>
                 </div>
               );
-              const color = entry.pct >= 100 ? "text-emerald-600 bg-emerald-50 border-emerald-200"
-                : entry.pct >= 99 ? "text-amber-600 bg-amber-50 border-amber-200"
-                : "text-red-600 bg-red-50 border-red-200";
+              const barColor = entry.pct >= 100 ? "bg-emerald-500" : entry.pct >= 99 ? "bg-amber-400" : "bg-red-500";
+              const textColor = entry.pct >= 100 ? "text-emerald-600" : entry.pct >= 99 ? "text-amber-600" : "text-red-600";
+              const barPct = Math.min(100, Math.max(0, (entry.pct - 95) / 5 * 100));
               return (
-                <div key={date} className="flex flex-col items-center gap-1 min-w-[52px]">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">{DAY_ABBREVS[d.getDay()]}</div>
-                  <div className={`text-[11px] font-black px-2 py-0.5 rounded-lg border ${color}`}>
-                    {entry.pct.toFixed(1)}%
+                <div key={date} className="flex-1 flex flex-col items-center gap-2 min-w-[48px]">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{DAY_ABBREVS[d.getDay()]}</p>
+                  <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${barColor}`} style={{width:`${barPct}%`}} />
                   </div>
+                  <p className={`text-[12px] font-black ${textColor}`}>{entry.pct.toFixed(1)}%</p>
                 </div>
               );
             })}
