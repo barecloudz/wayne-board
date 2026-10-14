@@ -109,18 +109,22 @@ function matchDswName(driverName: string, dswNameRaw: string): boolean {
   return matches >= 2;
 }
 
+type RydeRow = { driverId: string; stars: number | null; reviewDate: string | null };
+
 export default function PayrollClient({
   weekData,
   currentOffset,
   payWeekStart,
   dswRows,
   driverLocationMap,
+  rydeRows = [],
 }: {
   weekData: PayrollWeekData;
   currentOffset: number;
   payWeekStart: number;
   dswRows: DswDayRow[];
   driverLocationMap: Record<string, number[]>;
+  rydeRows?: RydeRow[];
 }) {
   const router = useRouter();
   const { locations, selectedLocationIds, allSelected } = useLocationContext();
@@ -206,6 +210,20 @@ export default function PayrollClient({
     if (driver.allLocations) return true;
     const assigned = driverLocationMap[driver.driverId] ?? [];
     return assigned.some(id => selectedLocationIds.includes(id));
+  }
+
+  // Build ryde map: driverId -> date -> { ones, fives, total }
+  const rydeByDriverDate = new Map<string, Map<string, { ones: number; fives: number; total: number }>>();
+  for (const r of rydeRows) {
+    if (!r.reviewDate) continue;
+    const date = r.reviewDate.slice(0, 10);
+    if (!rydeByDriverDate.has(r.driverId)) rydeByDriverDate.set(r.driverId, new Map());
+    const dm = rydeByDriverDate.get(r.driverId)!;
+    const cur = dm.get(date) ?? { ones: 0, fives: 0, total: 0 };
+    cur.total++;
+    if (r.stars === 1) cur.ones++;
+    if (r.stars === 5) cur.fives++;
+    dm.set(date, cur);
   }
 
   const activeDrivers    = weekData.drivers.filter(d => !d.isTerminated && matchesLocation(d));
@@ -357,6 +375,7 @@ export default function PayrollClient({
             drivers={activeDrivers}
             weekDates={weekDates}
             dswByDriverDate={dswByDriverDate}
+            rydeByDriverDate={rydeByDriverDate}
             deductionAmount={weekData.deductionAmount}
             onCellClick={setEditTarget}
           />
@@ -367,6 +386,7 @@ export default function PayrollClient({
                 drivers={terminatedDrivers}
                 weekDates={weekDates}
                 dswByDriverDate={dswByDriverDate}
+                rydeByDriverDate={rydeByDriverDate}
                 deductionAmount={weekData.deductionAmount}
                 onCellClick={setEditTarget}
                 dimmed
@@ -422,6 +442,7 @@ function PayrollTable({
   drivers,
   weekDates,
   dswByDriverDate,
+  rydeByDriverDate,
   deductionAmount,
   dimmed = false,
   onCellClick,
@@ -429,6 +450,7 @@ function PayrollTable({
   drivers: PayrollDriverRow[];
   weekDates: string[];
   dswByDriverDate: Map<string, Map<string, DswDayRow>>;
+  rydeByDriverDate: Map<string, Map<string, { ones: number; fives: number; total: number }>>;
   deductionAmount: number;
   dimmed?: boolean;
   onCellClick?: (target: import("./payroll-edit-modal").PayrollEditTarget) => void;
@@ -463,6 +485,8 @@ function PayrollTable({
               const showDeduction = driver.isTerminated && driver.terminationType === "notice";
               const driverDsw = dswByDriverDate.get(driver.driverId);
               const hasDsw = driverDsw && driverDsw.size > 0;
+              const driverRyde = rydeByDriverDate.get(driver.driverId);
+              const hasRyde = driverRyde && driverRyde.size > 0;
 
               return (
                 <>
@@ -545,7 +569,7 @@ function PayrollTable({
                         if (!dsw || dsw.ilsPct == null) {
                           return <td key={dateStr} className="px-2 py-1 text-center"><span className="text-slate-200 text-[9px]">—</span></td>;
                         }
-                        const color = dsw.ilsPct >= 100 ? "text-emerald-500" : dsw.ilsPct >= 99 ? "text-amber-500" : "text-red-500";
+                        const color = dsw.ilsPct >= 100 ? "text-emerald-600" : dsw.ilsPct >= 99 ? "text-amber-600" : "text-red-600";
                         const impact = dsw.pldImpactPkgs ?? 0;
                         const ghost  = dsw.pldGhostPkgs  ?? 0;
                         const tipParts = [`ILS: ${dsw.ilsPct}%`];
@@ -556,7 +580,7 @@ function PayrollTable({
                         return (
                           <td key={dateStr} className="px-2 py-1 text-center">
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-[10px] font-bold ${color}`}>{dsw.ilsPct}%</span>
+                              <span className={`text-[11px] font-black ${color}`}>{dsw.ilsPct}%</span>
                               {impact > 0 && (
                                 <span className="text-[8px] font-bold text-red-400 leading-none">
                                   {impact}pkg{ghost > 0 ? ` +${ghost}👻` : ""}
@@ -581,11 +605,60 @@ function PayrollTable({
                           if (!vals.length) return null;
                           const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
                           const totalImpact = weekDates.reduce((s, d) => s + (driverDsw.get(d)?.pldImpactPkgs ?? 0), 0);
-                          const color = avg >= 100 ? "text-emerald-500" : avg >= 99 ? "text-amber-500" : "text-red-500";
+                          const color = avg >= 100 ? "text-emerald-600" : avg >= 99 ? "text-amber-600" : "text-red-600";
                           return (
                             <div className="flex flex-col items-center gap-0.5">
-                              <span className={`text-[10px] font-bold ${color}`}>{avg.toFixed(1)}%</span>
+                              <span className={`text-[11px] font-black ${color}`}>{avg.toFixed(1)}%</span>
                               {totalImpact > 0 && <span className="text-[8px] font-bold text-red-400 leading-none">{totalImpact}pkg</span>}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td /><td />
+                    </tr>
+                  )}
+
+                  {/* Ryde sub-row: per-day star breakdown */}
+                  {hasRyde && (
+                    <tr className="bg-amber-50/30">
+                      <td className="px-5 py-1 pl-6">
+                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">Ryde</span>
+                      </td>
+                      {weekDates.map((dateStr) => {
+                        const r = driverRyde!.get(dateStr);
+                        if (!r) return <td key={dateStr} className="px-2 py-1 text-center"><span className="text-slate-200 text-[9px]">—</span></td>;
+                        return (
+                          <td key={dateStr} className="px-2 py-1 text-center">
+                            <div className="flex flex-col items-center gap-0.5">
+                              {r.fives > 0 && (
+                                <span className="text-[9px] font-black text-emerald-600 leading-none">
+                                  {r.fives}★5
+                                </span>
+                              )}
+                              {r.ones > 0 && (
+                                <span className="text-[9px] font-black text-red-500 leading-none">
+                                  {r.ones}★1
+                                </span>
+                              )}
+                              {r.ones === 0 && r.fives === 0 && r.total > 0 && (
+                                <span className="text-[9px] font-bold text-slate-400 leading-none">{r.total}★</span>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+                      <td className="px-3 py-1 text-center">
+                        {(() => {
+                          const totals = weekDates.reduce((acc, d) => {
+                            const r = driverRyde!.get(d);
+                            if (!r) return acc;
+                            return { ones: acc.ones + r.ones, fives: acc.fives + r.fives, total: acc.total + r.total };
+                          }, { ones: 0, fives: 0, total: 0 });
+                          if (!totals.total) return null;
+                          return (
+                            <div className="flex flex-col items-center gap-0.5">
+                              {totals.fives > 0 && <span className="text-[9px] font-black text-emerald-600 leading-none">{totals.fives}★5</span>}
+                              {totals.ones > 0 && <span className="text-[9px] font-black text-red-500 leading-none">{totals.ones}★1</span>}
                             </div>
                           );
                         })()}

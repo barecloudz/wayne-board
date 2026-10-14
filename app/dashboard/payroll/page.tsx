@@ -8,8 +8,8 @@ import { getDswDataForRange } from "@/lib/actions/dsw-data";
 import { getSetting } from "@/lib/actions/settings";
 import PayrollClient from "./payroll-client";
 import { db } from "@/lib/db";
-import { driverLocations } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { driverLocations, rydeReviews } from "@/lib/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 function getPayWeekBounds(offsetWeeks: number, payWeekStart: number): { weekStart: string; weekEnd: string } {
   const today = new Date();
@@ -42,13 +42,21 @@ export default async function PayrollPage({ searchParams }: Props) {
   const payWeekStart = parseInt(payWeekStartStr, 10);
   const { weekStart, weekEnd } = getPayWeekBounds(offset, payWeekStart);
 
-  const [weekData, dswRows, driverLocRows] = await Promise.all([
+  const [weekData, dswRows, driverLocRows, rydeRows] = await Promise.all([
     getPayrollWeek(weekStart, weekEnd),
     getDswDataForRange(weekStart, weekEnd),
     db
       .select({ driverId: driverLocations.driverId, locationId: driverLocations.locationId })
       .from(driverLocations)
       .where(eq(driverLocations.organizationId, orgId)),
+    db
+      .select({ driverId: rydeReviews.driverId, stars: rydeReviews.stars, reviewDate: rydeReviews.reviewDate })
+      .from(rydeReviews)
+      .where(and(
+        eq(rydeReviews.organizationId, orgId),
+        gte(rydeReviews.reviewDate, weekStart),
+        lte(rydeReviews.reviewDate, weekEnd),
+      )),
   ]);
 
   const driverLocationMap: Record<string, number[]> = {};
@@ -59,7 +67,7 @@ export default async function PayrollPage({ searchParams }: Props) {
 
   return (
     <AppShell>
-      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} driverLocationMap={driverLocationMap} />
+      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} driverLocationMap={driverLocationMap} rydeRows={rydeRows} />
     </AppShell>
   );
 }
