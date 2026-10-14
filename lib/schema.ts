@@ -736,3 +736,31 @@ export const driverNotes = pgTable("driver_notes", {
 }, (t) => [
   index("driver_notes_driver_idx").on(t.driverDbId),
 ]);
+
+// ── PPOD Days ─────────────────────────────────────────────────────────────────
+export const ppodDays = pgTable("ppod_days", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  date:           date("date").notNull(),
+  driverId:       text("driver_id"),
+  driverNameRaw:  text("driver_name_raw").notNull().default(""),
+  ppodPct:        real("ppod_pct"),
+  totalPkgs:      integer("total_pkgs"),
+  podCaptured:    integer("pod_captured"),
+  locationId:     integer("location_id").references(() => locations.id, { onDelete: "set null" }),
+  syncedAt:       timestamp("synced_at").defaultNow(),
+}, (t) => [
+  index("ppod_days_org_date_idx").on(t.organizationId, t.date),
+  uniqueIndex("ppod_days_org_date_name_unique").on(t.organizationId, t.date, t.driverNameRaw),
+]);
+
+// ── PPOD Name Mappings ────────────────────────────────────────────────────────
+export const ppodNameMappings = pgTable("ppod_name_mappings", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  ppodName:       text("ppod_name").notNull(),
+  driverId:       text("driver_id").notNull(),
+  createdAt:      timestamp("created_at").defaultNow(),
+}, (t) => [
+  uniqueIndex("ppod_name_mappings_org_name_unique").on(t.organizationId, t.ppodName),
+]);

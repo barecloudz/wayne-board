@@ -8,7 +8,7 @@ import { getDswDataForRange } from "@/lib/actions/dsw-data";
 import { getSetting } from "@/lib/actions/settings";
 import PayrollClient from "./payroll-client";
 import { db } from "@/lib/db";
-import { driverLocations, rydeReviews } from "@/lib/schema";
+import { driverLocations, rydeReviews, ppodDays } from "@/lib/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 
 function getPayWeekBounds(offsetWeeks: number, payWeekStart: number): { weekStart: string; weekEnd: string } {
@@ -42,7 +42,7 @@ export default async function PayrollPage({ searchParams }: Props) {
   const payWeekStart = parseInt(payWeekStartStr, 10);
   const { weekStart, weekEnd } = getPayWeekBounds(offset, payWeekStart);
 
-  const [weekData, dswRows, driverLocRows, rydeRows] = await Promise.all([
+  const [weekData, dswRows, driverLocRows, rydeRows, ppodRows] = await Promise.all([
     getPayrollWeek(weekStart, weekEnd),
     getDswDataForRange(weekStart, weekEnd),
     db
@@ -57,6 +57,14 @@ export default async function PayrollPage({ searchParams }: Props) {
         gte(rydeReviews.reviewDate, weekStart),
         lte(rydeReviews.reviewDate, weekEnd),
       )),
+    db
+      .select({ driverId: ppodDays.driverId, driverNameRaw: ppodDays.driverNameRaw, date: ppodDays.date, ppodPct: ppodDays.ppodPct })
+      .from(ppodDays)
+      .where(and(
+        eq(ppodDays.organizationId, orgId),
+        gte(ppodDays.date, weekStart),
+        lte(ppodDays.date, weekEnd),
+      )),
   ]);
 
   const driverLocationMap: Record<string, number[]> = {};
@@ -67,7 +75,7 @@ export default async function PayrollPage({ searchParams }: Props) {
 
   return (
     <AppShell>
-      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} driverLocationMap={driverLocationMap} rydeRows={rydeRows} />
+      <PayrollClient weekData={weekData} currentOffset={offset} payWeekStart={payWeekStart} dswRows={dswRows} driverLocationMap={driverLocationMap} rydeRows={rydeRows} ppodRows={ppodRows} />
     </AppShell>
   );
 }

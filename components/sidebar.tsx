@@ -24,6 +24,7 @@ const adminItems = [
   { icon: DollarSign,    label: "Payroll",      href: "/dashboard/payroll",        exact: true },
   { icon: Upload,        label: "DSW Upload",   href: "/dashboard/payroll/upload",      exact: true },
   { icon: Upload,        label: "Ryde Upload",  href: "/dashboard/payroll/ryde-upload", exact: true },
+  { icon: Upload,        label: "PPOD Upload",  href: "/dashboard/payroll/ppod-upload", exact: true },
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },

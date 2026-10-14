@@ -110,6 +110,7 @@ function matchDswName(driverName: string, dswNameRaw: string): boolean {
 }
 
 type RydeRow = { driverId: string; stars: number | null; reviewDate: string | null };
+type PpodRow = { driverId: string | null; driverNameRaw: string; date: string | Date; ppodPct: number | null };
 
 export default function PayrollClient({
   weekData,
@@ -118,6 +119,7 @@ export default function PayrollClient({
   dswRows,
   driverLocationMap,
   rydeRows = [],
+  ppodRows = [],
 }: {
   weekData: PayrollWeekData;
   currentOffset: number;
@@ -125,6 +127,7 @@ export default function PayrollClient({
   dswRows: DswDayRow[];
   driverLocationMap: Record<string, number[]>;
   rydeRows?: RydeRow[];
+  ppodRows?: PpodRow[];
 }) {
   const router = useRouter();
   const { locations, selectedLocationIds, allSelected } = useLocationContext();
@@ -224,6 +227,20 @@ export default function PayrollClient({
     if (r.stars === 1) cur.ones++;
     if (r.stars === 5) cur.fives++;
     dm.set(date, cur);
+  }
+
+  // Build PPOD map: driverId -> date -> ppodPct
+  const ppodByDriverDate = new Map<string, Map<string, number>>();
+  for (const driver of weekData.drivers) {
+    const driverPpod = new Map<string, number>();
+    for (const row of ppodRows) {
+      const rowDate = typeof row.date === "string" ? row.date.slice(0, 10) : (row.date as Date).toISOString().slice(0, 10);
+      const matched = row.driverId
+        ? row.driverId === driver.driverId
+        : matchDswName(driver.name, row.driverNameRaw);
+      if (matched && row.ppodPct != null) driverPpod.set(rowDate, row.ppodPct);
+    }
+    if (driverPpod.size > 0) ppodByDriverDate.set(driver.driverId, driverPpod);
   }
 
   const activeDrivers    = weekData.drivers.filter(d => !d.isTerminated && matchesLocation(d));
@@ -376,6 +393,7 @@ export default function PayrollClient({
             weekDates={weekDates}
             dswByDriverDate={dswByDriverDate}
             rydeByDriverDate={rydeByDriverDate}
+            ppodByDriverDate={ppodByDriverDate}
             deductionAmount={weekData.deductionAmount}
             onCellClick={setEditTarget}
           />
@@ -387,6 +405,7 @@ export default function PayrollClient({
                 weekDates={weekDates}
                 dswByDriverDate={dswByDriverDate}
                 rydeByDriverDate={rydeByDriverDate}
+                ppodByDriverDate={ppodByDriverDate}
                 deductionAmount={weekData.deductionAmount}
                 onCellClick={setEditTarget}
                 dimmed
@@ -443,6 +462,7 @@ function PayrollTable({
   weekDates,
   dswByDriverDate,
   rydeByDriverDate,
+  ppodByDriverDate,
   deductionAmount,
   dimmed = false,
   onCellClick,
@@ -451,6 +471,7 @@ function PayrollTable({
   weekDates: string[];
   dswByDriverDate: Map<string, Map<string, DswDayRow>>;
   rydeByDriverDate: Map<string, Map<string, { ones: number; fives: number; total: number }>>;
+  ppodByDriverDate: Map<string, Map<string, number>>;
   deductionAmount: number;
   dimmed?: boolean;
   onCellClick?: (target: import("./payroll-edit-modal").PayrollEditTarget) => void;
@@ -487,6 +508,8 @@ function PayrollTable({
               const hasDsw = driverDsw && driverDsw.size > 0;
               const driverRyde = rydeByDriverDate.get(driver.driverId);
               const hasRyde = driverRyde && driverRyde.size > 0;
+              const driverPpod = ppodByDriverDate.get(driver.driverId);
+              const hasPpod = driverPpod && driverPpod.size > 0;
 
               return (
                 <>
@@ -661,6 +684,35 @@ function PayrollTable({
                               {totals.ones > 0 && <span className="text-[9px] font-black text-red-500 leading-none">{totals.ones}★1</span>}
                             </div>
                           );
+                        })()}
+                      </td>
+                      <td /><td />
+                    </tr>
+                  )}
+
+                  {/* PPOD sub-row: per-day PPOD% */}
+                  {hasPpod && (
+                    <tr className="bg-cyan-50/30">
+                      <td className="px-5 py-1 pl-6">
+                        <span className="text-[9px] font-bold text-cyan-500 uppercase tracking-widest">PPOD</span>
+                      </td>
+                      {weekDates.map((dateStr) => {
+                        const pct = driverPpod!.get(dateStr);
+                        if (pct == null) return <td key={dateStr} className="px-2 py-1 text-center"><span className="text-slate-200 text-[9px]">—</span></td>;
+                        const color = pct >= 99 ? "text-emerald-600" : pct >= 95 ? "text-amber-600" : "text-red-600";
+                        return (
+                          <td key={dateStr} className="px-2 py-1 text-center">
+                            <span className={`text-[11px] font-black ${color}`}>{pct.toFixed(1)}%</span>
+                          </td>
+                        );
+                      })}
+                      <td className="px-3 py-1 text-center">
+                        {(() => {
+                          const vals = weekDates.map((d) => driverPpod!.get(d)).filter((v): v is number => v != null);
+                          if (!vals.length) return null;
+                          const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                          const color = avg >= 99 ? "text-emerald-600" : avg >= 95 ? "text-amber-600" : "text-red-600";
+                          return <span className={`text-[11px] font-black ${color}`}>{avg.toFixed(1)}%</span>;
                         })()}
                       </td>
                       <td /><td />
