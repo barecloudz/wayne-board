@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckSquare, Square, Plus, Clock, Users, Loader2 } from "lucide-react";
-import { completeTask, uncompleteTask } from "@/lib/actions/tasks";
+import { CheckSquare, Square, Plus, Clock, Users, Loader2, X, ChevronDown } from "lucide-react";
+import { completeTask, uncompleteTask, createTaskTemplate } from "@/lib/actions/tasks";
 import type { TaskWithCompletion } from "@/lib/actions/tasks";
 import Link from "next/link";
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ALL_ROLES = ["bc", "co_owner", "owner", "developer"];
+const ROLE_LABELS: Record<string, string> = {
+  bc: "Business Contact", co_owner: "Co-Owner", owner: "Owner", developer: "Developer",
+};
 
 export default function TasksClient({
   tasks,
@@ -17,6 +23,30 @@ export default function TasksClient({
 }) {
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newDays, setNewDays] = useState([1, 2, 3, 4, 5, 6]);
+  const [newTime, setNewTime] = useState("17:00");
+  const [newRoles, setNewRoles] = useState(["bc", "co_owner", "owner"]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isAdding, startAddTransition] = useTransition();
+
+  function handleAdd() {
+    if (!newTitle.trim()) return;
+    startAddTransition(async () => {
+      await createTaskTemplate({
+        title: newTitle.trim(),
+        description: newDesc.trim() || undefined,
+        daysOfWeek: newDays,
+        dueTime: newTime,
+        assignedRoles: newRoles,
+      });
+      setNewTitle(""); setNewDesc(""); setNewDays([1,2,3,4,5,6]);
+      setNewTime("17:00"); setNewRoles(["bc","co_owner","owner"]);
+      setShowAdd(false); setShowAdvanced(false);
+    });
+  }
 
   const completedCount = tasks.filter(t => t.completedByIds.includes(currentUserId)).length;
   const allDone = tasks.length > 0 && completedCount === tasks.length;
@@ -45,13 +75,13 @@ export default function TasksClient({
           </p>
         </div>
         {["owner", "co_owner", "bc", "developer"].includes(currentUserRole) && (
-          <Link
-            href="/dashboard/settings#tasks"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            Manage Tasks
-          </Link>
+            Add Task
+          </button>
         )}
       </div>
 
@@ -129,6 +159,89 @@ export default function TasksClient({
               </div>
             );
           })}
+        </div>
+      )}
+      {/* ── Add Task Modal ── */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+              <p className="text-white font-bold text-[15px]">New Task</p>
+              <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <input
+                autoFocus
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAdd()}
+                placeholder="Task title *"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(v => !v)}
+                className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors self-start"
+              >
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                Advanced options
+              </button>
+              {showAdvanced && (
+                <>
+                  <input
+                    value={newDesc}
+                    onChange={e => setNewDesc(e.target.value)}
+                    placeholder="Description (optional)"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                  />
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Days</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {DAY_LABELS.map((label, i) => (
+                        <button key={i} type="button"
+                          onClick={() => setNewDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newDays.includes(i) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Due by</p>
+                      <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+                        className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 transition" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Visible to</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {ALL_ROLES.map(role => (
+                          <button key={role} type="button"
+                            onClick={() => setNewRoles(prev => prev.includes(role) ? prev.filter(x => x !== role) : [...prev, role])}
+                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newRoles.includes(role) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                            {ROLE_LABELS[role]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setShowAdd(false)}
+                  className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleAdd} disabled={!newTitle.trim() || isAdding}
+                  className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  {isAdding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Save Task
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </main>
