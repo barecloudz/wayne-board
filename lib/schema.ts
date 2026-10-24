@@ -223,10 +223,12 @@ export const driverSchedules = pgTable("driver_schedules", {
   wed:       boolean("wed").notNull().default(false),
   thu:       boolean("thu").notNull().default(false),
   fri:       boolean("fri").notNull().default(false),
-  sat:       boolean("sat").notNull().default(false),
-  sun:       boolean("sun").notNull().default(false),
-  notes:     text("notes"),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  sat:         boolean("sat").notNull().default(false),
+  sun:         boolean("sun").notNull().default(false),
+  altSat:      boolean("alt_sat").notNull().default(false),
+  altSatStart: date("alt_sat_start"),
+  notes:       text("notes"),
+  updatedAt:   timestamp("updated_at").defaultNow(),
 });
 
 // ── Time Off Entries ──────────────────────────────────────────────────────────

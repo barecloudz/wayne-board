@@ -6,7 +6,7 @@ import {
   Loader2, Check, AlertTriangle, Pencil, X, CalendarPlus, ChevronLeft, ChevronRight, History, Map as MapIcon,
 } from "lucide-react";
 import WorkAreaManager from "@/app/dashboard/work-area-manager";
-import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverHireDate, setDriverTrainee } from "@/lib/actions/scheduling";
+import { upsertSchedule, addTimeOff, updateTimeOff, deleteTimeOff, updateDriverInfo, setDriverActive, addScheduleOverride, removeScheduleOverride, setDriverNoticeDate, setDriverLastDay, setDriverHireDate, setDriverTrainee, setAltSat } from "@/lib/actions/scheduling";
 import { upsertAttendance, markDayHoliday, unmarkDayHoliday } from "@/lib/actions/attendance";
 import type { AttendanceRecord, AttendanceStatus } from "@/lib/actions/attendance";
 import { setDailyVehicle } from "@/lib/actions/work-areas";
@@ -46,6 +46,7 @@ type ScheduleRow = {
   schedule: {
     mon: boolean; tue: boolean; wed: boolean; thu: boolean;
     fri: boolean; sat: boolean; sun: boolean; notes: string | null;
+    altSat: boolean; altSatStart: string | null;
   } | null;
 };
 
@@ -105,6 +106,15 @@ type DailyAssignmentRow = {
   vehicleId: number | null;
 };
 
+/** Returns true if the driver works on the given Saturday under their alt-sat pattern */
+function isAltSatWorking(altSatStart: string, dateStr: string): boolean {
+  const start = new Date(altSatStart + "T00:00:00");
+  const check = new Date(dateStr + "T00:00:00");
+  const diffMs = check.getTime() - start.getTime();
+  const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
+  return diffWeeks % 2 === 0; // even = same phase = working
+}
+
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition";
 
 export default function SchedulingClient({
@@ -125,7 +135,7 @@ export default function SchedulingClient({
 }) {
   const { locations, selectedLocationIds, allSelected } = useLocationContext();
 
-  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history">("schedules");
+  const [tab, setTab] = useState<"schedules" | "timeoff" | "coverage" | "added" | "history" | "saturdays">("schedules");
   const [waOpen, setWaOpen] = useState(false);
   const [historyDate, setHistoryDate] = useState(() => {
     // Default to yesterday
@@ -148,6 +158,10 @@ export default function SchedulingClient({
 
   // ── Holiday modal state ───────────────────────────────────────────────────
   const [holidayModal, setHolidayModal] = useState<{ dateStr: string; working: ScheduleRow[] } | null>(null);
+
+  // ── Alt-sat modal state ───────────────────────────────────────────────────
+  const [altSatModal, setAltSatModal] = useState<{ driverId: string; name: string; schedule: ScheduleRow["schedule"] } | null>(null);
+  const [altSatPending, startAltSatTransition] = useTransition();
 
   // ── Schedule editing ──────────────────────────────────────────────────────
   // Local draft state per driver: driverId -> days object
@@ -480,6 +494,15 @@ export default function SchedulingClient({
             {label}
           </button>
         ))}
+        <button
+          onClick={() => setTab("saturdays")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${
+            tab === "saturdays" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          Saturdays
+        </button>
       </div>
         <button
           onClick={() => setWaOpen(true)}
@@ -514,6 +537,11 @@ export default function SchedulingClient({
       {tab === "history" && (
         <p className="text-[13px] text-slate-400 mb-6">
           Pick any past date to see who was working, who was cut, who called out, and who had time off. Click any name in <span className="text-emerald-600 font-semibold">Working</span> to correct their attendance.
+        </p>
+      )}
+      {tab === "saturdays" && (
+        <p className="text-[13px] text-slate-400 mb-6">
+          10-week Saturday grid for all drivers with Saturday scheduled. Alt-sat drivers show their working/off pattern. Click an off-Saturday to add a one-time override.
         </p>
       )}
 
@@ -764,16 +792,31 @@ export default function SchedulingClient({
                       </td>
                       {DAYS.map((d) => (
                         <td key={d.key} className="px-2 py-3 text-center">
-                          <button
-                            onClick={() => toggleDay(row.driverId, d.key, days)}
-                            className={`w-8 h-8 rounded-lg text-[11px] font-bold transition-all border ${
-                              days[d.key]
-                                ? "bg-slate-900 text-white border-slate-900"
-                                : "bg-white text-slate-300 border-slate-200 hover:border-slate-400"
-                            }`}
-                          >
-                            {d.short}
-                          </button>
+                          <div className="flex flex-col items-center gap-1">
+                            <button
+                              onClick={() => toggleDay(row.driverId, d.key, days)}
+                              className={`w-8 h-8 rounded-lg text-[11px] font-bold transition-all border ${
+                                days[d.key]
+                                  ? "bg-slate-900 text-white border-slate-900"
+                                  : "bg-white text-slate-300 border-slate-200 hover:border-slate-400"
+                              }`}
+                            >
+                              {d.short}
+                            </button>
+                            {d.key === "sat" && days.sat && (
+                              <button
+                                onClick={() => setAltSatModal({ driverId: row.driverId, name: row.name, schedule: row.schedule })}
+                                className={`text-[9px] font-black px-1.5 py-0.5 rounded border transition-colors ${
+                                  row.schedule?.altSat
+                                    ? "bg-violet-100 text-violet-700 border-violet-300"
+                                    : "bg-slate-100 text-slate-400 border-slate-200 hover:bg-violet-50 hover:text-violet-600"
+                                }`}
+                                title="Configure alternating Saturdays"
+                              >
+                                {row.schedule?.altSat ? "Alt ✓" : "Alt"}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       ))}
                       <td className="px-4 py-3 text-right">
@@ -1096,13 +1139,25 @@ export default function SchedulingClient({
                   const key = `${d.driverId}|${dateStr}`;
                   if (offSet.has(key)) return false;
                   if (isPastLastDay(d.driverId, day)) return false;
-                  return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
+                  const isSat = dayKey === "sat";
+                  const satScheduled = isSat && d.schedule?.sat
+                    ? (d.schedule.altSat && d.schedule.altSatStart
+                        ? isAltSatWorking(d.schedule.altSatStart, dateStr)
+                        : true)
+                    : (d.schedule?.[dayKey] ?? false);
+                  return satScheduled || overrideSet.has(key);
                 });
                 const offToday = activeDrivers.filter((d) => {
                   const key = `${d.driverId}|${dateStr}`;
                   if (isPastLastDay(d.driverId, day)) return false;
                   if (!offSet.has(key)) return false;
-                  return (d.schedule && d.schedule[dayKey]) || overrideSet.has(key);
+                  const isSat = dayKey === "sat";
+                  const satScheduled = isSat && d.schedule?.sat
+                    ? (d.schedule.altSat && d.schedule.altSatStart
+                        ? isAltSatWorking(d.schedule.altSatStart, dateStr)
+                        : true)
+                    : (d.schedule?.[dayKey] ?? false);
+                  return satScheduled || overrideSet.has(key);
                 });
                 const isToday = dateStr === today;
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
@@ -1874,6 +1929,149 @@ export default function SchedulingClient({
         );
       })()}
 
+      {/* ── SATURDAYS TAB ────────────────────────────────────────────────── */}
+      {tab === "saturdays" && (() => {
+        const saturdays: string[] = [];
+        const startD = new Date(today + "T00:00:00");
+        const dayOfWeek = startD.getDay();
+        // Go back to find last Saturday (or today if Saturday), then show 10 weeks
+        const daysBackToSat = dayOfWeek === 6 ? 0 : (dayOfWeek + 1) % 7;
+        startD.setDate(startD.getDate() - daysBackToSat);
+        for (let i = 0; i < 10; i++) {
+          saturdays.push(startD.toISOString().slice(0, 10));
+          startD.setDate(startD.getDate() + 7);
+        }
+
+        const satDrivers = visibleSchedules.filter(d => d.active && d.schedule?.sat);
+        const overrideByDriverDate = new Map<string, number>();
+        for (const o of allOverrides) {
+          overrideByDriverDate.set(`${o.driverId}|${o.date}`, o.id);
+        }
+
+        return (
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px] border-collapse">
+                <thead>
+                  <tr className="bg-slate-50">
+                    <th className="text-left px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider min-w-[160px] border-b border-slate-200">Driver</th>
+                    {saturdays.map(sat => {
+                      const d = new Date(sat + "T00:00:00");
+                      const isThisSat = sat === saturdays.find(s => s >= today);
+                      return (
+                        <th key={sat} className={`px-2 py-3 text-center text-[10px] font-bold border-b border-slate-200 min-w-[72px] ${isThisSat ? "text-slate-900 bg-slate-100" : "text-slate-400"}`}>
+                          <div>{d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {satDrivers.map(driver => (
+                    <tr key={driver.driverId} className="hover:bg-slate-50/60">
+                      <td className="px-4 py-2.5">
+                        <div className="font-semibold text-slate-800">{driver.name}</div>
+                        {driver.schedule?.altSat && (
+                          <div className="text-[10px] text-violet-600 font-bold">Alt Sat</div>
+                        )}
+                      </td>
+                      {saturdays.map(sat => {
+                        const overrideId = overrideByDriverDate.get(`${driver.driverId}|${sat}`);
+                        const baseWorking = driver.schedule?.altSat && driver.schedule?.altSatStart
+                          ? isAltSatWorking(driver.schedule.altSatStart, sat)
+                          : true;
+                        const effectiveWorking = baseWorking || overrideId != null;
+                        return (
+                          <td key={sat} className="px-2 py-2 text-center">
+                            <button
+                              onClick={() => {
+                                if (overrideId != null) {
+                                  startTransition(async () => { await removeScheduleOverride(overrideId); });
+                                } else if (!baseWorking) {
+                                  startTransition(async () => { await addScheduleOverride(driver.driverId, sat); });
+                                }
+                              }}
+                              disabled={isPending || (baseWorking && overrideId == null)}
+                              className={`w-10 h-8 rounded-lg text-[10px] font-bold transition-colors ${
+                                overrideId != null
+                                  ? "bg-amber-100 text-amber-700 border border-amber-300 cursor-pointer hover:bg-amber-200"
+                                  : effectiveWorking
+                                  ? "bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default"
+                                  : "bg-slate-100 text-slate-400 border border-slate-200 cursor-pointer hover:bg-violet-50 hover:text-violet-600 hover:border-violet-200"
+                              }`}
+                              title={
+                                overrideId != null ? "Override (click to remove)" :
+                                effectiveWorking ? "Working" :
+                                "Off — click to add one-time override"
+                              }
+                            >
+                              {overrideId != null ? "OV" : effectiveWorking ? "✓" : "—"}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-slate-50 border-t-2 border-slate-200">
+                    <td className="px-4 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total working</td>
+                    {saturdays.map(sat => {
+                      const count = satDrivers.filter(d => {
+                        const ov = overrideByDriverDate.get(`${d.driverId}|${sat}`);
+                        const base = d.schedule?.altSat && d.schedule?.altSatStart
+                          ? isAltSatWorking(d.schedule.altSatStart, sat)
+                          : true;
+                        return base || ov != null;
+                      }).length;
+                      return (
+                        <td key={sat} className="px-2 py-2.5 text-center">
+                          <span className="text-[12px] font-black text-slate-700">{count}</span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tfoot>
+              </table>
+              {satDrivers.length === 0 && (
+                <div className="py-16 text-center text-slate-400 text-[13px]">No drivers have Saturday scheduled.</div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Alt-sat Modal ─────────────────────────────────────────────────── */}
+      {altSatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setAltSatModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-96 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+              <div>
+                <p className="text-white font-bold text-[15px]">Alternating Saturdays</p>
+                <p className="text-slate-400 text-[12px] mt-0.5">{altSatModal.name}</p>
+              </div>
+              <button onClick={() => setAltSatModal(null)} className="text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <AltSatModalBody
+              modal={altSatModal}
+              onClose={() => setAltSatModal(null)}
+              onSave={(altSat, altSatStart) => {
+                startAltSatTransition(async () => {
+                  await setAltSat(altSatModal.driverId, altSat, altSatStart);
+                  setAltSatModal(null);
+                });
+              }}
+              isPending={altSatPending}
+              allOverrides={allOverrides}
+              onAddOverride={(date) => startTransition(async () => { await addScheduleOverride(altSatModal.driverId, date); })}
+              onRemoveOverride={(id) => startTransition(async () => { await removeScheduleOverride(id); })}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Holiday Modal ─────────────────────────────────────────────────── */}
       {holidayModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setHolidayModal(null)}>
@@ -1920,6 +2118,116 @@ export default function SchedulingClient({
         </div>
       )}
     </main>
+  );
+}
+
+function AltSatModalBody({
+  modal, onClose, onSave, isPending, allOverrides, onAddOverride, onRemoveOverride,
+}: {
+  modal: { driverId: string; name: string; schedule: ScheduleRow["schedule"] };
+  onClose: () => void;
+  onSave: (altSat: boolean, altSatStart: string | null) => void;
+  isPending: boolean;
+  allOverrides: { id: number; driverId: string; date: string; note: string | null }[];
+  onAddOverride: (date: string) => void;
+  onRemoveOverride: (id: number) => void;
+}) {
+  const [enabled, setEnabled] = useState<boolean>(modal.schedule?.altSat ?? false);
+  const [startDate, setStartDate] = useState<string>(modal.schedule?.altSatStart ?? "");
+
+  // Compute next 8 Saturdays from today
+  const saturdays: string[] = [];
+  const d = new Date();
+  const daysToSat = (6 - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysToSat);
+  for (let i = 0; i < 8; i++) {
+    saturdays.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 7);
+  }
+
+  const driverOverrides = allOverrides.filter(o => o.driverId === modal.driverId);
+  const overrideSet = new Set(driverOverrides.map(o => o.date));
+
+  function satStatus(dateStr: string): "working" | "off" | "override" {
+    if (overrideSet.has(dateStr)) return "override";
+    if (!enabled || !startDate) return "working";
+    return isAltSatWorking(startDate, dateStr) ? "working" : "off";
+  }
+
+  return (
+    <div className="px-6 py-5 flex flex-col gap-5">
+      {/* Toggle */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[13px] font-bold text-slate-800">Alternating Schedule</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Driver works every other Saturday</p>
+        </div>
+        <button
+          onClick={() => setEnabled(e => !e)}
+          className={`w-12 h-6 rounded-full transition-colors relative ${enabled ? "bg-violet-600" : "bg-slate-200"}`}
+        >
+          <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${enabled ? "left-6" : "left-0.5"}`} />
+        </button>
+      </div>
+
+      {/* Start date picker */}
+      {enabled && (
+        <div>
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">First working Saturday</p>
+          <input
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
+          />
+          <p className="text-[10px] text-slate-400 mt-1.5">Pick any Saturday they are scheduled to work</p>
+        </div>
+      )}
+
+      {/* 8-week preview */}
+      <div>
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">8-week preview</p>
+        <div className="grid grid-cols-4 gap-1.5">
+          {saturdays.map(sat => {
+            const status = satStatus(sat);
+            const satD = new Date(sat + "T00:00:00");
+            const label = satD.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const overrideId = driverOverrides.find(o => o.date === sat)?.id;
+            return (
+              <button
+                key={sat}
+                onClick={() => overrideId != null ? onRemoveOverride(overrideId) : onAddOverride(sat)}
+                title={status === "override" ? "Click to remove override" : "Click to add one-time override"}
+                className={`px-2 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${
+                  status === "override" ? "bg-amber-100 text-amber-700 border-amber-300" :
+                  status === "working"  ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                  "bg-slate-50 text-slate-400 border-slate-200 hover:bg-violet-50 hover:text-violet-600 hover:border-violet-200"
+                }`}
+              >
+                {label}
+                {status === "override" && <span className="block text-[8px]">override</span>}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-slate-400 mt-2">Click an off-Saturday to toggle a one-time override</p>
+      </div>
+
+      {/* Save */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onSave(enabled, enabled && startDate ? startDate : null)}
+          disabled={isPending || (enabled && !startDate)}
+          className="flex-1 py-3 rounded-xl text-[13px] font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+        >
+          {isPending && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+          Save
+        </button>
+        <button onClick={onClose} className="px-4 py-3 rounded-xl text-[13px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 

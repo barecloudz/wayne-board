@@ -256,6 +256,21 @@ export async function getOverridesInRange(startDate: string, endDate: string) {
     .where(and(gte(scheduleOverrides.date, startDate), lte(scheduleOverrides.date, endDate)));
 }
 
+export async function setAltSat(
+  driverId: string,
+  altSat: boolean,
+  altSatStart: string | null,
+) {
+  await db
+    .insert(driverSchedules)
+    .values({ driverId, altSat, altSatStart: altSatStart ?? null })
+    .onConflictDoUpdate({
+      target: driverSchedules.driverId,
+      set: { altSat, altSatStart: altSatStart ?? null, updatedAt: new Date() },
+    });
+  revalidatePath("/dashboard/scheduling");
+}
+
 export async function getAllUpcomingOverrides(fromDate: string) {
   const orgId = await requireOrg();
   return db.select({ id: scheduleOverrides.id, driverId: scheduleOverrides.driverId, date: scheduleOverrides.date, note: scheduleOverrides.note, createdAt: scheduleOverrides.createdAt })
