@@ -163,22 +163,24 @@ export default function TasksClient({
       )}
       {/* ── Add Task Modal ── */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowAdd(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:p-4" onClick={() => setShowAdd(false)}>
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92vh]" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl shrink-0">
               <p className="text-white font-bold text-[15px]">New Task</p>
               <button onClick={() => setShowAdd(false)} className="text-slate-400 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="px-6 py-5 flex flex-col gap-4">
+            {/* Scrollable body */}
+            <div className="px-6 py-5 flex flex-col gap-4 overflow-y-auto flex-1">
               <input
                 autoFocus
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleAdd()}
                 placeholder="Task title *"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-[14px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
               />
               <button
                 type="button"
@@ -194,52 +196,51 @@ export default function TasksClient({
                     value={newDesc}
                     onChange={e => setNewDesc(e.target.value)}
                     placeholder="Description (optional)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
+                    className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-[14px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
                   />
                   <div>
-                    <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Days</p>
-                    <div className="flex gap-1.5 flex-wrap">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2">Days</p>
+                    <div className="flex gap-2 flex-wrap">
                       {DAY_LABELS.map((label, i) => (
                         <button key={i} type="button"
                           onClick={() => setNewDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
-                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newDays.includes(i) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                          className={`px-3 py-2 rounded-lg text-[12px] font-bold transition-colors ${newDays.includes(i) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                           {label}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div>
-                      <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Due by</p>
-                      <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
-                        className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 transition" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[11px] font-semibold text-slate-500 mb-1.5">Visible to</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {ALL_ROLES.map(role => (
-                          <button key={role} type="button"
-                            onClick={() => setNewRoles(prev => prev.includes(role) ? prev.filter(x => x !== role) : [...prev, role])}
-                            className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${newRoles.includes(role) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-                            {ROLE_LABELS[role]}
-                          </button>
-                        ))}
-                      </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2">Due by</p>
+                    <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
+                      className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-[14px] text-slate-800 outline-none focus:border-slate-400 transition" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2">Visible to</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {ALL_ROLES.map(role => (
+                        <button key={role} type="button"
+                          onClick={() => setNewRoles(prev => prev.includes(role) ? prev.filter(x => x !== role) : [...prev, role])}
+                          className={`px-3 py-2 rounded-lg text-[12px] font-bold transition-colors ${newRoles.includes(role) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                          {ROLE_LABELS[role]}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </>
               )}
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => setShowAdd(false)}
-                  className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
-                  Cancel
-                </button>
-                <button onClick={handleAdd} disabled={!newTitle.trim() || isAdding}
-                  className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
-                  {isAdding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Save Task
-                </button>
-              </div>
+            </div>
+            {/* Sticky footer */}
+            <div className="px-6 pb-8 sm:pb-5 pt-3 flex gap-2 border-t border-slate-100 shrink-0">
+              <button onClick={() => setShowAdd(false)}
+                className="flex-1 py-3 rounded-xl text-[14px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleAdd} disabled={!newTitle.trim() || isAdding}
+                className="flex-1 py-3 rounded-xl text-[14px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                {isAdding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Save Task
+              </button>
             </div>
           </div>
         </div>

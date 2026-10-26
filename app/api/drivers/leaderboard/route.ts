@@ -41,15 +41,15 @@ export async function GET() {
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rr.ryde_avg   AS ryde_score,
             rr.ryde_count AS ryde_count,
-            AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)                AS avg_ils_30d,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)              AS avg_ppod_30d,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_no_pkg_pct END)      AS avg_photo_no_pkg_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_sensitive_pct END)   AS avg_photo_sensitive_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_other_pct END)       AS avg_photo_other_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_good_pct END)          AS avg_loc_good_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_poor_pct END)          AS avg_loc_poor_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_over_mile_pct END)     AS avg_loc_over_mile_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.dtc_pct END)               AS avg_dtc_pct
+            AVG(dsw.ils_pct)                AS avg_ils_30d,
+            AVG(ppod.ppod_pct)              AS avg_ppod_30d,
+            AVG(ppod.photo_no_pkg_pct)      AS avg_photo_no_pkg_pct,
+            AVG(ppod.photo_sensitive_pct)   AS avg_photo_sensitive_pct,
+            AVG(ppod.photo_other_pct)       AS avg_photo_other_pct,
+            AVG(ppod.loc_good_pct)          AS avg_loc_good_pct,
+            AVG(ppod.loc_poor_pct)          AS avg_loc_poor_pct,
+            AVG(ppod.loc_over_mile_pct)     AS avg_loc_over_mile_pct,
+            AVG(ppod.dtc_pct)               AS avg_dtc_pct
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -64,7 +64,6 @@ export async function GET() {
             WHERE driver_id = d.driver_id
               AND organization_id = ${orgId}
               AND stars IS NOT NULL AND stars > 0
-              AND review_date >= CURRENT_DATE - INTERVAL '30 days'
           ) rr ON true
           LEFT JOIN dsw_route_days dsw
             ON dsw.driver_id = d.driver_id
@@ -106,15 +105,15 @@ export async function GET() {
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rr.ryde_avg   AS ryde_score,
             rr.ryde_count AS ryde_count,
-            AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)                AS avg_ils_30d,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)              AS avg_ppod_30d,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_no_pkg_pct END)      AS avg_photo_no_pkg_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_sensitive_pct END)   AS avg_photo_sensitive_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.photo_other_pct END)       AS avg_photo_other_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_good_pct END)          AS avg_loc_good_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_poor_pct END)          AS avg_loc_poor_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.loc_over_mile_pct END)     AS avg_loc_over_mile_pct,
-            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.dtc_pct END)               AS avg_dtc_pct
+            AVG(dsw.ils_pct)                AS avg_ils_30d,
+            AVG(ppod.ppod_pct)              AS avg_ppod_30d,
+            AVG(ppod.photo_no_pkg_pct)      AS avg_photo_no_pkg_pct,
+            AVG(ppod.photo_sensitive_pct)   AS avg_photo_sensitive_pct,
+            AVG(ppod.photo_other_pct)       AS avg_photo_other_pct,
+            AVG(ppod.loc_good_pct)          AS avg_loc_good_pct,
+            AVG(ppod.loc_poor_pct)          AS avg_loc_poor_pct,
+            AVG(ppod.loc_over_mile_pct)     AS avg_loc_over_mile_pct,
+            AVG(ppod.dtc_pct)               AS avg_dtc_pct
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -129,7 +128,6 @@ export async function GET() {
             WHERE driver_id = d.driver_id
               AND organization_id = ${orgId}
               AND stars IS NOT NULL AND stars > 0
-              AND review_date >= CURRENT_DATE - INTERVAL '30 days'
           ) rr ON true
           LEFT JOIN dsw_route_days dsw
             ON dsw.driver_id = d.driver_id
