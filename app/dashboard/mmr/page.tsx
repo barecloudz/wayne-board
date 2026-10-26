@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import MmrClient from "./mmr-client";
 import { getVehiclesForMmrDashboard, getOrgName } from "@/lib/actions/mmr";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "MMR Generator" };
 
@@ -15,6 +17,8 @@ function getPreviousMonth(): string {
 }
 
 export default async function MmrPage() {
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
   const defaultMonth = getPreviousMonth();
   const [initialVehicles, orgName] = await Promise.all([
     getVehiclesForMmrDashboard(defaultMonth),
@@ -22,7 +26,7 @@ export default async function MmrPage() {
   ]);
   return (
     <AppShell>
-      <MmrClient initialVehicles={initialVehicles} defaultMonth={defaultMonth} orgName={orgName} />
+      <MmrClient initialVehicles={initialVehicles} defaultMonth={defaultMonth} orgName={orgName} signerName={session.name} />
     </AppShell>
   );
 }

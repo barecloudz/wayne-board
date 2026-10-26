@@ -18,6 +18,7 @@ export type VehicleMmrRow = {
   mileage: number;
   stationCode: string | null;
   maintenanceCount: number;
+  maintenanceEntries: { date: string; description: string }[];
   lastGenerated: Date | null;
   lastGeneratedBy: string | null;
 };
@@ -43,8 +44,9 @@ export async function getVehiclesForMmrDashboard(monthYear: string): Promise<Veh
 
   const maintRows = await db
     .select({
-      vehicleId: vehicleMaintenanceRecords.vehicleId,
-      cnt: sql<number>`count(*)::int`,
+      vehicleId:   vehicleMaintenanceRecords.vehicleId,
+      serviceDate: vehicleMaintenanceRecords.serviceDate,
+      description: vehicleMaintenanceRecords.description,
     })
     .from(vehicleMaintenanceRecords)
     .where(
@@ -54,11 +56,14 @@ export async function getVehiclesForMmrDashboard(monthYear: string): Promise<Veh
         lte(vehicleMaintenanceRecords.serviceDate, lastDay)
       )
     )
-    .groupBy(vehicleMaintenanceRecords.vehicleId);
+    .orderBy(vehicleMaintenanceRecords.serviceDate);
 
-  const maintMap = new Map<number, number>();
+  const maintMap = new Map<number, { date: string; description: string }[]>();
   for (const r of maintRows) {
-    if (r.vehicleId !== null) maintMap.set(r.vehicleId, r.cnt);
+    if (r.vehicleId === null) continue;
+    const list = maintMap.get(r.vehicleId) ?? [];
+    list.push({ date: r.serviceDate, description: r.description });
+    maintMap.set(r.vehicleId, list);
   }
 
   const genRows = await db
@@ -80,15 +85,19 @@ export async function getVehiclesForMmrDashboard(monthYear: string): Promise<Veh
     genMap.set(r.vehicleId, { generatedAt: r.generatedAt, generatedBy: r.generatedBy });
   }
 
-  return vehicleRows.map((v) => ({
-    id:              v.id,
-    unitNumber:      v.unitNumber,
-    mileage:         v.mileage,
-    stationCode:     v.stationCode ?? null,
-    maintenanceCount: maintMap.get(v.id) ?? 0,
-    lastGenerated:   genMap.get(v.id)?.generatedAt ?? null,
-    lastGeneratedBy: genMap.get(v.id)?.generatedBy ?? null,
-  }));
+  return vehicleRows.map((v) => {
+    const entries = maintMap.get(v.id) ?? [];
+    return {
+      id:               v.id,
+      unitNumber:       v.unitNumber,
+      mileage:          v.mileage,
+      stationCode:      v.stationCode ?? null,
+      maintenanceCount: entries.length,
+      maintenanceEntries: entries,
+      lastGenerated:    genMap.get(v.id)?.generatedAt ?? null,
+      lastGeneratedBy:  genMap.get(v.id)?.generatedBy ?? null,
+    };
+  });
 }
 
 export async function recordMmrGeneration(

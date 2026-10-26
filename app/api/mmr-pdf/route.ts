@@ -46,11 +46,13 @@ function todayMDY(): string {
 
 function generateVehiclePage(p: {
   unit: string; station: string; mileage: string; companyName: string;
-  monthLabel: string; dateCompleted: string; hasRows: boolean; tableRows: string;
+  monthLabel: string; dateCompleted: string; signerName: string;
+  maintenancePerformed: boolean; outOfService: boolean; tableRows: string;
 }): string {
-  const topYes = p.hasRows ? "✓" : "";
-  const topNo  = p.hasRows ? "" : "✓";
-  const botNo  = p.hasRows ? "" : "✓";
+  const topYes = p.maintenancePerformed ? "✓" : "";
+  const topNo  = p.maintenancePerformed ? "" : "✓";
+  const q2Yes  = !p.maintenancePerformed && p.outOfService ? "✓" : "";
+  const q2No   = !p.maintenancePerformed && !p.outOfService ? "✓" : "";
   return `
 <div style="page-break-after:always;font-family:Arial,Helvetica,sans-serif;font-size:10pt;padding:0.55in 0.6in 0.4in 0.6in;color:#000;box-sizing:border-box;width:8.5in;min-height:11in;">
   <div style="border:2px solid #000;text-align:center;padding:6px 12px;margin-bottom:6px;">
@@ -80,8 +82,8 @@ function generateVehiclePage(p: {
   <div style="display:flex;align-items:flex-start;margin-bottom:10px;font-size:9pt;">
     <div style="flex:1;padding-top:1px;line-height:1.3;">If &ldquo;no&rdquo; maintenance was performed, was the unit out of service and unable to provide service (i.e., awaiting repair, on litigation hold, etc.)?</div>
     <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;padding-left:12px;">
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;"></span><span>Yes</span>
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${botNo}</span><span>No</span>
+      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${q2Yes}</span><span>Yes</span>
+      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${q2No}</span><span>No</span>
     </div>
   </div>
   <div style="margin:7px 0;">
@@ -105,7 +107,7 @@ function generateVehiclePage(p: {
     <div>
       <div style="font-size:9pt;font-weight:bold;margin-bottom:2px;">Signature of Authorized Officer or Business Contact:</div>
       <div style="border:1px solid #000;height:40px;display:flex;align-items:center;padding:0 8px;overflow:hidden;">
-        <span style="font-family:'Brush Script MT','Segoe Script',cursive;font-size:26pt;line-height:1;">Blake Nardoni</span>
+        <span style="font-family:'Brush Script MT','Segoe Script',cursive;font-size:26pt;line-height:1;">${escHtml(p.signerName)}</span>
       </div>
     </div>
     <div style="min-width:200px;">
@@ -129,16 +131,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json() as { vehicleIds: number[]; monthYear: string };
-  const { vehicleIds, monthYear } = body;
+  type VehicleInput = { vehicleId: number; mileage: string; station: string; maintenancePerformed: boolean; outOfService: boolean };
+  const body = await req.json() as { vehicles: VehicleInput[]; monthYear: string; signerName: string };
+  const { vehicles: vehicleInputs, monthYear, signerName } = body;
 
-  if (!Array.isArray(vehicleIds) || !vehicleIds.length) {
-    return NextResponse.json({ error: "vehicleIds must be a non-empty array of positive integers" }, { status: 400 });
+  if (!Array.isArray(vehicleInputs) || !vehicleInputs.length) {
+    return NextResponse.json({ error: "vehicles must be a non-empty array" }, { status: 400 });
   }
-
-  if (vehicleIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)) {
-    return NextResponse.json({ error: "vehicleIds must be a non-empty array of positive integers" }, { status: 400 });
-  }
+  const vehicleIds = vehicleInputs.map(v => v.vehicleId);
 
   if (!monthYear) {
     return NextResponse.json({ error: "Missing monthYear" }, { status: 400 });
@@ -203,11 +203,16 @@ export async function POST(req: NextRequest) {
     return ua.localeCompare(ub, undefined, { numeric: true, sensitivity: "base" });
   });
 
+  const vehicleInputMap = new Map(vehicleInputs.map(v => [v.vehicleId, v]));
+
   for (const vehicleId of sortedVehicleIds) {
     const v = vehicleMap.get(vehicleId);
     if (!v) continue;
-    const rows = maintByVehicle.get(vehicleId) ?? [];
-    const dataRows = rows.map((r) => {
+    const input = vehicleInputMap.get(vehicleId);
+    const maintenancePerformed = input?.maintenancePerformed ?? (maintByVehicle.get(vehicleId) ?? []).length > 0;
+    const outOfService = input?.outOfService ?? false;
+    const dbRows = maintenancePerformed ? (maintByVehicle.get(vehicleId) ?? []) : [];
+    const dataRows = dbRows.map((r) => {
       const d = new Date(r.serviceDate + "T00:00:00");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const dd = String(d.getDate()).padStart(2, "0");
@@ -215,9 +220,10 @@ export async function POST(req: NextRequest) {
     });
     const padCount = Math.max(0, 5 - dataRows.length);
     const padRows = Array(padCount).fill(`<tr><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">&nbsp;</td><td style="border:1px solid #000;padding:3px 6px;font-size:9pt;height:18px;">&nbsp;</td></tr>`);
-    const mileageStr = v.mileage ? v.mileage.toLocaleString("en-US") : "N/A";
-    pages.push(generateVehiclePage({ unit: v.unitNumber, station: v.stationCode ?? "", mileage: mileageStr, companyName, monthLabel, dateCompleted, hasRows: rows.length > 0, tableRows: [...dataRows, ...padRows].join("") }));
-    generationEntries.push({ vehicleId, monthYear, mileageSnapshot: mileageStr, maintenanceRowCount: rows.length });
+    const mileageStr = input?.mileage || (v.mileage ? v.mileage.toLocaleString("en-US") : "N/A");
+    const stationStr = input?.station || v.stationCode || "";
+    pages.push(generateVehiclePage({ unit: v.unitNumber, station: stationStr, mileage: mileageStr, companyName, monthLabel, dateCompleted, signerName: signerName || "Authorized Officer", maintenancePerformed, outOfService, tableRows: [...dataRows, ...padRows].join("") }));
+    generationEntries.push({ vehicleId, monthYear, mileageSnapshot: mileageStr, maintenanceRowCount: dbRows.length });
   }
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0;}@page{size:letter;margin:0;}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style></head><body>${pages.join("")}</body></html>`;
