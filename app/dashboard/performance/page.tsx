@@ -727,14 +727,14 @@ export default function PerformancePage() {
             </div>
 
             {/* Table header */}
-            <div className="grid grid-cols-[32px_1fr_80px_80px_68px_90px_68px] gap-2 px-5 py-2.5 border-b border-slate-100 bg-slate-50 text-left">
+            <div className="grid grid-cols-[28px_1fr_60px_60px_72px] md:grid-cols-[32px_1fr_80px_80px_68px_90px_68px] gap-2 px-4 md:px-5 py-2.5 border-b border-slate-100 bg-slate-50 text-left">
               <div className="flex items-center"><SortBtn col="rank" label="#" /></div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Driver</span>
-              <SortBtn col="avg_sph_30d"  label="SPH 30d" />
+              <SortBtn col="avg_sph_30d"  label="SPH" />
               <div className="hidden md:flex items-center"><SortBtn col="avg_sph_90d" label="SPH 90d" /></div>
               <SortBtn col="avg_ils_30d"  label="ILS%" />
               <SortBtn col="ryde_score"   label="Ryde" />
-              <SortBtn col="avg_ppod_30d" label="PPOD" />
+              <div className="hidden md:flex items-center"><SortBtn col="avg_ppod_30d" label="PPOD" /></div>
             </div>
 
             {loading ? (
@@ -765,7 +765,7 @@ export default function PerformancePage() {
                           setSelectedIndex(Math.max(0, idx));
                         }
                       }}
-                      className={`w-full grid grid-cols-[32px_1fr_80px_80px_68px_90px_68px] gap-2 px-5 py-3 text-left transition-colors min-h-[52px]
+                      className={`w-full grid grid-cols-[28px_1fr_60px_60px_72px] md:grid-cols-[32px_1fr_80px_80px_68px_90px_68px] gap-2 px-4 md:px-5 py-3 text-left transition-colors min-h-[52px]
                         ${isSelected ? "bg-indigo-50/60" : "hover:bg-slate-50"}`}
                     >
                       <div className="flex items-center"><RankBadge rank={d.rank} /></div>
@@ -805,7 +805,7 @@ export default function PerformancePage() {
                         )}
                       </div>
 
-                      <div className="flex items-center">
+                      <div className="hidden md:flex items-center">
                         <span className={`text-[12px] font-semibold ${ppodColor(d.avg_ppod_30d)}`}>
                           {d.avg_ppod_30d != null ? `${d.avg_ppod_30d.toFixed(1)}%` : "—"}
                         </span>
