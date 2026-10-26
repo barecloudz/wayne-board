@@ -133,12 +133,15 @@ export async function uploadPpodBatch(formData: FormData): Promise<{
     error?: string;
   }> = [];
 
+  const manualDateRaw = formData.get("manualDate") as string | null;
+  const manualDate = manualDateRaw && /^\d{4}-\d{2}-\d{2}$/.test(manualDateRaw.trim()) ? manualDateRaw.trim() : null;
+
   for (const file of ppodFiles) {
     const fileName = file.name;
     try {
-      const date = parseDateFromFilename(fileName);
+      const date = manualDate ?? parseDateFromFilename(fileName);
       if (!date) {
-        results.push({ fileName, success: false, error: `Could not parse date from filename: ${fileName}. Name should contain YYYY-MM-DD.` });
+        results.push({ fileName, success: false, error: `Could not parse date from filename: ${fileName}. Name should contain YYYY-MM-DD, or enter a Week Ending Date above.` });
         continue;
       }
 

@@ -50,6 +50,7 @@ export default function PpodUploadClient() {
   const [persistedMappings, setPersistedMappings] = useState<Record<string, string>>({});
   const [savingPersistedName, setSavingPersistedName] = useState<string | null>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
+  const [manualDate, setManualDate] = useState<string>("");
 
   // Location picker (only shown when org has multiple locations)
   const [locations, setLocations] = useState<LocationOption[]>([]);
@@ -82,6 +83,7 @@ export default function PpodUploadClient() {
       const fd = new FormData();
       ppodFiles.forEach((f) => fd.append("ppod", f));
       if (selectedLocationId) fd.append("locationId", selectedLocationId);
+      if (manualDate) fd.append("manualDate", manualDate);
       const res = await uploadPpodBatch(fd);
       setBatchResults(res.results);
       if (res.results.some((r) => r.success)) {
@@ -164,7 +166,7 @@ export default function PpodUploadClient() {
         <p className="text-[13px] font-semibold text-sky-800 mb-1">About PPOD files</p>
         <ol className="text-[12px] text-sky-700 space-y-1 list-decimal list-inside">
           <li>Download the daily PPOD report from the FedEx performance portal</li>
-          <li>The filename must include the date — e.g. <strong>ppod_2024-11-15.xlsx</strong></li>
+          <li>The filename should include the date — e.g. <strong>ppod_2024-11-15.xlsx</strong> — or enter it manually below</li>
           <li>Columns: Driver Name (LAST,FIRST), PPOD%, Total Pkgs, POD Captured</li>
           <li>You can select multiple files at once for batch upload</li>
         </ol>
@@ -239,6 +241,20 @@ export default function PpodUploadClient() {
             </div>
           </div>
         )}
+
+        {/* Manual week-ending date override */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-4">
+          <label className="block text-[13px] font-bold text-slate-800 mb-1.5">
+            Week Ending Date
+            <span className="ml-1.5 text-[11px] font-normal text-slate-400">— required if your file has no date in the name</span>
+          </label>
+          <input
+            type="date"
+            value={manualDate}
+            onChange={(e) => setManualDate(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
+          />
+        </div>
 
         <button
           onClick={handleUpload}

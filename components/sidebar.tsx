@@ -27,6 +27,7 @@ const adminItems = [
   { icon: Upload,        label: "PPOD Upload",  href: "/dashboard/payroll/ppod-upload", exact: true },
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
+  { icon: BarChart2,     label: "Weekly Report", href: "/dashboard/scorecard",      exact: true },
   { icon: Star,          label: "Ryde Scores",  href: "/dashboard/ryde",           exact: true },
   { icon: Trophy,        label: "Milestones",   href: "/dashboard/milestones",     exact: true },
   { icon: Award,         label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
