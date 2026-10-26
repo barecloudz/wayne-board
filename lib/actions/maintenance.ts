@@ -31,8 +31,8 @@ export async function submitMaintenanceRequest(
   await createNotification({
     organizationId: orgId,
     type: NOTIFICATION_TYPES.MAINTENANCE_REQUEST,
-    title: "New Maintenance Request",
-    body: `${driverName} submitted a request for Truck ${truckNumber.trim()}.`,
+    title: `There's a problem with one of your trucks`,
+    body: `${driverName} flagged an issue with Truck ${truckNumber.trim()} and needs it looked at.`,
     linkTo: "/dashboard/maintenance",
     metadata: { requestId: newRequest.id, truckNumber: truckNumber.trim(), driverName },
   });
@@ -83,8 +83,8 @@ export async function updateRequestStatus(id: number, status: RequestStatus, adm
       await createNotification({
         organizationId: orgId,
         type: NOTIFICATION_TYPES.MAINTENANCE_RESOLVED,
-        title: "Maintenance Request Resolved",
-        body: `Your maintenance request for Truck ${request.truckNumber} has been resolved.`,
+        title: `That truck issue has been taken care of`,
+        body: `Your maintenance request for Truck ${request.truckNumber} has been resolved. You're good to go.`,
         linkTo: "/dashboard/maintenance",
         recipientIds: [driver.id],
       });

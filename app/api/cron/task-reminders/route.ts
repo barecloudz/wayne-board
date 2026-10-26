@@ -55,8 +55,10 @@ export async function GET() {
       await createNotification({
         organizationId: org.id,
         type: NOTIFICATION_TYPES.TASK_OVERDUE,
-        title: `${freshOverdue.length} task${freshOverdue.length > 1 ? "s" : ""} overdue`,
-        body: `The following task${freshOverdue.length > 1 ? "s are" : " is"} past due: ${taskNames}.`,
+        title: freshOverdue.length === 1
+          ? `Hey — a daily task was just missed`
+          : `Hey — ${freshOverdue.length} daily tasks were just missed`,
+        body: `${freshOverdue.length === 1 ? "This task is" : "These tasks are"} past due and still unmarked: ${taskNames}.`,
         linkTo: "/dashboard/tasks",
         metadata: {
           taskIds: freshOverdue.map(t => t.id),

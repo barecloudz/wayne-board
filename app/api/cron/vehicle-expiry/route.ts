@@ -75,8 +75,8 @@ export async function GET(req: NextRequest) {
       await createNotification({
         organizationId: vehicle.organizationId,
         type: NOTIFICATION_TYPES.VEHICLE_EXPIRY,
-        title: "Vehicle Compliance Expiring Soon",
-        body: `Truck ${vehicle.unitNumber}: ${label} expires in ${daysUntil} day(s).`,
+        title: `Heads up — a vehicle document expires ${daysUntil === 0 ? "today" : `in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`}`,
+        body: `Truck ${vehicle.unitNumber}: ${label} ${daysUntil === 0 ? "expires today" : `expires in ${daysUntil} day${daysUntil === 1 ? "" : "s"}`}. Renew it before it causes a compliance issue.`,
         linkTo: "/dashboard/fleet",
         metadata: {
           vehicleId: vehicle.id,

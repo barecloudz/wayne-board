@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
     await createNotification({
       organizationId: org.id,
       type: NOTIFICATION_TYPES.MMR_REPORT,
-      title: "Monthly MMR Report Ready",
-      body: "Your end-of-month MMR report is now available for review.",
+      title: "Your monthly MMR report is ready to send",
+      body: "Your end-of-month MMR report has been generated and is ready for review and submission.",
       linkTo: "/dashboard/mmr",
     });
   }
