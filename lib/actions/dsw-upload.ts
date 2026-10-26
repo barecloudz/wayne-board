@@ -92,7 +92,8 @@ async function processDswPair(
     .select({ dswName: dswNameMappings.dswName, driverId: dswNameMappings.driverId })
     .from(dswNameMappings)
     .where(eq(dswNameMappings.organizationId, orgId));
-  const mappingLookup = new Map(savedMappings.map((m) => [m.dswName, m.driverId]));
+  const dismissedNames = new Set(savedMappings.filter(m => m.driverId === "__dismissed__").map(m => m.dswName));
+  const mappingLookup = new Map(savedMappings.filter(m => m.driverId !== "__dismissed__").map((m) => [m.dswName, m.driverId]));
 
   // Load drivers for auto-match fallback
   const allDrivers = await db
@@ -181,7 +182,7 @@ async function processDswPair(
 
     // Resolve driverId from saved mappings, then auto-match fallback
     const resolvedDriverId = mappingLookup.get(driverNameRaw) ?? autoMatchDriver(driverNameRaw);
-    if (!resolvedDriverId && !unmatchedNames.includes(driverNameRaw)) {
+    if (!resolvedDriverId && !dismissedNames.has(driverNameRaw) && !unmatchedNames.includes(driverNameRaw)) {
       unmatchedNames.push(driverNameRaw);
     }
 
@@ -390,6 +391,25 @@ export async function saveDswNameMapping(
   return { success: true };
 }
 
+// ── Dismiss a DSW name (terminated driver — suppress from unmatched list) ─────
+
+export async function dismissDswName(dswName: string): Promise<{ success: boolean }> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  await db
+    .insert(dswNameMappings)
+    .values({ organizationId: orgId, dswName, driverId: "__dismissed__" })
+    .onConflictDoUpdate({
+      target: [dswNameMappings.organizationId, dswNameMappings.dswName],
+      set: { driverId: "__dismissed__" },
+    });
+
+  revalidatePath("/dashboard/payroll/upload");
+  return { success: true };
+}
+
 // ── Get all DSW rows with no matched driverId (grouped by raw name) ───────────
 
 export async function getUnmatchedDswNames(): Promise<Array<{ driverNameRaw: string; rowCount: number; dates: string[] }>> {
@@ -397,22 +417,32 @@ export async function getUnmatchedDswNames(): Promise<Array<{ driverNameRaw: str
   if (!session) throw new Error("Unauthorized");
   const orgId = session.organizationId;
 
-  const rows = await db
-    .select({
-      driverNameRaw: dswRouteDays.driverNameRaw,
-      rowCount: count(),
-      dates: sql<string>`string_agg(${dswRouteDays.date}::text, ',' ORDER BY ${dswRouteDays.date} DESC)`,
-    })
-    .from(dswRouteDays)
-    .where(and(eq(dswRouteDays.organizationId, orgId), isNull(dswRouteDays.driverId)))
-    .groupBy(dswRouteDays.driverNameRaw)
-    .orderBy(count());
+  const [rows, dismissedRows] = await Promise.all([
+    db
+      .select({
+        driverNameRaw: dswRouteDays.driverNameRaw,
+        rowCount: count(),
+        dates: sql<string>`string_agg(${dswRouteDays.date}::text, ',' ORDER BY ${dswRouteDays.date} DESC)`,
+      })
+      .from(dswRouteDays)
+      .where(and(eq(dswRouteDays.organizationId, orgId), isNull(dswRouteDays.driverId)))
+      .groupBy(dswRouteDays.driverNameRaw)
+      .orderBy(count()),
+    db
+      .select({ dswName: dswNameMappings.dswName })
+      .from(dswNameMappings)
+      .where(and(eq(dswNameMappings.organizationId, orgId), eq(dswNameMappings.driverId, "__dismissed__"))),
+  ]);
 
-  return rows.map(r => ({
-    driverNameRaw: r.driverNameRaw,
-    rowCount: Number(r.rowCount),
-    dates: typeof r.dates === "string" ? r.dates.split(",").map(d => d.slice(0, 10)) : [],
-  }));
+  const dismissedSet = new Set(dismissedRows.map(r => r.dswName));
+
+  return rows
+    .filter(r => !dismissedSet.has(r.driverNameRaw))
+    .map(r => ({
+      driverNameRaw: r.driverNameRaw,
+      rowCount: Number(r.rowCount),
+      dates: typeof r.dates === "string" ? r.dates.split(",").map(d => d.slice(0, 10)) : [],
+    }));
 }
 
 // ── Get distinct uploaded dates (most recent 30) — kept for backwards compat ──

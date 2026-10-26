@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadDswBatch, deleteDswDay, saveDswNameMapping, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames } from "@/lib/actions/dsw-upload";
+import { uploadDswBatch, deleteDswDay, saveDswNameMapping, dismissDswName, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames } from "@/lib/actions/dsw-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X } from "lucide-react";
 
@@ -43,6 +43,7 @@ export default function UploadClient() {
   const [persistedUnmatched, setPersistedUnmatched] = useState<UnmatchedRow[]>([]);
   const [persistedMappings, setPersistedMappings] = useState<Record<string, string>>({});
   const [savingPersistedName, setSavingPersistedName] = useState<string | null>(null);
+  const [dismissingName, setDismissingName] = useState<string | null>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
 
   // Location picker (only shown when org has multiple locations)
@@ -116,6 +117,13 @@ export default function UploadClient() {
     await saveDswNameMapping(driverNameRaw, driverId);
     setSavingPersistedName(null);
     getDswNameMappings().then(setSavedMappings).catch(() => {});
+    refreshUnmatched();
+  }
+
+  async function handleDismiss(driverNameRaw: string) {
+    setDismissingName(driverNameRaw);
+    await dismissDswName(driverNameRaw);
+    setDismissingName(null);
     refreshUnmatched();
   }
 
@@ -409,6 +417,15 @@ export default function UploadClient() {
                 >
                   {savingPersistedName === u.driverNameRaw ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                   Link
+                </button>
+                <button
+                  onClick={() => handleDismiss(u.driverNameRaw)}
+                  disabled={dismissingName === u.driverNameRaw}
+                  title="Driver is terminated — hide from this list"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {dismissingName === u.driverNameRaw ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+                  Dismiss
                 </button>
               </div>
             ))}
