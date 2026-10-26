@@ -152,12 +152,18 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
     const wbDrivers = await sql`SELECT driver_id, name FROM drivers WHERE active = true`;
 
     function normName(n: string) {
-      return n.toLowerCase().trim().replace(/\s+/g, " ");
+      return n.toLowerCase().trim().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
     }
 
+    // Build WB driver lookup: "first last" + reversed "last first" variants
     const wbByName: Record<string, string> = {};
     for (const d of wbDrivers as any[]) {
-      wbByName[normName(d.name)] = d.driver_id;
+      const norm = normName(d.name);
+      wbByName[norm] = d.driver_id;
+      const parts = norm.split(" ");
+      if (parts.length === 2) {
+        wbByName[`${parts[1]} ${parts[0]}`] = d.driver_id;
+      }
     }
 
     // Load manual name mappings (gc_name → driver_id overrides)
@@ -165,6 +171,31 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
     const gcMappings: Record<string, string> = {};
     for (const m of mappingRows as any[]) {
       gcMappings[normName(m.gc_name)] = m.driver_id;
+    }
+
+    function fuzzyMatchGc(gcNorm: string): string | null {
+      if (wbByName[gcNorm]) return wbByName[gcNorm];
+      const gcWords = gcNorm.split(" ").filter(w => w.length >= 2);
+      if (gcWords.length === 0) return null;
+      let bestId: string | null = null;
+      let bestScore = 0;
+      for (const [wbNorm, id] of Object.entries(wbByName)) {
+        const wbWords = wbNorm.split(" ").filter(w => w.length >= 2);
+        let score = 0;
+        for (const gw of gcWords) {
+          for (const ww of wbWords) {
+            if (gw === ww) { score += 2; break; }
+            if (gw.length >= 3 && ww.startsWith(gw)) { score += 1; break; }
+            if (ww.length >= 3 && gw.startsWith(ww)) { score += 1; break; }
+          }
+        }
+        // require matching at least first + last (score >= 2)
+        if (score >= 2 && score > bestScore) {
+          bestScore = score;
+          bestId = id;
+        }
+      }
+      return bestId;
     }
 
     // ── Upsert each route-day ────────────────────────────────────────────────
@@ -175,14 +206,8 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
         : "";
 
       const norm = normName(gcDriverName);
-      // Manual mapping takes priority, then exact name, then first-name fallback
-      let driverId: string | null = gcMappings[norm] ?? wbByName[norm] ?? null;
-
-      if (!driverId && norm) {
-        const firstName = norm.split(" ")[0];
-        const hit = Object.entries(wbByName).find(([k]) => k.startsWith(firstName + " "));
-        if (hit) driverId = hit[1];
-      }
+      // Manual mapping takes priority, then fuzzy name match
+      let driverId: string | null = gcMappings[norm] ?? fuzzyMatchGc(norm) ?? null;
 
       if (driverId) matched++;
 
@@ -237,6 +262,22 @@ export async function syncGc(dateOverride?: string, orgIdOverride?: number): Pro
     }
 
     await sql`INSERT INTO settings (organization_id, key, value) VALUES (${orgId}, 'gc_last_synced_at', NOW()::text) ON CONFLICT (organization_id, key) DO UPDATE SET value = NOW()::text`;
+
+    // Retroactively patch any historically unmatched rows using the improved fuzzy logic
+    const unmatched = await sql`
+      SELECT DISTINCT driver_name FROM gc_route_days
+      WHERE organization_id = ${orgId} AND driver_id IS NULL AND driver_name != ''
+    `;
+    for (const row of unmatched as any[]) {
+      const gcNorm = normName(row.driver_name);
+      const patchId = gcMappings[gcNorm] ?? fuzzyMatchGc(gcNorm) ?? null;
+      if (patchId) {
+        await sql`
+          UPDATE gc_route_days SET driver_id = ${patchId}
+          WHERE organization_id = ${orgId} AND driver_name = ${row.driver_name} AND driver_id IS NULL
+        `;
+      }
+    }
 
     return { success: true, date: targetDate, routeDays: details.length, matched };
 
