@@ -677,6 +677,7 @@ export default function PerformancePage() {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showNoData, setShowNoData] = useState(false);
+  const detailRef = useRef<HTMLDivElement>(null);
 
   async function load() {
     setLoading(true);
@@ -690,6 +691,12 @@ export default function PerformancePage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (selected && detailRef.current) {
+      detailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selected]);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortAsc((v) => !v);
@@ -840,11 +847,13 @@ export default function PerformancePage() {
 
           {/* Driver detail panel */}
           {selected && (
-            <DriverDetail
-              driver={selected}
-              index={selectedIndex}
-              onClose={() => setSelected(null)}
-            />
+            <div ref={detailRef} className="scroll-mt-4">
+              <DriverDetail
+                driver={selected}
+                index={selectedIndex}
+                onClose={() => setSelected(null)}
+              />
+            </div>
           )}
 
           {/* SPH Trend chart */}

@@ -72,6 +72,7 @@ export default function AutoGcClient() {
   const [wbDrivers,   setWbDrivers]   = useState<{ driver_id: string; name: string }[]>([]);
   const [matching,    setMatching]    = useState<Record<string, boolean>>({});
   const [matchSelect, setMatchSelect] = useState<Record<string, string>>({});
+  const [dismissing,  setDismissing]  = useState<Record<string, boolean>>({});
 
   const [username,    setUsername]    = useState("");
   const [password,    setPassword]    = useState("");
@@ -192,6 +193,17 @@ export default function AutoGcClient() {
       body: JSON.stringify({ gcName, driverId }),
     });
     setMatching(prev => ({ ...prev, [gcName]: false }));
+    await loadStatus();
+  }
+
+  async function handleDismiss(gcName: string) {
+    setDismissing(prev => ({ ...prev, [gcName]: true }));
+    await fetch("/api/auto-gc/dismiss-driver", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gcName }),
+    });
+    setDismissing(prev => ({ ...prev, [gcName]: false }));
     await loadStatus();
   }
 
@@ -457,7 +469,7 @@ export default function AutoGcClient() {
                       </td>
                       <td className="py-3">
                         {showUnmatched && !r.driverId ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <select
                               value={matchSelect[r.driverName] ?? ""}
                               onChange={e => setMatchSelect(prev => ({ ...prev, [r.driverName]: e.target.value }))}
@@ -475,6 +487,15 @@ export default function AutoGcClient() {
                             >
                               {matching[r.driverName] ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                               Match
+                            </button>
+                            <button
+                              onClick={() => handleDismiss(r.driverName)}
+                              disabled={dismissing[r.driverName]}
+                              title="Not your driver — hide from this list"
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 transition-colors whitespace-nowrap flex items-center gap-1"
+                            >
+                              {dismissing[r.driverName] ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                              Dismiss
                             </button>
                           </div>
                         ) : (
