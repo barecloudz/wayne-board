@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import AppShell from "@/components/app-shell";
 import { getSession } from "@/lib/session";
-import { getNotificationPreferences, getAdminsWithoutEmail } from "@/lib/actions/notifications";
+import { getNotificationPreferences, getAdminsWithoutEmail, getOrgAdmins } from "@/lib/actions/notifications";
 import NotificationsClient from "./notifications-client";
 
 export const metadata: Metadata = { title: "Notification Settings" };
@@ -13,9 +13,10 @@ export default async function NotificationsPage() {
 
   const organizationId = session.organizationId;
 
-  const [preferences, adminsWithoutEmail] = await Promise.all([
+  const [preferences, adminsWithoutEmail, admins] = await Promise.all([
     getNotificationPreferences(organizationId),
     getAdminsWithoutEmail(organizationId),
+    getOrgAdmins(organizationId),
   ]);
 
   return (
@@ -36,6 +37,7 @@ export default async function NotificationsPage() {
         <NotificationsClient
           initialPreferences={preferences}
           adminsWithoutEmail={adminsWithoutEmail}
+          admins={admins}
           organizationId={organizationId}
         />
       </main>

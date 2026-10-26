@@ -31,10 +31,18 @@ type NotificationItem = {
   createdAt: string;
 };
 
+type OrgAdmin = {
+  id:    number;
+  name:  string;
+  role:  string;
+  email: string | null;
+};
+
 interface Props {
   initialPreferences: NotificationPreference[];
   adminsWithoutEmail: { id: number; name: string; role: string }[];
-  organizationId: number;
+  admins:             OrgAdmin[];
+  organizationId:     number;
 }
 
 // ── Static config ──────────────────────────────────────────────────────────────
@@ -94,6 +102,28 @@ const ROLE_OPTIONS = [
 ];
 
 const TIMING_OPTIONS = [60, 30, 7, 0];
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner", co_owner: "Co-Owner", bc: "BC", developer: "Dev",
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  owner: "bg-indigo-100 text-indigo-700",
+  co_owner: "bg-violet-100 text-violet-700",
+  bc: "bg-sky-100 text-sky-700",
+  developer: "bg-slate-100 text-slate-600",
+};
+
+const AVATAR_PALETTE = [
+  "#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6",
+  "#8b5cf6","#ec4899","#14b8a6","#f97316","#84cc16",
+];
+
+function adminColor(id: number) { return AVATAR_PALETTE[id % AVATAR_PALETTE.length]; }
+
+function adminInitials(name: string) {
+  return name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+}
 
 // Notification type → display category for history
 const TYPE_CATEGORY: Record<string, string> = {
@@ -162,6 +192,56 @@ function Chip({ label, active, onClick, disabled }: { label: string; active: boo
       `}
     >
       {label}
+    </button>
+  );
+}
+
+// ── Person card ───────────────────────────────────────────────────────────────
+
+function PersonCard({
+  admin, selected, onClick, disabled,
+}: {
+  admin: OrgAdmin; selected: boolean; onClick: () => void; disabled?: boolean;
+}) {
+  const color = adminColor(admin.id);
+  const hasEmail = !!admin.email;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group relative flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all text-left
+        ${selected
+          ? "bg-slate-900 border-slate-900 shadow-md"
+          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm"}
+        ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+      `}
+    >
+      {/* Avatar */}
+      <div
+        className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0"
+        style={{ backgroundColor: selected ? color + "33" : color + "22", color }}
+      >
+        {adminInitials(admin.name)}
+      </div>
+
+      {/* Name + role */}
+      <div className="min-w-0">
+        <p className={`text-[12px] font-semibold leading-tight truncate ${selected ? "text-white" : "text-slate-800"}`}>
+          {admin.name.split(" ")[0]}
+        </p>
+        <span className={`text-[10px] font-bold ${selected ? "text-slate-400" : "text-slate-400"}`}>
+          {ROLE_LABELS[admin.role] ?? admin.role}
+        </span>
+      </div>
+
+      {/* Email dot */}
+      <div
+        className="w-2 h-2 rounded-full shrink-0 ml-auto"
+        title={hasEmail ? admin.email! : "No email set"}
+        style={{ backgroundColor: hasEmail ? "#10b981" : "#f59e0b" }}
+      />
     </button>
   );
 }
@@ -338,6 +418,7 @@ function HistoryTab() {
 export default function NotificationsClient({
   initialPreferences,
   adminsWithoutEmail,
+  admins,
   organizationId,
 }: Props) {
   const [tab, setTab]                   = useState<"history" | "settings">("history");
@@ -364,9 +445,23 @@ export default function NotificationsClient({
   function toggleInApp(type: string)    { save(type, { inAppEnabled:  !getPref(type)?.inAppEnabled }); }
   function toggleEmail(type: string)    { save(type, { emailEnabled:  !getPref(type)?.emailEnabled }); }
 
-  function toggleRole(type: string, role: string) {
-    const current = getPref(type)?.recipientRoles ?? [];
-    save(type, { recipientRoles: current.includes(role) ? current.filter(r => r !== role) : [...current, role] });
+  function togglePerson(type: string, adminId: number) {
+    const current = getPref(type)?.recipientIds ?? [];
+    const next = current.includes(adminId)
+      ? current.filter(id => id !== adminId)
+      : [...current, adminId];
+    // Switch to individual mode — clear role-based selection
+    save(type, { recipientIds: next, recipientRoles: [] });
+  }
+
+  function isPersonSelected(type: string, adminId: number): boolean {
+    const pref = getPref(type);
+    // Explicit individual selection
+    if (pref?.recipientIds?.includes(adminId)) return true;
+    // Fall back to role-based (existing preferences)
+    const admin = admins.find(a => a.id === adminId);
+    if (admin && pref?.recipientRoles?.includes(admin.role)) return true;
+    return false;
   }
 
   function toggleTimingDay(type: string, day: number) {
@@ -402,15 +497,36 @@ export default function NotificationsClient({
       {/* ── SETTINGS TAB ── */}
       {tab === "settings" && (
         <div className="flex flex-col gap-6">
-          {/* Missing email banner */}
+
+          {/* Missing email banner — shows names, not just a count */}
           {adminsWithoutEmail.length > 0 && (
             <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-amber-50 border border-amber-200">
               <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-              <p className="text-[13px] text-amber-800 font-medium">
-                <span className="font-bold">{adminsWithoutEmail.length}</span>{" "}
-                {adminsWithoutEmail.length === 1 ? "admin is" : "admins are"} missing email
-                addresses — they&apos;ll receive in-app notifications only.
-              </p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] text-amber-800 font-semibold mb-2">
+                  These admins have no email — they&apos;ll only receive in-app notifications:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {adminsWithoutEmail.map(a => (
+                    <span
+                      key={a.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 border border-amber-200 text-[11px] font-semibold text-amber-800"
+                    >
+                      <span
+                        className="w-4 h-4 rounded-md flex items-center justify-center text-[9px] font-black"
+                        style={{ backgroundColor: adminColor(a.id) + "33", color: adminColor(a.id) }}
+                      >
+                        {adminInitials(a.name)}
+                      </span>
+                      {a.name.split(" ")[0]}
+                      <span className="opacity-60">{ROLE_LABELS[a.role] ?? a.role}</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-amber-700 mt-2">
+                  Go to <span className="font-bold">Account Settings</span> to add an email address.
+                </p>
+              </div>
             </div>
           )}
 
@@ -432,22 +548,24 @@ export default function NotificationsClient({
           {/* Cards grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredTypes.map(type => {
-              const pref = getPref(type);
-              const enabled = pref?.enabled ?? true;
-              const inApp   = pref?.inAppEnabled ?? true;
-              const email   = pref?.emailEnabled ?? false;
-              const roles   = pref?.recipientRoles ?? [];
-              const timingDays = pref?.timingDays ?? [];
-              const recipientCount = roles.length;
+              const pref        = getPref(type);
+              const enabled     = pref?.enabled ?? true;
+              const inApp       = pref?.inAppEnabled ?? true;
+              const email       = pref?.emailEnabled ?? false;
+              const timingDays  = pref?.timingDays ?? [];
+              const selectedAdmins = admins.filter(a => isPersonSelected(type, a.id));
+              const Icon = TYPE_ICONS[type] ?? Bell;
+
               let channelLabel = "";
               if (inApp && email) channelLabel = "Email + In-App";
               else if (email)     channelLabel = "Email only";
               else if (inApp)     channelLabel = "In-App only";
               else                channelLabel = "No channels";
-              const Icon = TYPE_ICONS[type] ?? Bell;
 
               return (
                 <div key={type} className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
+
+                  {/* Card header */}
                   <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                       <Icon className="w-4 h-4 text-slate-500" />
@@ -458,37 +576,33 @@ export default function NotificationsClient({
                     <Toggle checked={enabled} onChange={() => toggleEnabled(type)} />
                   </div>
 
-                  <div className={`px-5 py-4 flex flex-col gap-4 ${!enabled ? "opacity-50 pointer-events-none" : ""}`}>
-                    <p className="text-[12px] text-slate-500">{DESCRIPTIONS[type]}</p>
+                  <div className={`px-5 py-4 flex flex-col gap-4 ${!enabled ? "opacity-40 pointer-events-none" : ""}`}>
+                    <p className="text-[12px] text-slate-400 leading-relaxed">{DESCRIPTIONS[type]}</p>
+
                     <div className="border-t border-slate-100" />
 
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Channels</p>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                    {/* Delivery channels */}
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Deliver via</p>
+                      <div className="flex items-center gap-3">
+                        <label className={`flex items-center gap-2 cursor-pointer select-none px-3 py-2 rounded-xl border transition-all
+                          ${inApp ? "bg-slate-900 border-slate-900" : "bg-white border-slate-200 hover:border-slate-300"}`}>
                           <Toggle size="sm" checked={inApp} onChange={() => toggleInApp(type)} />
-                          <span className="text-[12px] text-slate-600 font-medium">In-App</span>
+                          <span className={`text-[12px] font-semibold ${inApp ? "text-white" : "text-slate-500"}`}>In-App</span>
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <label className={`flex items-center gap-2 cursor-pointer select-none px-3 py-2 rounded-xl border transition-all
+                          ${email ? "bg-slate-900 border-slate-900" : "bg-white border-slate-200 hover:border-slate-300"}`}>
                           <Toggle size="sm" checked={email} onChange={() => toggleEmail(type)} />
-                          <span className="text-[12px] text-slate-600 font-medium">Email</span>
+                          <span className={`text-[12px] font-semibold ${email ? "text-white" : "text-slate-500"}`}>Email</span>
                         </label>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Recipients</p>
-                      <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                        {ROLE_OPTIONS.map(opt => (
-                          <Chip key={opt.value} label={opt.label} active={roles.includes(opt.value)} onClick={() => toggleRole(type, opt.value)} />
-                        ))}
-                      </div>
-                    </div>
-
+                    {/* Advance notice — vehicle expiry only */}
                     {type === "vehicle_expiry" && (
-                      <div className="flex items-center justify-between gap-4">
-                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Advance Notice</p>
-                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Advance Notice</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {TIMING_OPTIONS.map(day => (
                             <Chip key={day} label={day === 0 ? "Day of" : `${day}d`} active={timingDays.includes(day)} onClick={() => toggleTimingDay(type, day)} />
                           ))}
@@ -496,13 +610,50 @@ export default function NotificationsClient({
                       </div>
                     )}
 
-                    <div className="border-t border-slate-100" />
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-500">
-                        <span>{recipientCount} recipient{recipientCount !== 1 ? "s" : ""}</span>
-                        <span className="text-slate-300">·</span>
-                        <span>{channelLabel}</span>
-                      </span>
+                    {/* Notify — person picker */}
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">Notify</p>
+                      {admins.length === 0 ? (
+                        <p className="text-[12px] text-slate-400 italic">No admins found</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {admins.map(admin => (
+                            <PersonCard
+                              key={admin.id}
+                              admin={admin}
+                              selected={isPersonSelected(type, admin.id)}
+                              onClick={() => togglePerson(type, admin.id)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer summary */}
+                    <div className="border-t border-slate-100 pt-1 flex items-center gap-2 flex-wrap">
+                      {selectedAdmins.length === 0 ? (
+                        <span className="text-[11px] text-slate-400 italic">No recipients selected</span>
+                      ) : (
+                        <>
+                          <div className="flex -space-x-1.5">
+                            {selectedAdmins.slice(0, 5).map(a => (
+                              <div
+                                key={a.id}
+                                title={a.name}
+                                className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black"
+                                style={{ backgroundColor: adminColor(a.id) + "33", color: adminColor(a.id) }}
+                              >
+                                {adminInitials(a.name)}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            {selectedAdmins.length} recipient{selectedAdmins.length !== 1 ? "s" : ""}
+                          </span>
+                          <span className="text-slate-300 text-[11px]">·</span>
+                          <span className="text-[11px] text-slate-400">{channelLabel}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

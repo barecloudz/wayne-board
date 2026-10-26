@@ -121,20 +121,32 @@ export async function getNotificationsHistory(
   return { notifications: rows, total: Number(total) };
 }
 
-// ── Admins without email addresses ──
+// ── All org admins with email status ──
 
-export async function getAdminsWithoutEmail(organizationId: number) {
+export async function getOrgAdmins(organizationId: number) {
   const rows = await db
     .select({ id: drivers.id, name: drivers.name, role: drivers.role, email: drivers.email })
     .from(drivers)
     .where(
       and(
         eq(drivers.organizationId, organizationId),
-        inArray(drivers.role, ["owner", "co_owner", "bc"])
+        eq(drivers.active, true),
+        inArray(drivers.role, ["owner", "co_owner", "bc", "developer"])
       )
-    );
+    )
+    .orderBy(drivers.name);
 
-  return rows
-    .filter((d) => !d.email)
-    .map(({ email: _email, ...rest }) => rest);
+  return rows.map((r) => ({
+    id:    r.id,
+    name:  r.name,
+    role:  r.role ?? "bc",
+    email: r.email ?? null,
+  }));
+}
+
+// ── Admins without email addresses ──
+
+export async function getAdminsWithoutEmail(organizationId: number) {
+  const all = await getOrgAdmins(organizationId);
+  return all.filter((d) => !d.email).map(({ email: _e, ...rest }) => rest);
 }
