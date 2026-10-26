@@ -40,7 +40,9 @@ export async function GET() {
                AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rs.score   AS ryde_score,
-            rs.week    AS ryde_week
+            rs.week    AS ryde_week,
+            AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)          AS avg_ils_30d,
+            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)        AS avg_ppod_30d
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -52,6 +54,12 @@ export async function GET() {
             WHERE driver_id = d.driver_id AND organization_id = ${orgId}
             ORDER BY week DESC LIMIT 1
           ) rs ON true
+          LEFT JOIN dsw_route_days dsw
+            ON dsw.driver_id = d.driver_id
+            AND dsw.organization_id = ${orgId}
+          LEFT JOIN ppod_days ppod
+            ON ppod.driver_id = d.driver_id
+            AND ppod.organization_id = ${orgId}
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
@@ -85,7 +93,9 @@ export async function GET() {
                AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rs.score   AS ryde_score,
-            rs.week    AS ryde_week
+            rs.week    AS ryde_week,
+            AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)          AS avg_ils_30d,
+            AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)        AS avg_ppod_30d
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -97,6 +107,12 @@ export async function GET() {
             WHERE driver_id = d.driver_id AND organization_id = ${orgId}
             ORDER BY week DESC LIMIT 1
           ) rs ON true
+          LEFT JOIN dsw_route_days dsw
+            ON dsw.driver_id = d.driver_id
+            AND dsw.organization_id = ${orgId}
+          LEFT JOIN ppod_days ppod
+            ON ppod.driver_id = d.driver_id
+            AND ppod.organization_id = ${orgId}
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
@@ -125,6 +141,8 @@ export async function GET() {
         worst_sph:      r.worst_sph      ? parseFloat(r.worst_sph)      : null,
         ryde_score:     r.ryde_score     ? parseFloat(r.ryde_score)     : null,
         avg_miles_30d:  r.avg_miles_30d  ? parseFloat(r.avg_miles_30d)  : null,
+        avg_ils_30d:    r.avg_ils_30d    ? parseFloat(r.avg_ils_30d)    : null,
+        avg_ppod_30d:   r.avg_ppod_30d   ? parseFloat(r.avg_ppod_30d)   : null,
         sph_trend,
         trend_delta,
       };
