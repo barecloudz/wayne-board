@@ -89,7 +89,11 @@ export async function GET() {
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
             AND d.location_id = ${locationId}
-          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count
+          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count,
+            ils.avg_ils,
+            ppod.avg_ppod, ppod.avg_photo_no_pkg_pct, ppod.avg_photo_sensitive_pct,
+            ppod.avg_photo_other_pct, ppod.avg_loc_good_pct, ppod.avg_loc_poor_pct,
+            ppod.avg_loc_over_mile_pct, ppod.avg_dtc_pct
           ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
         `
       : await sql`
@@ -166,7 +170,11 @@ export async function GET() {
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
-          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count
+          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count,
+            ils.avg_ils,
+            ppod.avg_ppod, ppod.avg_photo_no_pkg_pct, ppod.avg_photo_sensitive_pct,
+            ppod.avg_photo_other_pct, ppod.avg_loc_good_pct, ppod.avg_loc_poor_pct,
+            ppod.avg_loc_over_mile_pct, ppod.avg_dtc_pct
           ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
         `;
 
