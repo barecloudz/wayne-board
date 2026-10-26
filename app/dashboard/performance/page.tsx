@@ -17,26 +17,33 @@ import {
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Driver = {
-  rank:            number;
-  driver_id:       string;
-  name:            string;
-  avg_sph_30d:     number | null;
-  avg_sph_90d:     number | null;
-  stddev_sph_30d:  number | null;
-  days_worked_30d: number | null;
-  days_worked_90d: number | null;
-  sph_trend:       string | null;
-  trend_delta:     number | null;
-  best_sph:        number | null;
-  best_date:       string | null;
-  worst_sph:       number | null;
-  worst_date:      string | null;
-  last_worked:     string | null;
-  avg_miles_30d:   number | null;
-  ryde_score:      number | null;
-  ryde_count:      number | null;
-  avg_ils_30d:     number | null;
-  avg_ppod_30d:    number | null;
+  rank:                    number;
+  driver_id:               string;
+  name:                    string;
+  avg_sph_30d:             number | null;
+  avg_sph_90d:             number | null;
+  stddev_sph_30d:          number | null;
+  days_worked_30d:         number | null;
+  days_worked_90d:         number | null;
+  sph_trend:               string | null;
+  trend_delta:             number | null;
+  best_sph:                number | null;
+  best_date:               string | null;
+  worst_sph:               number | null;
+  worst_date:              string | null;
+  last_worked:             string | null;
+  avg_miles_30d:           number | null;
+  ryde_score:              number | null;
+  ryde_count:              number | null;
+  avg_ils_30d:             number | null;
+  avg_ppod_30d:            number | null;
+  avg_photo_no_pkg_pct:    number | null;
+  avg_photo_sensitive_pct: number | null;
+  avg_photo_other_pct:     number | null;
+  avg_loc_good_pct:        number | null;
+  avg_loc_poor_pct:        number | null;
+  avg_loc_over_mile_pct:   number | null;
+  avg_dtc_pct:             number | null;
 };
 
 type SortKey = "rank" | "avg_sph_30d" | "avg_sph_90d" | "ryde_score" | "days_worked_30d" | "trend_delta" | "avg_ils_30d" | "avg_ppod_30d";
@@ -101,6 +108,45 @@ function ppodColor(val: number | null): string {
   if (val >= 99) return "text-cyan-700";
   if (val >= 95) return "text-amber-600";
   return "text-red-600";
+}
+
+// ── PPOD helpers ───────────────────────────────────────────────────────────────
+
+function ppodRiskFlags(d: Driver): { label: string; color: string; bg: string }[] {
+  const flags: { label: string; color: string; bg: string }[] = [];
+  if (d.avg_loc_over_mile_pct != null && d.avg_loc_over_mile_pct > 30)
+    flags.push({ label: `${d.avg_loc_over_mile_pct.toFixed(0)}% off-location`, color: "text-orange-700", bg: "bg-orange-100" });
+  if (d.avg_photo_sensitive_pct != null && d.avg_photo_sensitive_pct > 1)
+    flags.push({ label: `${d.avg_photo_sensitive_pct.toFixed(1)}% sensitive info`, color: "text-red-700", bg: "bg-red-100" });
+  if (d.avg_photo_other_pct != null && d.avg_photo_other_pct > 10)
+    flags.push({ label: `${d.avg_photo_other_pct.toFixed(0)}% photo issue`, color: "text-red-700", bg: "bg-red-100" });
+  if (d.avg_loc_poor_pct != null && d.avg_loc_poor_pct > 60)
+    flags.push({ label: `${d.avg_loc_poor_pct.toFixed(0)}% poor location`, color: "text-orange-700", bg: "bg-orange-100" });
+  return flags;
+}
+
+function StackedBar({
+  segments,
+  height = "h-2",
+}: {
+  segments: { pct: number | null; color: string; title: string }[];
+  height?: string;
+}) {
+  const total = segments.reduce((s, seg) => s + (seg.pct ?? 0), 0);
+  if (total === 0) return <div className={`w-full ${height} bg-slate-100 rounded-full`} />;
+  return (
+    <div className={`flex w-full ${height} rounded-full overflow-hidden gap-px`}>
+      {segments.map((seg, i) =>
+        seg.pct != null && seg.pct > 0 ? (
+          <div
+            key={i}
+            title={`${seg.title}: ${seg.pct.toFixed(1)}%`}
+            style={{ width: `${seg.pct}%`, backgroundColor: seg.color, flexShrink: 0 }}
+          />
+        ) : null
+      )}
+    </div>
+  );
 }
 
 function consistencyScore(d: Driver): number | null {
@@ -449,16 +495,26 @@ function DriverCard({
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className="h-1 rounded-full transition-all"
-          style={{
-            width: `${pct}%`,
-            backgroundColor: color,
-          }}
-        />
+      {/* SPH progress bar */}
+      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-2">
+        <div className="h-1 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
+
+      {/* PPOD photo quality bar — only if data exists */}
+      {driver.avg_ppod_30d != null && (
+        <div>
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Photo Quality</p>
+          <StackedBar
+            height="h-1.5"
+            segments={[
+              { pct: driver.avg_ppod_30d,            color: "#10b981", title: "Good" },
+              { pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b", title: "No Pkg Visible" },
+              { pct: driver.avg_photo_sensitive_pct, color: "#f97316", title: "Sensitive Info" },
+              { pct: driver.avg_photo_other_pct,     color: "#ef4444", title: "Other" },
+            ]}
+          />
+        </div>
+      )}
     </button>
   );
 }
@@ -468,26 +524,12 @@ function DriverCard({
 function DriverDetail({ driver, index, onClose }: { driver: Driver; index: number; onClose: () => void }) {
   const color = avatarColor(index);
   const consistency = consistencyScore(driver);
-
-  const stats1 = [
-    { label: "SPH 30d",   value: driver.avg_sph_30d?.toFixed(1) ?? "—",   sub: "stops per hour" },
-    { label: "SPH 90d",   value: driver.avg_sph_90d?.toFixed(1) ?? "—",   sub: "longer-term avg" },
-    { label: "ILS%",      value: driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—", sub: "30-day avg" },
-    { label: "PPOD%",     value: driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—", sub: "30-day avg" },
-  ];
-  const stats2 = [
-    {
-      label: "Ryde",
-      value: driver.ryde_score != null ? driver.ryde_score.toFixed(2) : "—",
-      sub: driver.ryde_count != null ? `${driver.ryde_count} review${driver.ryde_count !== 1 ? "s" : ""}` : "no data",
-    },
-    { label: "Consistency", value: consistency != null ? `${consistency}%` : "—", sub: "low SPH variance" },
-    { label: "Best Day",    value: driver.best_sph?.toFixed(1) ?? "—",            sub: driver.best_date ? formatDate(driver.best_date) : "—" },
-    { label: "Days Worked", value: String(driver.days_worked_30d ?? "—"),          sub: `${driver.days_worked_90d ?? "—"} last 90d` },
-  ];
+  const riskFlags = ppodRiskFlags(driver);
+  const hasPpod = driver.avg_ppod_30d != null;
+  const hasLoc  = driver.avg_loc_good_pct != null;
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white relative">
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 md:p-6 text-white relative">
       <button
         onClick={onClose}
         className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
@@ -496,41 +538,130 @@ function DriverDetail({ driver, index, onClose }: { driver: Driver; index: numbe
       </button>
 
       {/* Avatar + name + rank */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-5">
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black flex-shrink-0"
           style={{ backgroundColor: color + "33", color }}
         >
           {initials(driver.name)}
         </div>
-        <div>
-          <h2 className="text-xl font-black text-white">{driver.name}</h2>
-          <div className="flex items-center gap-2 mt-0.5">
+        <div className="min-w-0">
+          <h2 className="text-xl font-black text-white truncate">{driver.name}</h2>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <RankBadge rank={driver.rank} size="sm" />
             <TrendIcon trend={driver.sph_trend} delta={driver.trend_delta} />
+            {riskFlags.map((f) => (
+              <span key={f.label} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${f.bg} ${f.color}`}>
+                ⚠ {f.label}
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Stat rows */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-        {stats1.map(({ label, value, sub }) => (
+      {/* Core metrics row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+        {[
+          { label: "SPH 30d",     value: driver.avg_sph_30d?.toFixed(1) ?? "—",   sub: "stops / hr" },
+          { label: "SPH 90d",     value: driver.avg_sph_90d?.toFixed(1) ?? "—",   sub: "long-term avg" },
+          { label: "ILS%",        value: driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—", sub: "in-line scan" },
+          {
+            label: "Ryde",
+            value: driver.ryde_score != null ? `${driver.ryde_score.toFixed(2)} ★` : "—",
+            sub: driver.ryde_count != null ? `${driver.ryde_count} reviews` : "no data",
+          },
+        ].map(({ label, value, sub }) => (
           <div key={label} className="bg-white/10 rounded-xl p-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-            <p className="text-2xl font-black text-white leading-none">{value}</p>
+            <p className="text-xl font-black text-white leading-none">{value}</p>
             <p className="text-[10px] text-slate-500 mt-1">{sub}</p>
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {stats2.map(({ label, value, sub }) => (
+
+      {/* Secondary metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+        {[
+          { label: "Consistency", value: consistency != null ? `${consistency}%` : "—", sub: "low SPH variance" },
+          { label: "Best Day",    value: driver.best_sph?.toFixed(1) ?? "—",            sub: driver.best_date ? formatDate(driver.best_date) : "—" },
+          { label: "Days 30d",    value: String(driver.days_worked_30d ?? "—"),          sub: `${driver.days_worked_90d ?? "—"} last 90d` },
+          {
+            label: "DTC%",
+            value: driver.avg_dtc_pct != null ? `${driver.avg_dtc_pct.toFixed(1)}%` : "—",
+            sub: "door-to-customer",
+          },
+        ].map(({ label, value, sub }) => (
           <div key={label} className="bg-white/10 rounded-xl p-3">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-            <p className="text-2xl font-black text-white leading-none">{value}</p>
+            <p className="text-xl font-black text-white leading-none">{value}</p>
             <p className="text-[10px] text-slate-500 mt-1">{sub}</p>
           </div>
         ))}
       </div>
+
+      {/* PPOD breakdown — only shown when data exists */}
+      {(hasPpod || hasLoc) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+          {/* Photo quality */}
+          {hasPpod && (
+            <div className="bg-white/8 rounded-xl p-4 border border-white/10">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Photo Quality</p>
+              <StackedBar
+                height="h-3"
+                segments={[
+                  { pct: driver.avg_ppod_30d,            color: "#10b981", title: "Good" },
+                  { pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b", title: "No Pkg Visible" },
+                  { pct: driver.avg_photo_sensitive_pct, color: "#f97316", title: "Sensitive Info" },
+                  { pct: driver.avg_photo_other_pct,     color: "#ef4444", title: "Other" },
+                ]}
+              />
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
+                {[
+                  { label: "Good",          pct: driver.avg_ppod_30d,            color: "#10b981" },
+                  { label: "No Pkg",        pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b" },
+                  { label: "Sensitive",     pct: driver.avg_photo_sensitive_pct, color: "#f97316" },
+                  { label: "Other",         pct: driver.avg_photo_other_pct,     color: "#ef4444" },
+                ].map(({ label, pct, color: c }) => pct != null && (
+                  <div key={label} className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c }} />
+                    <span className="text-[11px] text-slate-400">{label}</span>
+                    <span className="text-[11px] font-bold text-white">{pct.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location quality */}
+          {hasLoc && (
+            <div className="bg-white/8 rounded-xl p-4 border border-white/10">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Location Quality</p>
+              <StackedBar
+                height="h-3"
+                segments={[
+                  { pct: driver.avg_loc_good_pct,      color: "#06b6d4", title: "Good" },
+                  { pct: driver.avg_loc_poor_pct,      color: "#f97316", title: "Poor" },
+                  { pct: driver.avg_loc_over_mile_pct, color: "#ef4444", title: "Over 1 Mile" },
+                ]}
+              />
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
+                {[
+                  { label: "Good",       pct: driver.avg_loc_good_pct,      color: "#06b6d4" },
+                  { label: "Poor",       pct: driver.avg_loc_poor_pct,      color: "#f97316" },
+                  { label: "Over 1 mi", pct: driver.avg_loc_over_mile_pct, color: "#ef4444" },
+                ].map(({ label, pct, color: c }) => pct != null && (
+                  <div key={label} className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c }} />
+                    <span className="text-[11px] text-slate-400">{label}</span>
+                    <span className="text-[11px] font-bold text-white">{pct.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

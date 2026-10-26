@@ -27,49 +27,55 @@ function parsePpodPct(val: unknown): number | null {
   return n;
 }
 
+// Extract FedEx employee ID from "A. HALBACH (5595484)" → "5595484"
+function extractFedexId(raw: string): string | null {
+  const m = raw.match(/\((\d{5,8})\)\s*$/);
+  return m ? m[1] : null;
+}
+
+// Handles both "LAST,FIRST" and "A. LAST (ID)" formats
 function normalizePpodName(raw: string): string {
   if (!raw) return "";
-  // Format: "LAST,FIRST" → "first last"
-  const [last, ...rest] = raw.split(",");
-  const first = rest.join(" ").trim();
-  const display = first ? `${first} ${last}`.trim() : last.trim();
-  return display.toLowerCase().trim().replace(/\s+/g, " ");
+  const stripped = raw.replace(/\s*\(\d+\)\s*$/, "").trim();
+  if (stripped.includes(",")) {
+    const [last, ...rest] = stripped.split(",");
+    const first = rest.join(" ").trim();
+    const display = first ? `${first} ${last}`.trim() : last.trim();
+    return display.toLowerCase().trim().replace(/\s+/g, " ");
+  }
+  return stripped.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
 function autoMatchDriver(
   raw: string,
   driverByName: Record<string, string>,
+  driverById: Record<string, string>,
 ): string | null {
+  // Primary: FedEx ID match — exact and reliable
+  const fedexId = extractFedexId(raw);
+  if (fedexId && driverById[fedexId]) return driverById[fedexId];
+
   const normalized = normalizePpodName(raw);
   if (!normalized) return null;
   if (driverByName[normalized]) return driverByName[normalized];
-  const parts = normalized.split(" ");
+
+  const parts = normalized.replace(/\./g, "").split(" ").filter(Boolean);
   if (parts.length > 2) {
     const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
     if (driverByName[firstLast]) return driverByName[firstLast];
   }
   const significant = parts.filter((p) => p.length > 1);
   if (significant.length >= 2) {
-    // Exact word match
     const hit = Object.entries(driverByName).find(([k]) => {
       const kWords = k.split(" ");
       return significant.filter((w) => kWords.includes(w)).length >= 2;
     });
     if (hit) return hit[1];
-    // Prefix match — handles nicknames
     const hit2 = Object.entries(driverByName).find(([k]) => {
       const kWords = k.split(" ");
       let matches = 0;
       for (const w of significant) {
-        if (
-          kWords.some(
-            (kw) =>
-              kw === w ||
-              (w.length >= 3 && kw.startsWith(w)) ||
-              (kw.length >= 3 && w.startsWith(kw)),
-          )
-        )
-          matches++;
+        if (kWords.some((kw) => kw === w || (w.length >= 3 && kw.startsWith(w)) || (kw.length >= 3 && w.startsWith(kw)))) matches++;
       }
       return matches >= 2;
     });
@@ -105,8 +111,10 @@ export async function uploadPpodBatch(formData: FormData): Promise<{
     .from(drivers)
     .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
   const driverByName: Record<string, string> = {};
+  const driverById: Record<string, string> = {};
   for (const d of allDrivers) {
     driverByName[d.name.toLowerCase().trim().replace(/\s+/g, " ")] = d.driverId;
+    driverById[d.driverId] = d.driverId;
   }
 
   // Load saved name mappings
@@ -146,18 +154,55 @@ export async function uploadPpodBatch(formData: FormData): Promise<{
       const unmatchedNames: string[] = [];
 
       for (const row of dataRows) {
-        const driverNameRaw = String((row as unknown[])[0] ?? "").trim();
-        if (!driverNameRaw) continue;
+        const r = row as unknown[];
+        const driverNameRaw = String(r[0] ?? "").trim();
+        if (!driverNameRaw || driverNameRaw.toLowerCase().startsWith("total")) continue;
 
-        const ppodPct = parsePpodPct((row as unknown[])[1]);
-        const totalPkgs = parseInt(String((row as unknown[])[2] ?? ""), 10) || null;
-        const podCaptured = parseInt(String((row as unknown[])[3] ?? ""), 10) || null;
+        // Col layout from PPOD resource export:
+        // [0] RESOURCE "A. HALBACH (5595484)"
+        // [1] TOTAL CLASSIFICATIONS (photo group)
+        // [2] GOOD % (photo quality) ← ppodPct
+        // [3] NO PKG VISIBLE %
+        // [4] SENSITIVE INFO %
+        // [5] OTHER %
+        // [6] TOTAL CLASSIFICATIONS (location group)
+        // [7] GOOD % (location)
+        // [8] POOR %
+        // [9] OVER 1 MILE %
+        // [10] TOTAL APPLIED
+        // [11] DTC %
+        const ppodPct         = parsePpodPct(r[2]);
+        const photoTotal      = parseInt(String(r[1] ?? ""), 10) || null;
+        const photoNoPkgPct   = parsePpodPct(r[3]);
+        const photoSensitivePct = parsePpodPct(r[4]);
+        const photoOtherPct   = parsePpodPct(r[5]);
+        const locTotal        = parseInt(String(r[6] ?? ""), 10) || null;
+        const locGoodPct      = parsePpodPct(r[7]);
+        const locPoorPct      = parsePpodPct(r[8]);
+        const locOverMilePct  = parsePpodPct(r[9]);
+        const locTotalApplied = parseInt(String(r[10] ?? ""), 10) || null;
+        const dtcPct          = parsePpodPct(r[11]);
 
         const resolvedDriverId =
-          mappingLookup.get(driverNameRaw) ?? autoMatchDriver(driverNameRaw, driverByName);
+          mappingLookup.get(driverNameRaw) ?? autoMatchDriver(driverNameRaw, driverByName, driverById);
         if (!resolvedDriverId && !unmatchedNames.includes(driverNameRaw)) {
           unmatchedNames.push(driverNameRaw);
         }
+
+        const newFields = {
+          ...(ppodPct          != null ? { ppodPct }          : {}),
+          ...(photoTotal       != null ? { photoTotal }       : {}),
+          ...(photoNoPkgPct    != null ? { photoNoPkgPct }    : {}),
+          ...(photoSensitivePct != null ? { photoSensitivePct } : {}),
+          ...(photoOtherPct    != null ? { photoOtherPct }    : {}),
+          ...(locTotal         != null ? { locTotal }         : {}),
+          ...(locGoodPct       != null ? { locGoodPct }       : {}),
+          ...(locPoorPct       != null ? { locPoorPct }       : {}),
+          ...(locOverMilePct   != null ? { locOverMilePct }   : {}),
+          ...(locTotalApplied  != null ? { locTotalApplied }  : {}),
+          ...(dtcPct           != null ? { dtcPct }           : {}),
+          ...(locationId       != null ? { locationId }       : {}),
+        };
 
         await db
           .insert(ppodDays)
@@ -166,19 +211,13 @@ export async function uploadPpodBatch(formData: FormData): Promise<{
             date,
             driverNameRaw,
             driverId: resolvedDriverId ?? undefined,
-            ...(ppodPct != null ? { ppodPct } : {}),
-            ...(totalPkgs != null ? { totalPkgs } : {}),
-            ...(podCaptured != null ? { podCaptured } : {}),
-            ...(locationId != null ? { locationId } : {}),
+            ...newFields,
           })
           .onConflictDoUpdate({
             target: [ppodDays.organizationId, ppodDays.date, ppodDays.driverNameRaw],
             set: {
               driverId: resolvedDriverId ?? undefined,
-              ...(ppodPct != null ? { ppodPct } : {}),
-              ...(totalPkgs != null ? { totalPkgs } : {}),
-              ...(podCaptured != null ? { podCaptured } : {}),
-              ...(locationId != null ? { locationId } : {}),
+              ...newFields,
               syncedAt: new Date(),
             },
           });
