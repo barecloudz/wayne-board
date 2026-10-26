@@ -13,174 +13,113 @@ export async function GET() {
     const locationId = await getActiveLocationId();
     const orgId = session.organizationId;
 
-    const rows = locationId !== null
+    // ── 1. Drivers ───────────────────────────────────────────────────────────
+    const driverRows = locationId !== null
       ? await sql`
-          SELECT
-            d.driver_id,
-            d.name,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END)    AS avg_sph_30d,
-            STDDEV(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END) AS stddev_sph_30d,
-            COUNT(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' AND grd.stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_30d,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '90 days' THEN grd.stops_per_hour END)    AS avg_sph_90d,
-            COUNT(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '90 days' AND grd.stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_90d,
-            MAX(grd.stops_per_hour)                                                                     AS best_sph,
-            MIN(CASE WHEN grd.stops_per_hour > 0 THEN grd.stops_per_hour END)                          AS worst_sph,
-            MAX(grd.date)::text                                                                         AS last_worked,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.miles_traveled END)   AS avg_miles_30d,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '14 days' THEN grd.stops_per_hour END)   AS sph_recent,
-            AVG(CASE WHEN grd.date <  CURRENT_DATE - INTERVAL '14 days'
-                      AND grd.date >= CURRENT_DATE - INTERVAL '28 days'
-                      THEN grd.stops_per_hour END)                                                      AS sph_prior,
-            (SELECT grd2.date::text FROM gc_route_days grd2
-             WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
-               AND grd2.stops_per_hour IS NOT NULL
-             ORDER BY grd2.stops_per_hour DESC LIMIT 1)                                                 AS best_date,
-            (SELECT grd2.date::text FROM gc_route_days grd2
-             WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
-               AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
-             ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
-            rr.ryde_avg   AS ryde_score,
-            rr.ryde_count AS ryde_count,
-            ils.avg_ils                     AS avg_ils_30d,
-            ppod.avg_ppod                   AS avg_ppod_30d,
-            ppod.avg_photo_no_pkg_pct       AS avg_photo_no_pkg_pct,
-            ppod.avg_photo_sensitive_pct    AS avg_photo_sensitive_pct,
-            ppod.avg_photo_other_pct        AS avg_photo_other_pct,
-            ppod.avg_loc_good_pct           AS avg_loc_good_pct,
-            ppod.avg_loc_poor_pct           AS avg_loc_poor_pct,
-            ppod.avg_loc_over_mile_pct      AS avg_loc_over_mile_pct,
-            ppod.avg_dtc_pct                AS avg_dtc_pct
-          FROM drivers d
-          LEFT JOIN gc_route_days grd
-            ON grd.driver_id = d.driver_id
-            AND grd.organization_id = ${orgId}
-            AND grd.stops_per_hour IS NOT NULL
-            AND grd.stops_per_hour > 0
-          LEFT JOIN LATERAL (
-            SELECT
-              AVG(stars) AS ryde_avg,
-              COUNT(*)   AS ryde_count
-            FROM ryde_reviews
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-              AND stars IS NOT NULL AND stars > 0
-          ) rr ON true
-          LEFT JOIN LATERAL (
-            SELECT AVG(ils_pct) AS avg_ils
-            FROM dsw_route_days
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-          ) ils ON true
-          LEFT JOIN LATERAL (
-            SELECT
-              AVG(ppod_pct)           AS avg_ppod,
-              AVG(photo_no_pkg_pct)   AS avg_photo_no_pkg_pct,
-              AVG(photo_sensitive_pct) AS avg_photo_sensitive_pct,
-              AVG(photo_other_pct)    AS avg_photo_other_pct,
-              AVG(loc_good_pct)       AS avg_loc_good_pct,
-              AVG(loc_poor_pct)       AS avg_loc_poor_pct,
-              AVG(loc_over_mile_pct)  AS avg_loc_over_mile_pct,
-              AVG(dtc_pct)            AS avg_dtc_pct
-            FROM ppod_days
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-          ) ppod ON true
-          WHERE d.active = true
-            AND d.role = 'driver'
-            AND d.organization_id = ${orgId}
-            AND d.location_id = ${locationId}
-          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count,
-            ils.avg_ils,
-            ppod.avg_ppod, ppod.avg_photo_no_pkg_pct, ppod.avg_photo_sensitive_pct,
-            ppod.avg_photo_other_pct, ppod.avg_loc_good_pct, ppod.avg_loc_poor_pct,
-            ppod.avg_loc_over_mile_pct, ppod.avg_dtc_pct
-          ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
+          SELECT driver_id, name FROM drivers
+          WHERE active = true AND role = 'driver'
+            AND organization_id = ${orgId}
+            AND location_id = ${locationId}
         `
       : await sql`
-          SELECT
-            d.driver_id,
-            d.name,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END)    AS avg_sph_30d,
-            STDDEV(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END) AS stddev_sph_30d,
-            COUNT(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' AND grd.stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_30d,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '90 days' THEN grd.stops_per_hour END)    AS avg_sph_90d,
-            COUNT(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '90 days' AND grd.stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_90d,
-            MAX(grd.stops_per_hour)                                                                     AS best_sph,
-            MIN(CASE WHEN grd.stops_per_hour > 0 THEN grd.stops_per_hour END)                          AS worst_sph,
-            MAX(grd.date)::text                                                                         AS last_worked,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.miles_traveled END)   AS avg_miles_30d,
-            AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '14 days' THEN grd.stops_per_hour END)   AS sph_recent,
-            AVG(CASE WHEN grd.date <  CURRENT_DATE - INTERVAL '14 days'
-                      AND grd.date >= CURRENT_DATE - INTERVAL '28 days'
-                      THEN grd.stops_per_hour END)                                                      AS sph_prior,
-            (SELECT grd2.date::text FROM gc_route_days grd2
-             WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
-               AND grd2.stops_per_hour IS NOT NULL
-             ORDER BY grd2.stops_per_hour DESC LIMIT 1)                                                 AS best_date,
-            (SELECT grd2.date::text FROM gc_route_days grd2
-             WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
-               AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
-             ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
-            rr.ryde_avg   AS ryde_score,
-            rr.ryde_count AS ryde_count,
-            ils.avg_ils                     AS avg_ils_30d,
-            ppod.avg_ppod                   AS avg_ppod_30d,
-            ppod.avg_photo_no_pkg_pct       AS avg_photo_no_pkg_pct,
-            ppod.avg_photo_sensitive_pct    AS avg_photo_sensitive_pct,
-            ppod.avg_photo_other_pct        AS avg_photo_other_pct,
-            ppod.avg_loc_good_pct           AS avg_loc_good_pct,
-            ppod.avg_loc_poor_pct           AS avg_loc_poor_pct,
-            ppod.avg_loc_over_mile_pct      AS avg_loc_over_mile_pct,
-            ppod.avg_dtc_pct                AS avg_dtc_pct
-          FROM drivers d
-          LEFT JOIN gc_route_days grd
-            ON grd.driver_id = d.driver_id
-            AND grd.organization_id = ${orgId}
-            AND grd.stops_per_hour IS NOT NULL
-            AND grd.stops_per_hour > 0
-          LEFT JOIN LATERAL (
-            SELECT
-              AVG(stars) AS ryde_avg,
-              COUNT(*)   AS ryde_count
-            FROM ryde_reviews
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-              AND stars IS NOT NULL AND stars > 0
-          ) rr ON true
-          LEFT JOIN LATERAL (
-            SELECT AVG(ils_pct) AS avg_ils
-            FROM dsw_route_days
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-          ) ils ON true
-          LEFT JOIN LATERAL (
-            SELECT
-              AVG(ppod_pct)            AS avg_ppod,
-              AVG(photo_no_pkg_pct)    AS avg_photo_no_pkg_pct,
-              AVG(photo_sensitive_pct) AS avg_photo_sensitive_pct,
-              AVG(photo_other_pct)     AS avg_photo_other_pct,
-              AVG(loc_good_pct)        AS avg_loc_good_pct,
-              AVG(loc_poor_pct)        AS avg_loc_poor_pct,
-              AVG(loc_over_mile_pct)   AS avg_loc_over_mile_pct,
-              AVG(dtc_pct)             AS avg_dtc_pct
-            FROM ppod_days
-            WHERE driver_id = d.driver_id
-              AND organization_id = ${orgId}
-          ) ppod ON true
-          WHERE d.active = true
-            AND d.role = 'driver'
-            AND d.organization_id = ${orgId}
-          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count,
-            ils.avg_ils,
-            ppod.avg_ppod, ppod.avg_photo_no_pkg_pct, ppod.avg_photo_sensitive_pct,
-            ppod.avg_photo_other_pct, ppod.avg_loc_good_pct, ppod.avg_loc_poor_pct,
-            ppod.avg_loc_over_mile_pct, ppod.avg_dtc_pct
-          ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
+          SELECT driver_id, name FROM drivers
+          WHERE active = true AND role = 'driver'
+            AND organization_id = ${orgId}
         `;
 
-    const ranked = (rows as any[]).map((r, i) => {
-      const sphRecent = r.sph_recent ? parseFloat(r.sph_recent) : null;
-      const sphPrior  = r.sph_prior  ? parseFloat(r.sph_prior)  : null;
+    if (driverRows.length === 0) return NextResponse.json([]);
+
+    // ── 2. SPH from gc_route_days ────────────────────────────────────────────
+    const sphRows = await sql`
+      SELECT
+        driver_id,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN stops_per_hour END)  AS avg_sph_30d,
+        STDDEV(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN stops_per_hour END) AS stddev_sph_30d,
+        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' AND stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_30d,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '90 days' THEN stops_per_hour END)  AS avg_sph_90d,
+        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '90 days' AND stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_90d,
+        MAX(stops_per_hour)                                                                AS best_sph,
+        MIN(CASE WHEN stops_per_hour > 0 THEN stops_per_hour END)                         AS worst_sph,
+        MAX(date)::text                                                                    AS last_worked,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN miles_traveled END)  AS avg_miles_30d,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '14 days' THEN stops_per_hour END)  AS sph_recent,
+        AVG(CASE WHEN date <  CURRENT_DATE - INTERVAL '14 days'
+                  AND date >= CURRENT_DATE - INTERVAL '28 days'
+                  THEN stops_per_hour END)                                                 AS sph_prior
+      FROM gc_route_days
+      WHERE organization_id = ${orgId}
+        AND stops_per_hour IS NOT NULL AND stops_per_hour > 0
+      GROUP BY driver_id
+    `;
+
+    // ── 3. Best/worst dates ──────────────────────────────────────────────────
+    const bestDateRows = await sql`
+      SELECT DISTINCT ON (driver_id)
+        driver_id, date::text AS best_date
+      FROM gc_route_days
+      WHERE organization_id = ${orgId} AND stops_per_hour IS NOT NULL
+      ORDER BY driver_id, stops_per_hour DESC
+    `;
+
+    const worstDateRows = await sql`
+      SELECT DISTINCT ON (driver_id)
+        driver_id, date::text AS worst_date
+      FROM gc_route_days
+      WHERE organization_id = ${orgId} AND stops_per_hour IS NOT NULL AND stops_per_hour > 0
+      ORDER BY driver_id, stops_per_hour ASC
+    `;
+
+    // ── 4. RYDE reviews ──────────────────────────────────────────────────────
+    const rydeRows = await sql`
+      SELECT driver_id, AVG(stars) AS ryde_avg, COUNT(*) AS ryde_count
+      FROM ryde_reviews
+      WHERE organization_id = ${orgId}
+        AND stars IS NOT NULL AND stars > 0
+      GROUP BY driver_id
+    `;
+
+    // ── 5. ILS from dsw_route_days ───────────────────────────────────────────
+    const ilsRows = await sql`
+      SELECT driver_id, AVG(ils_pct) AS avg_ils
+      FROM dsw_route_days
+      WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
+      GROUP BY driver_id
+    `;
+
+    // ── 6. PPOD from ppod_days ───────────────────────────────────────────────
+    const ppodRows = await sql`
+      SELECT
+        driver_id,
+        AVG(ppod_pct)            AS avg_ppod,
+        AVG(photo_no_pkg_pct)    AS avg_photo_no_pkg_pct,
+        AVG(photo_sensitive_pct) AS avg_photo_sensitive_pct,
+        AVG(photo_other_pct)     AS avg_photo_other_pct,
+        AVG(loc_good_pct)        AS avg_loc_good_pct,
+        AVG(loc_poor_pct)        AS avg_loc_poor_pct,
+        AVG(loc_over_mile_pct)   AS avg_loc_over_mile_pct,
+        AVG(dtc_pct)             AS avg_dtc_pct
+      FROM ppod_days
+      WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
+      GROUP BY driver_id
+    `;
+
+    // ── Build lookup maps ────────────────────────────────────────────────────
+    const sphMap      = new Map((sphRows      as any[]).map((r) => [r.driver_id, r]));
+    const bestDateMap = new Map((bestDateRows  as any[]).map((r) => [r.driver_id, r.best_date]));
+    const worstDateMap= new Map((worstDateRows as any[]).map((r) => [r.driver_id, r.worst_date]));
+    const rydeMap     = new Map((rydeRows      as any[]).map((r) => [r.driver_id, r]));
+    const ilsMap      = new Map((ilsRows       as any[]).map((r) => [r.driver_id, r]));
+    const ppodMap     = new Map((ppodRows      as any[]).map((r) => [r.driver_id, r]));
+
+    // ── Merge ────────────────────────────────────────────────────────────────
+    const merged = (driverRows as any[]).map((d) => {
+      const sph  = sphMap.get(d.driver_id);
+      const ryde = rydeMap.get(d.driver_id);
+      const ils  = ilsMap.get(d.driver_id);
+      const ppod = ppodMap.get(d.driver_id);
+
+      const sphRecent = sph?.sph_recent ? parseFloat(sph.sph_recent) : null;
+      const sphPrior  = sph?.sph_prior  ? parseFloat(sph.sph_prior)  : null;
       let sph_trend: string | null = null;
       let trend_delta: number | null = null;
       if (sphRecent !== null && sphPrior !== null) {
@@ -189,33 +128,45 @@ export async function GET() {
         else if (sphRecent < sphPrior - 0.5) sph_trend = "declining";
         else                                  sph_trend = "stable";
       }
+
       return {
-        ...r,
-        rank:           i + 1,
-        avg_sph_30d:    r.avg_sph_30d    ? parseFloat(r.avg_sph_30d)    : null,
-        avg_sph_90d:    r.avg_sph_90d    ? parseFloat(r.avg_sph_90d)    : null,
-        stddev_sph_30d: r.stddev_sph_30d ? parseFloat(r.stddev_sph_30d) : null,
-        best_sph:       r.best_sph       ? parseFloat(r.best_sph)       : null,
-        worst_sph:      r.worst_sph      ? parseFloat(r.worst_sph)      : null,
-        ryde_score:     r.ryde_score     ? parseFloat(r.ryde_score)     : null,
-        ryde_count:     r.ryde_count     ? parseInt(r.ryde_count)       : null,
-        avg_miles_30d:  r.avg_miles_30d  ? parseFloat(r.avg_miles_30d)  : null,
-        avg_ils_30d:            r.avg_ils_30d            ? parseFloat(r.avg_ils_30d)            : null,
-        avg_ppod_30d:           r.avg_ppod_30d           ? parseFloat(r.avg_ppod_30d)           : null,
-        avg_photo_no_pkg_pct:   r.avg_photo_no_pkg_pct   ? parseFloat(r.avg_photo_no_pkg_pct)   : null,
-        avg_photo_sensitive_pct: r.avg_photo_sensitive_pct ? parseFloat(r.avg_photo_sensitive_pct) : null,
-        avg_photo_other_pct:    r.avg_photo_other_pct    ? parseFloat(r.avg_photo_other_pct)    : null,
-        avg_loc_good_pct:       r.avg_loc_good_pct       ? parseFloat(r.avg_loc_good_pct)       : null,
-        avg_loc_poor_pct:       r.avg_loc_poor_pct       ? parseFloat(r.avg_loc_poor_pct)       : null,
-        avg_loc_over_mile_pct:  r.avg_loc_over_mile_pct  ? parseFloat(r.avg_loc_over_mile_pct)  : null,
-        avg_dtc_pct:            r.avg_dtc_pct            ? parseFloat(r.avg_dtc_pct)            : null,
+        driver_id:               d.driver_id,
+        name:                    d.name,
+        avg_sph_30d:             sph?.avg_sph_30d             ? parseFloat(sph.avg_sph_30d)             : null,
+        avg_sph_90d:             sph?.avg_sph_90d             ? parseFloat(sph.avg_sph_90d)             : null,
+        stddev_sph_30d:          sph?.stddev_sph_30d          ? parseFloat(sph.stddev_sph_30d)          : null,
+        days_worked_30d:         sph?.days_worked_30d         ? parseInt(sph.days_worked_30d)           : null,
+        days_worked_90d:         sph?.days_worked_90d         ? parseInt(sph.days_worked_90d)           : null,
+        best_sph:                sph?.best_sph                ? parseFloat(sph.best_sph)                : null,
+        worst_sph:               sph?.worst_sph               ? parseFloat(sph.worst_sph)               : null,
+        last_worked:             sph?.last_worked             ?? null,
+        avg_miles_30d:           sph?.avg_miles_30d           ? parseFloat(sph.avg_miles_30d)           : null,
+        best_date:               bestDateMap.get(d.driver_id) ?? null,
+        worst_date:              worstDateMap.get(d.driver_id)?? null,
+        ryde_score:              ryde?.ryde_avg               ? parseFloat(ryde.ryde_avg)               : null,
+        ryde_count:              ryde?.ryde_count             ? parseInt(ryde.ryde_count)                : null,
+        avg_ils_30d:             ils?.avg_ils                 ? parseFloat(ils.avg_ils)                  : null,
+        avg_ppod_30d:            ppod?.avg_ppod               ? parseFloat(ppod.avg_ppod)               : null,
+        avg_photo_no_pkg_pct:    ppod?.avg_photo_no_pkg_pct   ? parseFloat(ppod.avg_photo_no_pkg_pct)   : null,
+        avg_photo_sensitive_pct: ppod?.avg_photo_sensitive_pct? parseFloat(ppod.avg_photo_sensitive_pct): null,
+        avg_photo_other_pct:     ppod?.avg_photo_other_pct    ? parseFloat(ppod.avg_photo_other_pct)    : null,
+        avg_loc_good_pct:        ppod?.avg_loc_good_pct       ? parseFloat(ppod.avg_loc_good_pct)       : null,
+        avg_loc_poor_pct:        ppod?.avg_loc_poor_pct       ? parseFloat(ppod.avg_loc_poor_pct)       : null,
+        avg_loc_over_mile_pct:   ppod?.avg_loc_over_mile_pct  ? parseFloat(ppod.avg_loc_over_mile_pct)  : null,
+        avg_dtc_pct:             ppod?.avg_dtc_pct            ? parseFloat(ppod.avg_dtc_pct)            : null,
         sph_trend,
         trend_delta,
       };
     });
 
+    // Sort by 30d SPH desc, drivers without SPH data at the bottom
+    merged.sort((a, b) => (b.avg_sph_30d ?? -1) - (a.avg_sph_30d ?? -1));
+
+    const ranked = merged.map((r, i) => ({ ...r, rank: i + 1 }));
+
     return NextResponse.json(ranked);
   } catch (err: any) {
+    console.error("[leaderboard]", err);
     return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });
   }
 }
