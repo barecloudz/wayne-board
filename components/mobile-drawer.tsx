@@ -115,7 +115,7 @@ export default function MobileDrawer() {
     <>
       {navigating && (
         <div className="md:hidden fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm flex items-center justify-center">
-          <TruckSpinner size={72} />
+          <TruckSpinner size={160} />
         </div>
       )}
       {/* ── Mobile header bar ── */}

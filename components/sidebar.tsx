@@ -200,7 +200,7 @@ export default function Sidebar() {
     <>
     {navigating && (
       <div className="hidden md:flex fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm items-center justify-center">
-        <TruckSpinner size={72} />
+        <TruckSpinner size={160} />
       </div>
     )}
     <aside className="hidden md:flex flex-col w-[220px] shrink-0 bg-white border-r border-slate-200/70 min-h-screen sticky top-0 h-screen">
