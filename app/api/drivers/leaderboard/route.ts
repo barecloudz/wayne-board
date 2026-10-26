@@ -41,15 +41,15 @@ export async function GET() {
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rr.ryde_avg   AS ryde_score,
             rr.ryde_count AS ryde_count,
-            AVG(dsw.ils_pct)                AS avg_ils_30d,
-            AVG(ppod.ppod_pct)              AS avg_ppod_30d,
-            AVG(ppod.photo_no_pkg_pct)      AS avg_photo_no_pkg_pct,
-            AVG(ppod.photo_sensitive_pct)   AS avg_photo_sensitive_pct,
-            AVG(ppod.photo_other_pct)       AS avg_photo_other_pct,
-            AVG(ppod.loc_good_pct)          AS avg_loc_good_pct,
-            AVG(ppod.loc_poor_pct)          AS avg_loc_poor_pct,
-            AVG(ppod.loc_over_mile_pct)     AS avg_loc_over_mile_pct,
-            AVG(ppod.dtc_pct)               AS avg_dtc_pct
+            ils.avg_ils                     AS avg_ils_30d,
+            ppod.avg_ppod                   AS avg_ppod_30d,
+            ppod.avg_photo_no_pkg_pct       AS avg_photo_no_pkg_pct,
+            ppod.avg_photo_sensitive_pct    AS avg_photo_sensitive_pct,
+            ppod.avg_photo_other_pct        AS avg_photo_other_pct,
+            ppod.avg_loc_good_pct           AS avg_loc_good_pct,
+            ppod.avg_loc_poor_pct           AS avg_loc_poor_pct,
+            ppod.avg_loc_over_mile_pct      AS avg_loc_over_mile_pct,
+            ppod.avg_dtc_pct                AS avg_dtc_pct
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -65,12 +65,26 @@ export async function GET() {
               AND organization_id = ${orgId}
               AND stars IS NOT NULL AND stars > 0
           ) rr ON true
-          LEFT JOIN dsw_route_days dsw
-            ON dsw.driver_id = d.driver_id
-            AND dsw.organization_id = ${orgId}
-          LEFT JOIN ppod_days ppod
-            ON ppod.driver_id = d.driver_id
-            AND ppod.organization_id = ${orgId}
+          LEFT JOIN LATERAL (
+            SELECT AVG(ils_pct) AS avg_ils
+            FROM dsw_route_days
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+          ) ils ON true
+          LEFT JOIN LATERAL (
+            SELECT
+              AVG(ppod_pct)           AS avg_ppod,
+              AVG(photo_no_pkg_pct)   AS avg_photo_no_pkg_pct,
+              AVG(photo_sensitive_pct) AS avg_photo_sensitive_pct,
+              AVG(photo_other_pct)    AS avg_photo_other_pct,
+              AVG(loc_good_pct)       AS avg_loc_good_pct,
+              AVG(loc_poor_pct)       AS avg_loc_poor_pct,
+              AVG(loc_over_mile_pct)  AS avg_loc_over_mile_pct,
+              AVG(dtc_pct)            AS avg_dtc_pct
+            FROM ppod_days
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+          ) ppod ON true
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
@@ -105,15 +119,15 @@ export async function GET() {
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
             rr.ryde_avg   AS ryde_score,
             rr.ryde_count AS ryde_count,
-            AVG(dsw.ils_pct)                AS avg_ils_30d,
-            AVG(ppod.ppod_pct)              AS avg_ppod_30d,
-            AVG(ppod.photo_no_pkg_pct)      AS avg_photo_no_pkg_pct,
-            AVG(ppod.photo_sensitive_pct)   AS avg_photo_sensitive_pct,
-            AVG(ppod.photo_other_pct)       AS avg_photo_other_pct,
-            AVG(ppod.loc_good_pct)          AS avg_loc_good_pct,
-            AVG(ppod.loc_poor_pct)          AS avg_loc_poor_pct,
-            AVG(ppod.loc_over_mile_pct)     AS avg_loc_over_mile_pct,
-            AVG(ppod.dtc_pct)               AS avg_dtc_pct
+            ils.avg_ils                     AS avg_ils_30d,
+            ppod.avg_ppod                   AS avg_ppod_30d,
+            ppod.avg_photo_no_pkg_pct       AS avg_photo_no_pkg_pct,
+            ppod.avg_photo_sensitive_pct    AS avg_photo_sensitive_pct,
+            ppod.avg_photo_other_pct        AS avg_photo_other_pct,
+            ppod.avg_loc_good_pct           AS avg_loc_good_pct,
+            ppod.avg_loc_poor_pct           AS avg_loc_poor_pct,
+            ppod.avg_loc_over_mile_pct      AS avg_loc_over_mile_pct,
+            ppod.avg_dtc_pct                AS avg_dtc_pct
           FROM drivers d
           LEFT JOIN gc_route_days grd
             ON grd.driver_id = d.driver_id
@@ -129,12 +143,26 @@ export async function GET() {
               AND organization_id = ${orgId}
               AND stars IS NOT NULL AND stars > 0
           ) rr ON true
-          LEFT JOIN dsw_route_days dsw
-            ON dsw.driver_id = d.driver_id
-            AND dsw.organization_id = ${orgId}
-          LEFT JOIN ppod_days ppod
-            ON ppod.driver_id = d.driver_id
-            AND ppod.organization_id = ${orgId}
+          LEFT JOIN LATERAL (
+            SELECT AVG(ils_pct) AS avg_ils
+            FROM dsw_route_days
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+          ) ils ON true
+          LEFT JOIN LATERAL (
+            SELECT
+              AVG(ppod_pct)            AS avg_ppod,
+              AVG(photo_no_pkg_pct)    AS avg_photo_no_pkg_pct,
+              AVG(photo_sensitive_pct) AS avg_photo_sensitive_pct,
+              AVG(photo_other_pct)     AS avg_photo_other_pct,
+              AVG(loc_good_pct)        AS avg_loc_good_pct,
+              AVG(loc_poor_pct)        AS avg_loc_poor_pct,
+              AVG(loc_over_mile_pct)   AS avg_loc_over_mile_pct,
+              AVG(dtc_pct)             AS avg_dtc_pct
+            FROM ppod_days
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+          ) ppod ON true
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
