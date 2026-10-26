@@ -72,22 +72,32 @@ function serialToDate(serial: number): Date {
   return new Date(Math.round((serial - 25569) * 86400 * 1000));
 }
 
+export async function deleteRydeResource(resourceRaw: string): Promise<void> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+  await db
+    .delete(rydeReviews)
+    .where(and(eq(rydeReviews.organizationId, orgId), eq(rydeReviews.driverId, resourceRaw)));
+  revalidatePath("/dashboard/payroll/ryde-upload");
+}
+
 export async function uploadRydeFile(
   formData: FormData
-): Promise<{ inserted: number; skipped: number; unmatched: string[]; error?: string }> {
+): Promise<{ inserted: number; duplicates: number; noRating: number; unmatched: string[]; error?: string }> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   const orgId = session.organizationId;
 
   const file = formData.get("ryde") as File | null;
-  if (!file) return { inserted: 0, skipped: 0, unmatched: [], error: "No file provided" };
+  if (!file) return { inserted: 0, duplicates: 0, noRating: 0, unmatched: [], error: "No file provided" };
 
   let wb: XLSX.WorkBook;
   try {
     const buffer = await file.arrayBuffer();
     wb = XLSX.read(new Uint8Array(buffer), { type: "array" });
   } catch {
-    return { inserted: 0, skipped: 0, unmatched: [], error: "Failed to parse Excel file" };
+    return { inserted: 0, duplicates: 0, noRating: 0, unmatched: [], error: "Failed to parse Excel file" };
   }
 
   // Use "Export" sheet or fall back to first sheet
@@ -107,7 +117,8 @@ export async function uploadRydeFile(
   }
 
   let inserted = 0;
-  let skipped = 0;
+  let duplicates = 0;
+  let noRating = 0;
   const unmatched: string[] = [];
 
   // Skip header row (index 0)
@@ -126,13 +137,13 @@ export async function uploadRydeFile(
 
     // Skip rows without a star rating
     if (starRaw == null || starRaw === "" || starRaw === 0) {
-      skipped++;
+      noRating++;
       continue;
     }
 
     const stars = typeof starRaw === "number" ? starRaw : parseInt(String(starRaw), 10);
     if (isNaN(stars) || stars === 0) {
-      skipped++;
+      noRating++;
       continue;
     }
 
@@ -200,12 +211,12 @@ export async function uploadRydeFile(
       .returning({ id: rydeReviews.id });
 
     if (result.length > 0) inserted++;
-    else skipped++;
+    else duplicates++;
   }
 
   revalidatePath("/dashboard/payroll/ryde-upload");
   revalidatePath("/driver");
-  return { inserted, skipped, unmatched };
+  return { inserted, duplicates, noRating, unmatched };
 }
 
 /**

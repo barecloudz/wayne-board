@@ -1,20 +1,38 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadRydeFile, getUploadedRydeDates, getOrgDrivers, linkRydeDriver, getUnmatchedRydeResources } from "@/lib/actions/ryde-upload";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2 } from "lucide-react";
+import { uploadRydeFile, getUploadedRydeDates, getOrgDrivers, linkRydeDriver, getUnmatchedRydeResources, deleteRydeResource } from "@/lib/actions/ryde-upload";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, X } from "lucide-react";
 
 type DriverOption = { id: number; driverId: string; name: string };
+
+function isoWeekToRange(isoWeek: string): string {
+  const m = isoWeek.match(/^(\d{4})-W(\d{2})$/);
+  if (!m) return isoWeek;
+  const year = parseInt(m[1]);
+  const week = parseInt(m[2]);
+  // Jan 4 is always in ISO week 1
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (week - 1) * 7);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  return `${fmt(monday)} – ${fmt(sunday)}, ${year}`;
+}
 
 export default function RydeUploadClient() {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const [result, setResult] = useState<{
     inserted: number;
-    skipped: number;
+    duplicates: number;
+    noRating: number;
     unmatched: string[];
     error?: string;
   } | null>(null);
+  const [deletingResource, setDeletingResource] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [uploadedWeeks, setUploadedWeeks] = useState<string[]>([]);
   const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
@@ -55,6 +73,13 @@ export default function RydeUploadClient() {
         getUploadedRydeDates().then(setUploadedWeeks).catch(() => {});
       }
     });
+  }
+
+  async function handleDeleteResource(resourceRaw: string) {
+    setDeletingResource(resourceRaw);
+    await deleteRydeResource(resourceRaw);
+    setPersistedUnmatched(prev => prev.filter(r => r !== resourceRaw));
+    setDeletingResource(null);
   }
 
   async function handleLink(resourceRaw: string) {
@@ -179,13 +204,14 @@ export default function RydeUploadClient() {
               <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-emerald-800">Import complete</p>
-                <div className="flex gap-4 mt-2 text-sm text-emerald-700">
-                  <span>
-                    <span className="font-bold">{result.inserted}</span> inserted
-                  </span>
-                  <span>
-                    <span className="font-bold">{result.skipped}</span> skipped
-                  </span>
+                <div className="flex gap-4 mt-2 text-sm text-emerald-700 flex-wrap">
+                  <span><span className="font-bold">{result.inserted}</span> inserted</span>
+                  {result.duplicates > 0 && (
+                    <span className="text-slate-500"><span className="font-bold">{result.duplicates}</span> duplicate{result.duplicates !== 1 ? "s" : ""} skipped</span>
+                  )}
+                  {result.noRating > 0 && (
+                    <span className="text-slate-400"><span className="font-bold">{result.noRating}</span> no rating</span>
+                  )}
                 </div>
                 {result.unmatched.length > 0 && pendingUnmatched.length === 0 && (
                   <div className="mt-3 flex items-center gap-2 text-emerald-700">
@@ -233,6 +259,14 @@ export default function RydeUploadClient() {
                   {linkingResource === resourceRaw ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                   Save
                 </button>
+                <button
+                  onClick={() => handleDeleteResource(resourceRaw)}
+                  disabled={deletingResource === resourceRaw}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40 shrink-0"
+                  title="Delete all records for this entry (e.g. terminated driver)"
+                >
+                  {deletingResource === resourceRaw ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                </button>
               </div>
             ))}
           </div>
@@ -254,7 +288,7 @@ export default function RydeUploadClient() {
                 key={w}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200"
               >
-                {w}
+                {isoWeekToRange(w)}
               </span>
             ))}
           </div>

@@ -36,6 +36,8 @@ export default function UploadClient() {
 
   // Upload history
   const [uploadedDates, setUploadedDates] = useState<Array<{ date: string; rowCount: number }>>([]);
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  const HISTORY_LIMIT = 7;
 
   // Persistent unmatched rows from DB (driverId IS NULL)
   const [persistedUnmatched, setPersistedUnmatched] = useState<UnmatchedRow[]>([]);
@@ -344,7 +346,7 @@ export default function UploadClient() {
             <span className="ml-auto text-[11px] text-slate-400">{uploadedDates.length} day{uploadedDates.length !== 1 ? "s" : ""}</span>
           </div>
           <div className="flex flex-col divide-y divide-slate-100">
-            {uploadedDates.map(({ date, rowCount }) => (
+            {(showAllHistory ? uploadedDates : uploadedDates.slice(0, HISTORY_LIMIT)).map(({ date, rowCount }) => (
               <div key={date} className="flex items-center gap-3 py-2.5">
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-slate-800">{formatDate(date)}</p>
@@ -361,6 +363,14 @@ export default function UploadClient() {
               </div>
             ))}
           </div>
+          {uploadedDates.length > HISTORY_LIMIT && (
+            <button
+              onClick={() => setShowAllHistory(v => !v)}
+              className="mt-3 w-full text-[12px] font-semibold text-slate-400 hover:text-slate-600 transition-colors text-center"
+            >
+              {showAllHistory ? "Show less" : `Show all ${uploadedDates.length} days`}
+            </button>
+          )}
         </div>
       )}
 
