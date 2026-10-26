@@ -39,8 +39,8 @@ export async function GET() {
              WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
                AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
-            rs.score   AS ryde_score,
-            rs.week    AS ryde_week,
+            rr.ryde_avg   AS ryde_score,
+            rr.ryde_count AS ryde_count,
             AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)          AS avg_ils_30d,
             AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)        AS avg_ppod_30d
           FROM drivers d
@@ -50,10 +50,15 @@ export async function GET() {
             AND grd.stops_per_hour IS NOT NULL
             AND grd.stops_per_hour > 0
           LEFT JOIN LATERAL (
-            SELECT score, week FROM ryde_scores
-            WHERE driver_id = d.driver_id AND organization_id = ${orgId}
-            ORDER BY week DESC LIMIT 1
-          ) rs ON true
+            SELECT
+              AVG(stars) AS ryde_avg,
+              COUNT(*)   AS ryde_count
+            FROM ryde_reviews
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+              AND stars IS NOT NULL AND stars > 0
+              AND review_date >= CURRENT_DATE - INTERVAL '30 days'
+          ) rr ON true
           LEFT JOIN dsw_route_days dsw
             ON dsw.driver_id = d.driver_id
             AND dsw.organization_id = ${orgId}
@@ -64,7 +69,7 @@ export async function GET() {
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
             AND d.location_id = ${locationId}
-          GROUP BY d.driver_id, d.name, rs.score, rs.week
+          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count
           ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
         `
       : await sql`
@@ -92,8 +97,8 @@ export async function GET() {
              WHERE grd2.driver_id = d.driver_id AND grd2.organization_id = ${orgId}
                AND grd2.stops_per_hour IS NOT NULL AND grd2.stops_per_hour > 0
              ORDER BY grd2.stops_per_hour ASC LIMIT 1)                                                  AS worst_date,
-            rs.score   AS ryde_score,
-            rs.week    AS ryde_week,
+            rr.ryde_avg   AS ryde_score,
+            rr.ryde_count AS ryde_count,
             AVG(CASE WHEN dsw.date >= CURRENT_DATE - INTERVAL '30 days' THEN dsw.ils_pct END)          AS avg_ils_30d,
             AVG(CASE WHEN ppod.date >= CURRENT_DATE - INTERVAL '30 days' THEN ppod.ppod_pct END)        AS avg_ppod_30d
           FROM drivers d
@@ -103,10 +108,15 @@ export async function GET() {
             AND grd.stops_per_hour IS NOT NULL
             AND grd.stops_per_hour > 0
           LEFT JOIN LATERAL (
-            SELECT score, week FROM ryde_scores
-            WHERE driver_id = d.driver_id AND organization_id = ${orgId}
-            ORDER BY week DESC LIMIT 1
-          ) rs ON true
+            SELECT
+              AVG(stars) AS ryde_avg,
+              COUNT(*)   AS ryde_count
+            FROM ryde_reviews
+            WHERE driver_id = d.driver_id
+              AND organization_id = ${orgId}
+              AND stars IS NOT NULL AND stars > 0
+              AND review_date >= CURRENT_DATE - INTERVAL '30 days'
+          ) rr ON true
           LEFT JOIN dsw_route_days dsw
             ON dsw.driver_id = d.driver_id
             AND dsw.organization_id = ${orgId}
@@ -116,7 +126,7 @@ export async function GET() {
           WHERE d.active = true
             AND d.role = 'driver'
             AND d.organization_id = ${orgId}
-          GROUP BY d.driver_id, d.name, rs.score, rs.week
+          GROUP BY d.driver_id, d.name, rr.ryde_avg, rr.ryde_count
           ORDER BY COALESCE(AVG(CASE WHEN grd.date >= CURRENT_DATE - INTERVAL '30 days' THEN grd.stops_per_hour END), 0) DESC NULLS LAST
         `;
 
@@ -140,6 +150,7 @@ export async function GET() {
         best_sph:       r.best_sph       ? parseFloat(r.best_sph)       : null,
         worst_sph:      r.worst_sph      ? parseFloat(r.worst_sph)      : null,
         ryde_score:     r.ryde_score     ? parseFloat(r.ryde_score)     : null,
+        ryde_count:     r.ryde_count     ? parseInt(r.ryde_count)       : null,
         avg_miles_30d:  r.avg_miles_30d  ? parseFloat(r.avg_miles_30d)  : null,
         avg_ils_30d:    r.avg_ils_30d    ? parseFloat(r.avg_ils_30d)    : null,
         avg_ppod_30d:   r.avg_ppod_30d   ? parseFloat(r.avg_ppod_30d)   : null,
