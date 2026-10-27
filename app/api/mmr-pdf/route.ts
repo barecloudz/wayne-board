@@ -125,8 +125,8 @@ function generateVehiclePage(p: {
       </div>
     </div>
   </div>
-  <div style="font-style:italic;font-size:7.5pt;line-height:1.4;border-top:1px solid #000;padding-top:5px;margin-bottom:4px;">* The Monthly Maintenance Record (MMR) is FedEx&#8217;s systematic method of obtaining vehicle maintenance records for service provider-owned vehicles in compliance with the Federal Motor Carrier Safety Regulations which require motor carriers to have a systematic method of causing vehicles operating under their motor carrier operating authority to be repaired and maintained. Therefore, if FedEx does not receive records for a vehicle by the 20th of the month following the month in which maintenance or repairs, were performed, packages will not be made available to this vehicle.</div>
-  <div style="display:flex;justify-content:space-between;font-size:8pt;">
+  <div style="font-style:italic;font-size:7.5pt;line-height:1.4;margin-bottom:6px;">* The Monthly Maintenance Record (MMR) is FedEx&#8217;s systematic method of obtaining vehicle maintenance records for service provider-owned vehicles in compliance with the Federal Motor Carrier Safety Regulations which require motor carriers to have a systematic method of causing vehicles operating under their motor carrier operating authority to be repaired and maintained. Therefore, if FedEx does not receive records for a vehicle by the 20th of the month following the month in which maintenance or repairs, were performed, packages will not be made available to this vehicle.</div>
+  <div style="display:flex;justify-content:space-between;font-size:8pt;border-top:1px solid #000;padding-top:4px;">
     <span>This form for service providers is accessed through mybizaccount.fedex.com</span>
     <span>Page 1 of 1</span>
   </div>
