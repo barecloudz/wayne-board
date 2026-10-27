@@ -5,7 +5,7 @@ import AppShell from "@/components/app-shell";
 import {
   TrendingUp, TrendingDown, Minus, Star,
   ChevronUp, ChevronDown, Loader2, RefreshCw,
-  ChevronDown as ChevronDownIcon, AlertCircle,
+  AlertCircle,
   BarChart2, X,
 } from "lucide-react";
 import Link from "next/link";
@@ -105,7 +105,7 @@ function ilsColor(val: number | null): string {
 
 function ppodColor(val: number | null): string {
   if (val == null) return "text-slate-400";
-  if (val >= 99) return "text-cyan-700";
+  if (val >= 99) return "text-emerald-600";
   if (val >= 95) return "text-amber-600";
   return "text-red-600";
 }
@@ -315,7 +315,7 @@ function SphChart({ allDrivers }: { allDrivers: Driver[] }) {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
               Drivers ({visibleDriverIds.size}/{allDriverCount})
-              <ChevronDownIcon className="w-3.5 h-3.5" />
+              <ChevronDown className="w-3.5 h-3.5" />
             </button>
             {dropdownOpen && (
               <div className="absolute right-0 mt-1 z-20 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[200px] py-1.5 max-h-72 overflow-y-auto">
@@ -490,7 +490,7 @@ function DriverCard({
           {driver.ryde_score != null ? driver.ryde_score.toFixed(1) : <span className="text-slate-500">—</span>}
         </span>
         <span className={`text-[11px] font-semibold flex items-center gap-1 ${ppodColor(driver.avg_ppod_30d)}`}>
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ppod_30d == null ? "bg-slate-600" : driver.avg_ppod_30d >= 99 ? "bg-cyan-500" : driver.avg_ppod_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ppod_30d == null ? "bg-slate-600" : driver.avg_ppod_30d >= 99 ? "bg-emerald-500" : driver.avg_ppod_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
           {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
         </span>
       </div>
@@ -769,7 +769,7 @@ export default function PerformancePage() {
       label: "Team PPOD",
       value: teamAvgPpod ? `${teamAvgPpod.toFixed(1)}%` : "—",
       sub: `${days}d avg · proof of delivery`,
-      border: "border-l-cyan-500",
+      border: "border-l-emerald-500",
     },
     {
       label: "Team Ryde",

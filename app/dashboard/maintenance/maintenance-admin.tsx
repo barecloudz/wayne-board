@@ -271,8 +271,11 @@ export default function MaintenanceAdmin({
 
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden mb-4">
             {visible.length === 0 ? (
-              <div className="px-6 py-12 text-center text-slate-400 text-[13px]">
-                No {filter === "all" ? "open" : filter.replace("_", " ")} requests.
+              <div className="px-6 py-10 flex flex-col items-center gap-3 text-center">
+                <Wrench className="w-8 h-8 text-slate-200" />
+                <p className="text-[13px] text-slate-400">
+                  No {filter === "all" ? "open" : filter.replace("_", " ")} requests.
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -437,7 +440,7 @@ export default function MaintenanceAdmin({
           })()}
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
           {records.length === 0 ? (
-            <div className="px-6 py-16 text-center">
+            <div className="px-6 py-10 text-center">
               <FileText className="w-8 h-8 text-slate-200 mx-auto mb-3" />
               <p className="text-[13px] text-slate-400 mb-4">No maintenance records yet.</p>
               <button

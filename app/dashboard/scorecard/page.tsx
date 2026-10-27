@@ -147,9 +147,9 @@ function MetricCell({
 
 function SummaryTile({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-[28px] font-extrabold text-slate-900 leading-none">{value.toLocaleString()}</p>
+    <div className="bg-white border border-slate-200/80 rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col gap-1">
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+      <span className="text-[24px] font-extrabold text-slate-900 leading-none tracking-tight">{value.toLocaleString()}</span>
       {sub && <p className="text-[12px] text-slate-400">{sub}</p>}
     </div>
   );
@@ -241,7 +241,7 @@ export default function ScorecardPage() {
 
           {/* ── Loading skeleton ── */}
           {loading && !data && (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
             </div>
           )}
@@ -337,17 +337,17 @@ export default function ScorecardPage() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-left sticky left-0 bg-slate-50">
+                        <th className="px-4 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-left sticky left-0 bg-slate-50">
                           Driver
                         </th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">ILS%</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Act Del%</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">PPOD%</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Ryde</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">DNA</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Code 85</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Days</th>
-                        <th className="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Miles</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">ILS%</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Act Del%</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">PPOD%</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Ryde</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">DNA</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Code 85</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Days</th>
+                        <th className="px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">Miles</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">

@@ -63,7 +63,7 @@ export default async function Home() {
 
   return (
     <AppShell>
-      <main className="flex-1 px-8 py-8 max-w-[1100px] w-full mx-auto">
+      <main className="flex-1 px-6 py-8 max-w-[1100px] w-full mx-auto">
         {/* Page header */}
         <div className="mb-8">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
@@ -90,7 +90,7 @@ export default async function Home() {
               <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 {kpi.label}
               </p>
-              <span className="text-[22px] font-extrabold text-slate-900 leading-none tracking-tight">
+              <span className="text-[24px] font-extrabold text-slate-900 leading-none tracking-tight">
                 {kpi.value}
               </span>
             </div>
@@ -101,7 +101,7 @@ export default async function Home() {
         <Link
           href="/dashboard/scheduling"
           className="group flex items-center gap-6 bg-slate-900 hover:bg-slate-800 transition-colors
-            rounded-2xl px-7 py-6 mb-4 shadow-[0_4px_24px_rgba(0,0,0,0.12)]"
+            rounded-2xl px-7 py-6 mb-4 border border-white/[0.06]"
         >
           <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
             <CalendarDays className="w-8 h-8 text-white" />
