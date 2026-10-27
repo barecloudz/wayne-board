@@ -67,7 +67,7 @@ const RydeShareCard = React.forwardRef<HTMLDivElement, RydeShareCardProps>(
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", color: "#94a3b8", textTransform: "uppercase" as const }}>{orgName}</div>
-            <div style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.06em", marginTop: 3 }}>RYDE · Wayne Board</div>
+            <div style={{ fontSize: 10, color: "#64748b", letterSpacing: "0.06em", marginTop: 3 }}>RYDE · MyGroundOps</div>
           </div>
           <div style={{
             fontSize: 10, fontWeight: 800, letterSpacing: "0.1em",

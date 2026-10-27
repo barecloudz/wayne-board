@@ -16,7 +16,7 @@ export default function Header() {
           />
           <div className="flex flex-col leading-tight">
             <span className="text-base font-semibold text-slate-900">
-              Wayne Board
+              MyGroundOps
             </span>
             <span className="text-xs text-slate-500">FedEx Operations Suite</span>
           </div>
