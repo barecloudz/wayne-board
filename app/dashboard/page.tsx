@@ -30,7 +30,7 @@ import { getWorkAreas } from "@/lib/actions/work-areas";
 import Link from "next/link";
 import {
   UserCog, Star, Gauge, WrenchIcon,
-  Trophy, ClipboardList, Map, CalendarDays, ChevronRight,
+  Trophy, ClipboardList, Map, CalendarDays, ChevronRight, TrendingUp,
 } from "lucide-react";
 
 export default async function Home() {
@@ -118,6 +118,7 @@ export default async function Home() {
           {[
             { icon: UserCog,      label: "Drivers",      href: "/dashboard/drivers",      iconBg: "bg-violet-50",  iconColor: "text-violet-600" },
             { icon: Star,         label: "Ryde Scores",  href: "/dashboard/ryde",         iconBg: "bg-amber-50",   iconColor: "text-amber-600"  },
+            { icon: TrendingUp,   label: "Performance",  href: "/dashboard/performance",  iconBg: "bg-indigo-50",  iconColor: "text-indigo-600" },
             { icon: Gauge,        label: "Fleet Status", href: "/dashboard/fleet-status", iconBg: "bg-slate-100",  iconColor: "text-slate-600"  },
             { icon: WrenchIcon,   label: "Maintenance",  href: "/dashboard/maintenance",  iconBg: "bg-orange-50",  iconColor: "text-orange-600" },
             { icon: Trophy,       label: "Milestones",   href: "/dashboard/milestones",   iconBg: "bg-emerald-50", iconColor: "text-emerald-600"},

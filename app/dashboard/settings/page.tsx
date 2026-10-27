@@ -10,11 +10,13 @@ import LocationManager from "../location-manager";
 import PayrollWeekSettings from "../payroll-week-settings";
 import PayrollEmailSettings from "../payroll-email-settings";
 import TaskSettingsCard from "../task-settings";
+import NotificationSettings from "../notification-settings";
 import { getSetting } from "@/lib/actions/settings";
 import { getPayrollEmailSettings } from "@/lib/actions/payroll-email";
 import { getWorkAreas } from "@/lib/actions/work-areas";
 import { getLocations } from "@/lib/actions/locations";
 import { getAllTaskTemplates } from "@/lib/actions/tasks";
+import { getNotificationPreferences } from "@/lib/actions/notifications";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { organizations } from "@/lib/schema";
@@ -29,7 +31,7 @@ export default async function SettingsPage() {
         .from(organizations).where(eq(organizations.id, session.organizationId)).limit(1)
     : [null];
 
-  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList, payWeekStartSetting, payrollEmailSettings, taskTemplatesList] = await Promise.all([
+  const [showRydeSetting, showMilestonesSetting, clockInSetting, showDswSetting, workAreasList, gcSyncInterval, locationsList, payWeekStartSetting, payrollEmailSettings, taskTemplatesList, notificationPrefs] = await Promise.all([
     getSetting("show_ryde", "true"),
     getSetting("show_milestones", "true"),
     getSetting("clock_in_enabled", "false"),
@@ -40,6 +42,7 @@ export default async function SettingsPage() {
     getSetting("pay_week_start", "6"),
     getPayrollEmailSettings(),
     getAllTaskTemplates(),
+    session ? getNotificationPreferences(session.organizationId) : Promise.resolve([]),
   ]);
 
   // Compute most recent completed pay week for Send Now
@@ -87,6 +90,7 @@ export default async function SettingsPage() {
             currentUserRole={session?.role ?? "bc"}
             currentUserId={session?.driverId ?? ""}
           />
+          <NotificationSettings initialPrefs={notificationPrefs as any} />
         </div>
       </main>
     </AppShell>
