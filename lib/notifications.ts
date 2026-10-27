@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { db } from "@/lib/db";
-import { notifications, notificationPreferences, drivers } from "@/lib/schema";
+import { notifications, notificationPreferences, drivers, organizations } from "@/lib/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -69,6 +69,10 @@ export async function createNotification({
 
   if (!pref.enabled) return;
 
+  // Look up org slug for login link
+  const [org] = await db.select({ slug: organizations.slug }).from(organizations).where(eq(organizations.id, organizationId));
+  const orgSlug = org?.slug ?? "";
+
   // 2. Resolve recipients
   let recipientIds: number[] = explicitRecipientIds ?? [];
 
@@ -124,6 +128,7 @@ export async function createNotification({
           body,
           linkTo: linkTo ?? "/dashboard",
           type,
+          orgSlug,
         });
 
         await db
@@ -197,6 +202,7 @@ async function sendNotificationEmail({
   body,
   linkTo,
   type,
+  orgSlug,
 }: {
   to: string;
   name: string;
@@ -204,9 +210,12 @@ async function sendNotificationEmail({
   body: string;
   linkTo: string;
   type: string;
+  orgSlug: string;
 }) {
   const baseUrl   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://mygroundops.com";
-  const actionUrl = linkTo.startsWith("http") ? linkTo : `${baseUrl}${linkTo}`;
+  // Link to org-specific login page with redirect, so admins land in the right place
+  const loginBase = orgSlug ? `${baseUrl}/login/${orgSlug}` : `${baseUrl}/sign-in`;
+  const actionUrl = linkTo.startsWith("http") ? linkTo : `${loginBase}?redirect=${encodeURIComponent(linkTo)}`;
   const accent    = getAccentColor(type);
   const icon      = getTypeIcon(type);
   const label     = getTypeLabel(type);
@@ -217,7 +226,7 @@ async function sendNotificationEmail({
   await resend.emails.send({
     from: "MyGroundOps <alerts@mygroundops.com>",
     to,
-    subject: `${icon} ${title}`,
+    subject: `${title}`,
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,55 +234,53 @@ async function sendNotificationEmail({
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>${title}</title>
 </head>
-<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:40px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:48px 24px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
 
         <!-- Wordmark -->
-        <tr><td style="padding:0 0 20px;">
-          <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#475569;">MyGroundOps &middot; Apparo Group</p>
+        <tr><td style="padding:0 0 32px;">
+          <p style="margin:0;font-size:13px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;">MyGroundOps</p>
         </td></tr>
 
-        <!-- Card -->
-        <tr><td style="background:#ffffff;border-radius:16px;overflow:hidden;">
-
-          <!-- Top accent line -->
-          <div style="height:5px;background:${accent};"></div>
-
-          <!-- Dark header -->
-          <div style="background:#111827;padding:28px 32px 24px;">
-            <div style="display:inline-block;background:${accent}22;border:1px solid ${accent}55;border-radius:20px;padding:5px 14px;margin-bottom:14px;">
-              <span style="font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:${accent};">${icon}&nbsp;&nbsp;${label}</span>
-            </div>
-            <h1 style="margin:0 0 8px;font-size:21px;font-weight:800;color:#f8fafc;line-height:1.25;letter-spacing:-0.01em;">${title}</h1>
-            <p style="margin:0;font-size:12px;color:#475569;">${sentAt}</p>
-          </div>
-
-          <!-- Body -->
-          <div style="padding:32px;">
-            <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#0f172a;">Hi ${firstName},</p>
-            <!-- Accent message block -->
-            <div style="background:#f8fafc;border-left:4px solid ${accent};border-radius:0 10px 10px 0;padding:16px 20px;margin:0 0 28px;">
-              <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.65;">${body}</p>
-            </div>
-            <!-- CTA -->
-            <table cellpadding="0" cellspacing="0"><tr><td>
-              <a href="${actionUrl}" style="display:inline-block;background:${accent};color:#ffffff;font-size:13px;font-weight:800;padding:14px 30px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;">${ctaText} &rarr;</a>
-            </td></tr></table>
-          </div>
-
-          <!-- Footer -->
-          <div style="border-top:1px solid #e2e8f0;padding:18px 32px;background:#f8fafc;">
-            <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;line-height:1.7;">
-              Sent by <strong style="color:#64748b;">MyGroundOps</strong> &middot; Apparo Group INC<br/>
-              <a href="${baseUrl}" style="color:#94a3b8;text-decoration:none;">mygroundops.com</a>
-              &nbsp;&middot;&nbsp;You&apos;re receiving this because you&apos;re an admin in your organization.
-            </p>
-          </div>
-
+        <!-- Title -->
+        <tr><td style="padding:0 0 8px;">
+          <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#94a3b8;">${label}</p>
         </td></tr>
-        <tr><td style="height:32px;"></td></tr>
+        <tr><td style="padding:0 0 24px;">
+          <h1 style="margin:0;font-size:24px;font-weight:800;color:#0f172a;line-height:1.25;letter-spacing:-0.03em;">${title}</h1>
+        </td></tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 0 24px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr>
+
+        <!-- Content -->
+        <tr><td style="padding:0 0 24px;">
+          <p style="margin:0 0 20px;font-size:15px;color:#334155;line-height:1.6;">Hi ${firstName},</p>
+          <p style="margin:0 0 24px;font-size:15px;color:#334155;line-height:1.6;">${body}</p>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding:0 0 40px;">
+          <table cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#0f172a;">
+            <a href="${actionUrl}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;letter-spacing:-0.01em;">${ctaText}</a>
+          </td></tr></table>
+        </td></tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 0 20px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr>
+
+        <!-- Footer -->
+        <tr><td>
+          <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">
+            MyGroundOps &middot; Apparo Group INC<br/>
+            You&apos;re receiving this as an admin in your organization.<br/>
+            <a href="https://mygroundops.com" style="color:#cbd5e1;text-decoration:none;">mygroundops.com</a>
+          </p>
+        </td></tr>
+
+        <tr><td style="height:48px;"></td></tr>
       </table>
     </td></tr>
   </table>

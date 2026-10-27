@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MyGroundOps — Built for FedEx Ground Contractors",
     description:
-      "Driver scores, MMR compliance, maintenance requests, and a driver portal. Built by an ISP owner who runs 17 routes.",
+      "Driver scores, MMR compliance, maintenance requests, and a driver portal. Built for the people actually running the routes.",
     url: "https://mygroundops.com",
     siteName: "MyGroundOps",
     images: [{ url: "/og-image.png", width: 2048, height: 1152, alt: "MyGroundOps: Your operation, under control." }],
@@ -60,7 +60,7 @@ const SPOTLIGHT_FEATURES = [
     icon: Smartphone,
     label: "Driver Portal",
     title: "Give your drivers their own numbers",
-    body: "Every driver gets a login at 742.mygroundops.com. They can see their RYDE reviews, their ILS impact score, their PPOD metrics, and where they rank on the leaderboard. When drivers can see their own data, you stop having the same coaching conversation twice.",
+    body: "Every driver gets a login at yourorg.mygroundops.com. They can see their RYDE reviews, their ILS impact score, their PPOD metrics, and where they rank on the leaderboard. When drivers can see their own data, you stop having the same coaching conversation twice.",
     tags: ["RYDE Reviews", "ILS%", "PPOD", "Leaderboard", "Weekly Trends"],
     dark: false,
   },
@@ -403,13 +403,12 @@ export default function HomePage() {
               className="font-black leading-tight tracking-tight"
               style={{ fontSize: "clamp(18px, 3vw, 26px)", color: "#0A1A0E", flex: 1 }}
             >
-              &ldquo;I built this because I run 17+ routes and nothing out there was actually built for an ISP.
-              Every feature in this platform came from a real problem I had on a real morning.&rdquo;
+              &ldquo;I built this because nothing out there was actually built for the people managing these operations.
+              Every feature in this platform came from a real problem on a real morning.&rdquo;
             </p>
             <div className="flex-shrink-0 flex flex-col gap-0.5">
               <span className="text-[14px] font-bold" style={{ color: "#15803D" }}>Blake Nardoni</span>
-              <span className="text-[12px]" style={{ color: "#6B7280" }}>FedEx Ground ISP Owner</span>
-              <span className="text-[12px]" style={{ color: "#6B7280" }}>Apparo Group Inc.</span>
+              <span className="text-[12px]" style={{ color: "#6B7280" }}>Founder, Apparo Group Inc.</span>
             </div>
           </div>
         </section>

@@ -88,7 +88,7 @@ export default function LoginForm({ variant }: { variant: "card" | "mobile" }) {
         <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Driver ID</label>
         <input
           type="text"
-          placeholder="e.g. blake_742"
+          placeholder="e.g. your_username"
           value={driverId}
           onChange={(e) => setDriverId(e.target.value)}
           className="w-full px-5 py-4 rounded-xl border border-slate-200 text-[16px]

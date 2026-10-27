@@ -31,8 +31,8 @@ export async function submitMaintenanceRequest(
   await createNotification({
     organizationId: orgId,
     type: NOTIFICATION_TYPES.MAINTENANCE_REQUEST,
-    title: `There's a problem with one of your trucks`,
-    body: `${driverName} flagged an issue with Truck ${truckNumber.trim()} and needs it looked at.`,
+    title: `Truck ${truckNumber.trim()} — issue reported by ${driverName}`,
+    body: description.trim(),
     linkTo: "/dashboard/maintenance",
     metadata: { requestId: newRequest.id, truckNumber: truckNumber.trim(), driverName },
   });
