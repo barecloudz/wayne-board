@@ -10,8 +10,6 @@ import RydeAnalytics from "./ryde-analytics";
 import {
   getRydeDrivers, getRydeReviews,
   addRydeReview, deleteRydeReview, updateRydeReview,
-  getCompanyRating, setCompanyRating,
-  getRydeGoalMessage, setRydeGoalMessage,
 } from "@/lib/actions/ryde";
 import { getOrgName } from "@/lib/actions/mmr";
 
@@ -25,8 +23,6 @@ type Review = {
 };
 
 const CATEGORIES = ["Customer Feedback", "On-Time Delivery", "Scan Compliance", "Safety", "Professionalism", "Other"];
-const RATING_GOAL = 4.0;
-
 function toISODate(d: Date) {
   return d.toISOString().split("T")[0];
 }
@@ -46,12 +42,6 @@ export default function RydePage() {
   const [drivers, setDrivers]   = useState<Driver[]>([]);
   const [reviews, setReviews]   = useState<Review[]>([]);
   const [orgName, setOrgName]   = useState<string>("MyGroundOps");
-  const [companyRating, setCompanyRatingState] = useState<number | null>(null);
-  const [editingRating, setEditingRating] = useState(false);
-  const [ratingInput, setRatingInput] = useState("");
-  const [goalMessage, setGoalMessageState] = useState("");
-  const [editingMessage, setEditingMessage] = useState(false);
-  const [messageInput, setMessageInput] = useState("");
   const [showReview,      setShowReview]      = useState(false);
   const [showShareCard,   setShowShareCard]   = useState(false);
   const [shareDriverId,   setShareDriverId]   = useState<string | undefined>(undefined);
@@ -59,6 +49,12 @@ export default function RydePage() {
   const [isPending, startTransition] = useTransition();
   const [reviewsShown, setReviewsShown] = useState(20);
   const REVIEWS_PAGE = 20;
+
+  // Review filters
+  const [filterDriver, setFilterDriver] = useState("");
+  const [filterType, setFilterType]     = useState<"all" | "positive" | "negative">("all");
+  const [filterDays, setFilterDays]     = useState<0 | 7 | 30 | 90>(0);
+  const [filterStars, setFilterStars]   = useState(0);
 
   // Review form state
   const [rDriver, setRDriver]     = useState("");
@@ -83,32 +79,10 @@ export default function RydePage() {
   const [eCustomerInitials, setECustomerInitials] = useState("");
 
   async function refresh() {
-    const [d, r, cr, msg, name] = await Promise.all([getRydeDrivers(), getRydeReviews(), getCompanyRating(), getRydeGoalMessage(), getOrgName()]);
+    const [d, r, name] = await Promise.all([getRydeDrivers(), getRydeReviews(), getOrgName()]);
     setDrivers(d as Driver[]);
     setReviews(r as Review[]);
-    setCompanyRatingState(cr);
-    setGoalMessageState(msg);
     setOrgName(name);
-  }
-
-  function handleSaveMessage() {
-    if (!messageInput.trim()) return;
-    startTransition(async () => {
-      await setRydeGoalMessage(messageInput.trim());
-      setGoalMessageState(messageInput.trim());
-      setEditingMessage(false);
-    });
-  }
-
-  function handleSaveRating() {
-    const n = parseFloat(ratingInput);
-    if (isNaN(n) || n < 1 || n > 5) return;
-    const rounded = Math.round(n * 10) / 10;
-    startTransition(async () => {
-      await setCompanyRating(rounded);
-      setCompanyRatingState(rounded);
-      setEditingRating(false);
-    });
   }
 
   useEffect(() => { refresh(); }, []);
@@ -178,35 +152,48 @@ export default function RydePage() {
   const reviewCount = reviews.length;
   const posCount    = reviews.filter((r) => r.type === "positive").length;
   const negCount    = reviews.filter((r) => r.type === "negative").length;
-  const goalPct     = companyRating != null ? Math.min(100, (companyRating / RATING_GOAL) * 100) : 0;
-  const atGoal      = companyRating != null && companyRating >= RATING_GOAL;
+
+  // Filtered reviews
+  const filteredReviews = reviews.filter((r) => {
+    if (filterDriver && r.driverId !== filterDriver) return false;
+    if (filterType !== "all" && r.type !== filterType) return false;
+    if (filterStars > 0 && r.stars !== filterStars) return false;
+    if (filterDays > 0) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - filterDays);
+      const reviewDate = r.reviewDate ? new Date(r.reviewDate) : r.createdAt ? new Date(r.createdAt) : null;
+      if (!reviewDate || reviewDate < cutoff) return false;
+    }
+    return true;
+  });
+  const hasActiveFilters = filterDriver !== "" || filterType !== "all" || filterDays !== 0 || filterStars !== 0;
 
   return (
     <AppShell>
-      <main className="flex-1 px-6 py-8 max-w-[1100px] w-full mx-auto">
+      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-[1100px] w-full mx-auto">
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
           <div>
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
               MyGroundOps · Admin
             </p>
-            <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
+            <h1 className="text-[24px] sm:text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               Ryde Scores
             </h1>
             <p className="text-[13px] text-slate-400 mt-1.5">Driver performance reviews and Ryde metrics.</p>
           </div>
-          <div className="flex gap-2 mt-1">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setShowShareCard(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[13px] font-semibold
                 border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <Share2 className="w-4 h-4" />
-              Share Card
+              <span className="hidden sm:inline">Share Card</span>
             </button>
             <button
               onClick={() => { setShowReview(true); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[13px] font-semibold
                 bg-slate-900 text-white hover:bg-slate-700 transition-colors"
             >
               <Plus className="w-4 h-4" />
@@ -218,139 +205,8 @@ export default function RydePage() {
         {/* Analytics dashboard */}
         <RydeAnalytics reviews={reviews} drivers={drivers} />
 
-        {/* Team goal message · editable */}
-        <div className="mb-3 flex items-start justify-between gap-4 px-1">
-          {editingMessage ? (
-            <div className="flex-1 flex flex-col gap-2">
-              <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                rows={2}
-                autoFocus
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-[13px] text-slate-800 outline-none focus:border-slate-500 resize-none"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveMessage}
-                  disabled={isPending || !messageInput.trim()}
-                  className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 disabled:opacity-40 transition-colors"
-                >
-                  {isPending ? "Saving…" : "Save"}
-                </button>
-                <button
-                  onClick={() => setEditingMessage(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <p className="text-[13px] text-slate-500 flex-1">{goalMessage}</p>
-              <button
-                onClick={() => { setMessageInput(goalMessage); setEditingMessage(true); }}
-                className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 underline underline-offset-2 shrink-0 transition-colors"
-              >
-                Edit message
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Company Rating Goal Banner */}
-        <div className={`mb-6 rounded-2xl px-6 py-5 border ${
-          atGoal
-            ? "bg-emerald-50 border-emerald-200"
-            : "bg-white border-slate-200/80"
-        } shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)]`}>
-          <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-                Company Ryde Rating
-              </p>
-              {editingRating ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="number"
-                    min="1" max="5" step="0.1"
-                    value={ratingInput}
-                    onChange={(e) => setRatingInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveRating(); if (e.key === "Escape") setEditingRating(false); }}
-                    autoFocus
-                    className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-[16px] font-bold text-slate-900 outline-none focus:border-slate-500"
-                    placeholder="3.5"
-                  />
-                  <button
-                    onClick={handleSaveRating}
-                    disabled={isPending}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 transition-colors disabled:opacity-40"
-                  >
-                    {isPending ? "Saving…" : "Save"}
-                  </button>
-                  <button
-                    onClick={() => setEditingRating(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-500 hover:bg-slate-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map((i) => (
-                      <Star key={i} className={`w-5 h-5 ${
-                        companyRating != null && i <= Math.round(companyRating)
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-slate-200 fill-slate-200"
-                      }`} />
-                    ))}
-                  </div>
-                  <span className="text-[28px] font-extrabold text-slate-900 leading-none">
-                    {companyRating != null ? companyRating.toFixed(1) : "-"}
-                  </span>
-                  <button
-                    onClick={() => { setRatingInput(companyRating != null ? String(companyRating) : ""); setEditingRating(true); }}
-                    className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  {atGoal && (
-                    <span className="text-[12px] font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                      🎉 Goal reached! Free breakfast!
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-[11px] font-semibold text-slate-400">Goal: {RATING_GOAL.toFixed(1)} ★</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {atGoal ? "Team earns free breakfast" : `${companyRating != null ? (RATING_GOAL - companyRating).toFixed(1) : RATING_GOAL.toFixed(1)} stars to go`}
-              </p>
-            </div>
-          </div>
-          {/* Progress bar */}
-          <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${goalPct}%`,
-                background: atGoal
-                  ? "linear-gradient(90deg, #10b981, #34d399)"
-                  : "linear-gradient(90deg, #f59e0b, #fb923c)",
-              }}
-            />
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-[10px] text-slate-400">0</span>
-            <span className="text-[10px] font-semibold text-slate-500">🥞 Free Breakfast @ {RATING_GOAL.toFixed(1)}</span>
-            <span className="text-[10px] text-slate-400">5.0</span>
-          </div>
-        </div>
-
         {/* KPI strip */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
           {[
             { label: "Total Reviews", value: reviewCount.toString() },
             { label: "Positive",      value: posCount.toString()    },
@@ -477,13 +333,113 @@ export default function RydePage() {
 
         {/* Reviews list */}
         <div className="flex flex-col gap-3">
+
+          {/* Filter bar */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col gap-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <p className="text-[12px] font-bold text-slate-700">
+                {hasActiveFilters
+                  ? `${filteredReviews.length} of ${reviews.length} reviews`
+                  : `${reviews.length} reviews`}
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={() => { setFilterDriver(""); setFilterType("all"); setFilterDays(0); setFilterStars(0); setReviewsShown(20); }}
+                  className="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {/* Driver filter */}
+              <div className="relative">
+                <select
+                  value={filterDriver}
+                  onChange={(e) => { setFilterDriver(e.target.value); setReviewsShown(20); }}
+                  className="pl-2.5 pr-7 py-1.5 text-[12px] font-medium rounded-lg border border-slate-200 bg-white text-slate-700 appearance-none outline-none focus:border-slate-400"
+                >
+                  <option value="">All drivers</option>
+                  {drivers.map((d) => (
+                    <option key={d.driverId} value={d.driverId}>{d.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+              </div>
+
+              {/* Type filter */}
+              <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                {([
+                  { key: "all",      label: "All" },
+                  { key: "positive", label: "Positive" },
+                  { key: "negative", label: "Negative" },
+                ] as const).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => { setFilterType(key); setReviewsShown(20); }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                      filterType === key ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Date range filter */}
+              <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                {([
+                  { key: 0,  label: "All time" },
+                  { key: 7,  label: "7d" },
+                  { key: 30, label: "30d" },
+                  { key: 90, label: "90d" },
+                ] as { key: 0 | 7 | 30 | 90; label: string }[]).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => { setFilterDays(key); setReviewsShown(20); }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
+                      filterDays === key ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Stars filter */}
+              <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => { setFilterStars(0); setReviewsShown(20); }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${filterStars === 0 ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  Any ★
+                </button>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setFilterStars(s); setReviewsShown(20); }}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${filterStars === s ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                  >
+                    {s}★
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {reviews.length === 0 && (
             <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center
               shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <p className="text-slate-400 text-[13px]">No reviews yet. Use &quot;Add Review&quot; to record customer or performance feedback.</p>
             </div>
           )}
-          {reviews.slice(0, reviewsShown).map((r) => (
+          {filteredReviews.length === 0 && reviews.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+              <p className="text-[13px] text-slate-400">No reviews match the selected filters.</p>
+            </div>
+          )}
+          {filteredReviews.slice(0, reviewsShown).map((r) => (
             <ReviewCard
               key={r.id}
               review={r}
@@ -493,12 +449,12 @@ export default function RydePage() {
               isPending={isPending}
             />
           ))}
-          {reviews.length > reviewsShown && (
+          {filteredReviews.length > reviewsShown && (
             <button
               onClick={() => setReviewsShown((n) => n + REVIEWS_PAGE)}
               className="mt-1 w-full py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
             >
-              Load more ({reviews.length - reviewsShown} remaining)
+              Load more ({filteredReviews.length - reviewsShown} remaining)
             </button>
           )}
         </div>
@@ -936,50 +892,38 @@ function DriverReviewsModal({ driver, reviews, onClose, onShare }: {
           </div>
         )}
 
-        {/* Reviews table */}
+        {/* Reviews list */}
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <p className="text-[13px] text-slate-400">No {filter !== "all" ? filter : ""} reviews for {driver.name}.</p>
             </div>
           ) : (
-            <table className="w-full text-[13px]">
-              <thead className="sticky top-0 bg-slate-50/95 border-b border-slate-100">
-                <tr>
-                  <th className="text-left px-6 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Week</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Stars</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Type</th>
-                  <th className="text-left px-3 py-3 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Review</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(r => (
-                  <tr key={r.id} className="border-b border-slate-100/80 last:border-0 hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-3 font-mono text-[11px] text-slate-400 whitespace-nowrap align-top pt-4">{r.week ?? "-"}</td>
-                    <td className="px-3 py-3 whitespace-nowrap align-top pt-4">
-                      <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(i => (
-                          <Star key={i} className={`w-3 h-3 ${i <= (r.stars ?? 0) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-top pt-4">
-                      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                        r.type === "positive" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
-                      }`}>
-                        {r.type === "positive" ? "Positive" : "Negative"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-slate-700 align-top">
-                      <p className="leading-relaxed">{r.content}</p>
-                      {r.customerInitials && (
-                        <span className="text-[10px] font-semibold text-blue-500 mt-1 inline-block">{r.customerInitials}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="divide-y divide-slate-100">
+              {filtered.map(r => (
+                <div key={r.id} className="px-5 py-4 hover:bg-slate-50/60 transition-colors">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(i => (
+                        <Star key={i} className={`w-3 h-3 ${i <= (r.stars ?? 0) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
+                      ))}
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                      r.type === "positive" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+                    }`}>
+                      {r.type === "positive" ? "Positive" : "Negative"}
+                    </span>
+                    {r.customerInitials && (
+                      <span className="text-[10px] font-semibold text-blue-500 px-2 py-0.5 rounded-full bg-blue-50 shrink-0">{r.customerInitials}</span>
+                    )}
+                    {r.week && (
+                      <span className="text-[10px] font-mono text-slate-400 ml-auto">{r.week}</span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-slate-700 leading-relaxed">{r.content}</p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 

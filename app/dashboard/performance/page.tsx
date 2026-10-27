@@ -446,14 +446,10 @@ function SphChart({ allDrivers }: { allDrivers: Driver[] }) {
 // ── Driver Card ────────────────────────────────────────────────────────────────
 
 function DriverCard({
-  driver, index, selected, onClick, teamMaxSph,
+  driver, index, selected, onClick,
 }: {
-  driver: Driver; index: number; selected: boolean; onClick: () => void; teamMaxSph: number;
+  driver: Driver; index: number; selected: boolean; onClick: () => void;
 }) {
-  const tier = sphTier(driver.avg_sph_30d);
-  const pct = teamMaxSph > 0 && driver.avg_sph_30d != null
-    ? Math.round((driver.avg_sph_30d / teamMaxSph) * 100)
-    : 0;
   const color = avatarColor(index);
 
   return (
@@ -469,22 +465,32 @@ function DriverCard({
         <TrendIcon trend={driver.sph_trend} delta={driver.trend_delta} />
       </div>
 
-      {/* SPH + tier */}
-      <div className="flex items-end gap-2 mb-3">
-        <span className="text-3xl font-black text-white leading-none">
-          {driver.avg_sph_30d != null ? driver.avg_sph_30d.toFixed(1) : "—"}
-        </span>
-        <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full mb-0.5 opacity-90 ${tier.bg} ${tier.color}`}>
-          {tier.label}
-        </span>
-      </div>
-
-      {/* Mini stats row */}
-      <div className="flex items-center gap-3 mb-3">
-        <span className={`text-[11px] font-semibold flex items-center gap-1 ${ilsColor(driver.avg_ils_30d)}`}>
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ils_30d == null ? "bg-slate-600" : driver.avg_ils_30d >= 99 ? "bg-emerald-500" : driver.avg_ils_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
+      {/* ILS% hero */}
+      <div className="flex items-end gap-1.5 mb-1">
+        <span className={`text-3xl font-black leading-none ${
+          driver.avg_ils_30d == null ? "text-slate-500"
+          : driver.avg_ils_30d >= 99 ? "text-emerald-400"
+          : driver.avg_ils_30d >= 95 ? "text-amber-400"
+          : "text-red-400"
+        }`}>
           {driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—"}
         </span>
+        <span className="text-[10px] font-bold text-slate-500 mb-1">ILS</span>
+      </div>
+
+      {/* ILS progress bar */}
+      <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mb-3">
+        <div className="h-1 rounded-full transition-all" style={{
+          width: `${driver.avg_ils_30d != null ? Math.min(100, driver.avg_ils_30d) : 0}%`,
+          backgroundColor: driver.avg_ils_30d == null ? "#475569"
+            : driver.avg_ils_30d >= 99 ? "#10b981"
+            : driver.avg_ils_30d >= 95 ? "#f59e0b"
+            : "#ef4444",
+        }} />
+      </div>
+
+      {/* Mini stats row: Ryde · PPOD · SPH */}
+      <div className="flex items-center gap-3 mb-2">
         <span className="text-[11px] font-semibold flex items-center gap-0.5 text-amber-500">
           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
           {driver.ryde_score != null ? driver.ryde_score.toFixed(1) : <span className="text-slate-500">—</span>}
@@ -493,40 +499,29 @@ function DriverCard({
           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ppod_30d == null ? "bg-slate-600" : driver.avg_ppod_30d >= 99 ? "bg-emerald-500" : driver.avg_ppod_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
           {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
         </span>
+        <span className="text-[11px] text-slate-500 font-medium">
+          {driver.avg_sph_30d != null ? `${driver.avg_sph_30d.toFixed(1)} sph` : "—"}
+        </span>
       </div>
 
-      {/* SPH progress bar */}
-      <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mb-2">
-        <div className="h-1 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
-      </div>
-
-      {/* PPOD photo quality bar — only if data exists */}
-      {driver.avg_ppod_30d != null && (
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500 mb-0.5">Photo Quality</p>
-          <StackedBar
-            height="h-1.5"
-            segments={[
-              { pct: driver.avg_ppod_30d,            color: "#10b981", title: "Good" },
-              { pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b", title: "No Pkg Visible" },
-              { pct: driver.avg_photo_sensitive_pct, color: "#f97316", title: "Sensitive Info" },
-              { pct: driver.avg_photo_other_pct,     color: "#ef4444", title: "Other" },
-            ]}
-          />
-        </div>
-      )}
     </button>
   );
 }
 
 // ── Driver Detail Panel ────────────────────────────────────────────────────────
 
+function ilsStatusMsg(ils: number | null): { headline: string; detail: string; color: string; bg: string } {
+  if (ils == null) return { headline: "No scan data yet", detail: "ILS data comes from DSW uploads", color: "text-slate-400", bg: "bg-slate-700/40" };
+  if (ils >= 99)   return { headline: "Excellent — keep it up!", detail: "Scans are on target. Nothing to fix here.", color: "text-emerald-400", bg: "bg-emerald-900/30" };
+  if (ils >= 95)   return { headline: "Good, but room to improve", detail: `Aim for 99%+. About ${(100 - ils).toFixed(1)}% of packages aren't scanning in sequence.`, color: "text-amber-400", bg: "bg-amber-900/30" };
+  return { headline: "Needs immediate attention", detail: `${(100 - ils).toFixed(1)}% of packages are missing proper in-line scans. This affects the company's service score.`, color: "text-red-400", bg: "bg-red-900/30" };
+}
+
 function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index: number; onClose: () => void; days: number }) {
   const color = avatarColor(index);
-  const consistency = consistencyScore(driver);
-  const riskFlags = ppodRiskFlags(driver);
   const hasPpod = driver.avg_ppod_30d != null;
   const hasLoc  = driver.avg_loc_good_pct != null;
+  const ilsMsg  = ilsStatusMsg(driver.avg_ils_30d);
 
   return (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 md:p-6 text-white relative">
@@ -549,54 +544,96 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
           <h2 className="text-xl font-black text-white truncate">{driver.name}</h2>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <RankBadge rank={driver.rank} size="sm" />
-            <TrendIcon trend={driver.sph_trend} delta={driver.trend_delta} />
-            {riskFlags.map((f) => (
-              <span key={f.label} className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${f.bg} ${f.color}`}>
-                ⚠ {f.label}
-              </span>
-            ))}
+            <span className="text-[11px] text-slate-400">Team rank #{driver.rank}</span>
+            {driver.last_worked && (
+              <span className="text-[11px] text-slate-500">· Last worked {formatDate(driver.last_worked)}</span>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Core metrics row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-        {[
-          { label: "SPH 30d",     value: driver.avg_sph_30d?.toFixed(1) ?? "—",   sub: "stops / hr" },
-          { label: "SPH 90d",     value: driver.avg_sph_90d?.toFixed(1) ?? "—",   sub: "long-term avg" },
-          { label: "ILS%",        value: driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—", sub: "in-line scan" },
-          {
-            label: "Ryde",
-            value: driver.ryde_score != null ? `${driver.ryde_score.toFixed(2)} ★` : "—",
-            sub: driver.ryde_count != null ? `${driver.ryde_count} reviews` : "no data",
-          },
-        ].map(({ label, value, sub }) => (
-          <div key={label} className="bg-white/10 rounded-xl p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-            <p className="text-xl font-black text-white leading-none">{value}</p>
-            <p className="text-[10px] text-slate-500 mt-1">{sub}</p>
+      {/* ILS hero + status */}
+      <div className={`rounded-xl p-4 mb-4 ${ilsMsg.bg}`}>
+        <div className="flex items-end gap-3 mb-2">
+          <span className={`text-5xl font-black leading-none ${ilsMsg.color}`}>
+            {driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—"}
+          </span>
+          <div className="mb-1">
+            <p className={`text-[13px] font-bold ${ilsMsg.color}`}>{ilsMsg.headline}</p>
+            <p className="text-[11px] text-slate-400">In-Line Scan % · last {days} days</p>
           </div>
-        ))}
+        </div>
+        {/* ILS bar */}
+        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+          <div className="h-2 rounded-full" style={{
+            width: `${driver.avg_ils_30d != null ? Math.min(100, driver.avg_ils_30d) : 0}%`,
+            backgroundColor: driver.avg_ils_30d == null ? "#475569"
+              : driver.avg_ils_30d >= 99 ? "#10b981"
+              : driver.avg_ils_30d >= 95 ? "#f59e0b"
+              : "#ef4444",
+          }} />
+        </div>
+        <p className="text-[11px] text-slate-400">{ilsMsg.detail}</p>
       </div>
 
-      {/* Secondary metrics */}
+      {/* Key metrics — plain English labels */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-        {[
-          { label: "Consistency", value: consistency != null ? `${consistency}%` : "—", sub: "low SPH variance" },
-          { label: "Best Day",    value: driver.best_sph?.toFixed(1) ?? "—",            sub: driver.best_date ? formatDate(driver.best_date) : "—" },
-          { label: `Days ${days}d`,  value: String(driver.days_worked_30d ?? "—"),          sub: `${driver.days_worked_90d ?? "—"} last 90d` },
-          {
-            label: "DTC%",
-            value: driver.avg_dtc_pct != null ? `${driver.avg_dtc_pct.toFixed(1)}%` : "—",
-            sub: "door-to-customer",
-          },
-        ].map(({ label, value, sub }) => (
-          <div key={label} className="bg-white/10 rounded-xl p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-            <p className="text-xl font-black text-white leading-none">{value}</p>
-            <p className="text-[10px] text-slate-500 mt-1">{sub}</p>
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Safety Rating</p>
+          <p className="text-xl font-black text-white leading-none flex items-center gap-1">
+            {driver.ryde_score != null ? (
+              <><Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" /> {driver.ryde_score.toFixed(2)}</>
+            ) : "—"}
+          </p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            {driver.ryde_count != null ? `from ${driver.ryde_count} Ryde review${driver.ryde_count !== 1 ? "s" : ""}` : "no Ryde data"}
+          </p>
+        </div>
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Stops Per Hour</p>
+          <p className="text-xl font-black text-white leading-none">{driver.avg_sph_30d?.toFixed(1) ?? "—"}</p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            {driver.avg_sph_90d != null ? `${driver.avg_sph_90d.toFixed(1)} over 90 days` : "90d: no data"}
+          </p>
+        </div>
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Proof of Delivery</p>
+          <p className={`text-xl font-black leading-none ${ppodColor(driver.avg_ppod_30d)}`}>
+            {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
+          </p>
+          <p className="text-[10px] text-slate-500 mt-1">delivery confirmation photos</p>
+        </div>
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Days Worked</p>
+          <p className="text-xl font-black text-white leading-none">{driver.days_worked_30d ?? "—"}</p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            {driver.days_worked_90d != null ? `${driver.days_worked_90d} in last 90 days` : "—"}
+          </p>
+        </div>
+      </div>
+
+      {/* SPH trend + best day */}
+      <div className="grid grid-cols-2 gap-2.5 mb-4">
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">SPH Trend</p>
+          <div className="flex items-center gap-2">
+            <TrendIcon trend={driver.sph_trend} delta={driver.trend_delta} />
+            <p className="text-[12px] text-slate-300">
+              {driver.sph_trend === "improving" ? "Getting faster"
+                : driver.sph_trend === "declining" ? "Slowing down"
+                : driver.sph_trend === "stable" ? "Holding steady"
+                : "Not enough data"}
+            </p>
           </div>
-        ))}
+          <p className="text-[10px] text-slate-500 mt-1">compared to prior {days / 2 | 0}-day window</p>
+        </div>
+        <div className="bg-white/10 rounded-xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Best Day</p>
+          <p className="text-xl font-black text-white leading-none">{driver.best_sph?.toFixed(1) ?? "—"}</p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            {driver.best_date ? `on ${formatDate(driver.best_date)}` : "—"}
+          </p>
+        </div>
       </div>
 
       {/* PPOD breakdown — only shown when data exists */}
@@ -606,22 +643,22 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
           {/* Photo quality */}
           {hasPpod && (
             <div className="bg-white/8 rounded-xl p-4 border border-white/10">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Photo Quality</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Photo Quality Breakdown</p>
               <StackedBar
                 height="h-3"
                 segments={[
                   { pct: driver.avg_ppod_30d,            color: "#10b981", title: "Good" },
-                  { pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b", title: "No Pkg Visible" },
+                  { pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b", title: "No Package Visible" },
                   { pct: driver.avg_photo_sensitive_pct, color: "#f97316", title: "Sensitive Info" },
-                  { pct: driver.avg_photo_other_pct,     color: "#ef4444", title: "Other" },
+                  { pct: driver.avg_photo_other_pct,     color: "#ef4444", title: "Other Issue" },
                 ]}
               />
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
                 {[
-                  { label: "Good",          pct: driver.avg_ppod_30d,            color: "#10b981" },
-                  { label: "No Pkg",        pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b" },
-                  { label: "Sensitive",     pct: driver.avg_photo_sensitive_pct, color: "#f97316" },
-                  { label: "Other",         pct: driver.avg_photo_other_pct,     color: "#ef4444" },
+                  { label: "Good",             pct: driver.avg_ppod_30d,            color: "#10b981" },
+                  { label: "No package shown", pct: driver.avg_photo_no_pkg_pct,    color: "#f59e0b" },
+                  { label: "Sensitive info",   pct: driver.avg_photo_sensitive_pct, color: "#f97316" },
+                  { label: "Other",            pct: driver.avg_photo_other_pct,     color: "#ef4444" },
                 ].map(({ label, pct, color: c }) => pct != null && (
                   <div key={label} className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c }} />
@@ -636,20 +673,20 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
           {/* Location quality */}
           {hasLoc && (
             <div className="bg-white/8 rounded-xl p-4 border border-white/10">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Location Quality</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Delivery Location Accuracy</p>
               <StackedBar
                 height="h-3"
                 segments={[
                   { pct: driver.avg_loc_good_pct,      color: "#06b6d4", title: "Good" },
                   { pct: driver.avg_loc_poor_pct,      color: "#f97316", title: "Poor" },
-                  { pct: driver.avg_loc_over_mile_pct, color: "#ef4444", title: "Over 1 Mile" },
+                  { pct: driver.avg_loc_over_mile_pct, color: "#ef4444", title: "Over 1 Mile Away" },
                 ]}
               />
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
                 {[
-                  { label: "Good",       pct: driver.avg_loc_good_pct,      color: "#06b6d4" },
-                  { label: "Poor",       pct: driver.avg_loc_poor_pct,      color: "#f97316" },
-                  { label: "Over 1 mi", pct: driver.avg_loc_over_mile_pct, color: "#ef4444" },
+                  { label: "On target",       pct: driver.avg_loc_good_pct,      color: "#06b6d4" },
+                  { label: "Poor accuracy",   pct: driver.avg_loc_poor_pct,      color: "#f97316" },
+                  { label: "Over 1 mile off", pct: driver.avg_loc_over_mile_pct, color: "#ef4444" },
                 ].map(({ label, pct, color: c }) => pct != null && (
                   <div key={label} className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c }} />
@@ -936,7 +973,6 @@ export default function PerformancePage() {
                     driver={d}
                     index={i}
                     selected={selected?.driver_id === d.driver_id}
-                    teamMaxSph={teamMaxSph}
                     onClick={() => {
                       if (selected?.driver_id === d.driver_id) {
                         setSelected(null);

@@ -134,27 +134,23 @@ function ReviewRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Top row: stars + badge + date */}
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-2">
-            {/* Stars */}
-            <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(s => (
-                <span key={s} className={`text-[11px] ${s <= stars ? "text-amber-400" : "text-slate-700"}`}>★</span>
-              ))}
-            </div>
-            {/* Type badge */}
-            <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full
-              ${isPos ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
-              {isPos ? "Positive" : "Negative"}
-            </span>
-            {/* Category */}
-            <span className="text-[10px] text-slate-500 truncate">{cat}</span>
+        {/* Top row: stars + badge + date — wraps on narrow widths */}
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <div className="flex gap-0.5 shrink-0">
+            {[1,2,3,4,5].map(s => (
+              <span key={s} className={`text-[11px] ${s <= stars ? "text-amber-400" : "text-slate-700"}`}>★</span>
+            ))}
           </div>
+          <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full shrink-0
+            ${isPos ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"}`}>
+            {isPos ? "Positive" : "Negative"}
+          </span>
           {dateStr && (
-            <span className="text-[10px] text-slate-600 shrink-0">{dateStr}</span>
+            <span className="text-[10px] text-slate-600 shrink-0 ml-auto">{dateStr}</span>
           )}
         </div>
+        {/* Category on its own line so it never gets cut off */}
+        <p className="text-[10px] text-slate-500 mb-1.5">{cat}</p>
         {/* Review text */}
         <p className="text-[12px] text-slate-400 leading-snug line-clamp-2 italic">
           &ldquo;{review.content}&rdquo;

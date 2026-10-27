@@ -440,17 +440,17 @@ export default function SchedulingClient({
   const upcomingTimeOff = timeOff.filter((t) => t.endDate >= today).slice(0, 20);
 
   return (
-    <main className="flex-1 px-6 py-8 max-w-[1200px] w-full mx-auto">
+    <main className="flex-1 px-4 sm:px-6 py-5 sm:py-8 max-w-[1200px] w-full mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex items-start justify-between mb-5 sm:mb-8">
         <div>
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
             MyGroundOps · Admin
           </p>
-          <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
+          <h1 className="text-[22px] sm:text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
             Scheduling
           </h1>
-          <p className="text-[14px] text-slate-400 mt-2 max-w-xl">
+          <p className="text-[13px] text-slate-400 mt-1.5 max-w-xl hidden sm:block">
             Manage driver schedules, time off, and day-to-day coverage at a glance.
           </p>
         </div>
@@ -477,26 +477,28 @@ export default function SchedulingClient({
       <div className="flex flex-wrap items-center gap-2 mb-2">
       <div className="flex flex-wrap gap-1 bg-slate-100 rounded-xl p-1 w-fit">
         {([
-          { key: "schedules", label: "Weekly Schedule",   icon: Clock },
-          { key: "timeoff",   label: "Time Off",          icon: Calendar },
-          { key: "coverage",  label: "Who's Working",     icon: AlertTriangle },
-          { key: "added",     label: "Extra Days",        icon: CalendarPlus },
-          { key: "history",   label: "Attendance History", icon: History },
-        ] as const).map(({ key, label, icon: Icon }) => (
+          { key: "schedules", label: "Weekly Schedule",    short: "Schedule",  icon: Clock },
+          { key: "timeoff",   label: "Time Off",           short: "Time Off",  icon: Calendar },
+          { key: "coverage",  label: "Who's Working",      short: "Coverage",  icon: AlertTriangle },
+          { key: "added",     label: "Extra Days",         short: "Extra",     icon: CalendarPlus },
+          { key: "history",   label: "Attendance History", short: "History",   icon: History },
+        ] as const).map(({ key, label, short, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${
+            title={label}
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all ${
               tab === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
-            {label}
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{short}</span>
           </button>
         ))}
         <button
           onClick={() => setTab("saturdays")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${
+          className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all ${
             tab === "saturdays" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
           }`}
         >
@@ -560,19 +562,19 @@ export default function SchedulingClient({
       {/* ── SCHEDULES TAB ────────────────────────────────────────────────── */}
       {tab === "schedules" && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <p className="text-[13px] text-slate-500">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+            <p className="text-[12px] sm:text-[13px] text-slate-500 hidden sm:block">
               Tap the day buttons to toggle a driver&apos;s regular schedule, then click <strong className="text-slate-700">Save</strong>.
             </p>
             <button
               onClick={() => setShowInactive((p) => !p)}
-              className={`text-[12px] font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
+              className={`text-[11px] sm:text-[12px] font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg border transition-colors shrink-0 ${
                 showInactive
                   ? "bg-slate-900 text-white border-slate-900"
                   : "border-slate-200 text-slate-500 hover:bg-slate-50"
               }`}
             >
-              {showInactive ? "Hide inactive" : `Show inactive (${schedules.filter(s => !s.active).length})`}
+              {showInactive ? "Hide inactive" : `Inactive (${schedules.filter(s => !s.active).length})`}
             </button>
           </div>
           <div className="overflow-x-auto">
