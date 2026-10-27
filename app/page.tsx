@@ -31,7 +31,7 @@ const METRICS = [
 
 const MANAGER_FEATURES = [
   "Real-time ILS%, PPOD, and RYDE scores per driver",
-  "Upload DSW and PPOD files — dashboard updates instantly",
+  "Upload DSW and PPOD files, dashboard updates instantly",
   "Auto-generated MMR reports, one click to PDF",
   "Email alerts when drivers submit maintenance requests",
   "Weekly performance leaderboard with automated badges",
@@ -44,7 +44,7 @@ const DRIVER_FEATURES = [
   "Submit maintenance requests from your phone",
   "View your rank on the team leaderboard",
   "Track your weekly performance trends",
-  "No customer names, addresses, or PII — ever",
+  "No customer names, addresses, or PII stored",
 ];
 
 const SPOTLIGHT_FEATURES = [
@@ -52,7 +52,7 @@ const SPOTLIGHT_FEATURES = [
     icon: BarChart3,
     label: "Analytics",
     title: "Scores that actually mean something",
-    body: "Upload your DSW and PPOD resource files and every metric — ILS%, PPOD Good%, photo quality breakdown, location accuracy, door-to-customer rate — populates instantly. No spreadsheets. No copy-pasting. Color-coded risk flags surface the drivers who need attention before FedEx brings it up first.",
+    body: "Upload your DSW and PPOD resource files and every metric populates instantly: ILS%, PPOD Good%, photo quality breakdown, location accuracy, door-to-customer rate. No spreadsheets. No copy-pasting. Color-coded risk flags surface the drivers who need attention before FedEx brings it up first.",
     tags: ["ILS%", "PPOD", "RYDE", "Spotlight", "Photo Quality", "Location Accuracy"],
     dark: true,
   },
@@ -68,7 +68,7 @@ const SPOTLIGHT_FEATURES = [
     icon: Wrench,
     label: "Maintenance",
     title: "No more missed service requests",
-    body: "Drivers submit vehicle issues straight from the app. The moment a request comes in, your admin team gets an email notification. Every request is timestamped, tracked, and tied to the vehicle — so nothing falls through the cracks, and you have a paper trail when you need one.",
+    body: "Drivers submit vehicle issues straight from the app. The moment a request comes in, your admin team gets an email notification. Every request is timestamped, tracked, and tied to the vehicle. Nothing falls through the cracks, and you have a paper trail when you need one.",
     tags: ["Email Alerts", "Timestamped", "Per-Vehicle History", "Admin Inbox"],
     dark: true,
   },
@@ -108,7 +108,7 @@ const PLANS = [
       "Unlimited vehicles",
       "Full analytics dashboard (ILS, PPOD, RYDE)",
       "DSW + PPOD file upload",
-      "3D Fleet Inspector",
+      "Driver leaderboard + performance scoring",
       "Weekly leaderboard + badge awards",
       "Notification preferences per event",
       "Priority support",
@@ -172,7 +172,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-[16px] md:text-[18px] leading-relaxed mb-4 max-w-xl" style={{ color: "#475569" }}>
-            MyGroundOps is a custom command center built for FedEx Ground contractors — not generic fleet software retrofitted to fit.
+            MyGroundOps is a custom command center built for FedEx Ground contractors. Not generic fleet software retrofitted to fit.
             Driver analytics, maintenance tracking, compliance tools, and a driver-facing portal, all wired for the exact data FedEx sends you.
           </p>
           <p className="text-[14px] mb-8 max-w-lg font-semibold" style={{ color: "#16A34A" }}>
@@ -266,7 +266,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-[22px] font-extrabold leading-tight mb-2" style={{ color: "#0A1A0E" }}>Driver portal</h3>
                 <p className="text-[13px] leading-relaxed" style={{ color: "#6B7280" }}>
-                  Every driver gets their own login. They can see their scores, their reviews, and where they stand — without calling you to ask.
+                  Every driver gets their own login. They can see their scores, their reviews, and where they stand. No more "what's my ILS?" texts.
                 </p>
               </div>
               <ul className="flex flex-col gap-2.5">
@@ -293,7 +293,7 @@ export default function HomePage() {
             </div>
             <div className="hidden md:block w-px h-4" style={{ background: "#BBF7D0" }} />
             <span className="text-[12px]" style={{ color: "#166534" }}>
-              We process only the operational data FedEx already provides to you — no customer names, addresses, or package contents are ever saved in our system.
+              We process only the operational data FedEx already provides to you. No customer names, addresses, or package contents are ever saved in our system.
             </span>
           </div>
         </div>
@@ -373,12 +373,12 @@ export default function HomePage() {
                 {
                   step: "01",
                   title: "Add your drivers and vehicles",
-                  body: "Enter your team with their FedEx IDs. We use the ID as the universal key — everything ties together automatically when you upload data files.",
+                  body: "Enter your team with their FedEx IDs. The ID is the universal key and everything ties together automatically when you upload data files.",
                 },
                 {
                   step: "02",
                   title: "Upload your DSW and PPOD files",
-                  body: "Drop in the resource files FedEx already gives you. ILS%, PPOD scores, photo quality, location accuracy — all populate instantly. No manual data entry.",
+                  body: "Drop in the resource files FedEx already gives you. ILS%, PPOD scores, photo quality, location accuracy all populate instantly. No manual data entry.",
                 },
                 {
                   step: "03",
@@ -408,7 +408,6 @@ export default function HomePage() {
             </p>
             <div className="flex-shrink-0 flex flex-col gap-0.5">
               <span className="text-[14px] font-bold" style={{ color: "#15803D" }}>Blake Nardoni</span>
-              <span className="text-[12px]" style={{ color: "#6B7280" }}>Founder, Apparo Group Inc.</span>
             </div>
           </div>
         </section>

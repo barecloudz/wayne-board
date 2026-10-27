@@ -2,7 +2,7 @@ export default function Footer() {
   return (
     <footer className="bg-slate-50 border-t border-slate-200 py-6">
       <p className="text-center text-xs text-slate-500">
-        MyGroundOps · Apparo Group INC · mygroundops.com
+        MyGroundOps · mygroundops.com
       </p>
     </footer>
   );
