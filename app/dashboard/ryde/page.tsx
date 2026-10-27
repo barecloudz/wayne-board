@@ -194,34 +194,51 @@ export default function RydePage() {
     <AppShell>
       <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-[1100px] w-full mx-auto">
         {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-5">
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
               MyGroundOps · Admin
             </p>
             <h1 className="text-[24px] sm:text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">
               Ryde Scores
             </h1>
-            <p className="text-[13px] text-slate-400 mt-1.5">Driver performance reviews and Ryde metrics.</p>
+            <p className="text-[12px] text-slate-400 mt-1">Driver performance reviews and customer ratings.</p>
           </div>
           <div className="flex gap-2 shrink-0">
             <button
-              onClick={() => setShowShareCard(true)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[13px] font-semibold
-                border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Share Card</span>
-            </button>
-            <button
-              onClick={() => { setShowReview(true); }}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-[13px] font-semibold
-                bg-slate-900 text-white hover:bg-slate-700 transition-colors"
+              onClick={() => setShowReview(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold
+                border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Add Review
+              <span>Add Review</span>
+            </button>
+            <button
+              onClick={() => setShowShareCard(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold
+                bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Build Ryde Card</span>
             </button>
           </div>
+        </div>
+
+        {/* Coaching CTA banner */}
+        <div className="mb-5 rounded-2xl px-5 py-4 flex items-center justify-between gap-4 flex-wrap"
+          style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%)" }}>
+          <div>
+            <p className="text-[11px] font-bold tracking-widest uppercase text-indigo-300 mb-0.5">Driver Coaching</p>
+            <p className="text-[15px] font-bold text-white leading-tight">Send drivers their Ryde scorecard</p>
+            <p className="text-[12px] text-indigo-300 mt-0.5">Pick a driver, choose reviews to spotlight, share as an image.</p>
+          </div>
+          <button
+            onClick={() => setShowShareCard(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold bg-white text-indigo-700 hover:bg-indigo-50 transition-colors shrink-0 shadow-lg"
+          >
+            <Share2 className="w-4 h-4" />
+            Build Ryde Card
+          </button>
         </div>
 
         {/* ── Global period filter ─────────────────────────────────────────── */}

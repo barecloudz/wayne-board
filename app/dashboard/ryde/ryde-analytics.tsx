@@ -206,22 +206,24 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
         <div className="absolute right-[40px] top-[-30px] w-[130px] h-[130px] rounded-full"
           style={{ border: "1px solid rgba(255,255,255,0.03)" }} />
 
-        <div className="relative flex justify-between items-end">
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-end">
           <div>
-            <div className="text-[8px] font-semibold tracking-[.2em] uppercase mb-2.5" style={{ color: "#C9A44E" }}>
-              Analytics Overview
+            <div className="text-[8px] font-semibold tracking-[.2em] uppercase mb-2" style={{ color: "#C9A44E" }}>
+              {periodLabel ? `${periodLabel} · ` : ""}Analytics Overview
             </div>
-            <h2 className="text-[22px] font-extrabold text-white tracking-tight leading-tight">
+            <h2 className="text-[20px] sm:text-[22px] font-extrabold text-white tracking-tight leading-tight">
               RYDE Performance
             </h2>
             <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.38)" }}>
-              {periodLabel ? `${periodLabel} · ` : ""}Customer review analytics across all drivers
+              Customer review analytics · {totalReviews} review{totalReviews !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-[38px] font-black text-white leading-none tracking-tight">{overallAvg.toFixed(2)}</div>
-            <div className="text-[8px] tracking-[.12em] uppercase mt-1" style={{ color: "#C9A44E" }}>Overall Avg Rating</div>
-            <div className="flex gap-3 mt-2.5 justify-end">
+          <div className="flex items-end justify-between sm:flex-col sm:items-end sm:text-right gap-4 sm:gap-0">
+            <div>
+              <div className="text-[32px] sm:text-[38px] font-black text-white leading-none tracking-tight">{overallAvg.toFixed(2)}</div>
+              <div className="text-[8px] tracking-[.12em] uppercase mt-1" style={{ color: "#C9A44E" }}>Overall Avg Rating</div>
+            </div>
+            <div className="flex gap-3 sm:mt-2.5">
               {[
                 { val: `${posPct}%`, label: "Positive", color: GREEN },
                 { val: `${negPct}%`, label: "Negative", color: RED },
@@ -241,7 +243,7 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
       <div className="p-4" style={{ background: "#F5F5F7" }}>
 
         {/* KPI strip */}
-        <div className="grid grid-cols-5 gap-2.5 mb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5 mb-3">
           {kpis.map((k) => (
             <div key={k.label} className="rounded-xl p-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
               style={{
@@ -260,7 +262,7 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
         </div>
 
         {/* Charts row */}
-        <div className="grid gap-2.5 mb-3" style={{ gridTemplateColumns: "1fr 1.9fr 1fr" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.9fr_1fr] gap-2.5 mb-3">
 
           {/* Gauge */}
           <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)] flex flex-col items-center"
@@ -284,12 +286,12 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
           </div>
 
           {/* Bar chart */}
-          <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
+          <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)] md:col-span-2 lg:col-span-1"
             style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.65)" }}>
             <div className="text-[7px] font-bold uppercase tracking-[.12em] mb-2.5" style={{ color: "#86868B" }}>
               Driver Avg Ratings
             </div>
-            <svg width={barW} height={barSvgH} viewBox={`0 0 ${barW} ${barSvgH}`} style={{ maxWidth: "100%" }}>
+            <svg width="100%" height={barSvgH} viewBox={`0 0 ${barW} ${barSvgH}`} preserveAspectRatio="xMidYMid meet">
               <text x="0" y="9" fontSize="7.5" fontWeight="600" fill="#86868B" letterSpacing="0.1em"
                 fontFamily="-apple-system,Inter,sans-serif">AVG RATING PER DRIVER</text>
               {driverStats.slice(0, N_bars).map((d, i) => {
@@ -341,7 +343,7 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
               Requires {MIN_RANKED}+ reviews to rank · sorted by weighted score
             </div>
           </div>
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto -mx-1"><table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
                 {["#","Driver","ID","Score","Avg","Reviews","5★","4★","3★","2★","1★","Pos%","Status"].map((h, i) => (
@@ -410,7 +412,7 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
                 ];
               })()}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>
