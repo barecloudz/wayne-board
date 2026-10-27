@@ -1,13 +1,18 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { getSession } from "@/lib/session";
 import { getActiveLocationId } from "@/lib/active-location";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const days = Math.min(90, Math.max(7, parseInt(url.searchParams.get("days") ?? "30", 10)));
+  const recentDays = Math.round(days / 2);
 
   const sql = neon(process.env.DATABASE_URL_POOLER || process.env.DATABASE_URL!);
   const locationId = await getActiveLocationId();
@@ -44,18 +49,18 @@ export async function GET() {
     const rows = await sql`
       SELECT
         driver_id,
-        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN stops_per_hour END)    AS avg_sph_30d,
-        STDDEV(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN stops_per_hour END) AS stddev_sph_30d,
-        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' AND stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_30d,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '1 day' * ${days} THEN stops_per_hour END)    AS avg_sph_30d,
+        STDDEV(CASE WHEN date >= CURRENT_DATE - INTERVAL '1 day' * ${days} THEN stops_per_hour END) AS stddev_sph_30d,
+        COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '1 day' * ${days} AND stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_30d,
         AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '90 days' THEN stops_per_hour END)    AS avg_sph_90d,
         COUNT(CASE WHEN date >= CURRENT_DATE - INTERVAL '90 days' AND stops_per_hour IS NOT NULL THEN 1 END) AS days_worked_90d,
         MAX(stops_per_hour)                                                                  AS best_sph,
         MIN(CASE WHEN stops_per_hour > 0 THEN stops_per_hour END)                           AS worst_sph,
         MAX(date)::text                                                                      AS last_worked,
-        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '30 days' THEN miles_traveled END)    AS avg_miles_30d,
-        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '14 days' THEN stops_per_hour END)    AS sph_recent,
-        AVG(CASE WHEN date <  CURRENT_DATE - INTERVAL '14 days'
-                  AND date >= CURRENT_DATE - INTERVAL '28 days'
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '1 day' * ${days} THEN miles_traveled END)    AS avg_miles_30d,
+        AVG(CASE WHEN date >= CURRENT_DATE - INTERVAL '1 day' * ${recentDays} THEN stops_per_hour END)    AS sph_recent,
+        AVG(CASE WHEN date <  CURRENT_DATE - INTERVAL '1 day' * ${recentDays}
+                  AND date >= CURRENT_DATE - INTERVAL '1 day' * ${days}
                   THEN stops_per_hour END)                                                   AS sph_prior
       FROM gc_route_days
       WHERE organization_id = ${orgId}
@@ -99,6 +104,7 @@ export async function GET() {
       SELECT driver_id, AVG(stars) AS ryde_avg, COUNT(*) AS ryde_count
       FROM ryde_reviews
       WHERE organization_id = ${orgId} AND stars IS NOT NULL AND stars > 0
+        AND created_at >= CURRENT_TIMESTAMP - INTERVAL '1 day' * ${days}
       GROUP BY driver_id
     `;
     rydeMap = new Map(rows.map((r: any) => [r.driver_id, r]));
@@ -114,6 +120,7 @@ export async function GET() {
       SELECT driver_id, AVG(ils_pct) AS avg_ils
       FROM dsw_route_days
       WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
+        AND date >= CURRENT_DATE - INTERVAL '1 day' * ${days}
       GROUP BY driver_id
     `;
     ilsMap = new Map(rows.map((r: any) => [r.driver_id, r]));
@@ -138,6 +145,7 @@ export async function GET() {
         AVG(dtc_pct)             AS avg_dtc_pct
       FROM ppod_days
       WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
+        AND date >= CURRENT_DATE - INTERVAL '1 day' * ${days}
       GROUP BY driver_id
     `;
     ppodMap = new Map(rows.map((r: any) => [r.driver_id, r]));
