@@ -88,6 +88,7 @@ function MultiRingSvg({
 
   const rings = Array.from({ length: N }, (_, i) => {
     const r = maxR - i * (sw + gap);
+    if (r <= 0) return null;
     const d = driverStats[i];
     const p = Math.min(d.avg / 5, 0.9999);
     const circ = 2 * Math.PI * r;

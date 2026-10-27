@@ -78,7 +78,7 @@ export async function GET(req: Request) {
             COALESCE(SUM(dsw.del_stps_planned), 0)::int                   AS del_stps_planned,
             AVG(dsw.ils_pct)                                               AS avg_ils,
             COALESCE(SUM(dsw.dna), 0)::int                                AS dna,
-            COALESCE(SUM(dsw.code85), 0)::int                             AS code85,
+            COALESCE(SUM(dsw.code_85), 0)::int                            AS code85,
             COALESCE(SUM(dsw.miles), 0)                                   AS miles,
             COALESCE(
               SUM(
@@ -111,7 +111,7 @@ export async function GET(req: Request) {
             COALESCE(SUM(dsw.del_stps_planned), 0)::int                   AS del_stps_planned,
             AVG(dsw.ils_pct)                                               AS avg_ils,
             COALESCE(SUM(dsw.dna), 0)::int                                AS dna,
-            COALESCE(SUM(dsw.code85), 0)::int                             AS code85,
+            COALESCE(SUM(dsw.code_85), 0)::int                            AS code85,
             COALESCE(SUM(dsw.miles), 0)                                   AS miles,
             COALESCE(
               SUM(
