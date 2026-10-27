@@ -32,7 +32,6 @@ import Link from "next/link";
 import {
   UserCog, Star, Gauge, WrenchIcon,
   Trophy, ClipboardList, Map, CalendarDays, ChevronRight, TrendingUp,
-  Truck, Users, ClipboardCheck, AlertTriangle,
 } from "lucide-react";
 
 export default async function Home() {
@@ -78,10 +77,10 @@ export default async function Home() {
 
         {/* KPI strip — cursor-reactive 3D tiles */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          <FleetKpiCard label="Active Trucks"   value={vehicleCount}   icon={Truck}           accent="blue"    dark={false} />
-          <FleetKpiCard label="Active Drivers"  value={driverCount}    icon={Users}           accent="indigo"  dark={false} />
-          <FleetKpiCard label="Inspections"     value={completedCount} icon={ClipboardCheck}  accent="emerald" dark={false} />
-          <FleetKpiCard label="Out of Service"  value={oosCount}       icon={AlertTriangle}   accent={oosCount > 0 ? "red" : "slate"} dark={false} />
+          <FleetKpiCard label="Active Trucks"   value={vehicleCount}   icon="truck"     accent="blue"    dark={false} />
+          <FleetKpiCard label="Active Drivers"  value={driverCount}    icon="users"     accent="indigo"  dark={false} />
+          <FleetKpiCard label="Inspections"     value={completedCount} icon="clipboard" accent="emerald" dark={false} />
+          <FleetKpiCard label="Out of Service"  value={oosCount}       icon="alert"     accent={oosCount > 0 ? "red" : "slate"} dark={false} />
         </div>
 
         {/* Scheduling · hero button */}

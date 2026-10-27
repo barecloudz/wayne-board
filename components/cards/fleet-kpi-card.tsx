@@ -1,12 +1,21 @@
 "use client";
 
 import { useFleetTelemetry } from "@/hooks/use-fleet-telemetry";
-import type { LucideIcon } from "lucide-react";
+import { Truck, Users, ClipboardCheck, AlertTriangle, Gauge, TrendingUp, type LucideIcon } from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  truck: Truck,
+  users: Users,
+  clipboard: ClipboardCheck,
+  alert: AlertTriangle,
+  gauge: Gauge,
+  trending: TrendingUp,
+};
 
 interface FleetKpiCardProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: string;
   trend?: { direction: "up" | "down" | "flat"; label: string };
   accent?: "emerald" | "amber" | "red" | "blue" | "indigo" | "slate";
   dark?: boolean;
@@ -25,12 +34,13 @@ const ACCENT_MAP = {
 export default function FleetKpiCard({
   label,
   value,
-  icon: Icon,
+  icon,
   trend,
   accent = "slate",
   dark = true,
   onClick,
 }: FleetKpiCardProps) {
+  const Icon = ICON_MAP[icon] ?? Gauge;
   const { ref, cardStyle, glowStyle, handlers } = useFleetTelemetry<HTMLDivElement>({
     maxTilt: 6,
     perspective: 900,
