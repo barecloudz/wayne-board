@@ -65,33 +65,99 @@ export default async function SettingsPage() {
 
   return (
     <AppShell>
-      <main className="flex-1 px-6 py-8 max-w-[800px] w-full mx-auto">
-        <div className="mb-8">
+      <main className="flex-1 px-6 py-12 max-w-[860px] w-full mx-auto">
+
+        {/* Page header */}
+        <div className="mb-12">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
-          <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Settings</h1>
+          <h1 className="text-[32px] font-extrabold text-slate-900 tracking-tight leading-none">Settings</h1>
+          <p className="text-[14px] text-slate-400 mt-2">Manage your organization, operations, and notification preferences.</p>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} initialOgImageUrl={orgRow?.ogImageUrl ?? null} />
-          <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} showDsw={showDsw} />
-          <WorkAreaManager initial={workAreasList as any} />
-          <LocationManager initial={locationsList} />
-          <GcSyncSettings initialInterval={gcSyncInterval} />
-          <PayrollWeekSettings initialDay={parseInt(payWeekStartSetting, 10)} />
-          <PayrollEmailSettings
-            initialRecipients={payrollEmailSettings.recipients}
-            initialDay={payrollEmailSettings.day}
-            initialTime={payrollEmailSettings.time}
-            weekStart={emailWeekStart}
-            weekEnd={emailWeekEnd}
-          />
-          <TaskSettingsCard
-            initialTasks={taskTemplatesList}
-            currentUserRole={session?.role ?? "bc"}
-            currentUserId={session?.driverId ?? ""}
-          />
-          <NotificationSettings initialPrefs={notificationPrefs as any} />
+        <div className="flex flex-col gap-16">
+
+          {/* ── GENERAL ─────────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">G</span>
+              </div>
+              <h2 className="text-[13px] font-black text-slate-900 uppercase tracking-widest">General</h2>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <BrandingSettings initialLogoUrl={orgRow?.logoUrl ?? null} initialAccentColor={orgRow?.accentColor ?? null} initialOgImageUrl={orgRow?.ogImageUrl ?? null} />
+              <PortalSettings showRyde={showRyde} showMilestones={showMilestones} clockInEnabled={clockInEnabled} showDsw={showDsw} />
+            </div>
+          </section>
+
+          {/* ── OPERATIONS ──────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">O</span>
+              </div>
+              <h2 className="text-[13px] font-black text-slate-900 uppercase tracking-widest">Operations</h2>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <LocationManager initial={locationsList} />
+              <WorkAreaManager initial={workAreasList as any} />
+              <GcSyncSettings initialInterval={gcSyncInterval} />
+            </div>
+          </section>
+
+          {/* ── PAYROLL ─────────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">P</span>
+              </div>
+              <h2 className="text-[13px] font-black text-slate-900 uppercase tracking-widest">Payroll</h2>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <PayrollWeekSettings initialDay={parseInt(payWeekStartSetting, 10)} />
+              <PayrollEmailSettings
+                initialRecipients={payrollEmailSettings.recipients}
+                initialDay={payrollEmailSettings.day}
+                initialTime={payrollEmailSettings.time}
+                weekStart={emailWeekStart}
+                weekEnd={emailWeekEnd}
+              />
+            </div>
+          </section>
+
+          {/* ── NOTIFICATIONS ───────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">N</span>
+              </div>
+              <h2 className="text-[13px] font-black text-slate-900 uppercase tracking-widest">Notifications</h2>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+            <NotificationSettings initialPrefs={notificationPrefs as any} />
+          </section>
+
+          {/* ── TASKS ───────────────────────────────────────────── */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
+                <span className="text-white text-[11px] font-black">T</span>
+              </div>
+              <h2 className="text-[13px] font-black text-slate-900 uppercase tracking-widest">Tasks</h2>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+            <TaskSettingsCard
+              initialTasks={taskTemplatesList}
+              currentUserRole={session?.role ?? "bc"}
+              currentUserId={session?.driverId ?? ""}
+            />
+          </section>
+
         </div>
+        <div className="h-16" />
       </main>
     </AppShell>
   );
