@@ -6,6 +6,7 @@ import {
   ChevronRight, Check, BarChart3,
   Wrench, Users, Lock, Smartphone,
 } from "lucide-react";
+import OrgSlugRedirect from "@/components/org-slug-redirect";
 
 export const metadata: Metadata = {
   title: "MyGroundOps — Built for FedEx Ground Contractors",
@@ -138,6 +139,8 @@ const PLANS = [
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#FAFBF8", color: "#0A1A0E" }}>
+      {/* Silently redirect returning users who have a stored org slug */}
+      <OrgSlugRedirect />
 
       {/* ── NAV ──────────────────────────────────────────────────────────────── */}
       <nav

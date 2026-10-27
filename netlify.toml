@@ -8,6 +8,11 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# ── Keep-warm ping — prevents Neon cold starts (1–3s delays) ─────────────────
+[[crons]]
+  schedule = "*/5 * * * *"
+  path = "/api/cron/keep-warm"
+
 # ── Scheduled Functions ───────────────────────────────────────────────────────
 # 11:45 PM ET — pull yesterday's GC route-days + rebuild driver profiles
 [functions."cron-sync-gc"]
