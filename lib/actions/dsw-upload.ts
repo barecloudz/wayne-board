@@ -498,6 +498,128 @@ export async function deleteDswNameMapping(id: number): Promise<void> {
   revalidatePath("/dashboard/payroll/upload");
 }
 
+// ── Retroactively re-link all unmatched DSW rows using current auto-match ─────
+
+export async function relinkUnmatchedDswRows(): Promise<{
+  linked: number;
+  stillUnmatched: number;
+  details: { dswName: string; driverName: string }[];
+}> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  // Load active drivers
+  const allDriversRows = await db
+    .select({ driverId: drivers.driverId, name: drivers.name })
+    .from(drivers)
+    .where(and(eq(drivers.organizationId, orgId), eq(drivers.active, true)));
+
+  const driverByName: Record<string, string> = {};
+  const driverById: Record<string, string> = {};
+  for (const d of allDriversRows) {
+    driverByName[d.name.toLowerCase().trim().replace(/\s+/g, " ")] = d.driverId;
+    driverById[d.driverId] = d.name;
+  }
+
+  // Load existing saved mappings
+  const savedMappingRows = await db
+    .select({ dswName: dswNameMappings.dswName, driverId: dswNameMappings.driverId })
+    .from(dswNameMappings)
+    .where(eq(dswNameMappings.organizationId, orgId));
+  const mappingLookup = new Map(savedMappingRows.map(m => [m.dswName, m.driverId]));
+
+  function normalizeDswName(raw: string): string {
+    if (!raw) return "";
+    const [last, ...rest] = raw.split(",");
+    const first = rest.join(" ").trim();
+    const display = first ? `${first} ${last}`.trim() : last.trim();
+    return display.toLowerCase().trim().replace(/\s+/g, " ");
+  }
+
+  function tryMatch(raw: string): string | null {
+    const normalized = normalizeDswName(raw);
+    if (!normalized) return null;
+    if (driverByName[normalized]) return driverByName[normalized];
+    const parts = normalized.split(" ");
+    if (parts.length > 2) {
+      const firstLast = `${parts[0]} ${parts[parts.length - 1]}`;
+      if (driverByName[firstLast]) return driverByName[firstLast];
+    }
+    const significant = parts.filter(p => p.length > 1);
+    if (significant.length >= 2) {
+      const hit = Object.entries(driverByName).find(([k]) => {
+        const kWords = k.split(" ");
+        return significant.filter(w => kWords.includes(w)).length >= 2;
+      });
+      if (hit) return hit[1];
+      const hit2 = Object.entries(driverByName).find(([k]) => {
+        const kWords = k.split(" ");
+        let matches = 0;
+        for (const w of significant) {
+          if (kWords.some(kw =>
+            kw === w ||
+            (w.length >= 3 && kw.startsWith(w)) ||
+            (kw.length >= 3 && w.startsWith(kw))
+          )) matches++;
+        }
+        return matches >= 2;
+      });
+      if (hit2) return hit2[1];
+    }
+    return null;
+  }
+
+  // Get all unique unmatched raw names across all historical DSW data
+  const unmatchedRows = await db
+    .selectDistinct({ driverNameRaw: dswRouteDays.driverNameRaw })
+    .from(dswRouteDays)
+    .where(and(eq(dswRouteDays.organizationId, orgId), isNull(dswRouteDays.driverId)));
+
+  const linked: { dswName: string; driverName: string }[] = [];
+  let stillUnmatched = 0;
+
+  for (const { driverNameRaw } of unmatchedRows) {
+    if (!driverNameRaw) continue;
+    const existing = mappingLookup.get(driverNameRaw);
+    if (existing === "__dismissed__") continue;
+
+    const resolvedId = (existing && existing !== "__dismissed__")
+      ? existing
+      : tryMatch(driverNameRaw);
+
+    if (resolvedId) {
+      // Patch ALL historical DSW rows for this raw name
+      await db
+        .update(dswRouteDays)
+        .set({ driverId: resolvedId })
+        .where(and(
+          eq(dswRouteDays.organizationId, orgId),
+          eq(dswRouteDays.driverNameRaw, driverNameRaw),
+          isNull(dswRouteDays.driverId),
+        ));
+
+      // Upsert the mapping so future uploads auto-link immediately
+      await db
+        .insert(dswNameMappings)
+        .values({ organizationId: orgId, dswName: driverNameRaw, driverId: resolvedId })
+        .onConflictDoUpdate({
+          target: [dswNameMappings.organizationId, dswNameMappings.dswName],
+          set: { driverId: resolvedId },
+        });
+
+      linked.push({ dswName: driverNameRaw, driverName: driverById[resolvedId] ?? resolvedId });
+    } else {
+      stillUnmatched++;
+    }
+  }
+
+  revalidatePath("/dashboard/payroll");
+  revalidatePath("/dashboard/payroll/upload");
+
+  return { linked: linked.length, stillUnmatched, details: linked };
+}
+
 // ── Get active drivers for the org (for mapping dropdown) ────────────────────
 
 export async function getActiveDriversForOrg(): Promise<Array<{ driverId: string; name: string }>> {

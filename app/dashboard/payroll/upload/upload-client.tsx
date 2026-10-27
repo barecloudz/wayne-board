@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { uploadDswBatch, deleteDswDay, saveDswNameMapping, dismissDswName, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames } from "@/lib/actions/dsw-upload";
+import { uploadDswBatch, deleteDswDay, saveDswNameMapping, dismissDswName, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames, relinkUnmatchedDswRows } from "@/lib/actions/dsw-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X, RefreshCw } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
@@ -45,6 +45,10 @@ export default function UploadClient() {
   const [savingPersistedName, setSavingPersistedName] = useState<string | null>(null);
   const [dismissingName, setDismissingName] = useState<string | null>(null);
   const [deletingDate, setDeletingDate] = useState<string | null>(null);
+
+  // Re-link all unmatched DSW rows
+  const [relinking, setRelinking] = useState(false);
+  const [relinkResult, setRelinkResult] = useState<{ linked: number; stillUnmatched: number; details: { dswName: string; driverName: string }[] } | null>(null);
 
   // Location picker (only shown when org has multiple locations)
   const [locations, setLocations] = useState<LocationOption[]>([]);
@@ -144,6 +148,19 @@ export default function UploadClient() {
     setSavedMappings(prev => prev.filter(m => m.id !== id));
   }
 
+  async function handleRelinkAll() {
+    setRelinking(true);
+    setRelinkResult(null);
+    try {
+      const result = await relinkUnmatchedDswRows();
+      setRelinkResult(result);
+      refreshUnmatched();
+      getDswNameMappings().then(setSavedMappings).catch(() => {});
+    } finally {
+      setRelinking(false);
+    }
+  }
+
   const allUnmatched = [...new Set((batchResults ?? []).filter(r => r.success).flatMap(r => r.unmatchedNames ?? []))];
   const pendingUnmatched = allUnmatched.filter(n => !savedNames.has(n));
 
@@ -158,6 +175,48 @@ export default function UploadClient() {
         <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">MyGroundOps · Admin</p>
         <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">DSW Upload</h1>
         <p className="text-[14px] text-slate-400 mt-2">Upload the previous day&apos;s Daily Service Worksheet files to populate the payroll performance data.</p>
+      </div>
+
+      {/* ── Re-link All Drivers ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-slate-900 mb-1">Re-link ILS to Drivers</p>
+            <p className="text-[12px] text-slate-500 leading-snug">
+              Scans all historical DSW data for rows with no matched driver and attempts to link them using the current name-matching logic. Run this if a driver&apos;s ILS is missing from payroll.
+            </p>
+          </div>
+          <button
+            onClick={handleRelinkAll}
+            disabled={relinking}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-700 disabled:opacity-50 transition-colors shrink-0"
+          >
+            {relinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {relinking ? "Re-linking…" : "Re-link All Drivers"}
+          </button>
+        </div>
+        {relinkResult && (
+          <div className={`mt-4 rounded-xl border px-4 py-3 ${relinkResult.linked > 0 ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"}`}>
+            <p className={`text-[13px] font-bold mb-1 ${relinkResult.linked > 0 ? "text-emerald-800" : "text-slate-700"}`}>
+              {relinkResult.linked > 0
+                ? `${relinkResult.linked} driver${relinkResult.linked !== 1 ? "s" : ""} linked — ILS data restored`
+                : "No new links found"}
+              {relinkResult.stillUnmatched > 0 && ` · ${relinkResult.stillUnmatched} still unmatched`}
+            </p>
+            {relinkResult.details.length > 0 && (
+              <ul className="flex flex-col gap-0.5 mt-1.5">
+                {relinkResult.details.map(d => (
+                  <li key={d.dswName} className="text-[11px] text-emerald-700">
+                    <span className="font-mono text-slate-500">{d.dswName}</span> → <span className="font-semibold">{d.driverName}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {relinkResult.stillUnmatched > 0 && (
+              <p className="text-[11px] text-slate-500 mt-2">Still-unmatched names appear in the &quot;Unmatched Drivers&quot; section below — assign them manually.</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">

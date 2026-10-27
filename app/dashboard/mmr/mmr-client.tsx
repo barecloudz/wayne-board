@@ -69,6 +69,12 @@ export default function MmrClient({
   const [confirmed, setConfirmed] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // OOS pre-step (batch generate only)
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [modalStep, setModalStep] = useState<"oos" | "review">("review");
+  const [oosAny, setOosAny] = useState<boolean | null>(null);
+  const [oosSelectedIds, setOosSelectedIds] = useState<Set<number>>(new Set());
+
   // Mileage pull
   type MileageResult = {
     gcVehicleId: number;
@@ -108,11 +114,24 @@ export default function MmrClient({
     loadMonth(val);
   }
 
-  function openReview(vehicleSubset: VehicleMmrRow[]) {
+  function openReview(vehicleSubset: VehicleMmrRow[], batch = false) {
     setReviewVehicles(buildReviews(vehicleSubset));
     setSignerName(defaultSignerName);
-    setConfirmed(false);
+    setConfirmed(true);
+    setIsBatchMode(batch);
+    setOosAny(null);
+    setOosSelectedIds(new Set());
+    setModalStep(batch ? "oos" : "review");
     setReviewOpen(true);
+  }
+
+  function applyOosAndProceed() {
+    if (oosAny) {
+      setReviewVehicles(prev =>
+        prev.map(r => ({ ...r, outOfService: oosSelectedIds.has(r.vehicleId) }))
+      );
+    }
+    setModalStep("review");
   }
 
   function updateReview(vehicleId: number, patch: Partial<VehicleReview>) {
@@ -213,7 +232,7 @@ export default function MmrClient({
             {pendingCount} pending
           </span>
           <button
-            onClick={() => openReview(vehicles)}
+            onClick={() => openReview(vehicles, true)}
             disabled={loadingMonth || vehicles.length === 0}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-700 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
@@ -383,8 +402,76 @@ export default function MmrClient({
               </button>
             </div>
 
+            {/* OOS pre-step (batch only) */}
+            {modalStep === "oos" && (
+              <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
+                <div>
+                  <p className="text-[15px] font-extrabold text-slate-900 mb-1">Were any trucks out of service this month?</p>
+                  <p className="text-[12px] text-slate-400">OOS means the truck was unable to provide service — awaiting repair, on hold, etc. Most months the answer is No.</p>
+                </div>
+                <div className="flex gap-3">
+                  {([false, true] as const).map(val => (
+                    <button
+                      key={String(val)}
+                      onClick={() => { setOosAny(val); if (!val) setOosSelectedIds(new Set()); }}
+                      className={`flex-1 py-3 rounded-xl text-[14px] font-bold border transition-colors ${
+                        oosAny === val ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                      }`}
+                    >
+                      {val ? "Yes" : "No"}
+                    </button>
+                  ))}
+                </div>
+
+                {oosAny && (
+                  <div>
+                    <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wider mb-2">Which trucks were OOS?</p>
+                    <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                      {reviewVehicles.filter(r => !r.maintenancePerformed).map(r => (
+                        <label key={r.vehicleId} className="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={oosSelectedIds.has(r.vehicleId)}
+                            onChange={() => {
+                              setOosSelectedIds(prev => {
+                                const next = new Set(prev);
+                                if (next.has(r.vehicleId)) next.delete(r.vehicleId);
+                                else next.add(r.vehicleId);
+                                return next;
+                              });
+                            }}
+                            className="w-4 h-4 rounded accent-slate-900"
+                          />
+                          <span className="text-[14px] font-bold text-slate-800">{r.unitNumber}</span>
+                        </label>
+                      ))}
+                      {reviewVehicles.filter(r => !r.maintenancePerformed).length === 0 && (
+                        <p className="text-[12px] text-slate-400 px-1">All trucks have maintenance records this month.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-auto pt-4 border-t border-slate-100">
+                  <button
+                    onClick={() => { setReviewOpen(false); }}
+                    className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyOosAndProceed}
+                    disabled={oosAny === null}
+                    className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-colors disabled:opacity-40"
+                  >
+                    Continue →
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Signer name */}
-            <div className="px-6 py-4 border-b border-slate-100 shrink-0">
+            {modalStep === "review" && <div className="px-6 py-4 border-b border-slate-100 shrink-0">
               <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                 <Pencil className="w-3 h-3" /> Authorized Signer
               </label>
@@ -395,12 +482,12 @@ export default function MmrClient({
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-800 font-medium outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition"
               />
               <p className="text-[11px] text-slate-400 mt-1">This name appears as the signature on every form in this batch.</p>
-            </div>
+            </div>}
 
             {/* Vehicle list */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3">
+            {modalStep === "review" && <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3">
               {reviewVehicles.map((r) => (
-                <div key={r.vehicleId} className="border border-slate-200 rounded-xl overflow-hidden">
+                <div key={r.vehicleId} className="border border-slate-200 rounded-xl overflow-hidden shrink-0">
                   <div className="bg-slate-50 px-4 py-3 flex items-center gap-3">
                     <span className="text-[16px] font-extrabold text-slate-900">{r.unitNumber}</span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
@@ -512,10 +599,10 @@ export default function MmrClient({
                   </div>
                 </div>
               ))}
-            </div>
+            </div>}
 
             {/* Declaration + footer */}
-            <div className="px-6 py-4 border-t border-slate-100 shrink-0 bg-white flex flex-col gap-4">
+            {modalStep === "review" && <div className="px-6 py-4 border-t border-slate-100 shrink-0 bg-white flex flex-col gap-4">
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -545,7 +632,7 @@ export default function MmrClient({
                     : <><FileDown className="w-4 h-4" /> Generate {reviewVehicles.length > 1 ? `${reviewVehicles.length} PDFs` : "PDF"}</>}
                 </button>
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       )}
