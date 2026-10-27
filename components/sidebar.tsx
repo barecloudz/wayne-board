@@ -33,7 +33,6 @@ const adminItems = [
   { icon: Award,         label: "Leaderboard",  href: "/dashboard/leaderboard",    exact: true },
   { icon: GraduationCap, label: "Trainee Days", href: "/dashboard/trainees",       exact: true },
   { icon: UserSearch,   label: "Recruiting",    href: "/dashboard/recruiting",      exact: true },
-  { icon: Bell,         label: "Notifications", href: "/dashboard/notifications",   exact: true },
   { icon: Settings,     label: "Settings",      href: "/dashboard/settings",        exact: true },
 ];
 
@@ -310,6 +309,21 @@ export default function Sidebar() {
           {reportItems.map(item => <NavLink key={item.href} {...item} />)}
         </CollapsibleSection>
       </nav>
+
+      {/* Notifications — always visible, highlighted */}
+      <div className="px-3 pb-2">
+        <Link
+          href="/dashboard/notifications"
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 w-full
+            ${pathname === "/dashboard/notifications"
+              ? "bg-amber-500 text-white"
+              : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
+            }`}
+        >
+          <Bell className="w-4 h-4 flex-shrink-0" />
+          Notifications
+        </Link>
+      </div>
 
       {/* Driver Portal link */}
       <div className="px-3 pb-2">

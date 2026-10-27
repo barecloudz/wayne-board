@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { getNotificationPreferences, upsertNotificationPreference } from "@/lib/actions/notifications";
+import { getNotificationPreferences, upsertNotificationPreference, getOrgAdmins } from "@/lib/actions/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -8,8 +8,11 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const prefs = await getNotificationPreferences(session.organizationId);
-  return NextResponse.json({ prefs });
+  const [prefs, admins] = await Promise.all([
+    getNotificationPreferences(session.organizationId),
+    getOrgAdmins(session.organizationId),
+  ]);
+  return NextResponse.json({ prefs, admins });
 }
 
 export async function PATCH(req: NextRequest) {
