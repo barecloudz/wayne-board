@@ -62,6 +62,7 @@ type ScorecardData = {
   drivers: DriverRow[];
   totals: Totals | null;
   coachingPriorities: CoachPriority[];
+  sigPeriodLabel: string | null;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -259,27 +260,21 @@ export default function ScorecardPage() {
             <>
               {/* ── Team Summary Bar ── */}
               {totals && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <SummaryTile
-                    label="Total Packages"
-                    value={totals.delPkgs.toLocaleString()}
-                    sub="delivered"
-                  />
-                  <SummaryTile
-                    label="Total Stops"
-                    value={totals.delStps.toLocaleString()}
-                    sub={`of ${totals.delStpsPlanned.toLocaleString()} planned`}
-                  />
-                  <SummaryTile
-                    label="Total Miles"
-                    value={totals.miles.toLocaleString()}
-                    sub="driven this week"
-                  />
-                  <SummaryTile
-                    label="Drivers Worked"
-                    value={totals.driversWorked}
-                    sub="with DSW data"
-                  />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <SummaryTile label="Total Packages" value={totals.delPkgs.toLocaleString()} sub="delivered" />
+                  <SummaryTile label="Total Stops" value={totals.delStps.toLocaleString()} sub={`of ${totals.delStpsPlanned.toLocaleString()} planned`} />
+                  <SummaryTile label="Total Miles" value={totals.miles.toLocaleString()} sub="driven this week" />
+                  <SummaryTile label="Drivers Worked" value={totals.driversWorked} sub="with DSW data" />
+                  <div className={`border rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col gap-1 ${totals.code85 > 0 ? "bg-red-50 border-red-200" : "bg-white border-slate-200/80"}`}>
+                    <p className={`text-[11px] font-semibold uppercase tracking-wider ${totals.code85 > 0 ? "text-red-500" : "text-slate-400"}`}>Code 85</p>
+                    <span className={`text-[24px] font-extrabold leading-none tracking-tight ${totals.code85 > 0 ? "text-red-700" : "text-slate-900"}`}>{totals.code85}</span>
+                    <p className={`text-[12px] ${totals.code85 > 0 ? "text-red-500 font-semibold" : "text-slate-400"}`}>{totals.code85 > 0 ? "unscanned — action needed" : "clean"}</p>
+                  </div>
+                  <div className={`border rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col gap-1 ${totals.dna > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-slate-200/80"}`}>
+                    <p className={`text-[11px] font-semibold uppercase tracking-wider ${totals.dna > 0 ? "text-amber-600" : "text-slate-400"}`}>DNA</p>
+                    <span className={`text-[24px] font-extrabold leading-none tracking-tight ${totals.dna > 0 ? "text-amber-700" : "text-slate-900"}`}>{totals.dna}</span>
+                    <p className={`text-[12px] ${totals.dna > 0 ? "text-amber-600 font-semibold" : "text-slate-400"}`}>{totals.dna > 0 ? "did not attempt" : "clean"}</p>
+                  </div>
                 </div>
               )}
 

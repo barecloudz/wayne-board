@@ -355,7 +355,7 @@ export async function GET(req: Request) {
     });
   }
 
-  // High DNA (top 3 by count, only if any exist)
+  // High DNA
   const dnaDrivers = drivers
     .filter(d => d.dna > 0)
     .sort((a, b) => b.dna - a.dna)
@@ -369,11 +369,71 @@ export async function GET(req: Request) {
     });
   }
 
+  // Code 85 — unscanned packages, any count is a flag
+  const code85Drivers = drivers
+    .filter(d => d.code85 > 0)
+    .sort((a, b) => b.code85 - a.code85)
+    .slice(0, 3);
+  if (code85Drivers.length > 0) {
+    coachingPriorities.push({
+      metric: "Code 85",
+      status: "RED",
+      message: `${totalCode85} unscanned package${totalCode85 !== 1 ? "s" : ""} this week. These were delivered with no scanner record — the station has no proof of where they went. Any Code 85 count must be addressed immediately.`,
+      drivers: code85Drivers.map(d => ({ name: d.name, value: d.code85 })),
+    });
+  }
+
+  // ── 7. Sig compliance — most recent uploaded period ─────────────────────────
+  type SigDriver = { name: string; idr: number; invalid: number };
+  let sigDrivers: SigDriver[] = [];
+  let sigPeriodLabel: string | null = null;
+  try {
+    const periodRows: any[] = await sql`
+      SELECT period_label FROM sig_compliance
+      WHERE organization_id = ${orgId}
+      ORDER BY uploaded_at DESC LIMIT 1
+    `;
+    if (periodRows.length > 0) {
+      sigPeriodLabel = periodRows[0].period_label as string;
+      const sigRows: any[] = await sql`
+        SELECT
+          COALESCE(dr.name, sc.driver_name_raw) AS name,
+          COALESCE(sc.sig_invalid_driver_release, 0) AS idr,
+          COALESCE(sc.sig_invalid, 0)               AS invalid
+        FROM sig_compliance sc
+        LEFT JOIN drivers dr ON dr.driver_id = sc.driver_id AND dr.organization_id = ${orgId}
+        WHERE sc.organization_id = ${orgId}
+          AND sc.period_label = ${sigPeriodLabel}
+          AND (sc.sig_invalid_driver_release > 0 OR sc.sig_invalid > 0)
+        ORDER BY sc.sig_invalid_driver_release DESC, sc.sig_invalid DESC
+        LIMIT 5
+      `;
+      sigDrivers = sigRows.map((r: any) => ({
+        name: r.name as string,
+        idr: parseInt(r.idr) || 0,
+        invalid: parseInt(r.invalid) || 0,
+      }));
+    }
+  } catch (e: any) {
+    console.error("[scorecard] sig compliance query failed:", e);
+  }
+
+  if (sigDrivers.length > 0) {
+    const totalIdr = sigDrivers.reduce((s, d) => s + d.idr, 0);
+    coachingPriorities.push({
+      metric: "Sig Compliance",
+      status: "RED",
+      message: `${sigPeriodLabel}: ${totalIdr} IDR violation${totalIdr !== 1 ? "s" : ""} — driver released package without obtaining a signature. Drivers must use the customer's real first initial and last name. No acronyms, initials only, or fake names.`,
+      drivers: sigDrivers.map(d => ({ name: d.name, value: d.idr > 0 ? d.idr : d.invalid })),
+    });
+  }
+
   return NextResponse.json({
     weekEnding,
     weekStart,
     drivers,
     totals,
     coachingPriorities,
+    sigPeriodLabel: sigPeriodLabel ?? null,
   });
 }

@@ -417,6 +417,80 @@ export async function deletePpodNameMapping(id: number): Promise<void> {
   revalidatePath("/dashboard/payroll/ppod-upload");
 }
 
+// ── Aggregated driver coaching summary ───────────────────────────────────────
+
+export type PpodDriverSummary = {
+  driverId: string | null;
+  driverNameRaw: string;
+  days: number;
+  avgPpodPct: number | null;
+  avgPhotoNoPkgPct: number | null;
+  avgPhotoSensitivePct: number | null;
+  avgPhotoOtherPct: number | null;
+  avgLocGoodPct: number | null;
+  avgLocPoorPct: number | null;
+  avgLocOverMilePct: number | null;
+  avgDtcPct: number | null;
+  totalPkgs: number;
+  podCaptured: number;
+};
+
+export async function getPpodDriverSummary(
+  startDate: string,
+  endDate: string,
+): Promise<PpodDriverSummary[]> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select()
+    .from(ppodDays)
+    .where(
+      and(
+        eq(ppodDays.organizationId, orgId),
+        gte(ppodDays.date, startDate),
+        lte(ppodDays.date, endDate),
+      )
+    );
+
+  // Group by driverNameRaw (use driverId if matched, else raw name as key)
+  const grouped = new Map<string, typeof rows>();
+  for (const row of rows) {
+    const key = row.driverId ?? row.driverNameRaw;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(row);
+  }
+
+  function avg(vals: (number | null)[]): number | null {
+    const valid = vals.filter((v): v is number => v != null);
+    return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+  }
+
+  const summaries: PpodDriverSummary[] = [];
+  for (const [, driverRows] of grouped) {
+    const first = driverRows[0];
+    summaries.push({
+      driverId: first.driverId,
+      driverNameRaw: first.driverNameRaw,
+      days: driverRows.length,
+      avgPpodPct: avg(driverRows.map(r => r.ppodPct)),
+      avgPhotoNoPkgPct: avg(driverRows.map(r => r.photoNoPkgPct)),
+      avgPhotoSensitivePct: avg(driverRows.map(r => r.photoSensitivePct)),
+      avgPhotoOtherPct: avg(driverRows.map(r => r.photoOtherPct)),
+      avgLocGoodPct: avg(driverRows.map(r => r.locGoodPct)),
+      avgLocPoorPct: avg(driverRows.map(r => r.locPoorPct)),
+      avgLocOverMilePct: avg(driverRows.map(r => r.locOverMilePct)),
+      avgDtcPct: avg(driverRows.map(r => r.dtcPct)),
+      totalPkgs: driverRows.reduce((s, r) => s + (r.totalPkgs ?? 0), 0),
+      podCaptured: driverRows.reduce((s, r) => s + (r.podCaptured ?? 0), 0),
+    });
+  }
+
+  // Sort worst first (lowest avgPpodPct)
+  return summaries.sort((a, b) => (a.avgPpodPct ?? 100) - (b.avgPpodPct ?? 100));
+}
+
 // ── Get active drivers for the org (for mapping dropdown) ────────────────────
 
 export async function getActiveDriversForOrg(): Promise<Array<{ driverId: string; name: string }>> {

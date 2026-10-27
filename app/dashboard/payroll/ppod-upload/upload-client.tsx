@@ -10,9 +10,11 @@ import {
   deletePpodNameMapping,
   getUploadedPpodDatesWithCounts,
   getUnmatchedPpodNames,
+  getPpodDriverSummary,
+  type PpodDriverSummary,
 } from "@/lib/actions/ppod-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, ChevronDown } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; ppodName: string; driverId: string; driverName: string };
@@ -55,6 +57,13 @@ export default function PpodUploadClient() {
   // Location picker (only shown when org has multiple locations)
   const [locations, setLocations] = useState<LocationOption[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
+
+  // Driver coaching view
+  const [coachingView, setCoachingView] = useState(false);
+  const [coachingSummary, setCoachingSummary] = useState<PpodDriverSummary[] | null>(null);
+  const [coachingLoading, setCoachingLoading] = useState(false);
+  const [coachingStart, setCoachingStart] = useState<string>("");
+  const [coachingEnd, setCoachingEnd] = useState<string>("");
 
   const ppodRef = useRef<HTMLInputElement>(null);
 
@@ -507,6 +516,119 @@ export default function PpodUploadClient() {
           </div>
         </div>
       )}
+      {/* Coaching View */}
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setCoachingView(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 text-orange-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-[14px] font-bold text-slate-800">Driver Coaching View</p>
+              <p className="text-[12px] text-slate-400">Aggregated PPOD metrics with coaching callouts</p>
+            </div>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${coachingView ? "rotate-180" : ""}`} />
+        </button>
+
+        {coachingView && (
+          <div className="border-t border-slate-100 p-5 space-y-4">
+            {/* Date range picker */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <input type="date" value={coachingStart} onChange={e => setCoachingStart(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-slate-50" />
+              <span className="text-slate-400 text-[12px]">to</span>
+              <input type="date" value={coachingEnd} onChange={e => setCoachingEnd(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-slate-50" />
+              <button
+                onClick={async () => {
+                  if (!coachingStart || !coachingEnd) return;
+                  setCoachingLoading(true);
+                  const data = await getPpodDriverSummary(coachingStart, coachingEnd);
+                  setCoachingSummary(data);
+                  setCoachingLoading(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold"
+              >
+                {coachingLoading ? "Loading..." : "Load"}
+              </button>
+            </div>
+
+            {/* Results */}
+            {coachingSummary && (
+              <div className="space-y-3">
+                {coachingSummary.map((d, i) => {
+                  // Build coaching flags
+                  const flags: { level: "red" | "amber"; message: string; detail: string }[] = [];
+
+                  if ((d.avgPhotoSensitivePct ?? 0) > 2)
+                    flags.push({ level: "red", message: `${d.avgPhotoSensitivePct!.toFixed(1)}% photos expose sensitive info`, detail: "Driver is photographing license plates, door codes, or personal mail. This is a privacy violation — they must angle the camera away from this information on every delivery." });
+
+                  if ((d.avgLocOverMilePct ?? 0) > 5)
+                    flags.push({ level: "red", message: `${d.avgLocOverMilePct!.toFixed(1)}% deliveries over 1 mile from address`, detail: "Driver is dropping packages more than a mile from the intended delivery address. These are likely misdeliveries. Pull their recent stops and review." });
+
+                  if ((d.avgPhotoNoPkgPct ?? 0) > 8)
+                    flags.push({ level: "amber", message: `${d.avgPhotoNoPkgPct!.toFixed(1)}% photos don't show the package`, detail: "Package isn't visible in delivery photos. Driver must include the package in every shot — the photo only counts as proof if the package is in the frame." });
+
+                  if ((d.avgLocPoorPct ?? 0) > 40)
+                    flags.push({ level: "amber", message: `${d.avgLocPoorPct!.toFixed(1)}% poor location accuracy`, detail: "GPS accuracy is consistently poor for this driver. They may be taking photos while still in the vehicle. Driver should walk to the door and take the photo at the delivery point." });
+
+                  if ((d.avgDtcPct ?? 100) < 80 && d.avgDtcPct != null)
+                    flags.push({ level: "amber", message: `${d.avgDtcPct!.toFixed(1)}% door-to-customer rate`, detail: "Low rate of delivering directly to the customer at the door. Driver may be leaving packages at the mailbox or in the vehicle bay instead of walking them up." });
+
+                  if ((d.avgPpodPct ?? 100) < 95 && d.avgPpodPct != null)
+                    flags.push({ level: "red", message: `Only ${d.avgPpodPct!.toFixed(1)}% proof of delivery captured`, detail: "Driver is skipping delivery photos. Every stop requires a photo — no exceptions. Pull their delivery history and address this immediately." });
+
+                  const isClean = flags.length === 0;
+
+                  return (
+                    <div key={i} className={`rounded-xl border ${isClean ? "border-emerald-200 bg-emerald-50/50" : flags.some(f => f.level === "red") ? "border-red-200 bg-red-50/30" : "border-amber-200 bg-amber-50/30"}`}>
+                      <div className="px-4 py-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${isClean ? "bg-emerald-100 text-emerald-700" : flags.some(f => f.level === "red") ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                            {isClean ? "✓" : flags.length}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-bold text-slate-800 truncate">{d.driverNameRaw}</p>
+                            <p className="text-[11px] text-slate-400">{d.days} days · {d.totalPkgs.toLocaleString()} pkgs · {d.podCaptured.toLocaleString()} POD captured</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-[13px] font-black ${(d.avgPpodPct ?? 0) >= 99 ? "text-emerald-600" : (d.avgPpodPct ?? 0) >= 95 ? "text-amber-600" : "text-red-600"}`}>
+                            {d.avgPpodPct != null ? `${d.avgPpodPct.toFixed(1)}%` : "—"}
+                          </span>
+                          {isClean
+                            ? <span className="text-[11px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Clean</span>
+                            : <span className="text-[11px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{flags.length} issue{flags.length > 1 ? "s" : ""}</span>
+                          }
+                        </div>
+                      </div>
+                      {!isClean && (
+                        <div className="px-4 pb-3 space-y-2">
+                          {flags.map((flag, fi) => (
+                            <div key={fi} className={`rounded-lg p-3 border ${flag.level === "red" ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                              <p className={`text-[12px] font-bold mb-0.5 ${flag.level === "red" ? "text-red-700" : "text-amber-700"}`}>
+                                {flag.level === "red" ? "⚠ " : "⚡ "}{flag.message}
+                              </p>
+                              <p className={`text-[11px] leading-snug ${flag.level === "red" ? "text-red-600" : "text-amber-600"}`}>{flag.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {coachingSummary.length === 0 && (
+                  <p className="text-[13px] text-slate-400 text-center py-6">No PPOD data found for this date range.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

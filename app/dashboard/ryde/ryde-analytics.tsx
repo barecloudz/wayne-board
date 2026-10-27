@@ -13,6 +13,42 @@ type Review = {
   category: string | null; content: string; week: string | null;
   improvement: string | null; atFault: boolean;
   customerInitials: string | null; createdAt: Date | null;
+  releaseLocation: string | null;
+  workArea: string | null;
+};
+
+// Normalise raw release-location codes into readable labels
+function normaliseRelLoc(raw: string): string {
+  if (raw.startsWith("O~")) {
+    const rest = raw.slice(2).replace(/[._]+/g, " ").toLowerCase();
+    return rest.charAt(0).toUpperCase() + rest.slice(1);
+  }
+  const MAP: Record<string, string> = {
+    FRONTDOOR: "Front Door", BACKDOOR: "Back Door", PORCH: "Porch",
+    GARAGE: "Garage", MAILROOM: "Mailroom", OSSTORAGEUNIT: "Storage Unit",
+    INSTORAGEUNIT: "Indoor Storage", GATEDDRIVEWAY: "Gated Driveway",
+    LOCKER: "Locker", SIDEDOOR: "Side Door", "PATIO/CARPORT": "Patio / Carport",
+  };
+  return MAP[raw] ?? raw;
+}
+
+// Split multi-select category field (\r\n or \n delimited)
+function splitCategories(raw: string | null): string[] {
+  if (!raw) return [];
+  return raw.split(/[\r\n]+/).map(s => s.trim()).filter(Boolean);
+}
+
+// Group raw FedEx complaint labels into concise coaching buckets
+const COMPLAINT_GROUPS: Record<string, string> = {
+  "Package not placed where it should have been": "Placement Issue",
+  "Delivery instructions not followed":           "Placement Issue",
+  "Delivered to the wrong address":               "Wrong Address",
+  "My package has not arrived":                   "Package Missing",
+  "No knock or doorbell ring":                    "No Attempt",
+  "Package was damaged":                          "Damage",
+  "Delivery was late":                            "Late Delivery",
+  "Problem with the picture of the delivery":     "Photo Issue",
+  "Other":                                        "Other",
 };
 type Driver = { id: number; driverId: string; name: string };
 
@@ -163,9 +199,61 @@ function useDriverStats(reviews: Review[], drivers: Driver[]) {
   }, [reviews, drivers]);
 }
 
+// ── Complaint category + release location aggregation ─────────────────────
+function useCategoryStats(reviews: Review[]) {
+  return useMemo(() => {
+    const negReviews = reviews.filter(r => r.stars != null && r.stars <= 2);
+    const groupCounts = new Map<string, number>();
+    const relLocCounts = new Map<string, number>();
+
+    for (const r of negReviews) {
+      // Count grouped complaint categories (dedupe per review so "Placement" only counts once)
+      const seenGroups = new Set<string>();
+      for (const cat of splitCategories(r.category)) {
+        const group = COMPLAINT_GROUPS[cat];
+        if (group && !seenGroups.has(group)) {
+          seenGroups.add(group);
+          groupCounts.set(group, (groupCounts.get(group) ?? 0) + 1);
+        }
+      }
+      // Count release locations for negative reviews
+      if (r.releaseLocation) {
+        const label = normaliseRelLoc(r.releaseLocation);
+        relLocCounts.set(label, (relLocCounts.get(label) ?? 0) + 1);
+      }
+    }
+
+    const sortedGroups = Array.from(groupCounts.entries())
+      .sort((a, b) => b[1] - a[1]);
+    const sortedRelLoc = Array.from(relLocCounts.entries())
+      .sort((a, b) => b[1] - a[1]);
+
+    return { sortedGroups, sortedRelLoc, negTotal: negReviews.length };
+  }, [reviews]);
+}
+
+// Top complaint group per driver (for scorecard table)
+function topComplaintForDriver(driverId: string, reviews: Review[]): string | null {
+  const neg = reviews.filter(r => r.driverId === driverId && r.stars != null && r.stars <= 2);
+  const counts = new Map<string, number>();
+  for (const r of neg) {
+    const seenGroups = new Set<string>();
+    for (const cat of splitCategories(r.category)) {
+      const group = COMPLAINT_GROUPS[cat];
+      if (group && !seenGroups.has(group)) {
+        seenGroups.add(group);
+        counts.set(group, (counts.get(group) ?? 0) + 1);
+      }
+    }
+  }
+  if (counts.size === 0) return null;
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0];
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) {
   const driverStats = useDriverStats(reviews, drivers);
+  const { sortedGroups, sortedRelLoc, negTotal } = useCategoryStats(reviews);
   const ratedReviews = reviews.filter((r) => r.stars !== null);
 
   if (ratedReviews.length === 0) return null;
@@ -332,6 +420,70 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
           </div>
         </div>
 
+        {/* ── Complaint category + release location row ── */}
+        {negTotal > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
+            {/* Complaint categories */}
+            <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
+              style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.65)" }}>
+              <div className="text-[7px] font-bold uppercase tracking-[.12em] mb-3" style={{ color: "#86868B" }}>
+                Complaint Categories · {negTotal} negative review{negTotal !== 1 ? "s" : ""}
+              </div>
+              <div className="space-y-2">
+                {sortedGroups.map(([group, count]) => {
+                  const pct = Math.round((count / negTotal) * 100);
+                  const barColor = group === "Wrong Address" || group === "Package Missing" ? RED
+                    : group === "Placement Issue" || group === "No Attempt" ? AMBER
+                    : "#6E6E73";
+                  return (
+                    <div key={group}>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[10px] font-semibold" style={{ color: "#1D1D1F" }}>{group}</span>
+                        <span className="text-[9px] font-bold" style={{ color: barColor }}>{count} ({pct}%)</span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: barColor, opacity: 0.75 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[8px] mt-3" style={{ color: "#AEAEB2" }}>
+                "Placement Issue" groups: not placed correctly + delivery instructions ignored. One complaint may flag multiple groups.
+              </p>
+            </div>
+
+            {/* Release locations for negative reviews */}
+            {sortedRelLoc.length > 0 && (
+              <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
+                style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.65)" }}>
+                <div className="text-[7px] font-bold uppercase tracking-[.12em] mb-3" style={{ color: "#86868B" }}>
+                  Where Complaints Happen · by Release Location
+                </div>
+                <div className="space-y-2">
+                  {sortedRelLoc.slice(0, 8).map(([loc, count]) => {
+                    const pct = Math.round((count / negTotal) * 100);
+                    return (
+                      <div key={loc}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[10px] font-semibold" style={{ color: "#1D1D1F" }}>{loc}</span>
+                          <span className="text-[9px] font-bold" style={{ color: "#0071E3" }}>{count} ({pct}%)</span>
+                        </div>
+                        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.06)" }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#0071E3", opacity: 0.6 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[8px] mt-3" style={{ color: "#AEAEB2" }}>
+                  Locations where negative reviews were generated. "Front Door" dominant here is expected given volume — watch for O~ custom entries.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Rankings table */}
         <div className="rounded-xl p-4 shadow-[0_2px_10px_rgba(0,0,0,0.05)]"
           style={{ background: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.65)" }}>
@@ -346,10 +498,10 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
           <div className="overflow-x-auto -mx-1"><table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.08)" }}>
-                {["#","Driver","ID","Score","Avg","Reviews","5★","4★","3★","2★","1★","Pos%","Status"].map((h, i) => (
+                {["#","Driver","ID","Score","Avg","Reviews","5★","4★","3★","2★","1★","Pos%","Top Issue","Status"].map((h, i) => (
                   <th key={h} className="pb-2 px-1"
                     style={{
-                      textAlign: i === 1 || i === 12 ? "left" : "center",
+                      textAlign: i === 1 || i === 12 || i === 13 ? "left" : "center",
                       fontSize: 7, fontWeight: 700, textTransform: "uppercase",
                       letterSpacing: ".09em", color: "#AEAEB2",
                     }}>
@@ -391,6 +543,21 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
                           {d.pct}%
                         </td>
                         <td className="py-1.5 px-1">
+                          {(() => {
+                            const top = topComplaintForDriver(d.driverId, reviews);
+                            if (!top) return <span style={{ color: "#AEAEB2", fontSize: 8 }}>—</span>;
+                            const c = top === "Wrong Address" || top === "Package Missing" ? RED
+                              : top === "Placement Issue" || top === "No Attempt" ? AMBER
+                              : "#6E6E73";
+                            return (
+                              <span className="px-1.5 py-0.5 rounded text-[7px] font-bold"
+                                style={{ background: `${c}18`, color: c }}>
+                                {top}
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className="py-1.5 px-1">
                           <span className="px-2 py-0.5 rounded-full text-[7px] font-bold uppercase tracking-wider"
                             style={{ background: `${color}1A`, color }}>
                             {tierLabel(d.bayesianAvg)}
@@ -404,7 +571,7 @@ export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) 
                       <td className="py-1.5 px-1 text-center text-[9px]" style={{ color: "#C7C7CC" }}>—</td>
                       <td className="py-1.5 px-1 text-[10px] text-[#6E6E73]">{d.name}</td>
                       <td className="py-1.5 px-1 text-center text-[8px]" style={{ color: "#AEAEB2" }}>{d.driverId}</td>
-                      <td colSpan={10} className="py-1.5 px-1 text-[8px]" style={{ color: "#AEAEB2" }}>
+                      <td colSpan={11} className="py-1.5 px-1 text-[8px]" style={{ color: "#AEAEB2" }}>
                         {d.total} review{d.total !== 1 ? "s" : ""} — needs {MIN_RANKED - d.total} more to rank
                       </td>
                     </tr>

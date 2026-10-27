@@ -162,6 +162,10 @@ export const rydeReviews = pgTable("ryde_reviews", {
   customerInitials: text("customer_initials"),
   source:           text("source"),
   trackId:          text("track_id"),
+  surveyDate:       text("survey_date"),           // "YYYY-MM-DD" — date customer completed survey
+  address:          text("address"),               // delivery address from file
+  releaseLocation:  text("release_location"),      // "FRONTDOOR"|"PORCH"|"MAILBOX"|"GARAGE"|"GROUND" etc.
+  workArea:         text("work_area"),             // work area number e.g. "0350"
   createdAt:        timestamp("created_at").defaultNow(),
 }, (t) => [
   uniqueIndex("ryde_reviews_org_track_unique").on(t.organizationId, t.trackId),
@@ -806,4 +810,27 @@ export const ppodNameMappings = pgTable("ppod_name_mappings", {
   createdAt:      timestamp("created_at").defaultNow(),
 }, (t) => [
   uniqueIndex("ppod_name_mappings_org_name_unique").on(t.organizationId, t.ppodName),
+]);
+
+// ── Signature Compliance ──────────────────────────────────────────────────────
+export const sigCompliance = pgTable("sig_compliance", {
+  id:                          serial("id").primaryKey(),
+  organizationId:              integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  driverId:                    text("driver_id"),              // FedEx ID matched from drivers table, null if unmatched
+  driverNameRaw:               text("driver_name_raw").notNull(), // raw "A. HALBACH (5595484)"
+  fedexId:                     text("fedex_id").notNull(),      // extracted from parens
+  periodLabel:                 text("period_label").notNull(),  // "October 2026" user-entered
+  sigCompliancePct:            real("sig_compliance_pct"),
+  sigRequiredStops:            integer("sig_required_stops"),
+  sigFailures:                 integer("sig_failures"),
+  sigInvalid:                  integer("sig_invalid"),
+  sigInvalidDriverRelease:     integer("sig_invalid_driver_release"),
+  alcoholCompliancePct:        real("alcohol_compliance_pct"),
+  alcoholRequiredStops:        integer("alcohol_required_stops"),
+  alcoholFailures:             integer("alcohol_failures"),
+  alcoholSigInvalid:           integer("alcohol_sig_invalid"),
+  alcoholInvalidDriverRelease: integer("alcohol_invalid_driver_release"),
+  uploadedAt:                  timestamp("uploaded_at").defaultNow(),
+}, (t) => [
+  index("sig_compliance_org_idx").on(t.organizationId),
 ]);

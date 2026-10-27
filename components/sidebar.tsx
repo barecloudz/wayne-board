@@ -25,6 +25,7 @@ const adminItems = [
   { icon: Upload,        label: "DSW Upload",   href: "/dashboard/payroll/upload",      exact: true },
   { icon: Upload,        label: "Ryde Upload",  href: "/dashboard/payroll/ryde-upload", exact: true },
   { icon: Upload,        label: "PPOD Upload",  href: "/dashboard/payroll/ppod-upload", exact: true },
+  { icon: Upload,        label: "Sig Compliance", href: "/dashboard/payroll/sig-upload", exact: true },
   { icon: ClipboardList, label: "Tasks",        href: "/dashboard/tasks",          exact: true },
   { icon: TrendingUp,    label: "Performance",  href: "/dashboard/performance",    exact: true },
   { icon: BarChart2,     label: "Weekly Report", href: "/dashboard/scorecard",      exact: true },

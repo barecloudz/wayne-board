@@ -113,11 +113,17 @@ export async function GET(req: NextRequest) {
     console.error("[leaderboard] ryde query failed:", e);
   }
 
-  // ── 5. ILS ────────────────────────────────────────────────────────────────────
+  // ── 5. ILS + DSW coaching fields ─────────────────────────────────────────────
   let ilsMap = new Map<string, any>();
   try {
     const rows = await sql`
-      SELECT driver_id, AVG(ils_pct) AS avg_ils
+      SELECT
+        driver_id,
+        AVG(ils_pct)        AS avg_ils,
+        SUM(code_85)        AS total_code85,
+        SUM(dna)            AS total_dna,
+        SUM(non_delvd_stps) AS total_non_delvd,
+        SUM(act_del_stps)   AS total_act_del
       FROM dsw_route_days
       WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
         AND date >= CURRENT_DATE - INTERVAL '1 day' * ${days}
@@ -189,6 +195,10 @@ export async function GET(req: NextRequest) {
       ryde_score:              ryde?.ryde_avg               ? parseFloat(ryde.ryde_avg)               : null,
       ryde_count:              ryde?.ryde_count             ? parseInt(ryde.ryde_count)                : null,
       avg_ils_30d:             ils?.avg_ils                 ? parseFloat(ils.avg_ils)                  : null,
+      total_code85:            ils?.total_code85            ? parseInt(ils.total_code85)               : null,
+      total_dna:               ils?.total_dna               ? parseInt(ils.total_dna)                  : null,
+      total_non_delvd:         ils?.total_non_delvd         ? parseInt(ils.total_non_delvd)            : null,
+      total_act_del:           ils?.total_act_del           ? parseInt(ils.total_act_del)              : null,
       avg_ppod_30d:            ppod?.avg_ppod               ? parseFloat(ppod.avg_ppod)               : null,
       avg_photo_no_pkg_pct:    ppod?.avg_photo_no_pkg_pct   ? parseFloat(ppod.avg_photo_no_pkg_pct)   : null,
       avg_photo_sensitive_pct: ppod?.avg_photo_sensitive_pct? parseFloat(ppod.avg_photo_sensitive_pct): null,

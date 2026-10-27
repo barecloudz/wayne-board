@@ -44,6 +44,10 @@ type Driver = {
   avg_loc_poor_pct:        number | null;
   avg_loc_over_mile_pct:   number | null;
   avg_dtc_pct:             number | null;
+  total_code85:            number | null;
+  total_dna:               number | null;
+  total_non_delvd:         number | null;
+  total_act_del:           number | null;
 };
 
 type SortKey = "rank" | "avg_sph_30d" | "avg_sph_90d" | "ryde_score" | "days_worked_30d" | "trend_delta" | "avg_ils_30d" | "avg_ppod_30d";
@@ -511,10 +515,24 @@ function DriverCard({
 // ── Driver Detail Panel ────────────────────────────────────────────────────────
 
 function ilsStatusMsg(ils: number | null): { headline: string; detail: string; color: string; bg: string } {
-  if (ils == null) return { headline: "No scan data yet", detail: "ILS data comes from DSW uploads", color: "text-slate-400", bg: "bg-slate-700/40" };
-  if (ils >= 99)   return { headline: "Excellent — keep it up!", detail: "Scans are on target. Nothing to fix here.", color: "text-emerald-400", bg: "bg-emerald-900/30" };
-  if (ils >= 95)   return { headline: "Good, but room to improve", detail: `Aim for 99%+. About ${(100 - ils).toFixed(1)}% of packages aren't scanning in sequence.`, color: "text-amber-400", bg: "bg-amber-900/30" };
-  return { headline: "Needs immediate attention", detail: `${(100 - ils).toFixed(1)}% of packages are missing proper in-line scans. This affects the company's service score.`, color: "text-red-400", bg: "bg-red-900/30" };
+  if (ils == null) return { headline: "No scan data yet", detail: "ILS data comes from DSW uploads. Once DSW is uploaded this will populate.", color: "text-slate-400", bg: "bg-slate-700/40" };
+  if (ils >= 99)   return { headline: "Passing — on target", detail: "Packages are being scanned and delivered correctly. Keep it up.", color: "text-emerald-400", bg: "bg-emerald-900/30" };
+  if (ils >= 95)   return { headline: "FAILED — below 99% threshold", detail: `${(100 - ils).toFixed(1)}% of packages were not properly scanned or delivered. Anything under 99% is a failure. This driver needs to be coached immediately — packages may be coming back to the station or incorrect status codes are being used to avoid delivering.`, color: "text-amber-400", bg: "bg-amber-900/30" };
+  return { headline: "FAILED — seriously hurting the team", detail: `${(100 - ils).toFixed(1)}% of packages were not properly scanned or delivered. This driver is dragging the entire team's FedEx service score down. Common causes: packages returned to station undelivered, or false status codes used to close out stops without delivering. This requires immediate coaching and may require disciplinary action.`, color: "text-red-400", bg: "bg-red-900/30" };
+}
+
+function photoQualityMsg(d: Driver): { headline: string; detail: string; color: string } {
+  const ppod      = d.avg_ppod_30d;
+  const sensitive = d.avg_photo_sensitive_pct ?? 0;
+  const noPkg     = d.avg_photo_no_pkg_pct ?? 0;
+  const other     = d.avg_photo_other_pct ?? 0;
+  if (ppod == null) return { headline: "No photo data", detail: "PPOD data comes from DSW uploads.", color: "text-slate-400" };
+  if (sensitive > 3)  return { headline: "Exposing sensitive information", detail: `${sensitive.toFixed(1)}% of photos show sensitive info — license plates, mail labels, door codes. Driver must angle the camera away from these items on every delivery.`, color: "text-red-400" };
+  if (noPkg > 8)      return { headline: "Package not in the frame", detail: `${noPkg.toFixed(1)}% of photos don't show the package. Every delivery photo must clearly show the package at the door — driver needs to be retrained on this.`, color: "text-orange-400" };
+  if (other > 10)     return { headline: "Photo quality issues", detail: `${other.toFixed(1)}% of photos have quality problems. Pull recent delivery photos and review them directly with this driver.`, color: "text-amber-400" };
+  if (ppod < 95)      return { headline: "Missing delivery photos", detail: `Only ${ppod.toFixed(1)}% of deliveries have a confirmation photo. Driver must photograph every single stop — no exceptions.`, color: "text-red-400" };
+  if (ppod >= 99)     return { headline: "Photos look great", detail: "Consistent, clean delivery confirmation shots. No issues here.", color: "text-emerald-400" };
+  return { headline: "Photos are mostly good", detail: `${ppod.toFixed(1)}% confirmation rate. A few gaps — remind the driver to photo every stop.`, color: "text-amber-400" };
 }
 
 function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index: number; onClose: () => void; days: number }) {
@@ -577,40 +595,44 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
       </div>
 
       {/* Key metrics — plain English labels */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-        <div className="bg-white/10 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Safety Rating</p>
-          <p className="text-xl font-black text-white leading-none flex items-center gap-1">
-            {driver.ryde_score != null ? (
-              <><Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" /> {driver.ryde_score.toFixed(2)}</>
-            ) : "—"}
-          </p>
-          <p className="text-[10px] text-slate-500 mt-1">
-            {driver.ryde_count != null ? `from ${driver.ryde_count} Ryde review${driver.ryde_count !== 1 ? "s" : ""}` : "no Ryde data"}
-          </p>
-        </div>
-        <div className="bg-white/10 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Stops Per Hour</p>
-          <p className="text-xl font-black text-white leading-none">{driver.avg_sph_30d?.toFixed(1) ?? "—"}</p>
-          <p className="text-[10px] text-slate-500 mt-1">
-            {driver.avg_sph_90d != null ? `${driver.avg_sph_90d.toFixed(1)} over 90 days` : "90d: no data"}
-          </p>
-        </div>
-        <div className="bg-white/10 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Proof of Delivery</p>
-          <p className={`text-xl font-black leading-none ${ppodColor(driver.avg_ppod_30d)}`}>
-            {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
-          </p>
-          <p className="text-[10px] text-slate-500 mt-1">delivery confirmation photos</p>
-        </div>
-        <div className="bg-white/10 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Days Worked</p>
-          <p className="text-xl font-black text-white leading-none">{driver.days_worked_30d ?? "—"}</p>
-          <p className="text-[10px] text-slate-500 mt-1">
-            {driver.days_worked_90d != null ? `${driver.days_worked_90d} in last 90 days` : "—"}
-          </p>
-        </div>
-      </div>
+      {(() => {
+        const photoMsg = photoQualityMsg(driver);
+        const daysWorked = days <= 30 ? driver.days_worked_30d : driver.days_worked_90d;
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ryde Score</p>
+              <p className="text-xl font-black text-white leading-none flex items-center gap-1">
+                {driver.ryde_score != null ? (
+                  <><Star className="w-4 h-4 fill-amber-400 text-amber-400 inline" /> {driver.ryde_score.toFixed(2)}</>
+                ) : "—"}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                {driver.ryde_count != null ? `customer rating · ${driver.ryde_count} review${driver.ryde_count !== 1 ? "s" : ""}` : "no Ryde data"}
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Stops Per Hour</p>
+              <p className="text-xl font-black text-white leading-none">{driver.avg_sph_30d?.toFixed(1) ?? "—"}</p>
+              <p className="text-[10px] text-slate-500 mt-1">
+                {driver.avg_sph_90d != null ? `${driver.avg_sph_90d.toFixed(1)} over 90 days` : "90d: no data"}
+              </p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Proof of Delivery</p>
+              <p className={`text-xl font-black leading-none ${ppodColor(driver.avg_ppod_30d)}`}>
+                {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
+              </p>
+              <p className={`text-[10px] mt-1 font-semibold ${photoMsg.color}`}>{photoMsg.headline}</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Days Worked</p>
+              <p className="text-xl font-black text-white leading-none">{daysWorked ?? "—"}</p>
+              <p className="text-[10px] text-slate-500 mt-1">shifts in last {days} days</p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* SPH trend + best day */}
       <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -643,7 +665,8 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
           {/* Photo quality */}
           {hasPpod && (
             <div className="bg-white/8 rounded-xl p-4 border border-white/10">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Photo Quality Breakdown</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Photo Quality Breakdown</p>
+              {(() => { const m = photoQualityMsg(driver); return <p className={`text-[12px] font-semibold mb-3 ${m.color}`}>{m.detail}</p>; })()}
               <StackedBar
                 height="h-3"
                 segments={[
@@ -699,6 +722,47 @@ function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index:
           )}
         </div>
       )}
+
+      {/* Code 85 / DNA coaching — only shown when data exists */}
+      {(driver.total_code85 != null && driver.total_code85 > 0) || (driver.total_dna != null && driver.total_dna > 0) || (driver.total_non_delvd != null && driver.total_non_delvd > 0) ? (
+        <div className="mt-3 rounded-xl p-4 border border-red-900/60 bg-red-950/40">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-red-400 mb-3">Scan & Delivery Accountability</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            {driver.total_code85 != null && driver.total_code85 > 0 && (
+              <div className="bg-black/30 rounded-xl p-3 border border-red-900/40">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-red-400 mb-1">Code 85 Packages</p>
+                <p className="text-2xl font-black text-red-300 leading-none">{driver.total_code85}</p>
+                <p className="text-[10px] text-slate-500 mt-1">last {days} days</p>
+              </div>
+            )}
+            {driver.total_dna != null && driver.total_dna > 0 && (
+              <div className="bg-black/30 rounded-xl p-3 border border-amber-900/40">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-amber-400 mb-1">DNA Packages</p>
+                <p className="text-2xl font-black text-amber-300 leading-none">{driver.total_dna}</p>
+                <p className="text-[10px] text-slate-500 mt-1">did not attempt</p>
+              </div>
+            )}
+            {driver.total_non_delvd != null && driver.total_non_delvd > 0 && (
+              <div className="bg-black/30 rounded-xl p-3 border border-orange-900/40">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400 mb-1">Undelivered Stops</p>
+                <p className="text-2xl font-black text-orange-300 leading-none">{driver.total_non_delvd}</p>
+                <p className="text-[10px] text-slate-500 mt-1">returned to station</p>
+              </div>
+            )}
+          </div>
+          {driver.total_code85 != null && driver.total_code85 > 0 && (
+            <div className="rounded-lg px-4 py-3 bg-black/30 border border-red-900/30">
+              <p className="text-[11px] font-bold text-red-400 mb-1">⚠ Code 85 — Unscanned Packages</p>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Code 85 means a package was delivered without being scanned by the driver&apos;s scanner or the vehicle&apos;s VSA.
+                This could happen if the scanner died mid-route, but it also means the station has no record of where that package
+                went. If the customer says it wasn&apos;t delivered — there&apos;s no scan to prove otherwise.
+                Any Code 85 count above zero needs to be addressed with this driver immediately.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

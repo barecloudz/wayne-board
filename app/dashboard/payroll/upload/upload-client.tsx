@@ -3,7 +3,8 @@
 import { useState, useTransition, useRef, useEffect } from "react";
 import { uploadDswBatch, deleteDswDay, saveDswNameMapping, dismissDswName, getActiveDriversForOrg, getDswNameMappings, deleteDswNameMapping, getUploadedDswDatesWithCounts, getUnmatchedDswNames, relinkUnmatchedDswRows } from "@/lib/actions/dsw-upload";
 import { getLocationsForOrg } from "@/lib/actions/driver-locations";
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X, RefreshCw } from "lucide-react";
+import { getDswDriverSummary, type DswDriverSummary } from "@/lib/actions/dsw-data";
+import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Link2, Pencil, Trash2, Calendar, MapPin, X, RefreshCw, ChevronDown, ChevronUp, Users } from "lucide-react";
 
 type DriverOption = { driverId: string; name: string };
 type Mapping = { id: number; dswName: string; driverId: string; driverName: string };
@@ -49,6 +50,26 @@ export default function UploadClient() {
   // Re-link all unmatched DSW rows
   const [relinking, setRelinking] = useState(false);
   const [relinkResult, setRelinkResult] = useState<{ linked: number; stillUnmatched: number; details: { dswName: string; driverName: string }[] } | null>(null);
+
+  // Driver Coaching View
+  const [showCoaching, setShowCoaching] = useState(false);
+  const [coachingStart, setCoachingStart] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+  });
+  const [coachingEnd, setCoachingEnd] = useState(() => new Date().toISOString().slice(0, 10));
+  const [coachingData, setCoachingData] = useState<DswDriverSummary[] | null>(null);
+  const [coachingLoading, setCoachingLoading] = useState(false);
+
+  async function loadCoaching() {
+    setCoachingLoading(true);
+    try {
+      const data = await getDswDriverSummary(coachingStart, coachingEnd);
+      setCoachingData(data);
+    } finally {
+      setCoachingLoading(false);
+    }
+  }
 
   // Location picker (only shown when org has multiple locations)
   const [locations, setLocations] = useState<LocationOption[]>([]);
@@ -559,6 +580,109 @@ export default function UploadClient() {
           </div>
         </div>
       )}
+      {/* ── Driver Coaching View ── */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <button
+          onClick={() => { setShowCoaching(v => !v); if (!showCoaching && !coachingData) loadCoaching(); }}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Users className="w-5 h-5 text-slate-400" />
+            <div className="text-left">
+              <p className="text-[14px] font-bold text-slate-800">Driver Coaching View</p>
+              <p className="text-[12px] text-slate-400">Code 85, DNA, and undelivered stops by driver</p>
+            </div>
+          </div>
+          {showCoaching ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {showCoaching && (
+          <div className="border-t border-slate-100 px-6 py-5">
+            {/* Date range */}
+            <div className="flex flex-wrap items-end gap-3 mb-5">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Start Date</label>
+                <input type="date" value={coachingStart} onChange={e => setCoachingStart(e.target.value)}
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">End Date</label>
+                <input type="date" value={coachingEnd} onChange={e => setCoachingEnd(e.target.value)}
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-300" />
+              </div>
+              <button onClick={loadCoaching} disabled={coachingLoading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-bold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
+                {coachingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                Load
+              </button>
+            </div>
+
+            {coachingData && coachingData.length === 0 && (
+              <p className="text-[13px] text-slate-400 text-center py-6">No DSW data with Code 85, DNA, or undelivered stops in this range.</p>
+            )}
+
+            {coachingData && coachingData.length > 0 && (
+              <div className="space-y-3">
+                {/* Code 85 explanation banner */}
+                <div className="rounded-xl px-4 py-3 bg-red-50 border border-red-200">
+                  <p className="text-[11px] font-bold text-red-700 mb-0.5">What is Code 85?</p>
+                  <p className="text-[12px] text-red-600 leading-relaxed">
+                    A package delivered without a scanner scan — neither the VSA nor the driver&apos;s handheld recorded it.
+                    The station has no proof of where it went. If the customer claims it wasn&apos;t delivered, there&apos;s nothing to show.
+                    Any Code 85 count needs to be addressed immediately.
+                  </p>
+                </div>
+
+                {coachingData.map(d => {
+                  const hasCode85 = d.totalCode85 > 0;
+                  const hasDna    = d.totalDna > 0;
+                  const hasNonDel = d.totalNonDelvd > 0;
+                  const ilsFailed = d.avgIls != null && d.avgIls < 99;
+                  const borderColor = hasCode85 ? "#fca5a5" : hasDna ? "#fcd34d" : "#e2e8f0";
+                  return (
+                    <div key={d.driverId} className="rounded-xl border p-4" style={{ borderColor }}>
+                      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                        <div>
+                          <p className="text-[14px] font-bold text-slate-800">{d.driverName}</p>
+                          <p className="text-[11px] text-slate-400">{d.daysWorked} day{d.daysWorked !== 1 ? "s" : ""} worked</p>
+                        </div>
+                        {d.avgIls != null && (
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${ilsFailed ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                            ILS {d.avgIls.toFixed(1)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className={`rounded-xl p-3 text-center ${hasCode85 ? "bg-red-50 border border-red-200" : "bg-slate-50"}`}>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-red-500 mb-1">Code 85</p>
+                          <p className={`text-[22px] font-black leading-none ${hasCode85 ? "text-red-600" : "text-slate-300"}`}>{d.totalCode85}</p>
+                          <p className="text-[9px] text-slate-400 mt-1">unscanned pkgs</p>
+                        </div>
+                        <div className={`rounded-xl p-3 text-center ${hasDna ? "bg-amber-50 border border-amber-200" : "bg-slate-50"}`}>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-amber-600 mb-1">DNA</p>
+                          <p className={`text-[22px] font-black leading-none ${hasDna ? "text-amber-600" : "text-slate-300"}`}>{d.totalDna}</p>
+                          <p className="text-[9px] text-slate-400 mt-1">did not attempt</p>
+                        </div>
+                        <div className={`rounded-xl p-3 text-center ${hasNonDel ? "bg-orange-50 border border-orange-200" : "bg-slate-50"}`}>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-orange-600 mb-1">Undelivered</p>
+                          <p className={`text-[22px] font-black leading-none ${hasNonDel ? "text-orange-600" : "text-slate-300"}`}>{d.totalNonDelvd}</p>
+                          <p className="text-[9px] text-slate-400 mt-1">returned to station</p>
+                        </div>
+                      </div>
+                      {hasCode85 && (
+                        <p className="mt-2.5 text-[11px] text-red-600 font-semibold">
+                          ⚠ {d.totalCode85} unscanned package{d.totalCode85 !== 1 ? "s" : ""} — coach this driver immediately.
+                          Scanner death is possible but must be verified. If scanner was fine, this is a compliance violation.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

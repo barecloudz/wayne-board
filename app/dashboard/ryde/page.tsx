@@ -20,9 +20,54 @@ type Review = {
   reviewDate: string | null;
   improvement: string | null; atFault: boolean;
   customerInitials: string | null; createdAt: Date | null;
+  releaseLocation: string | null;
+  workArea: string | null;
+  address: string | null;
+  surveyDate: string | null;
 };
 
 const CATEGORIES = ["Customer Feedback", "On-Time Delivery", "Scan Compliance", "Safety", "Professionalism", "Other"];
+
+function normaliseRelLoc(raw: string): string {
+  if (raw.startsWith("O~")) {
+    const rest = raw.slice(2).replace(/[._]+/g, " ").toLowerCase();
+    return rest.charAt(0).toUpperCase() + rest.slice(1);
+  }
+  const MAP: Record<string, string> = {
+    FRONTDOOR: "Front Door", BACKDOOR: "Back Door", PORCH: "Porch",
+    GARAGE: "Garage", MAILROOM: "Mailroom", OSSTORAGEUNIT: "Storage Unit",
+    INSTORAGEUNIT: "Indoor Storage", GATEDDRIVEWAY: "Gated Driveway",
+    LOCKER: "Locker", SIDEDOOR: "Side Door", "PATIO/CARPORT": "Patio / Carport",
+  };
+  return MAP[raw] ?? raw;
+}
+
+const COMPLAINT_GROUPS: Record<string, string> = {
+  "Package not placed where it should have been": "Placement Issue",
+  "Delivery instructions not followed":           "Placement Issue",
+  "Delivered to the wrong address":               "Wrong Address",
+  "My package has not arrived":                   "Package Missing",
+  "No knock or doorbell ring":                    "No Attempt",
+  "Package was damaged":                          "Damage",
+  "Delivery was late":                            "Late Delivery",
+  "Problem with the picture of the delivery":     "Photo Issue",
+  "Other":                                        "Other",
+};
+
+function topComplaint(reviews: Review[]): string | null {
+  const neg = reviews.filter(r => r.stars != null && r.stars <= 2);
+  const counts = new Map<string, number>();
+  for (const r of neg) {
+    if (!r.category) continue;
+    const seen = new Set<string>();
+    for (const cat of r.category.split(/[\r\n]+/).map(s => s.trim()).filter(Boolean)) {
+      const group = COMPLAINT_GROUPS[cat];
+      if (group && !seen.has(group)) { seen.add(group); counts.set(group, (counts.get(group) ?? 0) + 1); }
+    }
+  }
+  if (!counts.size) return null;
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0];
+}
 function toISODate(d: Date) {
   return d.toISOString().split("T")[0];
 }
@@ -355,6 +400,25 @@ export default function RydePage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Top complaint badge */}
+                    {(() => {
+                      const complaint = topComplaint(driverReviews);
+                      if (!complaint) return null;
+                      const isRed = complaint === "Wrong Address" || complaint === "Package Missing";
+                      return (
+                        <div className="mb-2 rounded-lg px-3 py-1.5 flex items-center gap-2"
+                          style={{ background: isRed ? "#450a0a" : "#431407", border: `1px solid ${isRed ? "#7f1d1d" : "#7c2d12"}` }}>
+                          <span className="text-[8px] font-bold uppercase tracking-wider"
+                            style={{ color: isRed ? "#f87171" : "#fb923c" }}>
+                            Top Issue
+                          </span>
+                          <span className="text-[10px] font-semibold" style={{ color: isRed ? "#fca5a5" : "#fdba74" }}>
+                            {complaint}
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Most recent review snippet */}
                     {recent && (
@@ -777,6 +841,15 @@ function ReviewCard({ review, driverName, onDelete, onEdit, isPending }: {
             <p className="text-[11px] font-semibold text-amber-700 mb-0.5">Improvement Tip</p>
             <p className="text-[12px] text-amber-800">{review.improvement}</p>
           </div>
+        )}
+        {review.releaseLocation && (
+          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 ${
+            review.type === "negative"
+              ? "text-amber-700 bg-amber-50 border border-amber-200"
+              : "text-slate-500 bg-slate-100"
+          }`}>
+            📍 {normaliseRelLoc(review.releaseLocation)}
+          </span>
         )}
         <p className="text-[11px] text-slate-300 mt-2">
           {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ""}

@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${jakarta.variable} font-sans antialiased bg-[#F7F8FA] text-slate-900 min-h-screen`}>
+      <body className={`${jakarta.variable} font-sans antialiased bg-[#F7F8FA] text-slate-900 min-h-screen overflow-x-hidden`}>
         {children}
         <UpdateBanner />
       </body>

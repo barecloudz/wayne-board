@@ -50,7 +50,8 @@ async function processDswPair(
   //
   // ILS impact logic (confirmed by Blake):
   //   effectiveCode = VSA if VSA≠0, else STAR
-  //   counts against ILS if: effectiveCode===27 OR (VSA===0 AND STAR===0) [ghost/Code85]
+  //   counts against ILS if: effectiveCode is 2, 3, 12, or 27 OR (VSA===0 AND STAR===0) [ghost/Code85]
+  const ILS_IMPACT_CODES = new Set([2, 3, 12, 27]);
 
   const codeMap    = new Map<string, Record<string, number>>(); // WA# -> {code: count}
   const impactMap  = new Map<string, number>(); // WA# -> impact pkg count
@@ -80,7 +81,7 @@ async function processDswPair(
 
       // Determine if this package counts against ILS
       const isGhost  = vsaCode === 0 && starCode === 0;
-      const isImpact = effectiveCode === 27 || isGhost;
+      const isImpact = ILS_IMPACT_CODES.has(effectiveCode) || isGhost;
 
       if (isImpact) impactMap.set(wa, (impactMap.get(wa) ?? 0) + 1);
       if (isGhost)  ghostMap.set(wa,  (ghostMap.get(wa)  ?? 0) + 1);

@@ -128,6 +128,11 @@ export async function uploadRydeFile(
 
     const trackId = row[0] != null ? String(row[0]).trim() : null;
     const delvDateRaw = row[1];
+    // New fields — cols 2, 3, 4, 5
+    const surveyDateRaw = row[2];
+    const address = row[3] != null ? String(row[3]).trim() || null : null;
+    const releaseLocation = row[4] != null ? String(row[4]).trim() || null : null;
+    const workArea = row[5] != null ? String(row[5]).trim() || null : null;
     const resourceRaw = row[6] != null ? String(row[6]).trim() : null;
     const starRaw = row[7];
     const whyContent = row[8] != null ? String(row[8]).trim() : null;
@@ -160,6 +165,15 @@ export async function uploadRydeFile(
         week = toISOWeek(d);
         reviewDate = d.toISOString().slice(0, 10);
       }
+    }
+
+    // Parse survey date
+    let surveyDate: string | null = null;
+    if (surveyDateRaw != null && typeof surveyDateRaw === "number") {
+      surveyDate = serialToDate(surveyDateRaw).toISOString().slice(0, 10);
+    } else if (surveyDateRaw != null && typeof surveyDateRaw === "string" && surveyDateRaw.trim()) {
+      const d = new Date(surveyDateRaw);
+      if (!isNaN(d.getTime())) surveyDate = d.toISOString().slice(0, 10);
     }
 
     // Extract FedEx ID from Resource field
@@ -206,6 +220,10 @@ export async function uploadRydeFile(
         customerInitials: null,
         source: "ryde_upload",
         trackId,
+        surveyDate,
+        address,
+        releaseLocation,
+        workArea,
       })
       .onConflictDoNothing()
       .returning({ id: rydeReviews.id });
