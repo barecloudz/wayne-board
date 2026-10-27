@@ -51,57 +51,6 @@ function passFailBadge(pct: number | null | undefined) {
   );
 }
 
-function CoachingCallout({ row }: { row: SigRow }) {
-  const hasViolation = (row.sigInvalidDriverRelease ?? 0) > 0;
-  const hasInvalid = (row.sigInvalid ?? 0) > 0;
-  const hasFail = (row.sigCompliancePct ?? 1) < 1.0;
-
-  if (!hasFail && !hasViolation && !hasInvalid) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-900/20 border border-emerald-700/40">
-        <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-        <span className="text-[12px] text-emerald-300 font-semibold">Clean — no coaching needed</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      {hasFail && (
-        <div className="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 text-[12px] text-slate-300">
-          This driver failed signature compliance this period.
-        </div>
-      )}
-      {hasViolation && (
-        <div className="px-3 py-2.5 rounded-xl bg-red-950 border border-red-600 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[12px] font-bold text-red-300 mb-0.5">
-              VIOLATION: {row.sigInvalidDriverRelease} package{(row.sigInvalidDriverRelease ?? 0) !== 1 ? "s" : ""} released without a signature
-            </p>
-            <p className="text-[12px] text-red-400">
-              Driver is opening the door and leaving signature-required packages without making the customer sign.
-              This is not acceptable — coach immediately. Repeated violations can result in lost packages and FedEx consequences.
-            </p>
-          </div>
-        </div>
-      )}
-      {hasInvalid && (
-        <div className="px-3 py-2.5 rounded-xl bg-amber-950 border border-amber-700 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[12px] font-bold text-amber-300 mb-0.5">
-              {row.sigInvalid} invalid signature{(row.sigInvalid ?? 0) !== 1 ? "s" : ""} — fake name or acronym used
-            </p>
-            <p className="text-[12px] text-amber-400 leading-relaxed">
-              FedEx requires the customer's first initial and full last name (e.g. "J. Smith"). The scanner may let short entries through, but FedEx will still flag them as invalid during compliance review. Coach this driver to hand the device to the customer and tell them to sign their first initial and full last name — no nicknames, no first names only, no acronyms, no initials only.
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function DriverRow({
   row,
@@ -205,24 +154,85 @@ function DriverRow({
       {/* Expanded detail */}
       {expanded && (
         <div className="bg-slate-900 px-4 py-4 flex flex-col gap-4 border-t border-slate-700/50">
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <StatCard label="Stops Requiring Sig" value={row.sigRequiredStops} />
-            <StatCard label="Sig Failures" value={row.sigFailures} highlight={((row.sigFailures ?? 0) > 0) ? "red" : "green"} />
-            <StatCard label="Invalid Signatures" value={row.sigInvalid} highlight={((row.sigInvalid ?? 0) > 0) ? "amber" : undefined} />
-            <StatCard
-              label="Left Without Signing"
-              value={row.sigInvalidDriverRelease}
-              highlight={((row.sigInvalidDriverRelease ?? 0) > 0) ? "red" : undefined}
-              serious
-            />
-            <StatCard label="Alcohol Pass Rate" value={row.alcoholCompliancePct != null ? fmtPct(row.alcoholCompliancePct) : null} />
-            <StatCard label="Alcohol Sig Required" value={row.alcoholRequiredStops} />
-            <StatCard label="Alcohol Sig Failures" value={row.alcoholFailures} highlight={((row.alcoholFailures ?? 0) > 0) ? "red" : undefined} />
+
+          {/* Signature breakdown */}
+          <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Signature Compliance</span>
+              <span className="text-[11px] font-bold text-white">{fmtPct(row.sigCompliancePct)}</span>
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-2">
+              {/* Overview line */}
+              <p className="text-[13px] text-slate-300">
+                {(row.sigFailures ?? 0) === 0
+                  ? <><span className="text-emerald-400 font-bold">All {row.sigRequiredStops ?? 0} stops passed.</span> No issues this period.</>
+                  : <><span className="font-bold text-white">{row.sigFailures}</span> of <span className="font-bold text-white">{row.sigRequiredStops ?? 0}</span> signature-required stops had a compliance failure.</>
+                }
+              </p>
+
+              {/* Failure breakdown */}
+              {(row.sigInvalidDriverRelease ?? 0) > 0 && (
+                <div className="flex items-start gap-2 rounded-lg bg-red-950 border border-red-700/50 px-3 py-2.5">
+                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[12px] font-bold text-red-300">
+                      {row.sigInvalidDriverRelease}× Left without signing
+                    </p>
+                    <p className="text-[11px] text-red-400 mt-0.5 leading-relaxed">
+                      Driver opened the door and left a signature-required package without making the customer sign. This is a direct violation — coach immediately.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(row.sigInvalid ?? 0) > 0 && (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-950 border border-amber-700/50 px-3 py-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[12px] font-bold text-amber-300">
+                      {row.sigInvalid}× Invalid signature collected
+                    </p>
+                    <p className="text-[11px] text-amber-400 mt-0.5 leading-relaxed">
+                      FedEx flagged the signature as invalid — likely initials only, a nickname, a fake name, or a first name without the last name. Requires first initial + full last name (e.g. "J. Smith"). Hand the device to the customer and tell them exactly what to write.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(row.sigFailures ?? 0) === 0 && (
+                <div className="flex items-center gap-2 rounded-lg bg-emerald-900/20 border border-emerald-700/30 px-3 py-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="text-[12px] text-emerald-300 font-semibold">No coaching needed on signatures.</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Coaching callout */}
-          <CoachingCallout row={row} />
+          {/* Alcohol breakdown — only show if driver had alcohol stops */}
+          {(row.alcoholRequiredStops ?? 0) > 0 && (
+            <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Alcohol ID Verification</span>
+                <span className="text-[11px] font-bold text-white">{fmtPct(row.alcoholCompliancePct)}</span>
+              </div>
+              <div className="px-4 py-3 flex flex-col gap-2">
+                <p className="text-[13px] text-slate-300">
+                  {(row.alcoholFailures ?? 0) === 0
+                    ? <><span className="text-emerald-400 font-bold">All {row.alcoholRequiredStops} alcohol-required stops passed.</span></>
+                    : <><span className="font-bold text-white">{row.alcoholFailures}</span> of <span className="font-bold text-white">{row.alcoholRequiredStops}</span> stops with an alcohol ID requirement had a failure.</>
+                  }
+                </p>
+                {(row.alcoholFailures ?? 0) > 0 && (
+                  <div className="flex items-start gap-2 rounded-lg bg-red-950 border border-red-700/50 px-3 py-2.5">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <p className="text-[12px] text-red-300">
+                      Driver failed to properly verify the customer&apos;s ID before delivering an alcohol shipment. Coach immediately — this is a regulatory requirement, not a FedEx preference.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Link unmatched driver */}
           {!row.driverId && (
@@ -257,33 +267,6 @@ function DriverRow({
   );
 }
 
-function StatCard({
-  label,
-  value,
-  highlight,
-  serious,
-}: {
-  label: string;
-  value: number | string | null | undefined;
-  highlight?: "red" | "amber" | "green";
-  serious?: boolean;
-}) {
-  const colorMap = {
-    red: "text-red-400",
-    amber: "text-amber-400",
-    green: "text-emerald-400",
-  };
-  return (
-    <div className={`rounded-xl px-3 py-2.5 bg-slate-800 border ${serious ? "border-red-800" : "border-slate-700"}`}>
-      <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${serious ? "text-red-400" : "text-slate-500"}`}>
-        {label}
-      </p>
-      <p className={`text-[15px] font-extrabold ${highlight ? colorMap[highlight] : "text-white"}`}>
-        {value ?? "—"}
-      </p>
-    </div>
-  );
-}
 
 function buildPeriodLabel(endDateStr: string): string {
   if (!endDateStr) return "";
