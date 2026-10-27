@@ -515,10 +515,10 @@ function DriverCard({
 // ── Driver Detail Panel ────────────────────────────────────────────────────────
 
 function ilsStatusMsg(ils: number | null): { headline: string; detail: string; color: string; bg: string } {
-  if (ils == null) return { headline: "No scan data yet", detail: "ILS data comes from DSW uploads. Once DSW is uploaded this will populate.", color: "text-slate-400", bg: "bg-slate-700/40" };
-  if (ils >= 99)   return { headline: "Passing — on target", detail: "Packages are being scanned and delivered correctly. Keep it up.", color: "text-emerald-400", bg: "bg-emerald-900/30" };
-  if (ils >= 95)   return { headline: "FAILED — below 99% threshold", detail: `${(100 - ils).toFixed(1)}% of packages were not properly scanned or delivered. Anything under 99% is a failure. This driver needs to be coached immediately — packages may be coming back to the station or incorrect status codes are being used to avoid delivering.`, color: "text-amber-400", bg: "bg-amber-900/30" };
-  return { headline: "FAILED — seriously hurting the team", detail: `${(100 - ils).toFixed(1)}% of packages were not properly scanned or delivered. This driver is dragging the entire team's FedEx service score down. Common causes: packages returned to station undelivered, or false status codes used to close out stops without delivering. This requires immediate coaching and may require disciplinary action.`, color: "text-red-400", bg: "bg-red-900/30" };
+  if (ils == null) return { headline: "No data yet", detail: "ILS data comes from DSW uploads. This will populate once a DSW file has been uploaded.", color: "text-slate-400", bg: "bg-slate-700/40" };
+  if (ils >= 99)   return { headline: "Passing — on target", detail: "Packages are being delivered correctly. Target is 99% and above. Keep it up.", color: "text-emerald-400", bg: "bg-emerald-900/30" };
+  if (ils >= 95)   return { headline: "Below target", detail: `${(100 - ils).toFixed(1)}% of packages were not properly delivered. This is above the acceptable threshold and affects the team's service score. Common causes: packages returned to the station undelivered, or incorrect status codes used to close stops. A coaching session is required — let's work through it together.`, color: "text-amber-400", bg: "bg-amber-900/30" };
+  return { headline: "Significantly below target", detail: `${(100 - ils).toFixed(1)}% of packages were not properly delivered. Performance at this level impacts the entire team's FedEx service score. Common causes: packages returned to the station undelivered, or incorrect status codes used to close stops without completing delivery. Immediate coaching is required.`, color: "text-red-400", bg: "bg-red-900/30" };
 }
 
 function photoQualityMsg(d: Driver): { headline: string; detail: string; color: string } {
