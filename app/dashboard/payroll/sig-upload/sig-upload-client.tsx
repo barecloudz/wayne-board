@@ -94,7 +94,7 @@ function CoachingCallout({ row }: { row: SigRow }) {
               {row.sigInvalid} invalid signature{(row.sigInvalid ?? 0) !== 1 ? "s" : ""} — fake name or acronym used
             </p>
             <p className="text-[12px] text-amber-400 leading-relaxed">
-              FedEx requires the customer's real <strong className="text-amber-300">first initial and last name</strong> (e.g. "J. Smith"). Drivers get hit when they write their own initials, use an acronym like "JD", collect a first name only, or let a customer sign a fake name. Coach this driver to hand the device to the customer and require a proper signature every time — no shortcuts.
+              FedEx requires a first initial and at least 2 letters of the last name (e.g. "J.Sm"). The scanner enforces a minimum — but a driver can still pass a bad signature through if the customer signs something like "J.S" with only one last-name letter, a nickname, or their own initials. Coach this driver to hand the device to the customer and tell them exactly what to write — first initial, then at least 2 letters of their last name. No single-letter last names, no full first names, no acronyms.
             </p>
           </div>
         </div>
@@ -207,18 +207,18 @@ function DriverRow({
         <div className="bg-slate-900 px-4 py-4 flex flex-col gap-4 border-t border-slate-700/50">
           {/* Stats grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <StatCard label="Sig Required Stops" value={row.sigRequiredStops} />
-            <StatCard label="Failures" value={row.sigFailures} highlight={((row.sigFailures ?? 0) > 0) ? "red" : "green"} />
-            <StatCard label="Sig Invalid" value={row.sigInvalid} highlight={((row.sigInvalid ?? 0) > 0) ? "amber" : undefined} />
+            <StatCard label="Stops Requiring Sig" value={row.sigRequiredStops} />
+            <StatCard label="Sig Failures" value={row.sigFailures} highlight={((row.sigFailures ?? 0) > 0) ? "red" : "green"} />
+            <StatCard label="Invalid Signatures" value={row.sigInvalid} highlight={((row.sigInvalid ?? 0) > 0) ? "amber" : undefined} />
             <StatCard
-              label="Invalid Driver Release"
+              label="Left Without Signing"
               value={row.sigInvalidDriverRelease}
               highlight={((row.sigInvalidDriverRelease ?? 0) > 0) ? "red" : undefined}
               serious
             />
-            <StatCard label="Alcohol Compliance" value={row.alcoholCompliancePct != null ? fmtPct(row.alcoholCompliancePct) : null} />
-            <StatCard label="Alcohol Required" value={row.alcoholRequiredStops} />
-            <StatCard label="Alcohol Failures" value={row.alcoholFailures} highlight={((row.alcoholFailures ?? 0) > 0) ? "red" : undefined} />
+            <StatCard label="Alcohol Pass Rate" value={row.alcoholCompliancePct != null ? fmtPct(row.alcoholCompliancePct) : null} />
+            <StatCard label="Alcohol Sig Required" value={row.alcoholRequiredStops} />
+            <StatCard label="Alcohol Sig Failures" value={row.alcoholFailures} highlight={((row.alcoholFailures ?? 0) > 0) ? "red" : undefined} />
           </div>
 
           {/* Coaching callout */}
@@ -285,9 +285,31 @@ function StatCard({
   );
 }
 
+function buildPeriodLabel(endDateStr: string): string {
+  if (!endDateStr) return "";
+  const end = new Date(endDateStr + "T12:00:00");
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+function buildDateDisplay(endDateStr: string): { start: string; end: string } | null {
+  if (!endDateStr) return null;
+  const end = new Date(endDateStr + "T12:00:00");
+  const start = new Date(end);
+  start.setDate(start.getDate() - 6);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return { start: fmt(start), end: fmt(end) };
+}
+
 export default function SigUploadClient() {
   const [file, setFile] = useState<File | null>(null);
-  const [periodLabel, setPeriodLabel] = useState("");
+  const [periodEndDate, setPeriodEndDate] = useState("");
+  const periodLabel = buildPeriodLabel(periodEndDate);
+  const dateDisplay = buildDateDisplay(periodEndDate);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
     inserted: number;
@@ -330,7 +352,7 @@ export default function SigUploadClient() {
   }, [selectedPeriod]);
 
   function handleUpload() {
-    if (!file || !periodLabel.trim()) return;
+    if (!file || !periodLabel) return;
     setUploadResult(null);
     startTransition(async () => {
       const fd = new FormData();
@@ -390,7 +412,7 @@ export default function SigUploadClient() {
         <ol className="text-[12px] text-sky-700 space-y-1 list-decimal list-inside">
           <li>In SPOTlight, go to Signature Compliance → Resource Detail view</li>
           <li>Export as Excel (.xlsx)</li>
-          <li>Enter the period label (e.g. "October 2026") — used for grouping</li>
+          <li>Select the period end date — the last day of the 7-day window shown in SPOTlight</li>
           <li>Upload — rows sorted worst-first so you see who needs coaching immediately</li>
         </ol>
       </div>
@@ -428,24 +450,30 @@ export default function SigUploadClient() {
           </div>
         </div>
 
-        {/* Period label */}
+        {/* Period end-date picker */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4">
-          <label className="block text-[13px] font-bold text-slate-800 mb-1.5">
-            Period Label <span className="text-red-500">*</span>
-            <span className="ml-1.5 text-[11px] font-normal text-slate-400">— e.g. "October 2026"</span>
+          <label className="block text-[13px] font-bold text-slate-800 mb-1">
+            Period End Date <span className="text-red-500">*</span>
           </label>
+          <p className="text-[12px] text-slate-400 mb-2.5">
+            Select the last day of the 7-day window in SPOTlight. The system will label this period as the 7 days ending on that date.
+          </p>
           <input
-            type="text"
-            value={periodLabel}
-            onChange={(e) => setPeriodLabel(e.target.value)}
-            placeholder="October 2026"
+            type="date"
+            value={periodEndDate}
+            onChange={(e) => setPeriodEndDate(e.target.value)}
             className="w-full border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
           />
+          {dateDisplay && (
+            <p className="text-[12px] font-semibold text-sky-700 mt-2">
+              Covers {dateDisplay.start} – {dateDisplay.end}
+            </p>
+          )}
         </div>
 
         <button
           onClick={handleUpload}
-          disabled={!file || !periodLabel.trim() || isPending}
+          disabled={!file || !periodLabel || isPending}
           className="flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[14px] font-bold bg-sky-700 text-white hover:bg-sky-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
@@ -524,28 +552,32 @@ export default function SigUploadClient() {
             {selectedPeriod && tableData.length > 0 && !loadingTable && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-slate-800 rounded-2xl px-4 py-3">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Required</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sig-Required Stops</p>
                   <p className="text-[20px] font-extrabold text-white">{totalRequired.toLocaleString()}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">stops where customer had to sign</p>
                 </div>
                 <div className={`rounded-2xl px-4 py-3 ${totalFailures > 0 ? "bg-red-900" : "bg-slate-800"}`}>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Failures</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Sig Failures</p>
                   <p className={`text-[20px] font-extrabold ${totalFailures > 0 ? "text-red-300" : "text-white"}`}>
                     {totalFailures}
                   </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">stops that failed compliance</p>
                 </div>
                 <div className={`rounded-2xl px-4 py-3 ${totalViolations > 0 ? "bg-red-950 border border-red-700" : "bg-slate-800"}`}>
                   <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${totalViolations > 0 ? "text-red-400" : "text-slate-400"}`}>
-                    IDR Violations
+                    Left Without Signing
                   </p>
                   <p className={`text-[20px] font-extrabold ${totalViolations > 0 ? "text-red-300" : "text-white"}`}>
                     {totalViolations}
                   </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">driver didn&apos;t get customer&apos;s sig</p>
                 </div>
                 <div className={`rounded-2xl px-4 py-3 ${passRate != null && passRate < 100 ? "bg-amber-900" : "bg-slate-800"}`}>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Team Pass Rate</p>
                   <p className={`text-[20px] font-extrabold ${passRate != null && passRate < 100 ? "text-amber-300" : "text-emerald-400"}`}>
                     {passRate != null ? passRate.toFixed(0) + "%" : "—"}
                   </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">drivers at 100%</p>
                 </div>
               </div>
             )}
