@@ -19,6 +19,7 @@ type Driver = { id: number; driverId: string; name: string };
 interface Props {
   reviews: Review[];
   drivers: Driver[];
+  periodLabel?: string;
 }
 
 const GREEN = "#30D158";
@@ -163,7 +164,7 @@ function useDriverStats(reviews: Review[], drivers: Driver[]) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────
-export default function RydeAnalytics({ reviews, drivers }: Props) {
+export default function RydeAnalytics({ reviews, drivers, periodLabel }: Props) {
   const driverStats = useDriverStats(reviews, drivers);
   const ratedReviews = reviews.filter((r) => r.stars !== null);
 
@@ -214,7 +215,7 @@ export default function RydeAnalytics({ reviews, drivers }: Props) {
               RYDE Performance
             </h2>
             <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.38)" }}>
-              Customer review analytics across all drivers
+              {periodLabel ? `${periodLabel} · ` : ""}Customer review analytics across all drivers
             </p>
           </div>
           <div className="text-right">

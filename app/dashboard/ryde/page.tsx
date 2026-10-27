@@ -50,10 +50,13 @@ export default function RydePage() {
   const [reviewsShown, setReviewsShown] = useState(20);
   const REVIEWS_PAGE = 20;
 
-  // Review filters
+  // ── Global period filter (drives everything on the page) ──────────────────
+  type Period = "week" | "month" | "30d" | "90d" | "all";
+  const [period, setPeriod] = useState<Period>("all");
+
+  // Review-level drill-down filters (applied on top of period)
   const [filterDriver, setFilterDriver] = useState("");
   const [filterType, setFilterType]     = useState<"all" | "positive" | "negative">("all");
-  const [filterDays, setFilterDays]     = useState<0 | 7 | 30 | 90>(0);
   const [filterStars, setFilterStars]   = useState(0);
 
   // Review form state
@@ -149,24 +152,43 @@ export default function RydePage() {
     return drivers.find((d) => d.driverId === driverId)?.name ?? driverId;
   }
 
-  const reviewCount = reviews.length;
-  const posCount    = reviews.filter((r) => r.type === "positive").length;
-  const negCount    = reviews.filter((r) => r.type === "negative").length;
+  // ── Period filter: drives the whole page ──────────────────────────────────
+  function getReviewDate(r: Review): Date | null {
+    if (r.reviewDate) return new Date(r.reviewDate + "T12:00:00");
+    if (r.createdAt)  return new Date(r.createdAt);
+    return null;
+  }
 
-  // Filtered reviews
-  const filteredReviews = reviews.filter((r) => {
+  const periodCutoff: Date | null = (() => {
+    const now = new Date();
+    if (period === "week")  { const d = new Date(now); d.setDate(d.getDate() - 7);  return d; }
+    if (period === "month") { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+    if (period === "30d")   { const d = new Date(now); d.setDate(d.getDate() - 30); return d; }
+    if (period === "90d")   { const d = new Date(now); d.setDate(d.getDate() - 90); return d; }
+    return null;
+  })();
+
+  const periodReviews = periodCutoff
+    ? reviews.filter((r) => { const d = getReviewDate(r); return d != null && d >= periodCutoff; })
+    : reviews;
+
+  const PERIOD_LABELS: Record<string, string> = {
+    week: "Last 7 Days", month: "Last Month", "30d": "Last 30 Days", "90d": "Last 90 Days", all: "All Time",
+  };
+  const periodLabel = PERIOD_LABELS[period];
+
+  const reviewCount = periodReviews.length;
+  const posCount    = periodReviews.filter((r) => r.type === "positive").length;
+  const negCount    = periodReviews.filter((r) => r.type === "negative").length;
+
+  // ── Review list drill-down filters (on top of period) ─────────────────────
+  const filteredReviews = periodReviews.filter((r) => {
     if (filterDriver && r.driverId !== filterDriver) return false;
     if (filterType !== "all" && r.type !== filterType) return false;
     if (filterStars > 0 && r.stars !== filterStars) return false;
-    if (filterDays > 0) {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - filterDays);
-      const reviewDate = r.reviewDate ? new Date(r.reviewDate) : r.createdAt ? new Date(r.createdAt) : null;
-      if (!reviewDate || reviewDate < cutoff) return false;
-    }
     return true;
   });
-  const hasActiveFilters = filterDriver !== "" || filterType !== "all" || filterDays !== 0 || filterStars !== 0;
+  const hasActiveFilters = filterDriver !== "" || filterType !== "all" || filterStars !== 0;
 
   return (
     <AppShell>
@@ -202,8 +224,37 @@ export default function RydePage() {
           </div>
         </div>
 
+        {/* ── Global period filter ─────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Time Period</span>
+          <div className="flex items-center gap-0.5 bg-slate-100 rounded-xl p-1">
+            {([
+              { key: "week",  label: "Last 7 Days"  },
+              { key: "month", label: "Last Month"   },
+              { key: "30d",   label: "30 Days"      },
+              { key: "90d",   label: "90 Days"      },
+              { key: "all",   label: "All Time"     },
+            ] as { key: string; label: string }[]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => { setPeriod(key as any); setReviewsShown(20); }}
+                className={`px-3 sm:px-4 py-2 rounded-lg text-[12px] sm:text-[13px] font-semibold transition-all whitespace-nowrap ${
+                  period === key ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {period !== "all" && (
+            <span className="text-[11px] text-slate-400">
+              {reviewCount} review{reviewCount !== 1 ? "s" : ""} in this period
+            </span>
+          )}
+        </div>
+
         {/* Analytics dashboard */}
-        <RydeAnalytics reviews={reviews} drivers={drivers} />
+        <RydeAnalytics reviews={periodReviews} drivers={drivers} periodLabel={periodLabel} />
 
         {/* KPI strip */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
@@ -227,7 +278,7 @@ export default function RydePage() {
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">Driver Scorecards</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {drivers.map((driver) => {
-                const driverReviews = reviews.filter(r => r.driverId === driver.driverId);
+                const driverReviews = periodReviews.filter(r => r.driverId === driver.driverId);
                 const total = driverReviews.length;
                 const pos = driverReviews.filter(r => r.type === "positive").length;
                 const positivePct = total > 0 ? Math.round((pos / total) * 100) : 0;
@@ -344,7 +395,7 @@ export default function RydePage() {
               </p>
               {hasActiveFilters && (
                 <button
-                  onClick={() => { setFilterDriver(""); setFilterType("all"); setFilterDays(0); setFilterStars(0); setReviewsShown(20); }}
+                  onClick={() => { setFilterDriver(""); setFilterType("all"); setFilterStars(0); setReviewsShown(20); }}
                   className="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700"
                 >
                   Clear filters
@@ -380,26 +431,6 @@ export default function RydePage() {
                     onClick={() => { setFilterType(key); setReviewsShown(20); }}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
                       filterType === key ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Date range filter */}
-              <div className="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
-                {([
-                  { key: 0,  label: "All time" },
-                  { key: 7,  label: "7d" },
-                  { key: 30, label: "30d" },
-                  { key: 90, label: "90d" },
-                ] as { key: 0 | 7 | 30 | 90; label: string }[]).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => { setFilterDays(key); setReviewsShown(20); }}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${
-                      filterDays === key ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
                     {label}
