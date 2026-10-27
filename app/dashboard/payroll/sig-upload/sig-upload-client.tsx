@@ -32,6 +32,17 @@ function fmtPct(val: number | null | undefined): string {
   return (val * 100).toFixed(2) + "%";
 }
 
+function FileCell({ label, value, alert: isAlert }: { label: string; value: number | string | null | undefined; alert?: boolean }) {
+  return (
+    <div className="px-3 py-2.5">
+      <p className="text-[10px] font-semibold text-slate-500 mb-0.5">{label}</p>
+      <p className={`text-[15px] font-extrabold ${isAlert ? "text-red-400" : "text-white"}`}>
+        {value ?? "—"}
+      </p>
+    </div>
+  );
+}
+
 function passFailBadge(pct: number | null | undefined) {
   if (pct == null) return null;
   const pass = pct >= 1.0;
@@ -157,81 +168,32 @@ function DriverRow({
       {expanded && (
         <div className="bg-slate-900 px-4 py-4 flex flex-col gap-4 border-t border-slate-700/50">
 
-          {/* Signature breakdown */}
+          {/* Signature columns from file */}
           <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Signature Compliance</span>
-              <span className="text-[11px] font-bold text-white">{fmtPct(row.sigCompliancePct)}</span>
+            <p className="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700">Signature Compliance</p>
+            <div className="grid grid-cols-3 divide-x divide-slate-700">
+              <FileCell label="Sig Compliance %" value={fmtPct(row.sigCompliancePct)} alert={(row.sigCompliancePct ?? 1) < 1} />
+              <FileCell label="Sig Required Stops" value={row.sigRequiredStops} />
+              <FileCell label="Sig Failures" value={row.sigFailures} alert={(row.sigFailures ?? 0) > 0} />
             </div>
-            <div className="px-4 py-3 flex flex-col gap-2">
-              {/* Overview line */}
-              <p className="text-[13px] text-slate-300">
-                {(row.sigFailures ?? 0) === 0
-                  ? <><span className="text-emerald-400 font-bold">All {row.sigRequiredStops ?? 0} stops passed.</span> No issues this period.</>
-                  : <><span className="font-bold text-white">{row.sigFailures}</span> of <span className="font-bold text-white">{row.sigRequiredStops ?? 0}</span> signature-required stops had a compliance failure.</>
-                }
-              </p>
-
-              {/* Failure breakdown */}
-              {(row.sigInvalidDriverRelease ?? 0) > 0 && (
-                <div className="flex items-start gap-2 rounded-lg bg-red-950 border border-red-700/50 px-3 py-2.5">
-                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[12px] font-bold text-red-300">
-                      {row.sigInvalidDriverRelease}× Invalid Driver Release
-                    </p>
-                    <p className="text-[11px] text-red-400 mt-0.5 leading-relaxed">
-                      FedEx flagged {row.sigInvalidDriverRelease} stop{(row.sigInvalidDriverRelease ?? 0) !== 1 ? "s" : ""} as an invalid driver release this period. Coach immediately.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {(row.sigInvalid ?? 0) > 0 && (
-                <div className="flex items-start gap-2 rounded-lg bg-amber-950 border border-amber-700/50 px-3 py-2.5">
-                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[12px] font-bold text-amber-300">
-                      {row.sigInvalid}× Invalid signature collected
-                    </p>
-                    <p className="text-[11px] text-amber-400 mt-0.5 leading-relaxed">
-                      FedEx flagged the signature as invalid — likely initials only, a nickname, a fake name, or a first name without the last name. Requires first initial + full last name (e.g. "J. Smith"). Hand the device to the customer and tell them exactly what to write.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {(row.sigFailures ?? 0) === 0 && (
-                <div className="flex items-center gap-2 rounded-lg bg-emerald-900/20 border border-emerald-700/30 px-3 py-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="text-[12px] text-emerald-300 font-semibold">No coaching needed on signatures.</span>
-                </div>
-              )}
+            <div className="grid grid-cols-2 divide-x divide-slate-700 border-t border-slate-700">
+              <FileCell label="Sig Invalid" value={row.sigInvalid} alert={(row.sigInvalid ?? 0) > 0} />
+              <FileCell label="Invalid Driver Release" value={row.sigInvalidDriverRelease} alert={(row.sigInvalidDriverRelease ?? 0) > 0} />
             </div>
           </div>
 
-          {/* Alcohol breakdown — only show if driver had alcohol stops */}
+          {/* Alcohol columns — only show if driver had alcohol stops */}
           {(row.alcoholRequiredStops ?? 0) > 0 && (
             <div className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-slate-700 flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Alcohol ID Verification</span>
-                <span className="text-[11px] font-bold text-white">{fmtPct(row.alcoholCompliancePct)}</span>
+              <p className="px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700">Alcohol Compliance</p>
+              <div className="grid grid-cols-3 divide-x divide-slate-700">
+                <FileCell label="Alcohol Compliance %" value={fmtPct(row.alcoholCompliancePct)} alert={(row.alcoholCompliancePct ?? 1) < 1} />
+                <FileCell label="Alcohol Required Stops" value={row.alcoholRequiredStops} />
+                <FileCell label="Alcohol Failures" value={row.alcoholFailures} alert={(row.alcoholFailures ?? 0) > 0} />
               </div>
-              <div className="px-4 py-3 flex flex-col gap-2">
-                <p className="text-[13px] text-slate-300">
-                  {(row.alcoholFailures ?? 0) === 0
-                    ? <><span className="text-emerald-400 font-bold">All {row.alcoholRequiredStops} alcohol-required stops passed.</span></>
-                    : <><span className="font-bold text-white">{row.alcoholFailures}</span> of <span className="font-bold text-white">{row.alcoholRequiredStops}</span> stops with an alcohol ID requirement had a failure.</>
-                  }
-                </p>
-                {(row.alcoholFailures ?? 0) > 0 && (
-                  <div className="flex items-start gap-2 rounded-lg bg-red-950 border border-red-700/50 px-3 py-2.5">
-                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                    <p className="text-[12px] text-red-300">
-                      Driver failed to properly verify the customer&apos;s ID before delivering an alcohol shipment. Coach immediately — this is a regulatory requirement, not a FedEx preference.
-                    </p>
-                  </div>
-                )}
+              <div className="grid grid-cols-2 divide-x divide-slate-700 border-t border-slate-700">
+                <FileCell label="Alcohol Sig Invalid" value={row.alcoholSigInvalid} alert={(row.alcoholSigInvalid ?? 0) > 0} />
+                <FileCell label="Alcohol Invalid Driver Release" value={row.alcoholInvalidDriverRelease} alert={(row.alcoholInvalidDriverRelease ?? 0) > 0} />
               </div>
             </div>
           )}
