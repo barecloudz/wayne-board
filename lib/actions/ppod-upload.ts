@@ -159,7 +159,7 @@ export async function uploadPpodBatch(formData: FormData): Promise<{
       for (const row of dataRows) {
         const r = row as unknown[];
         const driverNameRaw = String(r[0] ?? "").trim();
-        if (!driverNameRaw || driverNameRaw.toLowerCase().startsWith("total")) continue;
+        if (!driverNameRaw || driverNameRaw.toLowerCase().startsWith("total") || driverNameRaw.toLowerCase().startsWith("applied filters")) continue;
 
         // Col layout from PPOD resource export:
         // [0] RESOURCE "A. HALBACH (5595484)"
