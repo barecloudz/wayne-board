@@ -39,7 +39,9 @@ export const workAreas = pgTable("work_areas", {
   color:          text("color").notNull().default("#6366f1"),
   active:         boolean("active").notNull().default(true),
   createdAt:      timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("work_areas_org_idx").on(t.organizationId),
+]);
 
 // ── Drivers / Users ──────────────────────────────────────────────────────────
 export const drivers = pgTable("drivers", {
@@ -93,7 +95,8 @@ export const vehicles = pgTable("vehicles", {
   locationId:           integer("location_id").references(() => locations.id, { onDelete: "set null" }),
   createdAt:            timestamp("created_at").defaultNow(),
 }, (t) => ({
-  orgUnitUnique: uniqueIndex("vehicles_org_unit_unique").on(t.organizationId, t.unitNumber),
+  orgUnitUnique:    uniqueIndex("vehicles_org_unit_unique").on(t.organizationId, t.unitNumber),
+  orgLocationIdx:   index("vehicles_org_location_idx").on(t.organizationId, t.locationId),
 }));
 
 // ── Inspections ───────────────────────────────────────────────────────────────
@@ -162,6 +165,7 @@ export const rydeReviews = pgTable("ryde_reviews", {
   createdAt:        timestamp("created_at").defaultNow(),
 }, (t) => [
   uniqueIndex("ryde_reviews_org_track_unique").on(t.organizationId, t.trackId),
+  index("ryde_reviews_org_driver_idx").on(t.organizationId, t.driverId),
 ]);
 
 // ── Milestone Rewards (platform-global, managed by MyGroundOps owner) ─────────
@@ -229,7 +233,9 @@ export const driverSchedules = pgTable("driver_schedules", {
   altSatStart: date("alt_sat_start"),
   notes:       text("notes"),
   updatedAt:   timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  index("driver_schedules_driver_idx").on(t.driverId),
+]);
 
 // ── Time Off Entries ──────────────────────────────────────────────────────────
 export const timeOffEntries = pgTable("time_off_entries", {
@@ -240,7 +246,9 @@ export const timeOffEntries = pgTable("time_off_entries", {
   reason:    text("reason").notNull().default(""),
   note:      text("note"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("time_off_entries_driver_idx").on(t.driverId),
+]);
 
 // ── Driver Milestone Claims ───────────────────────────────────────────────────
 export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
@@ -248,7 +256,9 @@ export const driverMilestoneClaims = pgTable("driver_milestone_claims", {
   driverId:    text("driver_id").notNull(),
   milestoneId: integer("milestone_id").notNull().references(() => milestoneRewards.id),
   earnedAt:    timestamp("earned_at").defaultNow(),
-});
+}, (t) => [
+  index("driver_milestone_claims_driver_idx").on(t.driverId),
+]);
 
 // ── Schedule Overrides ────────────────────────────────────────────────────────
 export const scheduleOverrides = pgTable("schedule_overrides", {
@@ -280,7 +290,10 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   adminNote:      text("admin_note"),
   createdAt:      timestamp("created_at").defaultNow(),
   updatedAt:      timestamp("updated_at").defaultNow(),
-});
+}, (t) => [
+  index("maintenance_requests_org_idx").on(t.organizationId),
+  index("maintenance_requests_org_status_idx").on(t.organizationId, t.status),
+]);
 
 // ── Gate Codes ────────────────────────────────────────────────────────────────
 export const gateCodes = pgTable("gate_codes", {
@@ -293,7 +306,9 @@ export const gateCodes = pgTable("gate_codes", {
   addedByName:    text("added_by_name").notNull(),
   active:         boolean("active").notNull().default(true),
   createdAt:      timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("gate_codes_org_idx").on(t.organizationId),
+]);
 
 export const gateCodeReports = pgTable("gate_code_reports", {
   id:         serial("id").primaryKey(),
@@ -327,7 +342,9 @@ export const droRoutes = pgTable("dro_routes", {
   exceededTargetDuration: boolean("exceeded_target_duration").notNull().default(false),
   timeCriticalStops:      integer("time_critical_stops").notNull().default(0),
   syncedAt:               timestamp("synced_at").defaultNow(),
-});
+}, (t) => [
+  index("dro_routes_org_date_idx").on(t.organizationId, t.sortDate),
+]);
 
 export const droStops = pgTable("dro_stops", {
   id:                   serial("id").primaryKey(),
@@ -368,7 +385,9 @@ export const droStops = pgTable("dro_stops", {
   overflowedRoute:      text("overflowed_route").notNull().default(""),
   numLpPackages:        integer("num_lp_packages").notNull().default(0),
   syncedAt:             timestamp("synced_at").defaultNow(),
-});
+}, (t) => [
+  index("dro_stops_org_date_idx").on(t.organizationId, t.sortDate),
+]);
 
 export const droRoutePlans = pgTable("dro_route_plans", {
   id:             serial("id").primaryKey(),
@@ -493,6 +512,8 @@ export const gcRouteDays = pgTable("gc_route_days", {
   syncedAt:       timestamp("synced_at").defaultNow(),
 }, (t) => ({
   orgGcDayUnique: uniqueIndex("gc_route_days_org_gc_day_unique").on(t.organizationId, t.gcRouteDayId),
+  orgDateIdx:     index("gc_route_days_org_date_idx").on(t.organizationId, t.date),
+  orgDriverIdx:   index("gc_route_days_org_driver_idx").on(t.organizationId, t.driverId),
 }));
 
 // ── GroundCloud Driver Name Mappings (manual overrides) ──────────────────────
@@ -531,7 +552,10 @@ export const vehicleMaintenanceRecords = pgTable("vehicle_maintenance_records", 
   vendor:         text("vendor"),
   createdBy:      text("created_by").notNull(),
   createdAt:      timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("vehicle_maintenance_records_org_idx").on(t.organizationId),
+  index("vehicle_maintenance_records_org_date_idx").on(t.organizationId, t.serviceDate),
+]);
 
 // ── MMR Generation Log ────────────────────────────────────────────────────────
 export const mmrGenerations = pgTable("mmr_generations", {
@@ -607,6 +631,7 @@ export const taskCompletions = pgTable("task_completions", {
   createdAt:       timestamp("created_at").defaultNow(),
 }, (t) => ({
   orgTaskDateUserUnique: uniqueIndex("task_completions_org_task_date_user_unique").on(t.organizationId, t.taskId, t.date, t.completedById),
+  orgDateIdx:            index("task_completions_org_date_idx").on(t.organizationId, t.date),
 }));
 
 export const attendanceLog = pgTable("attendance_log", {
@@ -659,6 +684,7 @@ export const badgeTypes = pgTable("badgeTypes", {
   orgRankUniq: uniqueIndex("badgeTypes_orgId_rank_uniq")
     .on(t.organizationId, t.rank)
     .where(sql`${t.rank} IS NOT NULL`),
+  orgIdx: index("badge_types_org_idx").on(t.organizationId),
 }));
 
 // ── Driver Badges (award log, never deleted) ─────────────────────────────────
@@ -673,6 +699,7 @@ export const driverBadges = pgTable("driverBadges", {
 }, (t) => ({
   orgBadgeWeekUniq: uniqueIndex("driverBadges_org_badgeType_week_uniq")
     .on(t.organizationId, t.badgeTypeId, t.weekStart),
+  orgDriverIdx:     index("driver_badges_org_driver_idx").on(t.organizationId, t.driverId),
 }));
 
 // ── Notifications ─────────────────────────────────────────────────────────────
@@ -708,6 +735,7 @@ export const gcVehicleMileage = pgTable("gc_vehicle_mileage", {
   pulledAt:       timestamp("pulled_at").defaultNow(),
 }, (t) => [
   uniqueIndex("gc_vehicle_mileage_org_date_vehicle_unique").on(t.organizationId, t.date, t.vehicleName),
+  index("gc_vehicle_mileage_org_date_idx").on(t.organizationId, t.date),
 ]);
 
 // ── Notification Preferences (per-org, per-type) ──────────────────────────────
