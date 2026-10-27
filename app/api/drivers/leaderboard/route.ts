@@ -119,11 +119,13 @@ export async function GET(req: NextRequest) {
     const rows = await sql`
       SELECT
         driver_id,
-        AVG(ils_pct)        AS avg_ils,
-        SUM(code_85)        AS total_code85,
-        SUM(dna)            AS total_dna,
-        SUM(non_delvd_stps) AS total_non_delvd,
-        SUM(act_del_stps)   AS total_act_del
+        AVG(ils_pct)                                          AS avg_ils,
+        SUM(code_85)                                          AS total_code85,
+        SUM(dna)                                              AS total_dna,
+        SUM(non_delvd_stps)                                   AS total_non_delvd,
+        SUM(act_del_stps)                                     AS total_act_del,
+        COUNT(DISTINCT date)::int                             AS days_worked_period,
+        COUNT(DISTINCT CASE WHEN date >= CURRENT_DATE - INTERVAL '90 days' THEN date END)::int AS days_worked_90d
       FROM dsw_route_days
       WHERE organization_id = ${orgId} AND driver_id IS NOT NULL
         AND date >= CURRENT_DATE - INTERVAL '1 day' * ${days}
@@ -184,8 +186,8 @@ export async function GET(req: NextRequest) {
       avg_sph_30d:             sph?.avg_sph_30d             ? parseFloat(sph.avg_sph_30d)             : null,
       avg_sph_90d:             sph?.avg_sph_90d             ? parseFloat(sph.avg_sph_90d)             : null,
       stddev_sph_30d:          sph?.stddev_sph_30d          ? parseFloat(sph.stddev_sph_30d)          : null,
-      days_worked_30d:         sph?.days_worked_30d         ? parseInt(sph.days_worked_30d)           : null,
-      days_worked_90d:         sph?.days_worked_90d         ? parseInt(sph.days_worked_90d)           : null,
+      days_worked_30d:         ils?.days_worked_period      ? parseInt(ils.days_worked_period)        : (sph?.days_worked_30d ? parseInt(sph.days_worked_30d) : null),
+      days_worked_90d:         ils?.days_worked_90d         ? parseInt(ils.days_worked_90d)           : (sph?.days_worked_90d ? parseInt(sph.days_worked_90d) : null),
       best_sph:                sph?.best_sph                ? parseFloat(sph.best_sph)                : null,
       worst_sph:               sph?.worst_sph               ? parseFloat(sph.worst_sph)               : null,
       last_worked:             sph?.last_worked             ?? null,
