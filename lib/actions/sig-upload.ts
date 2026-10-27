@@ -137,6 +137,17 @@ export async function deleteSigPeriod(periodLabel: string): Promise<void> {
   revalidatePath("/dashboard/payroll/sig-upload");
 }
 
+export async function deleteSigRow(rowId: number): Promise<void> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+  const orgId = session.organizationId;
+
+  await db.delete(sigCompliance).where(
+    and(eq(sigCompliance.id, rowId), eq(sigCompliance.organizationId, orgId))
+  );
+  revalidatePath("/dashboard/payroll/sig-upload");
+}
+
 export async function linkSigDriver(fedexId: string, driverDbId: number): Promise<void> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");

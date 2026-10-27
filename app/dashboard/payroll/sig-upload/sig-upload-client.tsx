@@ -6,6 +6,7 @@ import {
   getSigComplianceData,
   getSigPeriods,
   deleteSigPeriod,
+  deleteSigRow,
   linkSigDriver,
   type SigRow,
 } from "@/lib/actions/sig-upload";
@@ -62,14 +63,22 @@ function DriverRow({
   row,
   driverOptions,
   onLink,
+  onDelete,
 }: {
   row: SigRow;
   driverOptions: DriverOption[];
   onLink: (fedexId: string, driverDbId: number) => Promise<void>;
+  onDelete: (rowId: number) => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [linkVal, setLinkVal] = useState("");
   const [linking, setLinking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    await onDelete(row.id);
+  }
 
   const hasFail = (row.sigCompliancePct ?? 1) < 1.0;
   const hasCoaching =
@@ -191,30 +200,40 @@ function DriverRow({
             </div>
           )}
 
-          {/* Link unmatched driver */}
+          {/* Link or remove unmatched driver */}
           {!row.driverId && (
-            <div className="flex items-center gap-2 mt-1">
-              <Link2 className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-[12px] text-amber-300 font-semibold">Link this driver:</span>
-              <select
-                className="text-[12px] border border-slate-600 rounded-lg px-2 py-1.5 bg-slate-800 text-slate-200 flex-1 min-w-0"
-                value={linkVal}
-                onChange={(e) => setLinkVal(e.target.value)}
-              >
-                <option value="">Select driver…</option>
-                {driverOptions.map((d) => (
-                  <option key={d.driverId} value={d.driverId}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="text-[12px] text-amber-300 font-semibold">Link this driver:</span>
+                <select
+                  className="text-[12px] border border-slate-600 rounded-lg px-2 py-1.5 bg-slate-800 text-slate-200 flex-1 min-w-0"
+                  value={linkVal}
+                  onChange={(e) => setLinkVal(e.target.value)}
+                >
+                  <option value="">Select driver…</option>
+                  {driverOptions.map((d) => (
+                    <option key={d.driverId} value={d.driverId}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleLink}
+                  disabled={!linkVal || linking}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-bold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 transition-colors shrink-0"
+                >
+                  {linking ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                  Link
+                </button>
+              </div>
               <button
-                onClick={handleLink}
-                disabled={!linkVal || linking}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-bold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 transition-colors shrink-0"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-semibold text-red-400 border border-red-800/50 hover:bg-red-950/40 transition-colors disabled:opacity-40 self-start"
               >
-                {linking ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                Link
+                {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Remove record — driver no longer with us
               </button>
             </div>
           )}
@@ -325,6 +344,11 @@ export default function SigUploadClient() {
     if (selectedPeriod) {
       getSigComplianceData(selectedPeriod).then(setTableData).catch(() => {});
     }
+  }
+
+  async function handleDeleteRow(rowId: number) {
+    await deleteSigRow(rowId);
+    setTableData((prev) => prev.filter((r) => r.id !== rowId));
   }
 
   // Summary stats
@@ -537,6 +561,7 @@ export default function SigUploadClient() {
                   row={row}
                   driverOptions={driverOptions}
                   onLink={handleLink}
+                  onDelete={handleDeleteRow}
                 />
               ))}
             </div>
