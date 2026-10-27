@@ -521,7 +521,7 @@ function DriverCard({
 
 // ── Driver Detail Panel ────────────────────────────────────────────────────────
 
-function DriverDetail({ driver, index, onClose }: { driver: Driver; index: number; onClose: () => void }) {
+function DriverDetail({ driver, index, onClose, days }: { driver: Driver; index: number; onClose: () => void; days: number }) {
   const color = avatarColor(index);
   const consistency = consistencyScore(driver);
   const riskFlags = ppodRiskFlags(driver);
@@ -584,7 +584,7 @@ function DriverDetail({ driver, index, onClose }: { driver: Driver; index: numbe
         {[
           { label: "Consistency", value: consistency != null ? `${consistency}%` : "—", sub: "low SPH variance" },
           { label: "Best Day",    value: driver.best_sph?.toFixed(1) ?? "—",            sub: driver.best_date ? formatDate(driver.best_date) : "—" },
-          { label: "Days 30d",    value: String(driver.days_worked_30d ?? "—"),          sub: `${driver.days_worked_90d ?? "—"} last 90d` },
+          { label: `Days ${days}d`,  value: String(driver.days_worked_30d ?? "—"),          sub: `${driver.days_worked_90d ?? "—"} last 90d` },
           {
             label: "DTC%",
             value: driver.avg_dtc_pct != null ? `${driver.avg_dtc_pct.toFixed(1)}%` : "—",
@@ -958,6 +958,7 @@ export default function PerformancePage() {
                 driver={selected}
                 index={selectedIndex}
                 onClose={() => setSelected(null)}
+                days={days}
               />
             </div>
           )}

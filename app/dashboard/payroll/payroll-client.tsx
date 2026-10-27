@@ -269,7 +269,7 @@ export default function PayrollClient({
       )}
 
       {/* ── Dark hero banner ── */}
-      <div className="print:hidden relative rounded-3xl overflow-hidden mb-6 bg-slate-900 shadow-[0_8px_40px_rgba(0,0,0,0.18)]">
+      <div className="print:hidden relative rounded-2xl overflow-hidden mb-6 bg-slate-900 shadow-[0_8px_40px_rgba(0,0,0,0.18)]">
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage:"repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)"}} />
         <div className="relative px-7 py-6 flex items-center justify-between gap-6">
@@ -541,7 +541,7 @@ function PayrollTable({
             </tr>
           </thead>
           <tbody className="bg-white/80 backdrop-blur-sm divide-y divide-slate-100/80">
-            {drivers.map((driver) => {
+            {drivers.map((driver, driverIdx) => {
               const { workDays, traineeDays } = computeRowTotals(driver.attendance);
               const showDeduction = driver.isTerminated && driver.terminationType === "notice";
               const driverDsw = dswByDriverDate.get(driver.driverId);
@@ -553,6 +553,12 @@ function PayrollTable({
 
               return (
                 <>
+                  {/* Spacer between driver groups */}
+                  {driverIdx > 0 && (
+                    <tr aria-hidden="true">
+                      <td colSpan={20} className="py-1.5 bg-slate-100/60 border-t border-b border-slate-200/60" />
+                    </tr>
+                  )}
                   {/* Main attendance row */}
                   <tr className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-5 py-3">
@@ -646,7 +652,7 @@ function PayrollTable({
                               <span className={`text-[11px] font-black ${color}`}>{dsw.ilsPct}%</span>
                               {impact > 0 && (
                                 <span className="text-[8px] font-bold text-red-400 leading-none">
-                                  {impact}pkg{ghost > 0 ? ` +${ghost}👻` : ""}
+                                  {impact}pkg{ghost > 0 ? ` +${ghost}✗` : ""}
                                 </span>
                               )}
                               {breakdown.length > 0 && (
