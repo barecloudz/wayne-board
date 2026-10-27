@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Mail, Smartphone, Loader2 } from "lucide-react";
 
 const NOTIFICATION_LABELS: Record<string, { label: string; description: string }> = {
@@ -45,6 +45,17 @@ export default function NotificationSettings({ initialPrefs }: { initialPrefs: P
   const [prefs, setPrefs] = useState<Pref[]>(initialPrefs);
   const [saving, setSaving] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [loading, setLoading] = useState(initialPrefs.length === 0);
+
+  // If server-side had no rows (not yet seeded), fetch on mount to trigger seeding
+  useEffect(() => {
+    if (initialPrefs.length > 0) return;
+    fetch("/api/notifications/preferences")
+      .then((r) => r.json())
+      .then((d) => { if (d.prefs?.length) setPrefs(d.prefs); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [initialPrefs.length]);
 
   async function update(type: string, patch: Partial<Pref>) {
     setSaving(type);
@@ -88,6 +99,12 @@ export default function NotificationSettings({ initialPrefs }: { initialPrefs: P
         </span>
         <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 text-center">On</span>
       </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 py-4 text-slate-400 text-[13px]">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading notification settings…
+        </div>
+      )}
 
       <div className="flex flex-col divide-y divide-slate-100">
         {prefs.map((pref) => {
