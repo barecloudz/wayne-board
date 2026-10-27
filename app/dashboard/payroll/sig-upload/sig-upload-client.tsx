@@ -37,8 +37,10 @@ function passFailBadge(pct: number | null | undefined) {
   const pass = pct >= 1.0;
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
-        pass ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+        pass
+          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+          : "bg-red-500/15 text-red-400 border-red-500/30"
       }`}
     >
       {pass ? (
@@ -176,10 +178,10 @@ function DriverRow({
                   <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-[12px] font-bold text-red-300">
-                      {row.sigInvalidDriverRelease}× Left without signing
+                      {row.sigInvalidDriverRelease}× Invalid Driver Release
                     </p>
                     <p className="text-[11px] text-red-400 mt-0.5 leading-relaxed">
-                      Driver opened the door and left a signature-required package without making the customer sign. This is a direct violation — coach immediately.
+                      FedEx flagged {row.sigInvalidDriverRelease} stop{(row.sigInvalidDriverRelease ?? 0) !== 1 ? "s" : ""} as an invalid driver release this period. Coach immediately.
                     </p>
                   </div>
                 </div>
@@ -500,35 +502,30 @@ export default function SigUploadClient() {
       {/* Period selector + table */}
       {periods.length > 0 && (
         <div className="flex flex-col gap-6">
-          {/* Period tabs */}
+          {/* Period selector */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              {periods.map((p) => (
-                <div key={p} className="flex items-center gap-1">
-                  <button
-                    onClick={() => setSelectedPeriod(p)}
-                    className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-colors ${
-                      selectedPeriod === p
-                        ? "bg-slate-900 text-white"
-                        : "bg-white border border-slate-200 text-slate-600 hover:border-slate-400"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                  <button
-                    onClick={() => handleDeletePeriod(p)}
-                    disabled={deletingPeriod === p}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
-                    title="Delete this period's data"
-                  >
-                    {deletingPeriod === p ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-3.5 h-3.5" />
-                    )}
-                  </button>
-                </div>
-              ))}
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="flex-1 border border-slate-700 rounded-xl px-3 py-2 text-[13px] font-semibold bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+              >
+                {periods.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => selectedPeriod && handleDeletePeriod(selectedPeriod)}
+                disabled={!selectedPeriod || deletingPeriod === selectedPeriod}
+                className="p-2 rounded-xl border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-700/50 hover:bg-red-950/30 transition-colors disabled:opacity-30"
+                title="Delete this period"
+              >
+                {deletingPeriod === selectedPeriod ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
             </div>
 
             {/* Team summary */}
@@ -548,12 +545,11 @@ export default function SigUploadClient() {
                 </div>
                 <div className={`rounded-2xl px-4 py-3 ${totalViolations > 0 ? "bg-red-950 border border-red-700" : "bg-slate-800"}`}>
                   <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${totalViolations > 0 ? "text-red-400" : "text-slate-400"}`}>
-                    Left Without Signing
+                    Invalid Driver Release
                   </p>
                   <p className={`text-[20px] font-extrabold ${totalViolations > 0 ? "text-red-300" : "text-white"}`}>
                     {totalViolations}
                   </p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">driver didn&apos;t get customer&apos;s sig</p>
                 </div>
                 <div className={`rounded-2xl px-4 py-3 ${passRate != null && passRate < 100 ? "bg-amber-900" : "bg-slate-800"}`}>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Team Pass Rate</p>
