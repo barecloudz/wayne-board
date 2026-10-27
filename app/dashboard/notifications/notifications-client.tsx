@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback } from "react";
-import { AlertTriangle, Wrench, Truck, CheckSquare, DollarSign, Bell, Settings, History, Loader2, Check } from "lucide-react";
+import { AlertTriangle, Wrench, Truck, CheckSquare, DollarSign, Bell, Settings, History, Loader2, Check, X, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { upsertNotificationPreference } from "@/lib/actions/notifications";
 
@@ -256,6 +256,7 @@ function HistoryTab() {
   const [unread, setUnread]           = useState(0);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [markingAll, setMarkingAll]   = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const LIMIT = 25;
 
@@ -287,6 +288,21 @@ function HistoryTab() {
     await fetch(`/api/notifications/${id}/read`, { method: "POST" });
     setItems(prev => prev.map(n => n.id === id ? { ...n, readAt: new Date().toISOString() } : n));
     setUnread(prev => Math.max(0, prev - 1));
+  }
+
+  async function dismiss(id: number) {
+    await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+    setItems(prev => prev.filter(n => n.id !== id));
+    setTotal(prev => Math.max(0, prev - 1));
+  }
+
+  async function clearAll() {
+    setClearingAll(true);
+    await fetch("/api/notifications/clear-all", { method: "POST" });
+    setItems([]);
+    setTotal(0);
+    setUnread(0);
+    setClearingAll(false);
   }
 
   const filtered = categoryFilter === "all"
@@ -328,6 +344,16 @@ function HistoryTab() {
               Mark all read
             </button>
           )}
+          {items.length > 0 && (
+            <button
+              onClick={clearAll}
+              disabled={clearingAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+            >
+              {clearingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              Clear all
+            </button>
+          )}
         </div>
       </div>
 
@@ -350,10 +376,10 @@ function HistoryTab() {
               const colors = HISTORY_COLORS[cat] ?? { border: "border-slate-200", bg: "bg-slate-50", icon: "text-slate-400" };
               const Icon = TYPE_ICONS[n.type] ?? Bell;
               return (
-                <li key={n.id}>
+                <li key={n.id} className={`flex items-start border-l-4 ${colors.border} ${isUnread ? colors.bg : ""}`}>
                   <button
                     onClick={() => { if (isUnread) markRead(n.id); }}
-                    className={`w-full text-left flex gap-3 px-5 py-4 border-l-4 transition-colors hover:bg-slate-50 ${colors.border} ${isUnread ? colors.bg : ""}`}
+                    className="flex-1 text-left flex gap-3 px-5 py-4 transition-colors hover:bg-black/5"
                   >
                     <div className={`pt-0.5 shrink-0 ${colors.icon}`}>
                       <Icon className="w-4 h-4" />
@@ -377,6 +403,13 @@ function HistoryTab() {
                         )}
                       </p>
                     </div>
+                  </button>
+                  <button
+                    onClick={() => dismiss(n.id)}
+                    className="p-3 text-slate-300 hover:text-red-400 transition-colors shrink-0"
+                    title="Dismiss"
+                  >
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </li>
               );
