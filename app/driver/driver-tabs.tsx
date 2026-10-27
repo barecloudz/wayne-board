@@ -409,7 +409,7 @@ export default function DriverTabs({
               </p>
               <div className="flex items-center justify-between mt-0.5">
                 <h1 className="text-[26px] font-extrabold text-slate-900 tracking-tight leading-tight">
-                  Hey, {driverName.split(" ")[0]} 👋
+                  Hey, {driverName.split(" ")[0]}
                 </h1>
               </div>
             </div>
@@ -449,7 +449,7 @@ export default function DriverTabs({
                 )}
                 {vehicleNumber && (
                   <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 px-4 py-3 flex items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                    <span className="text-[16px]">🚚</span>
+                    <Wrench className="w-4 h-4 text-slate-400 shrink-0" />
                     <div>
                       <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Truck</p>
                       <p className="text-[18px] font-extrabold text-slate-900 leading-none">{vehicleNumber}</p>
@@ -460,7 +460,7 @@ export default function DriverTabs({
             ) : null}
 
             {/* 2-week calendar card */}
-            <div className="mx-4 bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+            <div className="mx-4 bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarDays className="w-4 h-4 text-slate-400" />
                 <h2 className="text-[15px] font-bold text-slate-900">My Schedule</h2>
@@ -534,7 +534,7 @@ export default function DriverTabs({
             </div>
 
             {/* Upcoming time off */}
-            <div className="mx-4 bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+            <div className="mx-4 bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
                 <CalendarOff className="w-4 h-4 text-slate-400" />
                 <h2 className="text-[15px] font-bold text-slate-900">Upcoming Time Off</h2>

@@ -131,6 +131,63 @@ Every empty state needs: icon (w-8 h-8 text-slate-200) + message (text-[13px] te
 
 ---
 
+## Cinematic Interactions (Hero / Dashboard Modules)
+
+For flagship surfaces — the main fleet dashboard, driver performance command center, KPI hero modules — use `useFleetTelemetry` from `hooks/use-fleet-telemetry.ts` to achieve cursor-reactive 3D depth.
+
+### When to use
+- Hero KPI cards on the admin dashboard
+- Driver performance cards in the command center
+- Any "above the fold" module that benefits from perceived depth
+- **Not for**: data tables, form inputs, modals, list rows
+
+### 3D Tilt Pattern
+```tsx
+import { useFleetTelemetry } from "@/hooks/use-fleet-telemetry";
+
+const { ref, cardStyle, glowStyle, handlers } = useFleetTelemetry({
+  maxTilt: 6,        // degrees (4–8 feels right; beyond 10 is nauseating)
+  perspective: 900,  // px (600–1200; lower = more dramatic)
+  glowOpacity: 0.12, // subtle on light surfaces, 0.18 on dark
+  easing: 0.1,       // lower = more inertia / Jarvis feel
+});
+
+// Card element:
+<div ref={ref} style={cardStyle} {...handlers} className="relative overflow-hidden rounded-2xl ...">
+  {/* Spotlight layer — must be first child, pointer-events-none */}
+  <div style={glowStyle} className="absolute inset-0 pointer-events-none rounded-2xl z-10" />
+  {/* Content */}
+  ...
+</div>
+```
+
+### Dark card glow (brand accent color)
+```tsx
+import { useBrandGlow } from "@/hooks/use-fleet-telemetry";
+
+const { ref, cardStyle, brandGlowStyle, handlers } = useBrandGlow({
+  color: "#4D148C",  // or var(--brand)
+  glowOpacity: 0.15,
+  maxTilt: 7,
+});
+```
+
+### Rules for cinematic components
+- `position: "relative"` is required on the card (cardStyle includes it)
+- Glow layer: `absolute inset-0 pointer-events-none z-10`
+- `overflow-hidden` on the card clips the glow at the border
+- Do NOT nest tilt cards inside other tilt cards
+- Tilt amount: `maxTilt` 4–8 for data cards, up to 10 for pure hero modules
+- Always use `willChange: "transform"` (included in cardStyle)
+- On mobile (touch devices), tilt is naturally inactive — no touch handler needed
+
+### Micro-state rules
+- Hovered card: border brightens to `border-white/[0.14]` on dark, `border-slate-300` on light
+- Active/pressed: `scale(0.97)` via `active:scale-[0.97]`
+- Focus-visible: `outline-2 outline-offset-2 outline-indigo-500`
+
+---
+
 ## Layout Patterns
 
 ### Dashboard Page Structure

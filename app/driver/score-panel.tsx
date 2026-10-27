@@ -144,7 +144,7 @@ export default function ScorePanel({
 
         {/* ── 2-Week Performance Card ── */}
         {myIlsHistory.length > 0 && (
-          <div className="rounded-3xl overflow-hidden" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)" }}>
             {/* Header */}
             <div className="px-5 pt-5 pb-4 border-b border-white/8">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">My Performance · Last 2 Weeks</p>
@@ -264,7 +264,7 @@ export default function ScorePanel({
 
         {/* Score card — dark with animated ring */}
         {rydeAvg !== null ? (
-          <div className="rounded-3xl overflow-hidden" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)" }}>
             <div className="flex flex-col items-center pt-8 pb-5 px-6">
               {/* Ring */}
               <div className="relative w-40 h-40 mb-4">
@@ -301,7 +301,7 @@ export default function ScorePanel({
               <div className="px-5 pb-6 flex gap-2 flex-wrap justify-center">
                 {weeklyIlsRank !== null && (
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}>
-                    <span className="text-[13px]">📦</span>
+                    <BarChart2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                     <span className="text-[13px] font-bold text-blue-300">
                       #{weeklyIlsRank}
                       {totalDriversThisWeek > 0 && <span className="font-normal text-[12px] text-blue-400"> of {totalDriversThisWeek}</span>}
@@ -311,7 +311,7 @@ export default function ScorePanel({
                 )}
                 {weeklyRydeRank !== null && (
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.3)" }}>
-                    <span className="text-[13px]">⭐</span>
+                    <Star className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                     <span className="text-[13px] font-bold text-orange-300">#{weeklyRydeRank}</span>
                     <span className="text-[11px] font-semibold text-orange-400/70">in ratings</span>
                   </div>
@@ -320,7 +320,7 @@ export default function ScorePanel({
             )}
           </div>
         ) : (
-          <div className="rounded-3xl p-8 flex flex-col items-center text-center" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 100%)" }}>
+          <div className="rounded-2xl p-8 flex flex-col items-center text-center" style={{ background: "linear-gradient(150deg,#0f172a 0%,#1e293b 100%)" }}>
             <Star className="w-10 h-10 text-white/20 mb-3" />
             <p className="text-[15px] font-bold text-white/60">No score yet</p>
             <p className="text-[13px] text-white/30 mt-1">Complete rides to earn your Ryde rating</p>
@@ -343,7 +343,7 @@ export default function ScorePanel({
                 }`}
                 style={typeFilter === f ? { backgroundColor: f === "Positive" ? "#16a34a" : f === "Negative" ? "#dc2626" : "var(--brand)" } : {}}
               >
-                {f === "Positive" ? "👍 Positive" : f === "Negative" ? "👎 Negative" : "All"}
+                {f === "Positive" ? "Positive" : f === "Negative" ? "Negative" : "All"}
               </button>
             ))}
             {RATING_FILTERS.map(f => (

@@ -17,6 +17,7 @@ import FleetCard from "@/components/cards/fleet-card";
 import PayrollCard from "@/components/cards/payroll-card";
 import DriversCard from "@/components/cards/drivers-card";
 import RoutesCard from "@/components/cards/routes-card";
+import FleetKpiCard from "@/components/cards/fleet-kpi-card";
 import PortalSettings from "./portal-settings";
 import WorkAreaManager from "./work-area-manager";
 import DswScorecard from "./dsw-scorecard";
@@ -31,6 +32,7 @@ import Link from "next/link";
 import {
   UserCog, Star, Gauge, WrenchIcon,
   Trophy, ClipboardList, Map, CalendarDays, ChevronRight, TrendingUp,
+  Truck, Users, ClipboardCheck, AlertTriangle,
 } from "lucide-react";
 
 export default async function Home() {
@@ -74,27 +76,12 @@ export default async function Home() {
           </h1>
         </div>
 
-        {/* KPI strip */}
+        {/* KPI strip — cursor-reactive 3D tiles */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          {[
-            { label: "Active Trucks",    value: vehicleCount.toString() },
-            { label: "Active Drivers",   value: driverCount.toString() },
-            { label: "Q2 Inspections",   value: completedCount.toString() },
-            { label: "Out of Service",   value: oosCount.toString() },
-          ].map((kpi) => (
-            <div
-              key={kpi.label}
-              className="bg-white rounded-xl border border-slate-200/80 px-5 py-4
-                shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            >
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                {kpi.label}
-              </p>
-              <span className="text-[24px] font-extrabold text-slate-900 leading-none tracking-tight">
-                {kpi.value}
-              </span>
-            </div>
-          ))}
+          <FleetKpiCard label="Active Trucks"   value={vehicleCount}   icon={Truck}           accent="blue"    dark={false} />
+          <FleetKpiCard label="Active Drivers"  value={driverCount}    icon={Users}           accent="indigo"  dark={false} />
+          <FleetKpiCard label="Inspections"     value={completedCount} icon={ClipboardCheck}  accent="emerald" dark={false} />
+          <FleetKpiCard label="Out of Service"  value={oosCount}       icon={AlertTriangle}   accent={oosCount > 0 ? "red" : "slate"} dark={false} />
         </div>
 
         {/* Scheduling · hero button */}

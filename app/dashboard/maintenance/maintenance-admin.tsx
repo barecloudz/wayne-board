@@ -206,7 +206,7 @@ export default function MaintenanceAdmin({
             MMR Generator
           </Link>
           <button
-            onClick={openLogModal}
+            onClick={() => openLogModal()}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold border border-slate-900 bg-slate-900 text-white hover:bg-slate-700 transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -444,7 +444,7 @@ export default function MaintenanceAdmin({
               <FileText className="w-8 h-8 text-slate-200 mx-auto mb-3" />
               <p className="text-[13px] text-slate-400 mb-4">No maintenance records yet.</p>
               <button
-                onClick={openLogModal}
+                onClick={() => openLogModal()}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold bg-slate-900 text-white hover:bg-slate-700 transition-all"
               >
                 <Plus className="w-4 h-4" />
