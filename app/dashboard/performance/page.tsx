@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from "recharts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ function RankBadge({ rank, size = "sm" }: { rank: number; size?: "sm" | "md" }) 
     <span className={`${base} rounded-full bg-orange-100 flex items-center justify-center font-black text-orange-600`}>3</span>
   );
   return (
-    <span className={`${base} rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500`}>{rank}</span>
+    <span className={`${base} rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-300`}>{rank}</span>
   );
 }
 
@@ -459,22 +459,22 @@ function DriverCard({
   return (
     <button
       onClick={onClick}
-      className={`bg-white rounded-2xl border p-4 shadow-sm cursor-pointer text-left transition-all hover:shadow-md hover:border-slate-300 w-full
-        ${selected ? "ring-2 ring-indigo-400 border-indigo-300" : "border-slate-200"}`}
+      className={`bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border p-4 shadow-lg shadow-slate-900/20 cursor-pointer text-left transition-all hover:from-slate-700 hover:to-slate-800 hover:shadow-xl w-full
+        ${selected ? "ring-2 ring-indigo-400 border-slate-700/50" : "border-slate-700/50"}`}
     >
       {/* Top row: rank + name + trend */}
       <div className="flex items-center gap-2 mb-2">
         <RankBadge rank={driver.rank} />
-        <p className="flex-1 text-[13px] font-semibold text-slate-800 truncate leading-tight">{driver.name}</p>
+        <p className="flex-1 text-[13px] font-semibold text-white truncate leading-tight">{driver.name}</p>
         <TrendIcon trend={driver.sph_trend} delta={driver.trend_delta} />
       </div>
 
       {/* SPH + tier */}
       <div className="flex items-end gap-2 mb-3">
-        <span className="text-3xl font-black text-slate-900 leading-none">
+        <span className="text-3xl font-black text-white leading-none">
           {driver.avg_sph_30d != null ? driver.avg_sph_30d.toFixed(1) : "—"}
         </span>
-        <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full mb-0.5 ${tier.bg} ${tier.color}`}>
+        <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full mb-0.5 opacity-90 ${tier.bg} ${tier.color}`}>
           {tier.label}
         </span>
       </div>
@@ -482,28 +482,28 @@ function DriverCard({
       {/* Mini stats row */}
       <div className="flex items-center gap-3 mb-3">
         <span className={`text-[11px] font-semibold flex items-center gap-1 ${ilsColor(driver.avg_ils_30d)}`}>
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ils_30d == null ? "bg-slate-300" : driver.avg_ils_30d >= 99 ? "bg-emerald-500" : driver.avg_ils_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ils_30d == null ? "bg-slate-600" : driver.avg_ils_30d >= 99 ? "bg-emerald-500" : driver.avg_ils_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
           {driver.avg_ils_30d != null ? `${driver.avg_ils_30d.toFixed(1)}%` : "—"}
         </span>
         <span className="text-[11px] font-semibold flex items-center gap-0.5 text-amber-500">
           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          {driver.ryde_score != null ? driver.ryde_score.toFixed(1) : <span className="text-slate-400">—</span>}
+          {driver.ryde_score != null ? driver.ryde_score.toFixed(1) : <span className="text-slate-500">—</span>}
         </span>
         <span className={`text-[11px] font-semibold flex items-center gap-1 ${ppodColor(driver.avg_ppod_30d)}`}>
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ppod_30d == null ? "bg-slate-300" : driver.avg_ppod_30d >= 99 ? "bg-cyan-500" : driver.avg_ppod_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
+          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${driver.avg_ppod_30d == null ? "bg-slate-600" : driver.avg_ppod_30d >= 99 ? "bg-cyan-500" : driver.avg_ppod_30d >= 95 ? "bg-amber-400" : "bg-red-400"}`} />
           {driver.avg_ppod_30d != null ? `${driver.avg_ppod_30d.toFixed(1)}%` : "—"}
         </span>
       </div>
 
       {/* SPH progress bar */}
-      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mb-2">
+      <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mb-2">
         <div className="h-1 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
 
       {/* PPOD photo quality bar — only if data exists */}
       {driver.avg_ppod_30d != null && (
         <div>
-          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Photo Quality</p>
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500 mb-0.5">Photo Quality</p>
           <StackedBar
             height="h-1.5"
             segments={[
@@ -677,6 +677,7 @@ export default function PerformancePage() {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
   const [showNoData, setShowNoData] = useState(false);
+  const [expandedTile, setExpandedTile] = useState<string | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -799,15 +800,106 @@ export default function PerformancePage() {
 
           {/* Team summary bar */}
           {!loading && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {summaryPills.map(({ label, value, sub, border }) => (
-                <div key={label} className={`bg-white rounded-xl border border-slate-200 shadow-sm pl-4 pr-4 py-4 border-l-4 ${border}`}>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
-                  <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
-                  <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {summaryPills.map(({ label, value, sub, border }) => {
+                  const isExpanded = expandedTile === label;
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setExpandedTile((v) => v === label ? null : label)}
+                      className={`bg-white rounded-xl border border-slate-200 shadow-sm pl-4 pr-3 py-4 border-l-4 ${border} cursor-pointer text-left transition-all hover:shadow-md hover:border-slate-300 w-full ${isExpanded ? "ring-2 ring-indigo-300" : ""}`}
+                    >
+                      <div className="flex items-start justify-between gap-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
+                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                      <p className="text-2xl font-black text-slate-900 leading-none">{value}</p>
+                      <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Expanded tile chart panel */}
+              {expandedTile && (() => {
+                type TileConfig = {
+                  key: keyof Driver;
+                  color: string;
+                  fmt: (v: number) => string;
+                  refLine?: number;
+                };
+                const tileConfig: Record<string, TileConfig> = {
+                  "Team SPH":  { key: "avg_sph_30d",  color: "#6366f1", fmt: (v) => v.toFixed(1) },
+                  "Team ILS":  { key: "avg_ils_30d",  color: "#10b981", fmt: (v) => `${v.toFixed(1)}%`, refLine: 99 },
+                  "Team PPOD": { key: "avg_ppod_30d", color: "#06b6d4", fmt: (v) => `${v.toFixed(1)}%`, refLine: 99 },
+                  "Team Ryde": { key: "ryde_score",   color: "#f59e0b", fmt: (v) => v.toFixed(1),        refLine: 4.5 },
+                };
+                const cfg = tileConfig[expandedTile];
+                if (!cfg) return null;
+                const chartData = drivers
+                  .filter((d) => d[cfg.key] != null)
+                  .map((d) => ({ name: d.name.split(" ")[0], fullName: d.name, value: d[cfg.key] as number }))
+                  .sort((a, b) => b.value - a.value);
+                if (chartData.length === 0) return null;
+                const barHeight = 28;
+                const chartHeight = Math.max(160, chartData.length * barHeight + 40);
+                return (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[13px] font-bold text-slate-700">{expandedTile} · All Drivers</h3>
+                      <button
+                        onClick={() => setExpandedTile(null)}
+                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <ResponsiveContainer width="100%" height={chartHeight}>
+                      <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 48, left: 8, bottom: 4 }}>
+                        <XAxis
+                          type="number"
+                          domain={["auto", "auto"]}
+                          tick={{ fontSize: 10, fill: "#94a3b8" }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={72}
+                          tick={{ fontSize: 11, fill: "#64748b" }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip
+                          formatter={(val: any) => [cfg.fmt(Number(val)), expandedTile]}
+                          labelFormatter={(label: any) => {
+                            const d = chartData.find((x) => x.name === String(label));
+                            return d?.fullName ?? String(label);
+                          }}
+                          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e2e8f0" }}
+                        />
+                        {cfg.refLine != null && (
+                          <ReferenceLine
+                            x={cfg.refLine}
+                            stroke={cfg.color}
+                            strokeDasharray="4 4"
+                            strokeOpacity={0.6}
+                            label={{ value: String(cfg.refLine), fontSize: 9, fill: cfg.color, position: "insideTopRight" }}
+                          />
+                        )}
+                        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={20}>
+                          {chartData.map((_, i) => (
+                            <Cell key={i} fill={cfg.color} fillOpacity={1 - i * 0.04} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
+            </>
           )}
 
           {/* Loading skeleton */}
