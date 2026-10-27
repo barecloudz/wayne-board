@@ -48,17 +48,10 @@ function passFailBadge(pct: number | null | undefined) {
   const pass = pct >= 1.0;
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-        pass
-          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-          : "bg-red-500/15 text-red-400 border-red-500/30"
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase ${
+        pass ? "bg-emerald-500 text-white" : "bg-red-600 text-white"
       }`}
     >
-      {pass ? (
-        <ShieldCheck className="w-3 h-3" />
-      ) : (
-        <ShieldAlert className="w-3 h-3" />
-      )}
       {pass ? "PASS" : "FAIL"}
     </span>
   );
