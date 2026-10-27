@@ -94,7 +94,7 @@ function CoachingCallout({ row }: { row: SigRow }) {
               {row.sigInvalid} invalid signature{(row.sigInvalid ?? 0) !== 1 ? "s" : ""} — fake name or acronym used
             </p>
             <p className="text-[12px] text-amber-400 leading-relaxed">
-              FedEx requires a first initial and at least 2 letters of the last name (e.g. "J.Sm"). The scanner enforces a minimum — but a driver can still pass a bad signature through if the customer signs something like "J.S" with only one last-name letter, a nickname, or their own initials. Coach this driver to hand the device to the customer and tell them exactly what to write — first initial, then at least 2 letters of their last name. No single-letter last names, no full first names, no acronyms.
+              FedEx requires the customer's first initial and full last name (e.g. "J. Smith"). The scanner may let short entries through, but FedEx will still flag them as invalid during compliance review. Coach this driver to hand the device to the customer and tell them to sign their first initial and full last name — no nicknames, no first names only, no acronyms, no initials only.
             </p>
           </div>
         </div>
