@@ -137,10 +137,10 @@ const TYPE_CATEGORY: Record<string, string> = {
 };
 
 const HISTORY_COLORS: Record<string, { border: string; bg: string; icon: string }> = {
-  maintenance: { border: "border-orange-400", bg: "bg-orange-50",  icon: "text-orange-500" },
+  maintenance: { border: "border-amber-400",  bg: "bg-amber-50",   icon: "text-amber-500" },
   fleet:       { border: "border-blue-400",   bg: "bg-blue-50",    icon: "text-blue-500" },
-  tasks:       { border: "border-purple-400", bg: "bg-purple-50",  icon: "text-purple-500" },
-  reports:     { border: "border-green-400",  bg: "bg-green-50",   icon: "text-green-500" },
+  tasks:       { border: "border-indigo-400", bg: "bg-indigo-50",  icon: "text-indigo-500" },
+  reports:     { border: "border-emerald-400",bg: "bg-emerald-50", icon: "text-emerald-500" },
 };
 
 // ── Toggle switch ──────────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ function HistoryTab() {
             <button
               onClick={markAllRead}
               disabled={markingAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-[0.97] transition-all disabled:opacity-40"
             >
               {markingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
               Mark all read
@@ -348,7 +348,7 @@ function HistoryTab() {
             <button
               onClick={clearAll}
               disabled={clearingAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-red-200 text-red-600 hover:bg-red-50 active:scale-[0.97] transition-all disabled:opacity-40"
             >
               {clearingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
               Clear all
@@ -364,9 +364,15 @@ function HistoryTab() {
             <Loader2 className="w-6 h-6 text-slate-300 animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-2">
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Bell className="w-8 h-8 text-slate-200" />
             <p className="text-[13px] text-slate-400 font-medium">No notifications yet</p>
+            <button
+              onClick={() => {/* tab switching handled by parent */}}
+              className="mt-1 px-4 py-2 rounded-xl bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 active:scale-[0.97] transition-all"
+            >
+              Configure notifications
+            </button>
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
