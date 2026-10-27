@@ -37,6 +37,14 @@ function escHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function svgCheckbox(checked: boolean, size = 11): string {
+  const s = size;
+  const tick = checked
+    ? `<polyline points="${Math.round(s*0.15)},${Math.round(s*0.52)} ${Math.round(s*0.42)},${Math.round(s*0.78)} ${Math.round(s*0.85)},${Math.round(s*0.22)}" stroke="#000" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    : "";
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" style="display:inline-block;vertical-align:middle;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="0.5" width="${s-1}" height="${s-1}" fill="white" stroke="#000" stroke-width="1"/>${tick}</svg>`;
+}
+
 function todayMDY(): string {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -49,10 +57,10 @@ function generateVehiclePage(p: {
   monthLabel: string; dateCompleted: string; signerName: string;
   maintenancePerformed: boolean; outOfService: boolean; tableRows: string;
 }): string {
-  const topYes = p.maintenancePerformed ? "✓" : "";
-  const topNo  = p.maintenancePerformed ? "" : "✓";
-  const q2Yes  = !p.maintenancePerformed && p.outOfService ? "✓" : "";
-  const q2No   = !p.maintenancePerformed && !p.outOfService ? "✓" : "";
+  const topYes = svgCheckbox(p.maintenancePerformed);
+  const topNo  = svgCheckbox(!p.maintenancePerformed);
+  const q2Yes  = svgCheckbox(!p.maintenancePerformed && p.outOfService);
+  const q2No   = svgCheckbox(!p.maintenancePerformed && !p.outOfService);
   return `
 <div style="page-break-after:always;font-family:Arial,Helvetica,sans-serif;font-size:10pt;padding:0.55in 0.6in 0.4in 0.6in;color:#000;box-sizing:border-box;width:8.5in;min-height:11in;">
   <div style="border:2px solid #000;text-align:center;padding:6px 12px;margin-bottom:6px;">
@@ -75,15 +83,15 @@ function generateVehiclePage(p: {
   <div style="display:flex;align-items:flex-start;margin-bottom:5px;font-size:9pt;">
     <div style="flex:1;padding-top:1px;line-height:1.3;">Were any repairs, or preventative maintenance performed on this unit?</div>
     <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;padding-left:12px;">
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${topYes}</span><span>Yes</span>
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${topNo}</span><span>No</span>
+      ${topYes}<span>Yes</span>
+      ${topNo}<span>No</span>
     </div>
   </div>
   <div style="display:flex;align-items:flex-start;margin-bottom:10px;font-size:9pt;">
     <div style="flex:1;padding-top:1px;line-height:1.3;">If &ldquo;no&rdquo; maintenance was performed, was the unit out of service and unable to provide service (i.e., awaiting repair, on litigation hold, etc.)?</div>
     <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;padding-left:12px;">
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${q2Yes}</span><span>Yes</span>
-      <span style="display:inline-block;width:11px;height:11px;border:1px solid #000;text-align:center;line-height:11px;font-size:9pt;font-weight:bold;">${q2No}</span><span>No</span>
+      ${q2Yes}<span>Yes</span>
+      ${q2No}<span>No</span>
     </div>
   </div>
   <div style="margin:7px 0;">
@@ -100,7 +108,7 @@ function generateVehiclePage(p: {
     <tbody>${p.tableRows}</tbody>
   </table>
   <div style="display:flex;gap:6px;margin-bottom:10px;">
-    <div style="width:12px;height:12px;min-width:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9pt;font-weight:bold;margin-top:1px;">✓</div>
+    <div style="margin-top:1px;">${svgCheckbox(true, 12)}</div>
     <div style="font-size:8.5pt;line-height:1.4;">By checking this box, I declare that this record is true and correct. Unless otherwise clearly indicated as &#8220;out of service&#8221; on this record, I confirm that the equipment on this record is in compliance with the Federal Motor Carrier Safety Regulations 49 C.F.R. 396.3(a)(1) and 396.7 (a) and is in safe operating condition and meets all federal, state and local motor vehicle laws. Furthermore, I confirm that preventative maintenance is consistent with the interval schedule per 396.3(b)(2).</div>
   </div>
   <div style="display:grid;grid-template-columns:1fr auto;gap:20px;margin-bottom:10px;align-items:end;">
@@ -211,7 +219,9 @@ export async function POST(req: NextRequest) {
     const input = vehicleInputMap.get(vehicleId);
     const maintenancePerformed = input?.maintenancePerformed ?? (maintByVehicle.get(vehicleId) ?? []).length > 0;
     const outOfService = input?.outOfService ?? false;
-    const dbRows = maintenancePerformed ? (maintByVehicle.get(vehicleId) ?? []) : [];
+    const dbRows = maintenancePerformed
+      ? (maintByVehicle.get(vehicleId) ?? []).filter(r => r.description && r.description.trim().length > 0)
+      : [];
     const dataRows = dbRows.map((r) => {
       const d = new Date(r.serviceDate + "T00:00:00");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
