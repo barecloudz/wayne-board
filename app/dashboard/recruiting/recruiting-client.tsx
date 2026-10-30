@@ -1,14 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { UserPlus, Trash2, Loader2, ChevronDown, ChevronUp, Phone, Mail, StickyNote } from "lucide-react";
+import {
+  UserPlus, Trash2, Loader2, ChevronDown, ChevronUp,
+  Phone, Mail, StickyNote, CalendarDays, CheckCircle2, XCircle, Copy, Check,
+} from "lucide-react";
 import {
   createProspect,
   updateProspectChecklist,
   updateProspectNotes,
   deleteProspect,
+  proposeRoadTestDate,
+  confirmRoadTestDate,
+  markRoadTestPassed,
+  markDiscontinued,
+  hireProspect,
 } from "@/lib/actions/recruiting";
 import type { Prospect, ChecklistStatus } from "@/lib/actions/recruiting";
+
+// ── Legacy flat checklist (old prospects with status = 'prospect') ────────────
 
 const CHECKLIST_FIELDS: { key: string; label: string }[] = [
   { key: "applicationDone",       label: "Application" },
@@ -22,7 +32,7 @@ const CHECKLIST_FIELDS: { key: string; label: string }[] = [
 
 const TOTAL_STEPS = CHECKLIST_FIELDS.length;
 
-function getProgress(prospect: Prospect): number {
+function getLegacyProgress(prospect: Prospect): number {
   return CHECKLIST_FIELDS.filter((f) => (prospect as Record<string, unknown>)[f.key] === "passed").length;
 }
 
@@ -58,7 +68,494 @@ function ChecklistBadge({ status, label, onClick, pending }: {
   );
 }
 
-function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: () => void }) {
+// ── Stage pipeline constants ──────────────────────────────────────────────────
+
+const STAGE_ORDER = [
+  "screening",
+  "ready_for_road_test",
+  "road_test_scheduled",
+  "ride_alongs",
+  "hired",
+] as const;
+
+type PipelineStatus = typeof STAGE_ORDER[number] | "discontinued";
+
+function getStageIndex(status: string): number {
+  return STAGE_ORDER.indexOf(status as typeof STAGE_ORDER[number]);
+}
+
+const STAGE_LABELS: Record<string, string> = {
+  screening:            "Screening",
+  ready_for_road_test:  "Road Test Ready",
+  road_test_scheduled:  "Road Test Scheduled",
+  ride_alongs:          "Ride-Alongs",
+  hired:                "Hired",
+  discontinued:         "Discontinued",
+};
+
+const STAGE_COLORS: Record<string, { pill: string; dot: string }> = {
+  screening:            { pill: "bg-slate-100 text-slate-600 border-slate-200",      dot: "bg-slate-400" },
+  ready_for_road_test:  { pill: "bg-amber-50 text-amber-700 border-amber-200",       dot: "bg-amber-400" },
+  road_test_scheduled:  { pill: "bg-blue-50 text-blue-700 border-blue-200",          dot: "bg-blue-400" },
+  ride_alongs:          { pill: "bg-violet-50 text-violet-700 border-violet-200",    dot: "bg-violet-400" },
+  hired:                { pill: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
+  discontinued:         { pill: "bg-red-50 text-red-600 border-red-200",             dot: "bg-red-400" },
+};
+
+function StagePill({ status }: { status: string }) {
+  const color = STAGE_COLORS[status] ?? STAGE_COLORS.screening;
+  const label = STAGE_LABELS[status] ?? status;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${color.pill}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
+      {label}
+    </span>
+  );
+}
+
+function StageRail({ currentStatus }: { currentStatus: string }) {
+  if (currentStatus === "discontinued") return null;
+  const currentIdx = getStageIndex(currentStatus);
+  return (
+    <div className="flex items-center mt-2 mb-3">
+      {STAGE_ORDER.map((stage, i) => {
+        const filled = i <= currentIdx;
+        const color = STAGE_COLORS[stage]?.dot ?? "bg-slate-300";
+        return (
+          <div key={stage} className="flex items-center flex-1 last:flex-none">
+            <div
+              title={STAGE_LABELS[stage]}
+              className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ${filled ? color : "bg-slate-200"}`}
+            />
+            {i < STAGE_ORDER.length - 1 && (
+              <div className={`flex-1 h-[2px] mx-0.5 ${i < currentIdx ? color : "bg-slate-200"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Discontinue panel ─────────────────────────────────────────────────────────
+
+function DiscontinuePanel({ prospectId, onDone, onCancel }: {
+  prospectId: number; onDone: () => void; onCancel: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+      <p className="text-[12px] font-semibold text-red-700 mb-2">Reason for discontinuing</p>
+      <input
+        type="text"
+        value={reason}
+        onChange={e => setReason(e.target.value)}
+        placeholder="e.g. Drug test failed"
+        className="w-full px-3 py-2 rounded-lg border border-red-200 text-[13px] text-slate-800 outline-none focus:border-red-400 bg-white"
+        autoFocus
+      />
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={() => {
+            if (!reason.trim()) return;
+            startTransition(async () => {
+              await markDiscontinued(prospectId, reason);
+              onDone();
+            });
+          }}
+          disabled={!reason.trim() || isPending}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-[12px] font-semibold hover:bg-red-700 disabled:opacity-40 transition-all"
+        >
+          {isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+          Confirm Discontinue
+        </button>
+        <button onClick={onCancel} className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-700 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Hire success panel ────────────────────────────────────────────────────────
+
+function HireSuccessPanel({ name, username, tempPassword }: { name: string; username: string; tempPassword: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+      <div className="flex items-center gap-2 mb-3">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <span className="text-[13px] font-bold text-emerald-800">Driver account created for {name}</span>
+      </div>
+      <div className="space-y-1.5 text-[12px]">
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 w-24 flex-shrink-0">Username:</span>
+          <span className="font-mono font-semibold text-slate-800">{username}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 w-24 flex-shrink-0">Temp password:</span>
+          <span className="font-mono font-semibold text-slate-800 bg-white px-2 py-0.5 rounded border border-emerald-200">{tempPassword}</span>
+          <button
+            onClick={() => { navigator.clipboard.writeText(tempPassword); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            className="p-1 rounded text-emerald-600 hover:bg-emerald-100 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+      <p className="text-[11px] text-slate-400 mt-2">Give these credentials to {name} for first login. Update their FedEx ID from the driver profile.</p>
+    </div>
+  );
+}
+
+// ── Stage body ────────────────────────────────────────────────────────────────
+
+function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (updated: Partial<Prospect>) => void }) {
+  const [isPending, startTransition] = useTransition();
+  const [showDiscontinue, setShowDiscontinue] = useState(false);
+  const [proposedDateStr, setProposedDateStr] = useState("");
+  const [confirmedDateStr, setConfirmedDateStr] = useState(
+    prospect.roadTestProposedDate ? new Date(prospect.roadTestProposedDate).toISOString().split("T")[0] : ""
+  );
+  const [managerNote, setManagerNote] = useState(prospect.roadTestManagerNote ?? "");
+  const [hireResult, setHireResult] = useState<{ tempPassword: string; username: string } | null>(null);
+
+  const status = prospect.status as PipelineStatus;
+
+  if (status === "screening") {
+    return (
+      <div className="space-y-3">
+        <div>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Background Check</p>
+          <ChecklistBadge
+            label="Background Check"
+            status={prospect.backgroundCheckPassed}
+            pending={isPending}
+            onClick={() => {
+              const next = nextStatus(prospect.backgroundCheckPassed);
+              startTransition(async () => {
+                await updateProspectChecklist(prospect.id, "backgroundCheckPassed", next);
+                onUpdate({ backgroundCheckPassed: next });
+              });
+            }}
+          />
+        </div>
+        {prospect.backgroundCheckPassed === "passed" && (
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Propose Road Test Date</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="date"
+                value={proposedDateStr}
+                onChange={e => setProposedDateStr(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 bg-white"
+              />
+              <button
+                onClick={() => {
+                  if (!proposedDateStr) return;
+                  startTransition(async () => {
+                    await proposeRoadTestDate(prospect.id, new Date(proposedDateStr));
+                    onUpdate({ status: "ready_for_road_test", roadTestProposedDate: new Date(proposedDateStr) });
+                  });
+                }}
+                disabled={!proposedDateStr || isPending}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 text-white text-[12px] font-semibold hover:bg-amber-600 disabled:opacity-40 transition-all"
+              >
+                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CalendarDays className="w-3.5 h-3.5" />}
+                Propose Date
+              </button>
+            </div>
+          </div>
+        )}
+        {prospect.backgroundCheckPassed === "failed" && !showDiscontinue && (
+          <button
+            onClick={() => setShowDiscontinue(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[12px] font-semibold hover:bg-red-100 transition-colors"
+          >
+            <XCircle className="w-3.5 h-3.5" /> Discontinue
+          </button>
+        )}
+        {showDiscontinue && (
+          <DiscontinuePanel
+            prospectId={prospect.id}
+            onDone={() => onUpdate({ status: "discontinued" })}
+            onCancel={() => setShowDiscontinue(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (status === "ready_for_road_test") {
+    const proposedDate = prospect.roadTestProposedDate
+      ? new Date(prospect.roadTestProposedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+      : null;
+    return (
+      <div className="space-y-3">
+        {proposedDate && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-[11px] font-semibold text-amber-700 mb-1">Proposed Road Test Date</p>
+            <p className="text-[14px] font-bold text-slate-800">{proposedDate}</p>
+          </div>
+        )}
+        <div>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Confirm or suggest a different date</p>
+          <input
+            type="date"
+            value={confirmedDateStr}
+            onChange={e => setConfirmedDateStr(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 bg-white mb-2"
+          />
+          <textarea
+            value={managerNote}
+            onChange={e => setManagerNote(e.target.value)}
+            placeholder="Note (optional) — e.g. 8am at the station"
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 bg-white resize-none"
+          />
+          <button
+            onClick={() => {
+              if (!confirmedDateStr) return;
+              startTransition(async () => {
+                await confirmRoadTestDate(prospect.id, new Date(confirmedDateStr), managerNote);
+                onUpdate({ status: "road_test_scheduled", roadTestConfirmedDate: new Date(confirmedDateStr), roadTestManagerNote: managerNote });
+              });
+            }}
+            disabled={!confirmedDateStr || isPending}
+            className="mt-2 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-[12px] font-semibold hover:bg-blue-700 disabled:opacity-40 transition-all"
+          >
+            {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+            Confirm Date
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "road_test_scheduled") {
+    const confirmedDate = prospect.roadTestConfirmedDate
+      ? new Date(prospect.roadTestConfirmedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+      : null;
+    return (
+      <div className="space-y-3">
+        {confirmedDate && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <p className="text-[11px] font-semibold text-blue-700 mb-1">Confirmed Road Test Date</p>
+            <p className="text-[14px] font-bold text-slate-800">{confirmedDate}</p>
+            {prospect.roadTestManagerNote && (
+              <p className="text-[12px] text-slate-500 mt-1">{prospect.roadTestManagerNote}</p>
+            )}
+          </div>
+        )}
+        <button
+          onClick={() => {
+            startTransition(async () => {
+              await markRoadTestPassed(prospect.id);
+              onUpdate({ status: "ride_alongs", roadTestPassed: "passed" });
+            });
+          }}
+          disabled={isPending}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 disabled:opacity-40 transition-all"
+        >
+          {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+          Mark Road Test Passed →
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "ride_alongs") {
+    const bothPassed = prospect.drugTestPassed === "passed" && prospect.medicalCardPassed === "passed";
+    const eitherFailed = prospect.drugTestPassed === "failed" || prospect.medicalCardPassed === "failed";
+    return (
+      <div className="space-y-3">
+        <div>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Clearances</p>
+          <div className="flex flex-wrap gap-1.5">
+            <ChecklistBadge
+              label="Drug Test"
+              status={prospect.drugTestPassed}
+              pending={isPending}
+              onClick={() => {
+                const next = nextStatus(prospect.drugTestPassed);
+                startTransition(async () => {
+                  await updateProspectChecklist(prospect.id, "drugTestPassed", next);
+                  onUpdate({ drugTestPassed: next });
+                });
+              }}
+            />
+            <ChecklistBadge
+              label="Medical Card"
+              status={prospect.medicalCardPassed}
+              pending={isPending}
+              onClick={() => {
+                const next = nextStatus(prospect.medicalCardPassed);
+                startTransition(async () => {
+                  await updateProspectChecklist(prospect.id, "medicalCardPassed", next);
+                  onUpdate({ medicalCardPassed: next });
+                });
+              }}
+            />
+          </div>
+        </div>
+        {bothPassed && !hireResult && (
+          <button
+            onClick={() => {
+              startTransition(async () => {
+                const result = await hireProspect(prospect.id);
+                setHireResult(result);
+                onUpdate({ status: "hired" });
+              });
+            }}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-[13px] font-bold hover:bg-emerald-700 disabled:opacity-40 transition-all shadow-sm"
+          >
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            Hire {prospect.name.split(" ")[0]} →
+          </button>
+        )}
+        {hireResult && (
+          <HireSuccessPanel name={prospect.name} username={hireResult.username} tempPassword={hireResult.tempPassword} />
+        )}
+        {eitherFailed && !showDiscontinue && !hireResult && (
+          <button
+            onClick={() => setShowDiscontinue(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[12px] font-semibold hover:bg-red-100 transition-colors"
+          >
+            <XCircle className="w-3.5 h-3.5" /> Discontinue
+          </button>
+        )}
+        {showDiscontinue && (
+          <DiscontinuePanel
+            prospectId={prospect.id}
+            onDone={() => onUpdate({ status: "discontinued" })}
+            onCancel={() => setShowDiscontinue(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (status === "hired") {
+    return (
+      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <span className="text-[13px] font-bold text-emerald-800">Hired ✓</span>
+        </div>
+        <p className="text-[11px] text-slate-400 mt-1">Driver account created. Update FedEx ID from the driver profile.</p>
+      </div>
+    );
+  }
+
+  if (status === "discontinued") {
+    return (
+      <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+        <div className="flex items-center gap-2 mb-1">
+          <XCircle className="w-4 h-4 text-red-500" />
+          <span className="text-[12px] font-bold text-red-700">Discontinued</span>
+        </div>
+        {prospect.discontinuedReason && (
+          <p className="text-[12px] text-slate-500 italic">{prospect.discontinuedReason}</p>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ── Stage-aware card ──────────────────────────────────────────────────────────
+
+function StageCard({ prospect, onRemove }: { prospect: Prospect; onRemove: () => void }) {
+  const [data, setData] = useState(prospect);
+  const [expanded, setExpanded] = useState(true);
+  const [showNotes, setShowNotes] = useState(false);
+  const [notes, setNotes] = useState(prospect.notes ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function handleUpdate(updated: Partial<Prospect>) {
+    setData(prev => ({ ...prev, ...updated }));
+  }
+
+  function handleDelete() {
+    if (!confirm(`Remove ${data.name} from recruiting?`)) return;
+    setDeleting(true);
+    startTransition(async () => { await deleteProspect(data.id); onRemove(); });
+  }
+
+  const isDiscontinued = data.status === "discontinued";
+  const isHired = data.status === "hired";
+
+  return (
+    <div className={`bg-white rounded-2xl border transition-all ${
+      isHired       ? "border-emerald-300 shadow-[0_0_0_2px_rgba(52,211,153,0.12)]" :
+      isDiscontinued ? "border-slate-200 opacity-70" :
+      "border-slate-200/80"
+    }`}>
+      <div className="px-5 pt-4 pb-4">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-[15px] font-extrabold text-slate-900 leading-tight">{data.name}</h3>
+              <StagePill status={data.status} />
+            </div>
+            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+              {prospect.phone && <span className="flex items-center gap-1 text-[11px] text-slate-400"><Phone className="w-3 h-3" />{prospect.phone}</span>}
+              {prospect.email && <span className="flex items-center gap-1 text-[11px] text-slate-400"><Mail className="w-3 h-3" />{prospect.email}</span>}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button onClick={() => setShowNotes(v => !v)} className="p-1.5 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-50 transition-colors" title="Notes">
+              <StickyNote className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={handleDelete} disabled={deleting} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            </button>
+            <button onClick={() => setExpanded(v => !v)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 transition-colors">
+              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <StageRail currentStatus={data.status} />
+
+        {expanded && <StageBody prospect={data} onUpdate={handleUpdate} />}
+
+        {showNotes && (
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Add notes about this candidate…"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition resize-none"
+            />
+            <button
+              onClick={() => {
+                setSavingNotes(true);
+                startTransition(async () => { await updateProspectNotes(data.id, notes); setSavingNotes(false); });
+              }}
+              disabled={savingNotes || isPending}
+              className="mt-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 disabled:opacity-40 transition-all"
+            >
+              {savingNotes ? "Saving…" : "Save Notes"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Legacy card (old prospects, status = 'prospect') ──────────────────────────
+
+function LegacyCard({ prospect, onRemove }: { prospect: Prospect; onRemove: () => void }) {
   const [data, setData] = useState(prospect);
   const [expanded, setExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -67,7 +564,7 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
   const [savingNotes, setSavingNotes] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const passed = getProgress(data);
+  const passed = getLegacyProgress(data);
   const pct = Math.round((passed / TOTAL_STEPS) * 100);
   const allPassed = passed === TOTAL_STEPS;
 
@@ -76,42 +573,23 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
     const next = nextStatus(current);
     setPendingField(field);
     setData(prev => ({ ...prev, [field]: next }));
-    startTransition(async () => {
-      await updateProspectChecklist(data.id, field, next);
-      setPendingField(null);
-    });
-  }
-
-  function handleSaveNotes() {
-    setSavingNotes(true);
-    startTransition(async () => {
-      await updateProspectNotes(data.id, notes);
-      setSavingNotes(false);
-    });
+    startTransition(async () => { await updateProspectChecklist(data.id, field, next); setPendingField(null); });
   }
 
   function handleDelete() {
     if (!confirm(`Remove ${data.name} from recruiting?`)) return;
     setDeleting(true);
-    startTransition(async () => {
-      await deleteProspect(data.id);
-      onRemove();
-    });
+    startTransition(async () => { await deleteProspect(data.id); onRemove(); });
   }
 
   return (
     <div className={`bg-white rounded-2xl border transition-all ${allPassed ? "border-emerald-300 shadow-[0_0_0_2px_rgba(52,211,153,0.15)]" : "border-slate-200/80"}`}>
       <div className="px-5 pt-4 pb-3">
-        {/* Name row */}
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-[15px] font-extrabold text-slate-900 leading-tight">{data.name}</h3>
-              {allPassed && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                  Ready to Hire ✓
-                </span>
-              )}
+              {allPassed && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Ready to Hire ✓</span>}
             </div>
             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
               {data.phone && <span className="flex items-center gap-1 text-[11px] text-slate-400"><Phone className="w-3 h-3" />{data.phone}</span>}
@@ -127,22 +605,15 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
             </button>
           </div>
         </div>
-
-        {/* Progress bar */}
         <div className="mb-3">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-semibold text-slate-500">{passed} of {TOTAL_STEPS} steps complete</span>
             <span className={`text-[11px] font-bold ${allPassed ? "text-emerald-600" : "text-slate-400"}`}>{pct}%</span>
           </div>
           <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${allPassed ? "bg-emerald-500" : "bg-slate-800"}`}
-              style={{ width: `${pct}%` }}
-            />
+            <div className={`h-full rounded-full transition-all duration-500 ${allPassed ? "bg-emerald-500" : "bg-slate-800"}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
-
-        {/* Checklist badges */}
         <div className="flex flex-wrap gap-1.5">
           {CHECKLIST_FIELDS.map((f) => (
             <ChecklistBadge
@@ -155,8 +626,6 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
           ))}
         </div>
       </div>
-
-      {/* Notes panel */}
       {expanded && (
         <div className="px-5 pb-4 pt-3 border-t border-slate-100">
           <div className="flex items-center gap-1.5 mb-2">
@@ -171,7 +640,10 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
             className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition resize-none"
           />
           <button
-            onClick={handleSaveNotes}
+            onClick={() => {
+              setSavingNotes(true);
+              startTransition(async () => { await updateProspectNotes(data.id, notes); setSavingNotes(false); });
+            }}
             disabled={savingNotes || isPending}
             className="mt-2 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-700 disabled:opacity-40 transition-all"
           >
@@ -183,9 +655,18 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
   );
 }
 
+function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: () => void }) {
+  if (prospect.status === "prospect") {
+    return <LegacyCard prospect={prospect} onRemove={onRemove} />;
+  }
+  return <StageCard prospect={prospect} onRemove={onRemove} />;
+}
+
+// ── Input style ───────────────────────────────────────────────────────────────
+
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
 
-type FilterTab = "all" | "in_progress" | "ready";
+type FilterTab = "all" | "in_progress" | "needs_scheduling" | "ready";
 
 export default function RecruitingClient({ prospects: initial }: { prospects: Prospect[] }) {
   const [prospects, setProspects] = useState<Prospect[]>(initial);
@@ -199,22 +680,35 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
 
   const filtered = prospects
     .filter(p => {
-      const prog = getProgress(p);
-      if (filter === "in_progress") return prog > 0 && prog < TOTAL_STEPS;
-      if (filter === "ready") return prog === TOTAL_STEPS;
+      if (filter === "in_progress") return (
+        !["prospect", "hired", "discontinued"].includes(p.status) ||
+        (p.status === "prospect" && getLegacyProgress(p) > 0 && getLegacyProgress(p) < TOTAL_STEPS)
+      );
+      if (filter === "needs_scheduling") return p.status === "ready_for_road_test";
+      if (filter === "ready") return p.status === "hired" || (p.status === "prospect" && getLegacyProgress(p) === TOTAL_STEPS);
       return true;
     })
-    .sort((a, b) => getProgress(b) - getProgress(a));
+    .sort((a, b) => {
+      if (a.status === "discontinued" && b.status !== "discontinued") return 1;
+      if (b.status === "discontinued" && a.status !== "discontinued") return -1;
+      if (a.status === "hired" && b.status !== "hired") return -1;
+      if (b.status === "hired" && a.status !== "hired") return 1;
+      return 0;
+    });
 
   function handleAdd() {
     if (!name.trim()) return;
     startTransition(async () => {
-      const created = await createProspect({ name, phone, email, notes });
+      const created = await createProspect({ name, phone, email, notes, status: "screening" });
       setName(""); setPhone(""); setEmail(""); setNotes("");
       setShowAdd(false);
       setProspects(prev => [...prev, created]);
     });
   }
+
+  const inProgress = prospects.filter(p => !["prospect", "hired", "discontinued"].includes(p.status)).length;
+  const needsScheduling = prospects.filter(p => p.status === "ready_for_road_test").length;
+  const hiredCount = prospects.filter(p => p.status === "hired").length;
 
   return (
     <main className="flex-1 px-4 py-6 max-w-[760px] w-full mx-auto">
@@ -223,34 +717,33 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
         <div>
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">MyGroundOps · Admin</p>
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Recruiting</h1>
-          <p className="text-[13px] text-slate-400 mt-1.5">
-            Track candidates through onboarding. Click any step to cycle: Pending → Passed → Failed.
-          </p>
+          <p className="text-[13px] text-slate-400 mt-1.5">Track candidates through the hiring pipeline.</p>
         </div>
         <button
           onClick={() => setShowAdd(v => !v)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
         >
           <UserPlus className="w-3.5 h-3.5" />
-          Add Prospect
+          Add Candidate
         </button>
       </div>
 
-      {/* Summary bar — clickable filter tabs */}
+      {/* Summary stats */}
       {prospects.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           {([
-            { key: "all",         label: "Total",         value: prospects.length,                                                                    color: "text-slate-800",   ring: "ring-slate-300" },
-            { key: "in_progress", label: "In Progress",   value: prospects.filter(p => getProgress(p) > 0 && getProgress(p) < TOTAL_STEPS).length,   color: "text-amber-600",   ring: "ring-amber-300" },
-            { key: "ready",       label: "Ready to Hire", value: prospects.filter(p => getProgress(p) === TOTAL_STEPS).length,                        color: "text-emerald-600", ring: "ring-emerald-300" },
+            { key: "all",              label: "Total",           value: prospects.length, color: "text-slate-800",   ring: "ring-slate-300" },
+            { key: "in_progress",      label: "In Progress",     value: inProgress,        color: "text-amber-600",   ring: "ring-amber-300" },
+            { key: "needs_scheduling", label: "Needs Scheduling", value: needsScheduling,   color: "text-blue-600",    ring: "ring-blue-300" },
+            { key: "ready",            label: "Hired",           value: hiredCount,        color: "text-emerald-600", ring: "ring-emerald-300" },
           ] as { key: FilterTab; label: string; value: number; color: string; ring: string }[]).map(({ key, label, value, color, ring }) => (
             <button
               key={key}
               onClick={() => setFilter(f => f === key ? "all" : key)}
-              className={`bg-white rounded-xl border px-4 py-3 text-center transition-all ${filter === key ? `border-transparent ring-2 ${ring}` : "border-slate-200/80 hover:border-slate-300"}`}
+              className={`bg-white rounded-xl border px-3 py-3 text-center transition-all ${filter === key ? `border-transparent ring-2 ${ring}` : "border-slate-200/80 hover:border-slate-300"}`}
             >
-              <p className={`text-[22px] font-extrabold ${color}`}>{value}</p>
-              <p className="text-[11px] text-slate-400 font-semibold">{label}</p>
+              <p className={`text-[20px] font-extrabold ${color}`}>{value}</p>
+              <p className="text-[10px] text-slate-400 font-semibold leading-tight">{label}</p>
             </button>
           ))}
         </div>
@@ -259,7 +752,7 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
       {/* Add form */}
       {showAdd && (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 mb-5 shadow-sm">
-          <h2 className="text-[14px] font-bold text-slate-800 mb-4">New Prospect</h2>
+          <h2 className="text-[14px] font-bold text-slate-800 mb-4">New Candidate</h2>
           <div className="grid grid-cols-1 gap-3">
             <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full name *" className={INPUT} />
             <div className="grid grid-cols-2 gap-3">
@@ -277,7 +770,7 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-700 disabled:opacity-40 transition-all"
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Add Prospect
+                Add Candidate
               </button>
             </div>
           </div>
@@ -287,12 +780,12 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
       {/* List */}
       {prospects.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
-          <p className="text-[15px] font-semibold text-slate-500">No prospects yet</p>
-          <p className="text-[13px] text-slate-400 mt-1">Click "Add Prospect" to start tracking candidates.</p>
+          <p className="text-[15px] font-semibold text-slate-500">No candidates yet</p>
+          <p className="text-[13px] text-slate-400 mt-1">Click "Add Candidate" to start tracking.</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
-          <p className="text-[14px] font-semibold text-slate-400">No prospects in this category</p>
+          <p className="text-[14px] font-semibold text-slate-400">No candidates in this category</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
