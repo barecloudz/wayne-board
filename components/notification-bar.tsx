@@ -29,7 +29,7 @@ export default function NotificationBar() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  useInterval(fetchNotifications, 30_000);
+  useInterval(fetchNotifications, admin ? 30_000 : null);
 
   if (!admin || !visible || notifications.length === 0) return null;
 
@@ -47,10 +47,9 @@ export default function NotificationBar() {
     e.stopPropagation();
     if (dismissing) return;
     setDismissing(true);
-    await dismissNotification(latest.id);
-    const updated = await getUnseenNotifications();
-    setNotifications(updated);
-    if (updated.length === 0) setVisible(false);
+    await Promise.all(notifications.map(n => dismissNotification(n.id)));
+    setNotifications([]);
+    setVisible(false);
     setDismissing(false);
   }
 

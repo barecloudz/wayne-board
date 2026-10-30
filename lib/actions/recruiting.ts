@@ -224,7 +224,6 @@ export async function hireProspect(
     role: "driver",
     isAdmin: false,
     hireDate: new Date().toISOString().split("T")[0],
-    ...(prospect.phone ? { phone: prospect.phone } : {}),
     ...(prospect.email ? { email: prospect.email } : {}),
   });
 
