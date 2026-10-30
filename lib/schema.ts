@@ -1,6 +1,6 @@
 ﻿import {
   pgTable, serial, text, real, integer,
-  timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex, index,
+  timestamp, boolean, date, doublePrecision, bigint, json, uniqueIndex, index, primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -670,9 +670,33 @@ export const prospects = pgTable("prospects", {
   roadTestPassed:        text("road_test_passed").notNull().default("pending"),
   orientationDone:       text("orientation_done").notNull().default("pending"),
   fedexIdAssigned:       text("fedex_id_assigned").notNull().default("pending"),
+  // Workflow pipeline fields
+  medicalCardPassed:     text("medical_card_passed").notNull().default("pending"),
+  roadTestProposedDate:  timestamp("road_test_proposed_date"),
+  roadTestConfirmedDate: timestamp("road_test_confirmed_date"),
+  roadTestManagerNote:   text("road_test_manager_note"),
+  discontinuedReason:    text("discontinued_reason"),
   createdAt:             timestamp("created_at").defaultNow(),
   updatedAt:             timestamp("updated_at").defaultNow(),
 });
+
+// ── Prospect Notifications ────────────────────────────────────────────────────
+export const prospectNotifications = pgTable("prospect_notifications", {
+  id:             serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  prospectId:     integer("prospect_id").notNull().references(() => prospects.id, { onDelete: "cascade" }),
+  prospectName:   text("prospect_name").notNull(),
+  type:           text("type").notNull(), // 'new_prospect' | 'ready_for_road_test'
+  createdAt:      timestamp("created_at").defaultNow(),
+});
+
+export const notificationDismissals = pgTable("notification_dismissals", {
+  notificationId: integer("notification_id").notNull().references(() => prospectNotifications.id, { onDelete: "cascade" }),
+  driverId:       text("driver_id").notNull(),
+  dismissedAt:    timestamp("dismissed_at").defaultNow(),
+}, (t) => [
+  primaryKey({ columns: [t.notificationId, t.driverId] }),
+]);
 
 // ── Badge Types ──────────────────────────────────────────────────────────────
 export const badgeTypes = pgTable("badgeTypes", {
