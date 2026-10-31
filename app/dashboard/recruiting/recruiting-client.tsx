@@ -218,7 +218,9 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
   const [showDiscontinue, setShowDiscontinue] = useState(false);
   const [proposedDateStr, setProposedDateStr] = useState("");
   const [confirmedDateStr, setConfirmedDateStr] = useState(
-    prospect.roadTestProposedDate ? new Date(prospect.roadTestProposedDate).toISOString().split("T")[0] : ""
+    prospect.roadTestProposedDate
+      ? new Date(prospect.roadTestProposedDate).toISOString().slice(0, 16)
+      : ""
   );
   const [managerNote, setManagerNote] = useState(prospect.roadTestManagerNote ?? "");
   const [hireResult, setHireResult] = useState<{ tempPassword: string; username: string } | null>(null);
@@ -248,7 +250,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Propose Road Test Date</p>
             <div className="flex items-center gap-2 flex-wrap">
               <input
-                type="date"
+                type="datetime-local"
                 value={proposedDateStr}
                 onChange={e => setProposedDateStr(e.target.value)}
                 className="px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 bg-white"
@@ -304,7 +306,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
         <div>
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Confirm or suggest a different date</p>
           <input
-            type="date"
+            type="datetime-local"
             value={confirmedDateStr}
             onChange={e => setConfirmedDateStr(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 bg-white mb-2"
