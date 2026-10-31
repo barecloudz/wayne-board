@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { UserPlus, X } from "lucide-react";
+import { UserPlus, X, CalendarDays } from "lucide-react";
 import { getUnseenNotifications, dismissNotification, isAdminUser } from "@/lib/actions/recruiting";
 import type { ProspectNotification } from "@/lib/actions/recruiting";
 import { useInterval } from "@/hooks/use-interval";
@@ -35,13 +35,14 @@ export default function NotificationBar() {
 
   const latest = notifications[notifications.length - 1];
   const count = notifications.length;
+  const extra = count - 1;
 
-  const message =
-    count > 1
-      ? `${count} new candidates added`
-      : latest.type === "ready_for_road_test"
-      ? `Road test ready — ${latest.prospectName} needs scheduling`
-      : `New candidate added — ${latest.prospectName}`;
+  const isRoadTest = latest.type === "ready_for_road_test";
+  const Icon = isRoadTest ? CalendarDays : UserPlus;
+
+  const message = isRoadTest
+    ? `Road test ready — ${latest.prospectName}`
+    : `New candidate — ${latest.prospectName}`;
 
   async function handleDismiss(e: React.MouseEvent) {
     e.stopPropagation();
@@ -53,32 +54,29 @@ export default function NotificationBar() {
     setDismissing(false);
   }
 
-  function handleClick() {
-    router.push("/dashboard/recruiting");
-  }
-
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] animate-notification-slide-down">
+    <div className="fixed top-3 left-0 right-0 z-[100] flex justify-center px-4 pointer-events-none animate-notification-slide-down">
       <div
-        onClick={handleClick}
-        className="relative bg-slate-900/95 backdrop-blur-md rounded-b-2xl shadow-2xl cursor-pointer"
+        onClick={() => router.push("/dashboard/recruiting")}
+        className="pointer-events-auto flex items-center gap-3 bg-slate-900 rounded-2xl shadow-2xl shadow-black/30 px-4 py-3 cursor-pointer max-w-sm w-full border border-white/5"
       >
-        {/* Amber top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-amber-400/70" />
-        <div className="flex items-center gap-3 px-5 py-3">
-          <UserPlus className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          <span className="flex-1 text-white text-[13px] font-semibold leading-tight">
-            {message}
-          </span>
-          <button
-            onClick={handleDismiss}
-            disabled={dismissing}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0 disabled:opacity-40"
-            aria-label="Dismiss notification"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-4 h-4 text-white" />
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-[13px] font-semibold leading-tight truncate">{message}</p>
+          {extra > 0 && (
+            <p className="text-slate-400 text-[11px] mt-0.5">+{extra} more unseen</p>
+          )}
+        </div>
+        <button
+          onClick={handleDismiss}
+          disabled={dismissing}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0 disabled:opacity-40"
+          aria-label="Dismiss"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

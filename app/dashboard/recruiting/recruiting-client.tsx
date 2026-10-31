@@ -293,7 +293,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
 
   if (status === "ready_for_road_test") {
     const proposedDate = prospect.roadTestProposedDate
-      ? new Date(prospect.roadTestProposedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+      ? new Date(prospect.roadTestProposedDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
       : null;
     return (
       <div className="space-y-4">
@@ -341,7 +341,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
 
   if (status === "road_test_scheduled") {
     const confirmedDate = prospect.roadTestConfirmedDate
-      ? new Date(prospect.roadTestConfirmedDate).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+      ? new Date(prospect.roadTestConfirmedDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
       : null;
     return (
       <div className="space-y-4">
