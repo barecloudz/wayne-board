@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import {
   UserPlus, Trash2, Loader2, ChevronDown, ChevronUp,
   Phone, Mail, StickyNote, CalendarDays, CheckCircle2, XCircle, Copy, Check,
+  HelpCircle, X as XIcon,
 } from "lucide-react";
 import {
   createProspect,
@@ -662,6 +663,129 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
   return <StageCard prospect={prospect} onRemove={onRemove} />;
 }
 
+// ── Help guide ────────────────────────────────────────────────────────────────
+
+const GUIDE_STEPS = [
+  {
+    stage: "screening",
+    label: "Screening",
+    color: "border-l-slate-400 bg-slate-50",
+    pill: "bg-slate-100 text-slate-600 border-slate-200",
+    dot: "bg-slate-400",
+    what: "New candidate is added to the pipeline.",
+    action: "Run the background check. Once it clears, pick a proposed road test date. That sends a notification to your manager.",
+  },
+  {
+    stage: "ready_for_road_test",
+    label: "Road Test Ready",
+    color: "border-l-amber-400 bg-amber-50",
+    pill: "bg-amber-50 text-amber-700 border-amber-200",
+    dot: "bg-amber-400",
+    what: "Background check passed. Road test date has been proposed.",
+    action: "Manager confirms (or adjusts) the date and adds a note — e.g. \"8am at the station.\" That locks it in.",
+  },
+  {
+    stage: "road_test_scheduled",
+    label: "Road Test Scheduled",
+    color: "border-l-blue-400 bg-blue-50",
+    pill: "bg-blue-50 text-blue-700 border-blue-200",
+    dot: "bg-blue-400",
+    what: "Date is confirmed. Candidate is coming in.",
+    action: "After the road test, tap Mark Road Test Passed. They move to ride-alongs automatically.",
+  },
+  {
+    stage: "ride_alongs",
+    label: "Ride-Alongs",
+    color: "border-l-violet-400 bg-violet-50",
+    pill: "bg-violet-50 text-violet-700 border-violet-200",
+    dot: "bg-violet-400",
+    what: "Candidate is shadowing a driver out on route.",
+    action: "Clear the drug test and medical card as results come in. Once both pass, tap Hire — the system creates their driver account and generates a temporary password.",
+  },
+  {
+    stage: "hired",
+    label: "Hired",
+    color: "border-l-emerald-400 bg-emerald-50",
+    pill: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dot: "bg-emerald-500",
+    what: "Driver account created. They can log in immediately.",
+    action: "Hand them the username and temp password shown on the card. Update their FedEx ID from the driver profile once assigned.",
+  },
+];
+
+function HelpGuide({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
+      <div
+        className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle bar (mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
+
+        <div className="px-5 pt-4 pb-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <h2 className="text-[18px] font-extrabold text-slate-900 leading-tight">How Recruiting Works</h2>
+              <p className="text-[12px] text-slate-400 mt-0.5">Everything in one place — no spreadsheets.</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-3 flex-shrink-0"
+            >
+              <XIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Value statement */}
+          <div className="mt-3 mb-5 p-3 bg-slate-900 rounded-xl">
+            <p className="text-[12px] text-slate-300 leading-relaxed">
+              Every candidate moves through <span className="text-white font-semibold">5 stages</span> from first contact to hired driver. Open this screen on your phone and you see exactly where everyone stands — no color-coded spreadsheet, no digging through texts.
+            </p>
+          </div>
+
+          {/* Stage steps */}
+          <div className="flex flex-col gap-3">
+            {GUIDE_STEPS.map((step, i) => (
+              <div key={step.stage} className={`border-l-4 rounded-r-xl px-4 py-3 ${step.color}`}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[11px] font-bold text-slate-400">STEP {i + 1}</span>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${step.pill}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${step.dot}`} />
+                    {step.label}
+                  </span>
+                </div>
+                <p className="text-[12px] font-semibold text-slate-700 mb-0.5">{step.what}</p>
+                <p className="text-[12px] text-slate-500 leading-relaxed">{step.action}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Discontinue note */}
+          <div className="mt-4 p-3 border border-dashed border-slate-200 rounded-xl">
+            <p className="text-[11px] font-semibold text-slate-500 mb-1">Discontinuing a candidate</p>
+            <p className="text-[12px] text-slate-400 leading-relaxed">
+              At Screening or Ride-Alongs, a Discontinue button appears if something fails. Enter the reason and the candidate is moved out of the active pipeline but stays in the system for your records.
+            </p>
+          </div>
+
+          {/* Notifications note */}
+          <div className="mt-3 p-3 border border-dashed border-amber-200 bg-amber-50 rounded-xl">
+            <p className="text-[11px] font-semibold text-amber-700 mb-1">Notifications</p>
+            <p className="text-[12px] text-amber-600 leading-relaxed">
+              When a new candidate is added or a road test date is proposed, a banner slides down at the top of your screen — no matter what page you're on. Each admin sees and dismisses their own.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Input style ───────────────────────────────────────────────────────────────
 
 const INPUT = "w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
@@ -672,6 +796,7 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
   const [prospects, setProspects] = useState<Prospect[]>(initial);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [showAdd, setShowAdd] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -712,6 +837,8 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
 
   return (
     <main className="flex-1 px-4 py-6 max-w-[760px] w-full mx-auto">
+      {showHelp && <HelpGuide onClose={() => setShowHelp(false)} />}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -719,13 +846,22 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
           <h1 className="text-[28px] font-extrabold text-slate-900 tracking-tight leading-none">Recruiting</h1>
           <p className="text-[13px] text-slate-400 mt-1.5">Track candidates through the hiring pipeline.</p>
         </div>
-        <button
-          onClick={() => setShowAdd(v => !v)}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          Add Candidate
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            title="How this works"
+          >
+            <HelpCircle className="w-4.5 h-4.5" />
+          </button>
+          <button
+            onClick={() => setShowAdd(v => !v)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            Add Candidate
+          </button>
+        </div>
       </div>
 
       {/* Summary stats */}
