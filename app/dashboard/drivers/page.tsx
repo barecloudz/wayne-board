@@ -441,7 +441,7 @@ export default function DriversPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Total",    value: drivers.length, color: "text-slate-900" },
+            { label: "Total",    value: drivers.filter((d) => d.terminationType == null).length, color: "text-slate-900" },
             { label: "Active",   value: active,         color: "text-emerald-600" },
             { label: "Inactive", value: inactive,       color: "text-red-500" },
           ].map((s) => (
