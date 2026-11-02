@@ -68,7 +68,7 @@ export default function DriversPage() {
   const [newRole, setNewRole] = useState<"driver" | "bc">("driver");
   const [myRole, setMyRole] = useState<string>("bc");
   const [roleMenuOpen, setRoleMenuOpen] = useState<number | null>(null);
-  const [created, setCreated] = useState<{ driverId: string; password: string } | null>(null);
+  const [created, setCreated] = useState<{ driverId: string; username: string | null; password: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export default function DriversPage() {
     if (!newName.trim() || !createUsername.trim() || !newTempPassword.trim()) return;
     startTransition(async () => {
       const result = await createDriver(newName.trim(), newRole, newDriverId.trim() || undefined, newTempPassword.trim(), newLocationId, createUsername.trim());
-      setCreated({ driverId: result.driverId, password: result.tempPassword });
+      setCreated({ driverId: result.driverId, username: result.username, password: result.tempPassword });
       setShowCreate(false);
       await refresh();
     });
@@ -217,7 +217,7 @@ export default function DriversPage() {
     if (!resetTarget || !resetPassword.trim()) return;
     startTransition(async () => {
       const result = await resetDriverPassword(resetTarget.id, resetPassword.trim());
-      setCreated({ driverId: resetTarget.driverId, password: result.tempPassword });
+      setCreated({ driverId: resetTarget.driverId, username: null, password: result.tempPassword });
       setResetTarget(null);
       setShowPassword(false);
     });
@@ -469,9 +469,9 @@ export default function DriversPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <CredentialRow
-                label="Driver ID"
-                value={created.driverId}
-                onCopy={() => copyToClipboard(created.driverId, "id")}
+                label="Username (for login)"
+                value={created.username ?? created.driverId}
+                onCopy={() => copyToClipboard(created.username ?? created.driverId, "id")}
                 copied={copied === "id"}
               />
               <div className="bg-white rounded-lg border border-emerald-200 px-4 py-3 flex items-center justify-between gap-3">

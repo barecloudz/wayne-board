@@ -95,7 +95,7 @@ export async function createDriver(
     await db.insert(driverLocations).values({ organizationId: orgId, driverId, locationId });
   }
 
-  return { driverId, tempPassword };
+  return { driverId, tempPassword, username: username?.trim() || null };
 }
 
 export async function setDriverActive(id: number, loginDisabled: boolean) {
