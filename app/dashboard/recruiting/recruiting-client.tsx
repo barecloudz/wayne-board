@@ -543,6 +543,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
             { key: "eVerify", label: "e-Verify" },
             { key: "adpDone", label: "ADP" },
             { key: "gasCard", label: "Gas Card" },
+            { key: "driverContacted", label: "Driver Contacted (day before)" },
           ]}
           prospect={prospect}
           isPending={isPending}

@@ -687,6 +687,7 @@ export const prospects = pgTable("prospects", {
   eVerify:               text("e_verify").notNull().default("pending"),
   adpDone:               text("adp_done").notNull().default("pending"),
   gasCard:               text("gas_card").notNull().default("pending"),
+  driverContacted:       text("driver_contacted").notNull().default("pending"),
   // Workflow pipeline fields
   roadTestProposedDate:  timestamp("road_test_proposed_date"),
   roadTestConfirmedDate: timestamp("road_test_confirmed_date"),

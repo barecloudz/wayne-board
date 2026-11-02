@@ -51,6 +51,7 @@ export type Prospect = {
   eVerify: string;
   adpDone: string;
   gasCard: string;
+  driverContacted: string;
   // Legacy fields
   interviewDone: string;
   orientationDone: string;
@@ -119,7 +120,7 @@ const VALID_FIELDS = [
   // Road test
   "roadTestPassed", "roadCertUploaded",
   // Onboarding
-  "offerLetterSigned", "faEligible", "mbaEligible", "eVerify", "adpDone", "gasCard",
+  "offerLetterSigned", "faEligible", "mbaEligible", "eVerify", "adpDone", "gasCard", "driverContacted",
   // Legacy
   "interviewDone", "orientationDone", "fedexIdAssigned",
 ];
