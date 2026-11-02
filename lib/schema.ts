@@ -238,7 +238,7 @@ export const driverSchedules = pgTable("driver_schedules", {
   notes:       text("notes"),
   updatedAt:   timestamp("updated_at").defaultNow(),
 }, (t) => [
-  index("driver_schedules_driver_idx").on(t.driverId),
+  uniqueIndex("driver_schedules_driver_id_unique").on(t.driverId),
 ]);
 
 // ── Time Off Entries ──────────────────────────────────────────────────────────
