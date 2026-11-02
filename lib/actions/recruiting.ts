@@ -29,14 +29,33 @@ export type Prospect = {
   email: string | null;
   status: string;
   notes: string | null;
+  // Application stage
   applicationDone: string;
-  interviewDone: string;
-  drugTestPassed: string;
   backgroundCheckPassed: string;
+  // Clearances stage
+  drugTestPassed: string;
+  physicalPassed: string;
+  mecCardCopied: string;
+  medicalCardPassed: string;
+  // Training stage
+  gcSetUp: string;
+  gcTrainingOnline: string;
+  gcCertificate: string;
+  // Road test stage
   roadTestPassed: string;
+  roadCertUploaded: string;
+  // Onboarding stage
+  offerLetterSigned: string;
+  faEligible: string;
+  mbaEligible: string;
+  eVerify: string;
+  adpDone: string;
+  gasCard: string;
+  // Legacy fields
+  interviewDone: string;
   orientationDone: string;
   fedexIdAssigned: string;
-  medicalCardPassed: string;
+  // Pipeline dates
   roadTestProposedDate: Date | null;
   roadTestConfirmedDate: Date | null;
   roadTestManagerNote: string | null;
@@ -91,9 +110,18 @@ export async function createProspect(data: {
 }
 
 const VALID_FIELDS = [
-  "applicationDone", "interviewDone", "drugTestPassed",
-  "backgroundCheckPassed", "roadTestPassed", "orientationDone",
-  "fedexIdAssigned", "medicalCardPassed",
+  // Application
+  "applicationDone", "backgroundCheckPassed",
+  // Clearances
+  "drugTestPassed", "physicalPassed", "mecCardCopied", "medicalCardPassed",
+  // Training
+  "gcSetUp", "gcTrainingOnline", "gcCertificate",
+  // Road test
+  "roadTestPassed", "roadCertUploaded",
+  // Onboarding
+  "offerLetterSigned", "faEligible", "mbaEligible", "eVerify", "adpDone", "gasCard",
+  // Legacy
+  "interviewDone", "orientationDone", "fedexIdAssigned",
 ];
 
 export async function updateProspectChecklist(
@@ -173,7 +201,18 @@ export async function markRoadTestPassed(prospectId: number): Promise<void> {
   const orgId = await requireOrg();
   await db
     .update(prospects)
-    .set({ roadTestPassed: "passed", status: "ride_alongs", updatedAt: new Date() })
+    .set({ roadTestPassed: "passed", status: "onboarding", updatedAt: new Date() })
+    .where(and(eq(prospects.id, prospectId), eq(prospects.organizationId, orgId)));
+  revalidatePath("/dashboard/recruiting");
+}
+
+export async function advanceProspectStatus(prospectId: number, newStatus: string): Promise<void> {
+  const VALID_STATUSES = ["application", "clearances", "training", "ready_for_road_test", "onboarding"];
+  if (!VALID_STATUSES.includes(newStatus)) throw new Error("Invalid status");
+  const orgId = await requireOrg();
+  await db
+    .update(prospects)
+    .set({ status: newStatus, updatedAt: new Date() })
     .where(and(eq(prospects.id, prospectId), eq(prospects.organizationId, orgId)));
   revalidatePath("/dashboard/recruiting");
 }
@@ -200,8 +239,14 @@ export async function hireProspect(
 
   if (!prospect) throw new Error("Prospect not found");
   if (prospect.status === "hired") throw new Error("Already hired");
-  if (prospect.drugTestPassed !== "passed") throw new Error("Drug test not passed");
-  if (prospect.medicalCardPassed !== "passed") throw new Error("Medical card not passed");
+  // For new pipeline: require offer letter signed. Legacy: require drug+medical.
+  const isNewPipeline = prospect.status === "onboarding";
+  if (isNewPipeline) {
+    if (prospect.offerLetterSigned !== "passed") throw new Error("Offer letter not signed");
+  } else {
+    if (prospect.drugTestPassed !== "passed") throw new Error("Drug test not passed");
+    if (prospect.medicalCardPassed !== "passed") throw new Error("Medical card not passed");
+  }
 
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
   const tempPassword = Array.from(

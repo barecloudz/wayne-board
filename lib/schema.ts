@@ -670,8 +670,24 @@ export const prospects = pgTable("prospects", {
   roadTestPassed:        text("road_test_passed").notNull().default("pending"),
   orientationDone:       text("orientation_done").notNull().default("pending"),
   fedexIdAssigned:       text("fedex_id_assigned").notNull().default("pending"),
-  // Workflow pipeline fields
+  // Clearances stage
   medicalCardPassed:     text("medical_card_passed").notNull().default("pending"),
+  physicalPassed:        text("physical_passed").notNull().default("pending"),
+  mecCardCopied:         text("mec_card_copied").notNull().default("pending"),
+  // Training stage
+  gcSetUp:               text("gc_set_up").notNull().default("pending"),
+  gcTrainingOnline:      text("gc_training_online").notNull().default("pending"),
+  gcCertificate:         text("gc_certificate").notNull().default("pending"),
+  // Road test stage
+  roadCertUploaded:      text("road_cert_uploaded").notNull().default("pending"),
+  // Onboarding stage
+  offerLetterSigned:     text("offer_letter_signed").notNull().default("pending"),
+  faEligible:            text("fa_eligible").notNull().default("pending"),
+  mbaEligible:           text("mba_eligible").notNull().default("pending"),
+  eVerify:               text("e_verify").notNull().default("pending"),
+  adpDone:               text("adp_done").notNull().default("pending"),
+  gasCard:               text("gas_card").notNull().default("pending"),
+  // Workflow pipeline fields
   roadTestProposedDate:  timestamp("road_test_proposed_date"),
   roadTestConfirmedDate: timestamp("road_test_confirmed_date"),
   roadTestManagerNote:   text("road_test_manager_note"),

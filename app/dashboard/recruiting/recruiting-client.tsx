@@ -16,6 +16,7 @@ import {
   markRoadTestPassed,
   markDiscontinued,
   hireProspect,
+  advanceProspectStatus,
 } from "@/lib/actions/recruiting";
 import type { Prospect, ChecklistStatus } from "@/lib/actions/recruiting";
 
@@ -72,35 +73,54 @@ function ChecklistBadge({ status, label, onClick, pending }: {
 // ── Stage pipeline constants ──────────────────────────────────────────────────
 
 const STAGE_ORDER = [
-  "screening",
+  "application",
+  "clearances",
+  "training",
   "ready_for_road_test",
   "road_test_scheduled",
-  "ride_alongs",
+  "onboarding",
   "hired",
 ] as const;
+
+// Legacy statuses map to nearest equivalent for the rail
+const LEGACY_STATUS_MAP: Record<string, string> = {
+  screening:  "application",
+  ride_alongs: "onboarding",
+};
 
 type PipelineStatus = typeof STAGE_ORDER[number] | "discontinued";
 
 function getStageIndex(status: string): number {
-  return STAGE_ORDER.indexOf(status as typeof STAGE_ORDER[number]);
+  const mapped = LEGACY_STATUS_MAP[status] ?? status;
+  return STAGE_ORDER.indexOf(mapped as typeof STAGE_ORDER[number]);
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  screening:            "Screening",
+  application:          "Application",
+  clearances:           "Clearances",
+  training:             "Training",
   ready_for_road_test:  "Road Test Ready",
   road_test_scheduled:  "Road Test Scheduled",
-  ride_alongs:          "Ride-Alongs",
+  onboarding:           "Onboarding",
   hired:                "Hired",
   discontinued:         "Discontinued",
+  // legacy
+  screening:            "Screening",
+  ride_alongs:          "Ride-Alongs",
 };
 
 const STAGE_COLORS: Record<string, { pill: string; dot: string }> = {
-  screening:            { pill: "bg-slate-100 text-slate-600 border-slate-200",      dot: "bg-slate-400" },
+  application:          { pill: "bg-slate-100 text-slate-600 border-slate-200",      dot: "bg-slate-400" },
+  clearances:           { pill: "bg-orange-50 text-orange-700 border-orange-200",    dot: "bg-orange-400" },
+  training:             { pill: "bg-sky-50 text-sky-700 border-sky-200",             dot: "bg-sky-400" },
   ready_for_road_test:  { pill: "bg-amber-50 text-amber-700 border-amber-200",       dot: "bg-amber-400" },
   road_test_scheduled:  { pill: "bg-blue-50 text-blue-700 border-blue-200",          dot: "bg-blue-400" },
-  ride_alongs:          { pill: "bg-violet-50 text-violet-700 border-violet-200",    dot: "bg-violet-400" },
+  onboarding:           { pill: "bg-violet-50 text-violet-700 border-violet-200",    dot: "bg-violet-400" },
   hired:                { pill: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
   discontinued:         { pill: "bg-red-50 text-red-600 border-red-200",             dot: "bg-red-400" },
+  // legacy
+  screening:            { pill: "bg-slate-100 text-slate-600 border-slate-200",      dot: "bg-slate-400" },
+  ride_alongs:          { pill: "bg-violet-50 text-violet-700 border-violet-200",    dot: "bg-violet-400" },
 };
 
 function StagePill({ status }: { status: string }) {
@@ -211,6 +231,43 @@ function HireSuccessPanel({ name, username, tempPassword }: { name: string; user
   );
 }
 
+// ── Checklist group helper ────────────────────────────────────────────────────
+
+function ChecklistGroup({ label, items, prospect, isPending, onUpdate }: {
+  label: string;
+  items: { key: keyof Prospect; label: string }[];
+  prospect: Prospect;
+  isPending: boolean;
+  onUpdate: (u: Partial<Prospect>) => void;
+}) {
+  const [, startTransition] = useTransition();
+  return (
+    <div>
+      <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
+      <div className="flex flex-col gap-2">
+        {items.map(({ key, label: itemLabel }) => {
+          const status = prospect[key] as string;
+          return (
+            <ChecklistBadge
+              key={key}
+              label={itemLabel}
+              status={status}
+              pending={isPending}
+              onClick={() => {
+                const next = nextStatus(status);
+                startTransition(async () => {
+                  await updateProspectChecklist(prospect.id, key as string, next);
+                  onUpdate({ [key]: next } as Partial<Prospect>);
+                });
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Stage body ────────────────────────────────────────────────────────────────
 
 function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (updated: Partial<Prospect>) => void }) {
@@ -225,29 +282,114 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
   const [managerNote, setManagerNote] = useState(prospect.roadTestManagerNote ?? "");
   const [hireResult, setHireResult] = useState<{ tempPassword: string; username: string } | null>(null);
 
-  const status = prospect.status as PipelineStatus;
+  const rawStatus = prospect.status;
+  // Normalize legacy statuses
+  const status = (LEGACY_STATUS_MAP[rawStatus] ?? rawStatus) as PipelineStatus;
 
-  if (status === "screening") {
+  // ── Stage 1: Application ───────────────────────────────────────────────────
+  if (status === "application") {
+    const bothPassed = prospect.applicationDone === "passed" && prospect.backgroundCheckPassed === "passed";
+    const anyFailed = prospect.backgroundCheckPassed === "failed";
     return (
       <div className="space-y-4">
-        <div>
-          <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Background Check</p>
-          <ChecklistBadge
-            label="Background Check"
-            status={prospect.backgroundCheckPassed}
-            pending={isPending}
-            onClick={() => {
-              const next = nextStatus(prospect.backgroundCheckPassed);
-              startTransition(async () => {
-                await updateProspectChecklist(prospect.id, "backgroundCheckPassed", next);
-                onUpdate({ backgroundCheckPassed: next });
-              });
-            }}
-          />
-        </div>
-        {prospect.backgroundCheckPassed === "passed" && (
+        <ChecklistGroup
+          label="Application"
+          items={[
+            { key: "applicationDone", label: "FA Application" },
+            { key: "backgroundCheckPassed", label: "Background Check" },
+          ]}
+          prospect={prospect}
+          isPending={isPending}
+          onUpdate={onUpdate}
+        />
+        {bothPassed && (
+          <button
+            onClick={() => startTransition(async () => {
+              await advanceProspectStatus(prospect.id, "clearances");
+              onUpdate({ status: "clearances" });
+            })}
+            disabled={isPending}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-orange-500 text-white text-[14px] font-semibold hover:bg-orange-600 disabled:opacity-40 transition-all active:scale-[0.97] min-h-[44px]"
+          >
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            Move to Clearances
+          </button>
+        )}
+        {anyFailed && !showDiscontinue && (
+          <button onClick={() => setShowDiscontinue(true)}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]">
+            <XCircle className="w-4 h-4" /> Discontinue
+          </button>
+        )}
+        {showDiscontinue && (
+          <DiscontinuePanel prospectId={prospect.id} onDone={() => onUpdate({ status: "discontinued" })} onCancel={() => setShowDiscontinue(false)} />
+        )}
+      </div>
+    );
+  }
+
+  // ── Stage 2: Clearances ────────────────────────────────────────────────────
+  if (status === "clearances") {
+    const allPassed = prospect.drugTestPassed === "passed" && prospect.physicalPassed === "passed" && prospect.mecCardCopied === "passed";
+    const anyFailed = prospect.drugTestPassed === "failed" || prospect.physicalPassed === "failed";
+    return (
+      <div className="space-y-4">
+        <ChecklistGroup
+          label="Clearances"
+          items={[
+            { key: "drugTestPassed", label: "Drug Test" },
+            { key: "physicalPassed", label: "Physical" },
+            { key: "mecCardCopied", label: "MEC Card Copy" },
+          ]}
+          prospect={prospect}
+          isPending={isPending}
+          onUpdate={onUpdate}
+        />
+        {allPassed && (
+          <button
+            onClick={() => startTransition(async () => {
+              await advanceProspectStatus(prospect.id, "training");
+              onUpdate({ status: "training" });
+            })}
+            disabled={isPending}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-sky-600 text-white text-[14px] font-semibold hover:bg-sky-700 disabled:opacity-40 transition-all active:scale-[0.97] min-h-[44px]"
+          >
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            Move to Training
+          </button>
+        )}
+        {anyFailed && !showDiscontinue && (
+          <button onClick={() => setShowDiscontinue(true)}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]">
+            <XCircle className="w-4 h-4" /> Discontinue
+          </button>
+        )}
+        {showDiscontinue && (
+          <DiscontinuePanel prospectId={prospect.id} onDone={() => onUpdate({ status: "discontinued" })} onCancel={() => setShowDiscontinue(false)} />
+        )}
+      </div>
+    );
+  }
+
+  // ── Stage 3: Training ──────────────────────────────────────────────────────
+  if (status === "training") {
+    const allPassed = prospect.gcSetUp === "passed" && prospect.gcTrainingOnline === "passed" && prospect.gcCertificate === "passed";
+    return (
+      <div className="space-y-4">
+        <ChecklistGroup
+          label="GroundCloud Training"
+          items={[
+            { key: "gcSetUp", label: "GC Set Up" },
+            { key: "gcTrainingOnline", label: "GC Training Online" },
+            { key: "gcCertificate", label: "GC Certificate / Uploaded to FA" },
+          ]}
+          prospect={prospect}
+          isPending={isPending}
+          onUpdate={onUpdate}
+        />
+        {allPassed && (
           <div>
-            <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Propose Road Test Date</p>
+            <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Schedule Road Test</p>
             <div className="flex flex-col gap-2">
               <input
                 type="datetime-local"
@@ -267,31 +409,26 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
                 className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-amber-500 text-white text-[14px] font-semibold hover:bg-amber-600 disabled:opacity-40 transition-all active:scale-[0.97] min-h-[44px]"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />}
-                Propose Date
+                Propose Road Test Date
               </button>
             </div>
           </div>
         )}
-        {prospect.backgroundCheckPassed === "failed" && !showDiscontinue && (
-          <button
-            onClick={() => setShowDiscontinue(true)}
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]"
-          >
+        {!allPassed && !showDiscontinue && (
+          <button onClick={() => setShowDiscontinue(true)}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]">
             <XCircle className="w-4 h-4" /> Discontinue
           </button>
         )}
         {showDiscontinue && (
-          <DiscontinuePanel
-            prospectId={prospect.id}
-            onDone={() => onUpdate({ status: "discontinued" })}
-            onCancel={() => setShowDiscontinue(false)}
-          />
+          <DiscontinuePanel prospectId={prospect.id} onDone={() => onUpdate({ status: "discontinued" })} onCancel={() => setShowDiscontinue(false)} />
         )}
       </div>
     );
   }
 
-  if (status === "ready_for_road_test") {
+  // ── Stage 4a: Road Test Ready ──────────────────────────────────────────────
+  if (rawStatus === "ready_for_road_test") {
     const proposedDate = prospect.roadTestProposedDate
       ? new Date(prospect.roadTestProposedDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
       : null;
@@ -339,7 +476,8 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
     );
   }
 
-  if (status === "road_test_scheduled") {
+  // ── Stage 4b: Road Test Scheduled ─────────────────────────────────────────
+  if (rawStatus === "road_test_scheduled") {
     const confirmedDate = prospect.roadTestConfirmedDate
       ? new Date(prospect.roadTestConfirmedDate).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })
       : null;
@@ -354,66 +492,69 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
             )}
           </div>
         )}
-        <button
-          onClick={() => {
-            startTransition(async () => {
+        <ChecklistGroup
+          label="Road Test"
+          items={[
+            { key: "roadTestPassed", label: "Road Test Passed" },
+            { key: "roadCertUploaded", label: "Road Cert. Uploaded to FA" },
+          ]}
+          prospect={prospect}
+          isPending={isPending}
+          onUpdate={onUpdate}
+        />
+        {prospect.roadTestPassed === "passed" && (
+          <button
+            onClick={() => startTransition(async () => {
               await markRoadTestPassed(prospect.id);
-              onUpdate({ status: "ride_alongs", roadTestPassed: "passed" });
-            });
-          }}
-          disabled={isPending}
-          className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-700 disabled:opacity-40 transition-all active:scale-[0.97] min-h-[44px]"
-        >
-          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-          Mark Road Test Passed
-        </button>
+              onUpdate({ status: "onboarding", roadTestPassed: "passed" });
+            })}
+            disabled={isPending}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-violet-600 text-white text-[14px] font-semibold hover:bg-violet-700 disabled:opacity-40 transition-all active:scale-[0.97] min-h-[44px]"
+          >
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            Move to Onboarding
+          </button>
+        )}
+        {prospect.roadTestPassed === "failed" && !showDiscontinue && (
+          <button onClick={() => setShowDiscontinue(true)}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]">
+            <XCircle className="w-4 h-4" /> Discontinue
+          </button>
+        )}
+        {showDiscontinue && (
+          <DiscontinuePanel prospectId={prospect.id} onDone={() => onUpdate({ status: "discontinued" })} onCancel={() => setShowDiscontinue(false)} />
+        )}
       </div>
     );
   }
 
-  if (status === "ride_alongs") {
-    const bothPassed = prospect.drugTestPassed === "passed" && prospect.medicalCardPassed === "passed";
-    const eitherFailed = prospect.drugTestPassed === "failed" || prospect.medicalCardPassed === "failed";
+  // ── Stage 5: Onboarding (also handles legacy ride_alongs) ─────────────────
+  if (status === "onboarding") {
+    const offerSigned = prospect.offerLetterSigned === "passed";
+    const anyFailed = prospect.offerLetterSigned === "failed" || prospect.eVerify === "failed";
     return (
       <div className="space-y-4">
-        <div>
-          <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Clearances</p>
-          <div className="flex flex-col gap-2">
-            <ChecklistBadge
-              label="Drug Test"
-              status={prospect.drugTestPassed}
-              pending={isPending}
-              onClick={() => {
-                const next = nextStatus(prospect.drugTestPassed);
-                startTransition(async () => {
-                  await updateProspectChecklist(prospect.id, "drugTestPassed", next);
-                  onUpdate({ drugTestPassed: next });
-                });
-              }}
-            />
-            <ChecklistBadge
-              label="Medical Card"
-              status={prospect.medicalCardPassed}
-              pending={isPending}
-              onClick={() => {
-                const next = nextStatus(prospect.medicalCardPassed);
-                startTransition(async () => {
-                  await updateProspectChecklist(prospect.id, "medicalCardPassed", next);
-                  onUpdate({ medicalCardPassed: next });
-                });
-              }}
-            />
-          </div>
-        </div>
-        {bothPassed && !hireResult && (
+        <ChecklistGroup
+          label="Offer & Onboarding"
+          items={[
+            { key: "offerLetterSigned", label: "Offer Letter Signed" },
+            { key: "faEligible", label: "FA Eligible" },
+            { key: "mbaEligible", label: "MBA Eligible" },
+            { key: "eVerify", label: "e-Verify" },
+            { key: "adpDone", label: "ADP" },
+            { key: "gasCard", label: "Gas Card" },
+          ]}
+          prospect={prospect}
+          isPending={isPending}
+          onUpdate={onUpdate}
+        />
+        {offerSigned && !hireResult && (
           <button
-            onClick={() => {
-              startTransition(async () => {
-                const result = await hireProspect(prospect.id);
-                setHireResult(result);
-                onUpdate({ status: "hired" });
-              });
-            }}
+            onClick={() => startTransition(async () => {
+              const result = await hireProspect(prospect.id);
+              setHireResult(result);
+              onUpdate({ status: "hired" });
+            })}
             disabled={isPending}
             className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-emerald-600 text-white text-[15px] font-bold hover:bg-emerald-700 disabled:opacity-40 transition-all active:scale-[0.97] shadow-sm min-h-[44px]"
           >
@@ -424,26 +565,20 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
         {hireResult && (
           <HireSuccessPanel name={prospect.name} username={hireResult.username} tempPassword={hireResult.tempPassword} />
         )}
-        {eitherFailed && !showDiscontinue && !hireResult && (
-          <button
-            onClick={() => setShowDiscontinue(true)}
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]"
-          >
+        {anyFailed && !showDiscontinue && !hireResult && (
+          <button onClick={() => setShowDiscontinue(true)}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-[14px] font-semibold hover:bg-red-100 transition-colors active:scale-[0.97] min-h-[44px]">
             <XCircle className="w-4 h-4" /> Discontinue
           </button>
         )}
         {showDiscontinue && (
-          <DiscontinuePanel
-            prospectId={prospect.id}
-            onDone={() => onUpdate({ status: "discontinued" })}
-            onCancel={() => setShowDiscontinue(false)}
-          />
+          <DiscontinuePanel prospectId={prospect.id} onDone={() => onUpdate({ status: "discontinued" })} onCancel={() => setShowDiscontinue(false)} />
         )}
       </div>
     );
   }
 
-  if (status === "hired") {
+  if (rawStatus === "hired") {
     return (
       <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
         <div className="flex items-center gap-2">
@@ -455,7 +590,7 @@ function StageBody({ prospect, onUpdate }: { prospect: Prospect; onUpdate: (upda
     );
   }
 
-  if (status === "discontinued") {
+  if (rawStatus === "discontinued") {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
         <div className="flex items-center gap-2 mb-1">
@@ -689,40 +824,49 @@ function ProspectCard({ prospect, onRemove }: { prospect: Prospect; onRemove: ()
 
 const GUIDE_STEPS = [
   {
-    stage: "screening",
-    label: "Screening",
+    stage: "application",
+    label: "Application",
     color: "border-l-slate-400 bg-slate-50",
     pill: "bg-slate-100 text-slate-600 border-slate-200",
     dot: "bg-slate-400",
-    what: "New candidate is added to the pipeline.",
-    action: "Run the background check. Once it clears, pick a proposed road test date. That sends a notification to your manager.",
+    what: "Candidate is added. Checklist: FA Application + Background Check.",
+    action: "Mark both passed once cleared. A \"Move to Clearances\" button appears — tap it to advance.",
   },
   {
-    stage: "ready_for_road_test",
-    label: "Road Test Ready",
-    color: "border-l-amber-400 bg-amber-50",
-    pill: "bg-amber-50 text-amber-700 border-amber-200",
-    dot: "bg-amber-400",
-    what: "Background check passed. Road test date has been proposed.",
-    action: "Manager confirms (or adjusts) the date and adds a note — e.g. \"8am at the station.\" That locks it in.",
+    stage: "clearances",
+    label: "Clearances",
+    color: "border-l-orange-400 bg-orange-50",
+    pill: "bg-orange-50 text-orange-700 border-orange-200",
+    dot: "bg-orange-400",
+    what: "Drug test, physical, and MEC card copy must be completed before the road test.",
+    action: "Mark each item as results come in. Once all three pass, tap \"Move to Training.\"",
   },
   {
-    stage: "road_test_scheduled",
-    label: "Road Test Scheduled",
+    stage: "training",
+    label: "Training",
+    color: "border-l-sky-400 bg-sky-50",
+    pill: "bg-sky-50 text-sky-700 border-sky-200",
+    dot: "bg-sky-400",
+    what: "Candidate completes GroundCloud setup, online training, and uploads the certificate to FA.",
+    action: "Mark each training item complete. Once all pass, the road test date picker appears — propose a date to move forward.",
+  },
+  {
+    stage: "road_test",
+    label: "Road Test",
     color: "border-l-blue-400 bg-blue-50",
     pill: "bg-blue-50 text-blue-700 border-blue-200",
     dot: "bg-blue-400",
-    what: "Date is confirmed. Candidate is coming in.",
-    action: "After the road test, tap Mark Road Test Passed. They move to ride-alongs automatically.",
+    what: "Date is proposed and confirmed. Candidate comes in for the road test.",
+    action: "After the road test passes, mark it and upload the road cert to FA. Tap \"Move to Onboarding.\"",
   },
   {
-    stage: "ride_alongs",
-    label: "Ride-Alongs",
+    stage: "onboarding",
+    label: "Onboarding",
     color: "border-l-violet-400 bg-violet-50",
     pill: "bg-violet-50 text-violet-700 border-violet-200",
     dot: "bg-violet-400",
-    what: "Candidate is shadowing a driver out on route.",
-    action: "Clear the drug test and medical card as results come in. Once both pass, tap Hire — the system creates their driver account and generates a temporary password.",
+    what: "Offer letter, eligibility, e-Verify, ADP, and gas card are completed.",
+    action: "Once the offer letter is signed, the Hire button appears. Tapping it creates their driver account with a temporary password.",
   },
   {
     stage: "hired",
@@ -730,7 +874,7 @@ const GUIDE_STEPS = [
     color: "border-l-emerald-400 bg-emerald-50",
     pill: "bg-emerald-50 text-emerald-700 border-emerald-200",
     dot: "bg-emerald-500",
-    what: "Driver account created. They can log in immediately.",
+    what: "Driver account created. They can log in on day one.",
     action: "Hand them the username and temp password shown on the card. Update their FedEx ID from the driver profile once assigned.",
   },
 ];
@@ -791,7 +935,7 @@ function HelpGuide({ onClose }: { onClose: () => void }) {
           <div className="mt-4 p-3 border border-dashed border-slate-200 rounded-xl">
             <p className="text-[11px] font-semibold text-slate-500 mb-1">Discontinuing a candidate</p>
             <p className="text-[12px] text-slate-400 leading-relaxed">
-              At Screening or Ride-Alongs, a Discontinue button appears if something fails. Enter the reason and the candidate is moved out of the active pipeline but stays in the system for your records.
+              A Discontinue button appears any time something fails — background check, drug test, road test, etc. Enter the reason and they move out of the active pipeline but stay in the system for your records.
             </p>
           </div>
 
@@ -812,7 +956,9 @@ function HelpGuide({ onClose }: { onClose: () => void }) {
 
 const INPUT = "w-full px-3.5 py-3 rounded-lg border border-slate-200 text-[15px] text-slate-800 placeholder-slate-300 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 transition bg-white";
 
-type FilterTab = "all" | "in_progress" | "needs_scheduling" | "ready";
+const ACTIVE_STATUSES = ["application", "clearances", "training", "ready_for_road_test", "road_test_scheduled", "onboarding", "screening", "ride_alongs"];
+
+type FilterTab = "all" | "in_progress" | "road_test" | "hired";
 
 export default function RecruitingClient({ prospects: initial }: { prospects: Prospect[] }) {
   const [prospects, setProspects] = useState<Prospect[]>(initial);
@@ -827,12 +973,9 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
 
   const filtered = prospects
     .filter(p => {
-      if (filter === "in_progress") return (
-        !["prospect", "hired", "discontinued"].includes(p.status) ||
-        (p.status === "prospect" && getLegacyProgress(p) > 0 && getLegacyProgress(p) < TOTAL_STEPS)
-      );
-      if (filter === "needs_scheduling") return p.status === "ready_for_road_test";
-      if (filter === "ready") return p.status === "hired" || (p.status === "prospect" && getLegacyProgress(p) === TOTAL_STEPS);
+      if (filter === "in_progress") return ACTIVE_STATUSES.includes(p.status);
+      if (filter === "road_test") return p.status === "ready_for_road_test" || p.status === "road_test_scheduled";
+      if (filter === "hired") return p.status === "hired";
       return true;
     })
     .sort((a, b) => {
@@ -846,15 +989,15 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
   function handleAdd() {
     if (!name.trim()) return;
     startTransition(async () => {
-      const created = await createProspect({ name, phone, email, notes, status: "screening" });
+      const created = await createProspect({ name, phone, email, notes, status: "application" });
       setName(""); setPhone(""); setEmail(""); setNotes("");
       setShowAdd(false);
       setProspects(prev => [...prev, created]);
     });
   }
 
-  const inProgress = prospects.filter(p => !["prospect", "hired", "discontinued"].includes(p.status)).length;
-  const needsScheduling = prospects.filter(p => p.status === "ready_for_road_test").length;
+  const inProgress = prospects.filter(p => ACTIVE_STATUSES.includes(p.status)).length;
+  const roadTestCount = prospects.filter(p => p.status === "ready_for_road_test" || p.status === "road_test_scheduled").length;
   const hiredCount = prospects.filter(p => p.status === "hired").length;
 
   return (
@@ -892,10 +1035,10 @@ export default function RecruitingClient({ prospects: initial }: { prospects: Pr
       {prospects.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {([
-            { key: "all",              label: "Total",           value: prospects.length, color: "text-slate-800",   ring: "ring-slate-300" },
-            { key: "in_progress",      label: "In Progress",     value: inProgress,        color: "text-amber-600",   ring: "ring-amber-300" },
-            { key: "needs_scheduling", label: "Needs Scheduling", value: needsScheduling,   color: "text-blue-600",    ring: "ring-blue-300" },
-            { key: "ready",            label: "Hired",           value: hiredCount,        color: "text-emerald-600", ring: "ring-emerald-300" },
+            { key: "all",         label: "Total",      value: prospects.length, color: "text-slate-800",   ring: "ring-slate-300" },
+            { key: "in_progress", label: "In Progress", value: inProgress,       color: "text-amber-600",   ring: "ring-amber-300" },
+            { key: "road_test",   label: "Road Test",  value: roadTestCount,    color: "text-blue-600",    ring: "ring-blue-300" },
+            { key: "hired",       label: "Hired",      value: hiredCount,       color: "text-emerald-600", ring: "ring-emerald-300" },
           ] as { key: FilterTab; label: string; value: number; color: string; ring: string }[]).map(({ key, label, value, color, ring }) => (
             <button
               key={key}
