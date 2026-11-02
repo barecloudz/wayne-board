@@ -140,6 +140,18 @@ export default async function OrgLoginPage({ params }: { params: Promise<{ slug:
           }}
         />
 
+        {/* Temporary login notice */}
+        <div
+          className="w-full mb-5 rounded-xl px-4 py-3 flex gap-3 items-start"
+          style={{ background: "#FFF7ED", border: "1px solid #FED7AA" }}
+        >
+          <span style={{ fontSize: 15, lineHeight: 1.4, flexShrink: 0 }}>⚠️</span>
+          <p style={{ fontSize: 12, color: "#92400E", lineHeight: 1.6, fontWeight: 500 }}>
+            <strong style={{ display: "block", marginBottom: 1 }}>Login update</strong>
+            You can sign in with your <strong>GroundCloud username</strong> or your <strong>FedEx ID</strong>. If one does not work, try the other.
+          </p>
+        </div>
+
         {/* Form */}
         <OrgLoginForm orgSlug={slug} accentColor={accent} />
       </div>
