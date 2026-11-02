@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2, Plus, Loader2 } from "lucide-react";
-import { createWorkArea, deleteWorkArea } from "@/lib/actions/work-areas";
+import { Trash2, Plus, Loader2, Pencil, Check, X } from "lucide-react";
+import { createWorkArea, deleteWorkArea, updateWorkArea } from "@/lib/actions/work-areas";
 
 type WorkArea = { id: number; name: string; shape: string; color: string; active: boolean };
 
@@ -41,6 +41,26 @@ export default function WorkAreaManager({ initial }: { initial: WorkArea[] }) {
   const [shape, setShape] = useState<string>("circle");
   const [color, setColor] = useState("#6366f1");
   const [isPending, startTransition] = useTransition();
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editShape, setEditShape] = useState("circle");
+  const [editColor, setEditColor] = useState("#6366f1");
+
+  function openEdit(wa: WorkArea) {
+    setEditId(wa.id);
+    setEditName(wa.name);
+    setEditShape(wa.shape);
+    setEditColor(wa.color);
+  }
+
+  function handleUpdate() {
+    if (!editId || !editName.trim()) return;
+    startTransition(async () => {
+      await updateWorkArea(editId, editName.trim(), editShape, editColor);
+      setAreas((p) => p.map((w) => w.id === editId ? { ...w, name: editName.trim(), shape: editShape, color: editColor } : w));
+      setEditId(null);
+    });
+  }
 
   function handleCreate() {
     if (!name.trim()) return;
@@ -78,19 +98,56 @@ export default function WorkAreaManager({ initial }: { initial: WorkArea[] }) {
       {areas.length > 0 && (
         <div className="flex flex-col mb-5 divide-y divide-slate-100">
           {areas.map((wa) => (
-            <div key={wa.id} className="flex items-center gap-3 py-2.5">
-              <div className="flex items-center justify-center w-6">
-                <ShapePreview shape={wa.shape} color={wa.color} size={16} />
-              </div>
-              <span className="text-[13px] font-semibold text-slate-800 flex-1">{wa.name}</span>
-              <span className="text-[11px] text-slate-400 capitalize">{wa.shape}</span>
-              <button
-                onClick={() => handleDelete(wa.id)}
-                disabled={isPending}
-                className="p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-40"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
-              </button>
+            <div key={wa.id} className="flex flex-col py-2.5 gap-2">
+              {editId === wa.id ? (
+                <div className="flex flex-col gap-2">
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleUpdate()}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[13px] text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex gap-1">
+                      {SHAPES.map((s) => (
+                        <button key={s} onClick={() => setEditShape(s)} title={s}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${editShape === s ? "border-slate-900 bg-slate-50" : "border-slate-200 hover:border-slate-400"}`}>
+                          <ShapePreview shape={s} color={editShape === s ? editColor : "#94a3b8"} size={11} />
+                        </button>
+                      ))}
+                    </div>
+                    <input type="color" value={editColor} onChange={(e) => setEditColor(e.target.value)}
+                      className="w-8 h-8 rounded-lg border border-slate-200 cursor-pointer p-0.5" />
+                    <div className="flex gap-1.5 ml-auto">
+                      <button onClick={handleUpdate} disabled={!editName.trim() || isPending}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-40 transition-colors">
+                        <Check className="w-3 h-3" /> Save
+                      </button>
+                      <button onClick={() => setEditId(null)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                        <X className="w-3 h-3" /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-6">
+                    <ShapePreview shape={wa.shape} color={wa.color} size={16} />
+                  </div>
+                  <span className="text-[13px] font-semibold text-slate-800 flex-1">{wa.name}</span>
+                  <span className="text-[11px] text-slate-400 capitalize">{wa.shape}</span>
+                  <button onClick={() => openEdit(wa)} disabled={isPending}
+                    className="p-1.5 rounded hover:bg-slate-100 transition-colors disabled:opacity-40">
+                    <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                  <button onClick={() => handleDelete(wa.id)} disabled={isPending}
+                    className="p-1.5 rounded hover:bg-red-50 transition-colors disabled:opacity-40">
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

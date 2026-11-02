@@ -32,6 +32,15 @@ export async function deleteWorkArea(id: number) {
   revalidatePath("/dashboard/scheduling");
 }
 
+export async function updateWorkArea(id: number, name: string, shape: string, color: string) {
+  const orgId = await requireOrg();
+  await db.update(workAreas)
+    .set({ name: name.trim(), shape, color })
+    .where(and(eq(workAreas.id, id), eq(workAreas.organizationId, orgId)));
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/scheduling");
+}
+
 export async function setDriverDefaultWorkArea(driverId: string, workAreaId: number | null) {
   const orgId = await requireOrg();
   await db.update(drivers).set({ defaultWorkAreaId: workAreaId }).where(and(eq(drivers.organizationId, orgId), eq(drivers.driverId, driverId)));
