@@ -27,7 +27,7 @@ export type SigRow = {
 
 export async function uploadSigCompliance(
   formData: FormData
-): Promise<{ success: boolean; inserted: number; unmatched: string[]; error?: string }> {
+): Promise<{ success: boolean; inserted: number; unmatched: string[]; error?: string; sampleRows?: string[] }> {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
   const orgId = session.organizationId;
@@ -92,6 +92,10 @@ export async function uploadSigCompliance(
   }
 
   revalidatePath("/dashboard/payroll/sig-upload");
+  if (inserted === 0) {
+    const sampleRows = dataRows.slice(0, 5).map(r => String((r as unknown[])[0] ?? "").trim());
+    return { success: true, inserted, unmatched, sampleRows };
+  }
   return { success: true, inserted, unmatched };
 }
 

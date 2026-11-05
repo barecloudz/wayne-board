@@ -407,13 +407,13 @@ export default function MaintenanceAdmin({
       {tab === "records" && (
         <>
           {/* Truck filter chips */}
-          {records.length > 0 && (() => {
-            const trucks = Array.from(new Set(records.map(r => r.truckNumber))).sort();
+          {vehicles.length > 0 && (() => {
+            const trucks = vehicles.map(v => v.unitNumber).sort();
             return (
-              <div className="flex gap-1.5 flex-wrap mb-4">
+              <div className="flex gap-1.5 overflow-x-auto pb-1 mb-4 scrollbar-none" style={{ WebkitOverflowScrolling: "touch" }}>
                 <button
                   onClick={() => setTruckFilter("all")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
                     truckFilter === "all"
                       ? "bg-slate-900 text-white border-slate-900"
                       : "bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700"
@@ -425,7 +425,7 @@ export default function MaintenanceAdmin({
                   <button
                     key={t}
                     onClick={() => setTruckFilter(t)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold border transition-all ${
                       truckFilter === t
                         ? "bg-slate-900 text-white border-slate-900"
                         : "bg-white text-slate-500 border-slate-200 hover:border-slate-400 hover:text-slate-700"

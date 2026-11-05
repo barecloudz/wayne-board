@@ -274,6 +274,7 @@ export default function SigUploadClient() {
     inserted: number;
     unmatched: string[];
     error?: string;
+    sampleRows?: string[];
   } | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -464,6 +465,14 @@ export default function SigUploadClient() {
                   <p className="text-[13px] font-bold text-sky-800">
                     {uploadResult.inserted} drivers imported for "{periodLabel || selectedPeriod}"
                   </p>
+                  {uploadResult.inserted === 0 && uploadResult.sampleRows && uploadResult.sampleRows.length > 0 && (
+                    <div className="mt-1.5">
+                      <p className="text-[11px] font-semibold text-amber-700">Format mismatch — driver name column doesn&apos;t contain FedEx ID in parentheses. First rows parsed:</p>
+                      {uploadResult.sampleRows.map((r, i) => (
+                        <p key={i} className="text-[10px] text-slate-600 font-mono mt-0.5">{r || "(empty)"}</p>
+                      ))}
+                    </div>
+                  )}
                   {uploadResult.unmatched.length > 0 && (
                     <p className="text-[11px] text-sky-700 mt-0.5">
                       {uploadResult.unmatched.length} unmatched driver{uploadResult.unmatched.length !== 1 ? "s" : ""} — expand their rows below to link them.

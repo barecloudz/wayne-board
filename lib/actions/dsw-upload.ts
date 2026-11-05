@@ -146,6 +146,18 @@ async function processDswPair(
       });
       if (hit2) return hit2[1];
     }
+    // Single-word name fallback — match against any word in a driver's full name
+    if (significant.length === 1) {
+      const word = significant[0];
+      const hit = Object.entries(driverByName).find(([k]) =>
+        k.split(" ").some(kw =>
+          kw === word ||
+          (word.length >= 4 && kw.startsWith(word)) ||
+          (kw.length >= 4 && word.startsWith(kw))
+        )
+      );
+      if (hit) return hit[1];
+    }
     return null;
   }
 
@@ -166,8 +178,8 @@ async function processDswPair(
     const actDelStps = parseInt(String(row[9] ?? ""), 10) || null;
     const actDelPkgs = parseInt(String(row[10] ?? ""), 10) || null;
     const ilsImpactPkgs = parseInt(String(row[14] ?? ""), 10) || null;
-    const nonDelvdStps = parseInt(String(row[15] ?? ""), 10) || null;
-    const code85 = parseInt(String(row[16] ?? ""), 10) || null;
+    const nonDelvdStps = parseInt(String(row[16] ?? ""), 10) || null;
+    const code85 = parseInt(String(row[21] ?? ""), 10) || null;
     const allStatusCodePkgs = parseInt(String(row[17] ?? ""), 10) || null;
     const dna = parseInt(String(row[19] ?? ""), 10) || null;
     const miles = parseInt(String(row[24] ?? ""), 10) || null;
@@ -567,6 +579,17 @@ export async function relinkUnmatchedDswRows(): Promise<{
         return matches >= 2;
       });
       if (hit2) return hit2[1];
+    }
+    if (significant.length === 1) {
+      const word = significant[0];
+      const hit = Object.entries(driverByName).find(([k]) =>
+        k.split(" ").some(kw =>
+          kw === word ||
+          (word.length >= 4 && kw.startsWith(word)) ||
+          (kw.length >= 4 && word.startsWith(kw))
+        )
+      );
+      if (hit) return hit[1];
     }
     return null;
   }
